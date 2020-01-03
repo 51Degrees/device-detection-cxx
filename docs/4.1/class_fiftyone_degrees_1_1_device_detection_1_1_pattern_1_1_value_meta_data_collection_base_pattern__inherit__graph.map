@@ -1,0 +1,8 @@
+<map id="FiftyoneDegrees::DeviceDetection::Pattern::ValueMetaDataCollectionBasePattern" name="FiftyoneDegrees::DeviceDetection::Pattern::ValueMetaDataCollectionBasePattern">
+<area shape="rect" id="node1" title="A collection of all value meta data contained in a Pattern engine." alt="" coords="627,85,883,141"/>
+<area shape="rect" id="node4" href="$class_fiftyone_degrees_1_1_device_detection_1_1_pattern_1_1_value_meta_data_collection_for_profile_pattern.html" title="A collection of value meta data relating to a profile contained in a Pattern engine." alt="" coords="943,5,1189,61"/>
+<area shape="rect" id="node5" href="$class_fiftyone_degrees_1_1_device_detection_1_1_pattern_1_1_value_meta_data_collection_for_property_pattern.html" title="A collection of value meta data relating to a property contained in a Pattern engine." alt="" coords="943,85,1189,141"/>
+<area shape="rect" id="node6" href="$class_fiftyone_degrees_1_1_device_detection_1_1_pattern_1_1_value_meta_data_collection_pattern.html" title="A collection of all value meta data contained in a Pattern engine." alt="" coords="932,166,1200,207"/>
+<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_common_1_1_collection.html" title=" " alt="" coords="363,85,577,141"/>
+<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_common_1_1_collection.html" title="A group of items accessible by index or key." alt="" coords="5,93,181,134"/>
+</map>

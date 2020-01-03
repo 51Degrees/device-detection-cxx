@@ -1,0 +1,109 @@
+/* *********************************************************************
+ * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
+ * Copyright 2019 51 Degrees Mobile Experts Limited, 5 Charlotte Close,
+ * Caversham, Reading, Berkshire, United Kingdom RG4 7BY.
+ *
+ * This Original Work is licensed under the European Union Public Licence (EUPL) 
+ * v.1.2 and is subject to its terms as set out below.
+ *
+ * If a copy of the EUPL was not distributed with this file, You can obtain
+ * one at https://opensource.org/licenses/EUPL-1.2.
+ *
+ * The 'Compatible Licences' set out in the Appendix to the EUPL (as may be
+ * amended by the European Commission) shall be deemed incompatible for
+ * the purposes of the Work and the provisions of the compatibility
+ * clause in Article 5 of the EUPL shall not apply.
+ * 
+ * If using the Work as, or as part of, a network application, by 
+ * including the attribution notice(s) required under Article 5 of the EUPL
+ * in the end user terms of the application under an appropriate heading, 
+ * such notice(s) shall fulfill the requirements of that article.
+ * ********************************************************************* */
+
+#ifndef FIFTYONE_DEGREES_METADATA_PATTERN_HPP
+#define FIFTYONE_DEGREES_METADATA_PATTERN_HPP
+
+#include "../common-cxx/Exceptions.hpp"
+#include "../common-cxx/MetaData.hpp"
+#include "PropertyMetaDataCollectionPattern.hpp"
+#include "ValueMetaDataCollectionPattern.hpp"
+#include "ValueMetaDataCollectionForPropertyPattern.hpp"
+#include "ValueMetaDataCollectionForProfilePattern.hpp"
+#include "ComponentMetaDataCollectionPattern.hpp"
+#include "ProfileMetaDataCollectionPattern.hpp"
+#include "PropertyMetaDataCollectionForComponentPattern.hpp"
+#include "PropertyMetaDataBuilderPattern.hpp"
+#include "pattern.h"
+
+using namespace FiftyoneDegrees::Common;
+
+namespace FiftyoneDegrees {
+	namespace DeviceDetection {
+		namespace Pattern {
+			/**
+			 * @copydoc MetaData
+			 */
+			class MetaDataPattern : public MetaData
+			{
+			public:
+				/**
+				 * @name Constructors and Destructors
+				 * @{
+				 */
+
+				 /**
+				  * @copydoc Common::MetaData::MetaData
+				  */
+				MetaDataPattern(
+					shared_ptr<fiftyoneDegreesResourceManager> manager);
+
+				/**
+				 * @copydoc Common::MetaData::~MetaData
+				 */
+				~MetaDataPattern();
+
+				/**
+				 * @}
+				 * @name Common::MetaData Implementation
+				 * @{
+				 */
+
+				Collection<byte, ComponentMetaData>* getComponents();
+
+				Collection<string, PropertyMetaData>* getProperties();
+
+				Collection<uint32_t, ProfileMetaData>* getProfiles();
+
+				Collection<ValueMetaDataKey, ValueMetaData>* getValues();
+
+				Collection<ValueMetaDataKey, ValueMetaData>*
+					getValuesForProperty(PropertyMetaData *property);
+
+				Collection<ValueMetaDataKey, ValueMetaData>*
+					getValuesForProfile(ProfileMetaData *profile);
+
+				ComponentMetaData* getComponentForProfile(
+					ProfileMetaData *profile);
+
+				ComponentMetaData* getComponentForProperty(
+					PropertyMetaData *property);
+
+				ProfileMetaData* getDefaultProfileForComponent(
+					ComponentMetaData *component);
+
+				ValueMetaData* getDefaultValueForProperty(
+					PropertyMetaData *property);
+
+				Collection<string, PropertyMetaData>*
+					getPropertiesForComponent(ComponentMetaData *component);
+
+				PropertyMetaData* getPropertyForValue(ValueMetaData *value);
+				/**
+				 * @}
+				 */
+			};
+		}
+	}
+}
+
+#endif

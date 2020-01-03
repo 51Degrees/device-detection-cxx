@@ -1,0 +1,6 @@
+[submodule "src/common-cxx"]
+	path = src/common-cxx
+	url = ../common-cxx
+[submodule "device-detection-data"]
+	path = device-detection-data
+	url = ../device-detection-data

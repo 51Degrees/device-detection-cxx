@@ -1,0 +1,4 @@
+var searchData=
+[
+  ['build',['build',['../class_fiftyone_degrees_1_1_device_detection_1_1_pattern_1_1_component_meta_data_builder_pattern.html#ac65b11a336f084cbee4c70734c441ee2',1,'FiftyoneDegrees::DeviceDetection::Pattern::ComponentMetaDataBuilderPattern::build()'],['../class_fiftyone_degrees_1_1_device_detection_1_1_pattern_1_1_profile_meta_data_builder_pattern.html#a15c4ca3a9bef21c2773799206dcda642',1,'FiftyoneDegrees::DeviceDetection::Pattern::ProfileMetaDataBuilderPattern::build()'],['../class_fiftyone_degrees_1_1_device_detection_1_1_pattern_1_1_property_meta_data_builder_pattern.html#a610abfca7c82431c4bf60bc6c16c47bf',1,'FiftyoneDegrees::DeviceDetection::Pattern::PropertyMetaDataBuilderPattern::build()'],['../class_fiftyone_degrees_1_1_device_detection_1_1_pattern_1_1_value_meta_data_builder_pattern.html#ac6e73c7f36ba03ac7e4f6853bdf3a3fb',1,'FiftyoneDegrees::DeviceDetection::Pattern::ValueMetaDataBuilderPattern::build()']]]
+];

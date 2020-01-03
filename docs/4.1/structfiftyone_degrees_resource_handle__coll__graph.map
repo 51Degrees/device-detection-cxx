@@ -1,0 +1,4 @@
+<map id="fiftyoneDegreesResourceHandle" name="fiftyoneDegreesResourceHandle">
+<area shape="rect" id="node1" title="Tracks the number of active uses of the resource within the manager." alt="" coords="10,5,217,32"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="5,95,221,121"/>
+</map>

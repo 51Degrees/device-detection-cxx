@@ -1,0 +1,8 @@
+<map id="fiftyoneDegreesOverridePropertyArray" name="fiftyoneDegreesOverridePropertyArray">
+<area shape="rect" id="node1" title="Array of items of type fiftyoneDegreesOverrideProperty used to easily access and track the size of th..." alt="" coords="7,380,214,421"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_override_property.html" title="Index and pointer to a property which can be overridden." alt="" coords="7,291,214,317"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_property_available.html" title="Used to access the property item quickly without the need to search." alt="" coords="5,193,216,219"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="150,95,343,121"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="240,193,408,219"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="177,5,316,32"/>
+</map>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="PerfHash" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="MSVC Debug">
+				<Option output="bin/Debug/PerfHash" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option external_deps="../../../fiftyone.devicedetection.hash/bin/Debug/libfiftyone.devicedetection.hash.a;" />
+				<Option type="1" />
+				<Option compiler="msvc10" />
+				<Option parameters='&quot;../data/51Degrees-LiteV3.4.trie&quot; &quot;../data/20000 User Agents.csv&quot; &quot;IsMobile&quot;' />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-wd4668" />
+					<Add option="-wd4711" />
+					<Add option="-wd4820" />
+					<Add option="-wd4005" />
+					<Add option="-wd4255" />
+					<Add option="-wd4152" />
+					<Add option="-wd4054" />
+					<Add option="/D_DEBUG" />
+					<Add option="/D_CRT_SECURE_NO_WARNINGS" />
+				</Compiler>
+				<Linker>
+					<Add library="../../../fiftyone.devicedetection.hash/bin/Debug/libfiftyone.devicedetection.hash.a" />
+				</Linker>
+			</Target>
+			<Target title="MSVC Release">
+				<Option output="bin/Release/PerfHash" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="msvc10" />
+				<Option parameters='&quot;../data/51Degrees-LiteV3.4.trie&quot; &quot;../data/20000 User Agents.csv&quot; &quot;IsMobile&quot;' />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-wd4668" />
+					<Add option="-wd4711" />
+					<Add option="-wd4820" />
+					<Add option="-wd4005" />
+					<Add option="-wd4255" />
+					<Add option="-wd4152" />
+					<Add option="-wd4054" />
+					<Add option="/D_CRT_SECURE_NO_WARNINGS" />
+				</Compiler>
+				<Linker>
+					<Add library="../../../fiftyone.devicedetection.hash/bin/Debug/libfiftyone.devicedetection.hash.a" />
+				</Linker>
+			</Target>
+			<Target title="GCC Debug">
+				<Option output="bin/Debug/PerfHash" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters='&quot;D:\51Degrees-EnterpriseV3.4.trie&quot; &quot;D:\RandomUserAgents.csv&quot; &quot;IsMobile&quot;' />
+				<Compiler>
+					<Add option="-march=corei7" />
+					<Add option="-g" />
+					<Add option="-pthread" />
+					<Add option="-D_DEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="-pthread" />
+					<Add library="../../../fiftyone.devicedetection.hash/bin/Debug/libfiftyone.devicedetection.hash.a" />
+				</Linker>
+			</Target>
+			<Target title="GCC Release">
+				<Option output="bin/Release/PerfHash" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters='&quot;D:\51Degrees-EnterpriseV3.4.trie&quot; &quot;D:\RandomUserAgents.csv&quot; &quot;IsMobile&quot;' />
+				<Compiler>
+					<Add option="-march=corei7-avx" />
+					<Add option="-O3" />
+					<Add option="-pthread" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-pthread" />
+					<Add library="../../../fiftyone.devicedetection.hash/bin/Debug/libfiftyone.devicedetection.hash.a" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="../../../../examples/c/hash/PerfHash.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../../src/common-cxx/textfile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../../src/common-cxx/textfile.h" />
+		<Unit filename="../../../../src/common-cxx/threading.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../../../src/common-cxx/threading.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

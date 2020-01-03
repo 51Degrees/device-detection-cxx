@@ -1,0 +1,6 @@
+<map id="fiftyoneDegreesConfigHash" name="fiftyoneDegreesConfigHash">
+<area shape="rect" id="node1" title="Hash specific configuration structure." alt="" coords="77,287,254,313"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_collection_config.html" title="Collection configuration structure which defines how the collection should be created by the create m..." alt="" coords="5,95,173,136"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_config_device_detection.html" title="Device detection configuration structure containing device detection specific configuration options,..." alt="" coords="198,95,383,136"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_config_base.html" title="Base configuration structure containing common configuration options, and options that apply to struc..." alt="" coords="202,5,379,32"/>
+</map>

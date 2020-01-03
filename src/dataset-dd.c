@@ -1,0 +1,95 @@
+/* *********************************************************************
+ * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
+ * Copyright 2019 51 Degrees Mobile Experts Limited, 5 Charlotte Close,
+ * Caversham, Reading, Berkshire, United Kingdom RG4 7BY.
+ *
+ * This Original Work is licensed under the European Union Public Licence (EUPL) 
+ * v.1.2 and is subject to its terms as set out below.
+ *
+ * If a copy of the EUPL was not distributed with this file, You can obtain
+ * one at https://opensource.org/licenses/EUPL-1.2.
+ *
+ * The 'Compatible Licences' set out in the Appendix to the EUPL (as may be
+ * amended by the European Commission) shall be deemed incompatible for
+ * the purposes of the Work and the provisions of the compatibility
+ * clause in Article 5 of the EUPL shall not apply.
+ * 
+ * If using the Work as, or as part of, a network application, by 
+ * including the attribution notice(s) required under Article 5 of the EUPL
+ * in the end user terms of the application under an appropriate heading, 
+ * such notice(s) shall fulfill the requirements of that article.
+ * ********************************************************************* */
+
+#include "dataset-dd.h"
+
+#include "fiftyone.h"
+
+#ifdef min
+#define MIN(a,b) min(a,b)
+#else
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+
+fiftyoneDegreesStatusCode 
+fiftyoneDegreesDataSetDeviceDetectionInitPropertiesAndHeaders(
+	fiftyoneDegreesDataSetDeviceDetection *dataSet,
+	fiftyoneDegreesPropertiesRequired *properties,
+	void *state,
+	fiftyoneDegreesPropertiesGetMethod getPropertyMethod,
+	fiftyoneDegreesHeadersGetMethod getHeaderMethod,
+	fiftyoneDegreesOverridesFilterMethod overridesFilter) {
+	StatusCode status = DataSetInitProperties(
+		&dataSet->b,
+		properties,
+		state,
+		getPropertyMethod);
+	if (status != SUCCESS) {
+		return status;
+	}
+
+	status = DataSetInitHeaders(
+		&dataSet->b,
+		state,
+		getHeaderMethod);
+	if (status != SUCCESS) {
+		return status;
+	}
+
+	// Work out the unique HTTP header index of the User-Agent field.
+	dataSet->uniqueUserAgentHeaderIndex = HeaderGetIndex(
+		dataSet->b.uniqueHeaders,
+		"User-Agent",
+		sizeof("User-Agent") - 1);
+
+	// Iterate the available properties and determine if any are available to
+	// be overridden in the evidence.
+	dataSet->b.overridable = OverridePropertiesCreate(
+		dataSet->b.available,
+		true,
+		state,
+		overridesFilter);
+
+	return status;
+}
+
+void fiftyoneDegreesDataSetDeviceDetectionRelease(
+	fiftyoneDegreesDataSetDeviceDetection *dataSet) {
+	DataSetRelease(&dataSet->b);
+}
+
+void fiftyoneDegreesDataSetDeviceDetectionFree(
+	fiftyoneDegreesDataSetDeviceDetection *dataSet) {
+	DataSetFree(&dataSet->b);
+}
+
+fiftyoneDegreesDataSetDeviceDetection* 
+fiftyoneDegreesDataSetDeviceDetectionGet(
+	fiftyoneDegreesResourceManager *manager) {
+	return (DataSetDeviceDetection*)DataSetGet(manager);
+}
+
+void fiftyoneDegreesDataSetDeviceDetectionReset(
+	fiftyoneDegreesDataSetDeviceDetection *dataSet) {
+	DataSetReset(&dataSet->b);
+	dataSet->uniqueUserAgentHeaderIndex = 0;
+}

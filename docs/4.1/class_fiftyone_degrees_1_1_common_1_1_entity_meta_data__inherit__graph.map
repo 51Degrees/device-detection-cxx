@@ -1,0 +1,11 @@
+<map id="FiftyoneDegrees::Common::EntityMetaData&lt; K &gt;" name="FiftyoneDegrees::Common::EntityMetaData&lt; K &gt;">
+<area shape="rect" id="node1" title="Base class for any entity meta data." alt="" coords="5,104,181,145"/>
+<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_common_1_1_entity_meta_data.html" title=" " alt="" coords="403,5,594,47"/>
+<area shape="rect" id="node4" href="$class_fiftyone_degrees_1_1_common_1_1_entity_meta_data.html" title=" " alt="" coords="371,71,627,112"/>
+<area shape="rect" id="node6" href="$class_fiftyone_degrees_1_1_common_1_1_entity_meta_data.html" title=" " alt="" coords="411,136,587,177"/>
+<area shape="rect" id="node8" href="$class_fiftyone_degrees_1_1_common_1_1_entity_meta_data.html" title=" " alt="" coords="411,201,587,243"/>
+<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_common_1_1_profile_meta_data.html" title="Meta data relating to a profile populated by an engine implementation." alt="" coords="676,5,852,47"/>
+<area shape="rect" id="node5" href="$class_fiftyone_degrees_1_1_common_1_1_value_meta_data.html" title="Meta data relating to a value populated by an engine implementation." alt="" coords="676,71,852,112"/>
+<area shape="rect" id="node7" href="$class_fiftyone_degrees_1_1_common_1_1_property_meta_data.html" title="Meta data relating to a property populated by an engine implementation." alt="" coords="676,136,852,177"/>
+<area shape="rect" id="node9" href="$class_fiftyone_degrees_1_1_common_1_1_component_meta_data.html" title="EntityMetaData relating to a component populated by an engine implementation." alt="" coords="676,201,852,243"/>
+</map>

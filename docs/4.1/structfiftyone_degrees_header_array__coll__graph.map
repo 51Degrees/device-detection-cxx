@@ -1,0 +1,7 @@
+<map id="fiftyoneDegreesHeaderArray" name="fiftyoneDegreesHeaderArray">
+<area shape="rect" id="node1" title="Array of items of type fiftyoneDegreesHeader used to easily access and track the size of the array." alt="" coords="5,291,188,317"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_header.html" title="Header structure containing the name and unique id." alt="" coords="21,193,173,219"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="107,95,300,121"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="197,193,365,219"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="134,5,273,32"/>
+</map>

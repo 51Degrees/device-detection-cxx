@@ -1,0 +1,215 @@
+name: Build and Test Device Detection C++
+
+pr:
+- master
+- develop
+
+trigger: none
+
+stages:
+
+- stage: Windows
+  dependsOn: []
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - vstest
+
+  jobs:
+  - job: Build_VisualStudio
+
+    steps:
+
+    - checkout: self
+      submodules: recursive
+      lfs: true
+      persistCredentials: true
+
+    - powershell: |
+        git lfs install
+        ls
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs fetch
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs checkout
+        ls
+      workingDirectory: 'device-detection-data'
+      displayName: 'Fetch LFS Data Files'
+
+    - task: NuGetCommand@2
+      inputs:
+        command: 'restore'
+        restoreSolution: 'VisualStudio/DeviceDetection.sln'
+        feedsToUse: 'select'
+        vstsFeed: 'd2431f86-c1e6-4d8b-8d27-311cf3614847'
+
+    - task: MSBuild@1
+      displayName: 'Build Visual Studio Solution x64'
+      inputs:
+        solution: 'VisualStudio/DeviceDetection.sln'
+        msbuildArchitecture: x64
+        platform: x64
+        configuration: Release
+        clean: true
+
+    - bash: './FiftyOne.DeviceDetection.Hash.Tests.exe --gtest_filter="-*TestMem*:*TestPerf*:*TestOfflineProcessing*" --gtest_catch_exceptions=1 --gtest_break_on_failure=0 --gtest_output=xml:testoutput.xml'
+      workingDirectory: VisualStudio/FiftyOne.DeviceDetection.Hash.Tests/x64/Release
+      failOnStderr: true
+      displayName: 'Run Hash Tests'
+
+    - bash: './FiftyOne.DeviceDetection.Pattern.Tests.exe --gtest_filter="-*TestMem*:*TestPerf*:*TestOfflineProcessing*" --gtest_catch_exceptions=1 --gtest_break_on_failure=0 --gtest_output=xml:testoutput.xml'
+      workingDirectory: VisualStudio/FiftyOne.DeviceDetection.Pattern.Tests/x64/Release
+      failOnStderr: true
+      displayName: 'Run Pattern Tests'
+
+    - task: PublishTestResults@2
+      condition: true
+      inputs:
+        testResultsFormat: 'JUnit'
+        testRunTitle: 'Visual Studio x64 Pattern'
+        testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Pattern.Tests\x64\Release\testoutput.xml'
+
+    - task: PublishTestResults@2
+      condition: true
+      inputs:
+        testResultsFormat: 'JUnit'
+        testRunTitle: 'Visual Studio x64 Hash'
+        testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\x64\Release\testoutput.xml'
+        
+  - job: Build_And_Test_Pattern
+    steps:
+
+    - checkout: self
+      submodules: recursive
+      lfs: true
+      persistCredentials: true
+
+    - powershell: |
+        git lfs install
+        ls
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs fetch
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs checkout
+        ls
+      workingDirectory: 'device-detection-data'
+      displayName: 'Fetch LFS Data Files'
+
+    - task: Bash@3
+      displayName: 'Create Build Directory'
+      inputs:
+        targetType: 'inline'
+        script: 'mkdir build'
+
+
+    - task: CMake@1
+      displayName: 'CMake Configure'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '.. -A x64'
+
+    - task: CMake@1
+      displayName: 'CMake Build'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '--build . --config Release'
+
+    - bash: 'ctest -R ".*Pattern.*" -E ".*TestMem|TestPerf|TestOfflineProcessing.*" -T test --no-compress-output'
+      workingDirectory: build
+      failOnStderr: true
+      displayName: 'Run Tests'
+
+    - task: PublishTestResults@2
+      condition: true
+      inputs:
+        testResultsFormat: 'CTest'
+        testRunTitle: 'Windows CTest Pattern'
+        testResultsFiles: '**/Test.xml'
+
+  - job: Build_And_Test_Hash
+    steps:
+
+    - checkout: self
+      submodules: recursive
+      lfs: true
+      persistCredentials: true
+
+    - powershell: |
+        git lfs install
+        ls
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs fetch
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs checkout
+        ls
+      workingDirectory: 'device-detection-data'
+      displayName: 'Fetch LFS Data Files'
+
+    - task: Bash@3
+      displayName: 'Create Build Directory'
+      inputs:
+        targetType: 'inline'
+        script: 'mkdir build'
+
+
+    - task: CMake@1
+      displayName: 'CMake Configure'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '.. -A x64'
+
+    - task: CMake@1
+      displayName: 'CMake Build'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '--build . --config Release'
+
+    - bash: 'ctest -R ".*Hash.*" -E ".*TestMem|TestPerf|TestOfflineProcessing.*" -T test --no-compress-output'
+      workingDirectory: build
+      failOnStderr: true
+      displayName: 'Run Tests'
+
+    - task: PublishTestResults@2
+      condition: true
+      inputs:
+        testResultsFormat: 'CTest'
+        testRunTitle: 'Windows CTest Hash'
+        testResultsFiles: '**/Test.xml'
+
+- stage: Linux
+  dependsOn: []
+  jobs:
+  - job: Build_And_Test
+    pool:
+      name: Hosted Ubuntu 1604
+
+    steps:
+
+    - checkout: self
+      submodules: recursive
+      lfs: true
+
+    - task: Bash@3
+      displayName: 'Create Build Directory'
+      inputs:
+        targetType: 'inline'
+        script: 'mkdir build'
+
+    - task: CMake@1
+      displayName: 'CMake Configure'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '..'
+
+    - task: CMake@1
+      displayName: 'CMake Build'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '--build .'
+
+    - bash: 'ctest -E ".*TestMem|TestPerf|TestOfflineProcessing.*" -T test --no-compress-output'
+      workingDirectory: build
+      failOnStderr: true
+      displayName: 'Run Tests'
+
+    - task: PublishTestResults@2
+      condition: true
+      inputs:
+        testResultsFormat: 'CTest'
+        testRunTitle: 'Linux CTest'
+        testResultsFiles: '**/Test.xml'

@@ -1,0 +1,6 @@
+<map id="FiftyoneDegrees::Common::EngineBase" name="FiftyoneDegrees::Common::EngineBase">
+<area shape="rect" id="node1" title="Encapsulates the engine class to be extended by engine implementations." alt="" coords="339,71,515,112"/>
+<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_common_1_1_required_properties_config.html" title="C++ class wrapper for the fiftyoneDegreesPropertiesRequired structure." alt="" coords="5,5,181,47"/>
+<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_common_1_1_meta_data.html" title="Contains meta data for the properties, values, profiles and components that exist within the engine i..." alt="" coords="5,71,181,112"/>
+<area shape="rect" id="node4" href="$class_fiftyone_degrees_1_1_common_1_1_config_base.html" title="C++ class wrapper for the fiftyoneDegreesConfigBase configuration structure." alt="" coords="5,136,181,177"/>
+</map>

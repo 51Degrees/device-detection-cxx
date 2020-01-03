@@ -1,0 +1,12 @@
+<map id="fiftyoneDegreesResultHashArray" name="fiftyoneDegreesResultHashArray">
+<area shape="rect" id="node1" title="Array of items of type fiftyoneDegreesResultHash used to easily access and track the size of the arra..." alt="" coords="1107,167,1285,209"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_results_device_detection.html" title="Device detection specific results structure which any device detection processing results should exte..." alt="" coords="828,167,1021,209"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_override_value_array.html" title="An array of properties and values to use when getting override values." alt="" coords="531,201,721,242"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_override_value.html" title="String value which should override the value for the property indicated by the required property inde..." alt="" coords="231,148,421,175"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="5,116,144,143"/>
+<area shape="rect" id="node9" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="229,87,423,113"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_results_base.html" title="Base results structure which any processing results should extend." alt="" coords="533,149,719,176"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_result_hash.html" title="Singular User&#45;Agent result returned by a Hash process method." alt="" coords="835,253,1014,280"/>
+<area shape="rect" id="node8" href="$structfiftyone_degrees_result_user_agent.html" title="Singular User&#45;Agent result returned by a device detection process method." alt="" coords="539,266,713,307"/>
+<area shape="rect" id="node10" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="542,99,710,125"/>
+</map>

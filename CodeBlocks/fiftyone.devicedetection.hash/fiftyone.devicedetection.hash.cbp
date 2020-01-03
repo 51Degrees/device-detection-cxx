@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="fiftyone.devicedetection.hash" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="GCC Debug">
+				<Option output="bin/Debug/fiftyone.devicedetection.hash" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/Debug/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="GCC Release">
+				<Option output="bin/Release/fiftyone.devicedetection.hash" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/Release/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-march=corei7-avx" />
+					<Add option="-O3" />
+					<Add option="-Wall" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Unit filename="../../src/common-cxx/cache.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/cache.h" />
+		<Unit filename="../../src/common-cxx/collection.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/collection.h" />
+		<Unit filename="../../src/common-cxx/data.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/data.h" />
+		<Unit filename="../../src/common-cxx/evidence.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/evidence.h" />
+		<Unit filename="../../src/common-cxx/file.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/file.h" />
+		<Unit filename="../../src/common-cxx/headers.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/headers.h" />
+		<Unit filename="../../src/common-cxx/ip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/ip.h" />
+		<Unit filename="../../src/common-cxx/list.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/list.h" />
+		<Unit filename="../../src/common-cxx/memory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/memory.h" />
+		<Unit filename="../../src/common-cxx/properties.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/properties.h" />
+		<Unit filename="../../src/common-cxx/providerc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/providerc.h" />
+		<Unit filename="../../src/common-cxx/string.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/string.h" />
+		<Unit filename="../../src/common-cxx/threading.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/common-cxx/threading.h" />
+		<Unit filename="../../src/hash/hash.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../src/hash/hash.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

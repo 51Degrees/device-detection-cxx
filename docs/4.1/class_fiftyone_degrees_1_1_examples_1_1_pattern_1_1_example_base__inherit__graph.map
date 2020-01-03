@@ -1,0 +1,9 @@
+<map id="FiftyoneDegrees::Examples::Pattern::ExampleBase" name="FiftyoneDegrees::Examples::Pattern::ExampleBase">
+<area shape="rect" id="node1" title="Base class extended by all Pattern examples." alt="" coords="5,169,188,211"/>
+<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_examples_1_1_pattern_1_1_getting_started.html" title="Pattern Getting Started Example." alt="" coords="243,5,426,47"/>
+<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_examples_1_1_pattern_1_1_match_metrics.html" title="Match Metrics Pattern Example." alt="" coords="243,71,426,112"/>
+<area shape="rect" id="node4" href="$class_fiftyone_degrees_1_1_examples_1_1_pattern_1_1_meta_data_example.html" title="Pattern Meta Data Example." alt="" coords="241,136,428,177"/>
+<area shape="rect" id="node5" href="$class_fiftyone_degrees_1_1_examples_1_1_pattern_1_1_reload_from_file.html" title="Pattern Reload From File Example." alt="" coords="243,201,426,243"/>
+<area shape="rect" id="node6" href="$class_fiftyone_degrees_1_1_examples_1_1_pattern_1_1_reload_from_memory.html" title="Pattern Reload From Memory Example." alt="" coords="236,267,433,308"/>
+<area shape="rect" id="node7" href="$class_fiftyone_degrees_1_1_examples_1_1_pattern_1_1_strongly_typed.html" title="Pattern Strongly Typed Example." alt="" coords="243,332,426,373"/>
+</map>

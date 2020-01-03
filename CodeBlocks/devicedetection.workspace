@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="Workspace">
+		<Project filename="examples/c/hash/GettingStarted.cbp">
+			<Depends filename="fiftyone.devicedetection.hash/fiftyone.devicedetection.hash.cbp" />
+		</Project>
+		<Project filename="fiftyone.devicedetection.hash/fiftyone.devicedetection.hash.cbp" />
+		<Project filename="examples/c/hash/PerfHash.cbp">
+			<Depends filename="fiftyone.devicedetection.hash/fiftyone.devicedetection.hash.cbp" />
+		</Project>
+	</Workspace>
+</CodeBlocks_workspace_file>
