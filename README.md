@@ -77,3 +77,29 @@ The CMake project also builds a single shared library containing everything. Thi
 ## Visual Studio
 
 The Visual Studio solution contains static libraries which have all the dependencies set up correctly, so referencing these in a Visual Studio solution should be fairly self explanatory.
+
+# Examples
+
+There are several examples available, the source files can be found in the `examples/` folder. The examples are written in C or CPP, for Hash or Pattern.
+
+### Visual Studio
+All the examples are available to run in the `VisualStudio/DeviceDetection.sln` solution.
+
+## Device Detection Examples
+
+|Example|Description|Language|Algorithm|
+|-------|-----------|--------|---------|
+|Getting Started|This example shows how to get set up with a Device Detection Cloud aspect engine and begin using it to process User-Agents.|C / C++|Hash / Pattern|
+|Match For Device Id|This example shows how store device ids for processing later using a Device Detection aspect engine using the Pattern algorithm.|C|Pattern|
+|Match Metrics|This example shows how to view metrics associated with the results of processing with a Device Detection aspect engine using the Hash algorithm.|C / C++|Hash / Pattern|
+|Meta Data|This example shows how to interrogate the meta data associated with the contents of a Device Detection Hash data file.|C++|Hash / Pattern|
+|MemHash|This example measures the memory usage of the Hash algorithm.|C|Hash|
+|MemPat|This example measures the memory usage of the Pattern algorithm.|C|Pattern|
+|Offline Processing|This example shows how process data for later viewing using a Device Detection Hash data file.|C|Hash / Pattern|
+|PerfHash|Command line performance evaluation program which takes a file of user agents and returns a performance score measured in detections per second per CPU core.|C|Hash|
+|PerfPat|Command line performance evaluation program which takes a file of user agents and returns a performance score measured in detections per second per CPU core.|C|Pattern|
+|ProcHash|Command line process which takes a user agent via stdin and return device properties via stdout.|C|Hash|
+|ProcPat|Command line process which takes a user agent via stdin and return device properties via stdout.|C|Pattern|
+|Reload From File|This example illustrates how to reload the data file from the data file on disk without restarting the application.|C / C++|Hash / Pattern|
+|Reload From Memory|This example illustrates how to reload the data file from a continuous memory space that the data file was read into without restarting the application.|C / C++|Hash / Pattern|
+|Strongly Typed|This example  takes some common User-Agents and returns the value of the IsMobile property as a boolean.|C / C++|Hash / Pattern|
