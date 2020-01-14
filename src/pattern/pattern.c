@@ -35,6 +35,9 @@ MAP_TYPE(Collection)
  * GENERAL MACROS TO IMPROVE READABILITY
  */
 
+/** Offset used for a null profile. */
+#define NULL_PROFILE_OFFSET UINT32_MAX
+
 #define NODE(n) ((Node*)n->data.ptr)
 
 #define MAX_CONCURRENCY(t) if (config->t.concurrency > concurrency) { \
@@ -2208,10 +2211,15 @@ static void setResultDefault(DataSetPattern *dataSet, ResultPattern *result) {
 	byte i = 0;
 	Component *component;
 
-	// Add the default profile for each of the components.
+	// Add a null or default profile for each of the components.
 	while (i < dataSet->componentsList.count) {
 		component = (Component*)(dataSet->componentsList.items[i].data.ptr);
-		addProfile(result, i, component->defaultProfileOffset, false);
+		if (dataSet->config.b.allowUnmatched) {
+			addProfile(result, i, component->defaultProfileOffset, false);
+		}
+		else {
+			addProfile(result, i, NULL_PROFILE_OFFSET, false);
+		}
 		i++;
 	}
 
@@ -2408,7 +2416,15 @@ static void overrideProfileId(
 	ResultsPattern *results =
 		(ResultsPattern*)((stateWithException*)state)->state;
 	Exception *exception = ((stateWithException*)state)->exception;
-	addProfileById(results, profileId, true, exception);
+	if (profileId > 0) {
+		// Only override the profile id if it is not a null profile. In the
+		// case of a null profile (profileId = 0), the component cannot be
+		// determined. So instead of setting it here, it is left to the value
+		// set by the setResultDefault method which indicates either a null
+		// profile or the default profile depending on the data set
+		// configuration.
+		addProfileById(results, profileId, true, exception);
+	}
 }
 
 void fiftyoneDegreesResultsPatternFromEvidence(
@@ -3055,7 +3071,12 @@ bool fiftyoneDegreesResultsPatternGetHasValues(
 		// There is no result which contains values for the property.
 		return false;
 	}
-	
+
+	if (result->profileOffsets[property->componentIndex] == NULL_PROFILE_OFFSET) {
+		// There is a null profile.
+		return false;
+	}
+
 	if (result->profileIsOverriden[property->componentIndex] == false) {
 		if (ISUNMATCHED(dataSet, result)) {
 			// The evidence could not be matched.
@@ -3091,8 +3112,25 @@ fiftyoneDegreesResultsNoValueReason fiftyoneDegreesResultsPatternGetNoValueReaso
 		requiredPropertyIndex,
 		exception);
 
+	// Work out the property index from the required property index.
+	uint32_t propertyIndex = PropertiesGetPropertyIndexFromRequiredIndex(
+		dataSet->b.b.available,
+		requiredPropertyIndex);
+
+	// Set the property that will be available in the results structure. 
+	// This may also be needed to work out which of a selection of results 
+	// are used to obtain the values.
+	Property *property = PropertyGet(
+		dataSet->properties,
+		propertyIndex,
+		&results->propertyItem,
+		exception);
+
 	if (result == NULL) {
 		return FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_RESULT_FOR_PROPERTY;
+	}
+	else if (result->profileOffsets[property->componentIndex] == NULL_PROFILE_OFFSET) {
+		return FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE;
 	}
 	else if (ISUNMATCHED(dataSet, result)) {
 		return FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_MATCHED_NODES;
@@ -3119,6 +3157,9 @@ const char* fiftyoneDegreesResultsPatternGetNoValueReasonMessage(
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_MATCHED_NODES:
 		return "No matching substrings were found in the evidence, so no "
 			"meaningful result could be returned.";
+	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE:
+		return "The results contained a null profile for the component which "
+			"the required property belongs to.";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_UNKNOWN:
 	default:
 		return "The reason for missing values is unknown.";
@@ -3234,29 +3275,33 @@ char* fiftyoneDegreesPatternGetDeviceIdFromResult(
 			PRINT_PROFILE_SEP(destination, buffer, size, "-");
 		}
 		profileOffset = result->profileOffsets[i];
-		profile = (Profile*)dataSet->profiles->get(
-			dataSet->profiles,
-			profileOffset,
-			&item,
-			exception);
-
-		if (profile == NULL) {
-			PRINT_NULL_PROFILE_ID(destination, buffer, size);
-			COLLECTION_RELEASE(dataSet->profiles, &item);
-		}
-		else if(result->profileIsOverriden[i] == false &&
-			(ISUNMATCHED(dataSet, result) ||
-			DIFFERENCE_EXCEEDED(dataSet, result))) {
+		if (profileOffset == NULL_PROFILE_OFFSET) {
 			PRINT_NULL_PROFILE_ID(destination, buffer, size);
 		}
 		else {
-			PRINT_PROFILE_ID(
-				destination,
-				buffer,
-				size,
-				"%i",
-				profile->profileId);
-			COLLECTION_RELEASE(dataSet->profiles, &item);
+			profile = (Profile*)dataSet->profiles->get(
+				dataSet->profiles,
+				profileOffset,
+				&item,
+				exception);
+			if (profile == NULL) {
+				PRINT_NULL_PROFILE_ID(destination, buffer, size);
+				COLLECTION_RELEASE(dataSet->profiles, &item);
+			}
+			else if (result->profileIsOverriden[i] == false &&
+				(ISUNMATCHED(dataSet, result) ||
+					DIFFERENCE_EXCEEDED(dataSet, result))) {
+				PRINT_NULL_PROFILE_ID(destination, buffer, size);
+			}
+			else {
+				PRINT_PROFILE_ID(
+					destination,
+					buffer,
+					size,
+					"%i",
+					profile->profileId);
+				COLLECTION_RELEASE(dataSet->profiles, &item);
+			}
 		}
 	}
 	return destination;
@@ -3276,7 +3321,7 @@ char *getDefaultDeviceId(
 	for (i = 0; i < dataSet->componentsList.count; i++) {
 		if (i != 0) {
 			PRINT_PROFILE_SEP(destination, buffer, size, "-");
-		
+
 		}
 		component = (Component*)dataSet->componentsList.items[i].data.ptr;
 		profile = (Profile*)dataSet->profiles->get(
@@ -3360,27 +3405,33 @@ char* fiftyoneDegreesPatternGetDeviceIdFromResults(
 						if (componentIndex != 0) {
 							PRINT_PROFILE_SEP(destination, buffer, size, "-");
 						}
-						profile = dataSet->profiles->get(
-							dataSet->profiles,
-							result->profileOffsets[componentIndex],
-							&profileItem,
-							exception);
-						if (profile == NULL) {
+						if (result->profileOffsets[componentIndex] ==
+							NULL_PROFILE_OFFSET) {
 							PRINT_NULL_PROFILE_ID(destination, buffer, size);
-						}
-						else if (ISUNMATCHED(dataSet, result) ||
-							DIFFERENCE_EXCEEDED(dataSet, result)) {
-							PRINT_NULL_PROFILE_ID(destination, buffer, size);
-							COLLECTION_RELEASE(dataSet->profiles, &profileItem);
 						}
 						else {
-							PRINT_PROFILE_ID(
-								destination,
-								buffer,
-								size,
-								"%i",
-								profile->profileId);
-							COLLECTION_RELEASE(dataSet->profiles, &profileItem);
+							profile = dataSet->profiles->get(
+								dataSet->profiles,
+								result->profileOffsets[componentIndex],
+								&profileItem,
+								exception);
+							if (profile == NULL) {
+								PRINT_NULL_PROFILE_ID(destination, buffer, size);
+							}
+							else if (ISUNMATCHED(dataSet, result) ||
+								DIFFERENCE_EXCEEDED(dataSet, result)) {
+								PRINT_NULL_PROFILE_ID(destination, buffer, size);
+								COLLECTION_RELEASE(dataSet->profiles, &profileItem);
+							}
+							else {
+								PRINT_PROFILE_ID(
+									destination,
+									buffer,
+									size,
+									"%i",
+									profile->profileId);
+								COLLECTION_RELEASE(dataSet->profiles, &profileItem);
+							}
 						}
 					}
 				}

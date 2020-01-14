@@ -97,6 +97,7 @@ namespace FiftyoneDegrees {
 			 * ```
 			 */
 			class EnginePattern  : public EngineDeviceDetection {
+				friend class ::EnginePatternTests;
 			public:
 				/**
 				 * @name Constructors

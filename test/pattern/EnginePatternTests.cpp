@@ -70,6 +70,7 @@ public:
 		verifyProfileOverrideNoUserAgent();
 		verifyProcessDeviceId();
 		verifyProfileOverridePartial();
+		verifyProfileOverrideZero();
 		verifyDifference();
 	}
 	int setResultsDifference(
@@ -207,31 +208,104 @@ public:
 			L"The device id was not correct.";
 		delete results;
 	}
+	bool setAllowUnmatched(
+		EnginePattern *engine,
+		bool allowUnmatched) {
+		fiftyoneDegreesDataSetPattern *dataSet =
+			fiftyoneDegreesDataSetPatternGet(engine->manager.get());
+		// Discard the const qualifier to allow changing for the test.
+		fiftyoneDegreesConfigPattern *configSource =
+			(fiftyoneDegreesConfigPattern*)&dataSet->config;
+
+		int original = configSource->b.allowUnmatched;
+		configSource->b.allowUnmatched = allowUnmatched;
+		
+		fiftyoneDegreesDataSetPatternRelease(dataSet);
+
+		return original;
+	}
 
 	void verifyProfileOverridePartial() {
 		EvidenceDeviceDetection evidence;
-		char expectedDeviceId[24];
+		const char *evidenceValue = "17779|17470|18092";
+		char expectedDeviceId2[24];
+		const char* expectedDeviceId1 = "0-17779-17470-18092";
+		EnginePattern *engine = (EnginePattern*)getEngine();
 
+		// Get the expected device id for the case where a default profile is
+		// used.
 		Common::Collection<byte, ComponentMetaData> *components =
 			getEngine()->getMetaData()->getComponents();
 		ComponentMetaData *component = components->getByIndex(0);
-		sprintf(expectedDeviceId, "%d-17779-17470-18092", component->getDefaultProfileId());
+		sprintf(expectedDeviceId2, "%d-17779-17470-18092", component->getDefaultProfileId());
+
+		// Get a property to check which belongs to the component with no
+		// profile.
 		Common::Collection<string, PropertyMetaData> *properties = 
 			getEngine()->getMetaData()->getPropertiesForComponent(component);
 		PropertyMetaData *property = properties->getByIndex(0);
 
-		const char *evidenceValue = "17779|17470|18092";
+		// First test the behavior when unmatched is not allowed. This means
+		// null profiles instead of the default being used.
+		bool originalAllowUnmatched = setAllowUnmatched(engine, false);
 		evidence["query.ProfileIds"] = evidenceValue;
-		EngineTests::verifyWithEvidence(&evidence);
-		ResultsPattern *results =
-			((EnginePattern*)getEngine())->process(&evidence);
+		ResultsPattern *results = engine->process(&evidence);
 
-		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId) <<
+		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId1) <<
+			L"The device id was not correct.";
+		EXPECT_FALSE(results->getValueAsString(property->getName()).hasValue()) <<
+			L"No value should be returned for a missing profile.";
+		ASSERT_EQ(FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE,
+			results->getValueAsString(property->getName()).getNoValueReason()) <<
+			L"The reason for the missing value was not reported as being due " <<
+			L"to a null profile.";
+		delete results;
+
+		// Now test the behavior when unmatched is allowed. This means that
+		// where there is no profile, the default is used.
+		setAllowUnmatched(engine, true);
+		results = engine->process(&evidence);
+
+		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId2) <<
 			L"The device id was not correct.";
 		EXPECT_STREQ((*results->getValueAsString(property->getName())).c_str(), property->getDefaultValue().c_str()) <<
 			L"The value returned was not the default.";
+
+		setAllowUnmatched(engine, originalAllowUnmatched);
+
 		delete property;
-		
+		delete properties;
+		delete component;
+		delete components;
+		delete results;
+	}
+
+	void verifyProfileOverrideZero() {
+		EvidenceDeviceDetection evidence;
+		const char *expectedDeviceId = "12280-0-0-0";
+		const char *evidenceValue = "12280|0|0|0";
+		EnginePattern *pattern = (EnginePattern*)getEngine();
+		bool originalAllowUnmatched = setAllowUnmatched(engine, false);
+
+		Common::Collection<byte, ComponentMetaData> *components =
+			getEngine()->getMetaData()->getComponents();
+		ComponentMetaData *component = components->getByIndex(0);
+		// Get a property to check which belongs to the only component with a
+		// profile.
+		Common::Collection<string, PropertyMetaData> *properties =
+			getEngine()->getMetaData()->getPropertiesForComponent(component);
+		PropertyMetaData *property = properties->getByIndex(0);
+
+		evidence["query.ProfileIds"] = evidenceValue;
+		ResultsPattern *results = engine->process(&evidence);
+
+		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId) <<
+			L"The device id was not correct.";
+		EXPECT_TRUE(results->getValueAsString(property->getName()).hasValue()) <<
+			L"The results did not contain a value for the populated component.";
+
+		setAllowUnmatched(engine, originalAllowUnmatched);
+		delete property;
 		delete properties;
 		delete component;
 		delete components;
