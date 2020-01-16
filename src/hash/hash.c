@@ -1528,7 +1528,7 @@ static void evaluateListNode(Match *match) {
 	// Reset the first and last indexes as they may have been changed by the
 	// drift option.
 	match->firstIndex = initialFirstIndex;
-	match->lastIndex = initialFirstIndex;
+	match->lastIndex = initialLastIndex;
 
 	if (nodeHash != NULL) {
 		// A match occurred and the hash value was found. Use the offset
