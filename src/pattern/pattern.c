@@ -1849,6 +1849,17 @@ static StatusCode initWithFile(DataSetPattern *dataSet, Exception *exception) {
 		return status;
 	}
 
+	// Before closing the file handle, clean up any other temp files which are
+	// not in use.
+#ifndef __APPLE__
+	if (dataSet->config.b.b.useTempFile == true) {
+		FileDeleteUnusedTempFiles(
+			dataSet->b.b.masterFileName,
+			dataSet->config.b.b.tempDirs,
+			dataSet->config.b.b.tempDirCount,
+			sizeof(DataSetPatternHeader));
+	}
+#endif
 	// Close the file handle.
 	fclose(handle.file);
 
