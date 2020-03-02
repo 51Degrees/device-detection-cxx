@@ -30,7 +30,7 @@
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV3.4.trie";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static const char *userAgentFileName = "20000 User Agents.csv";
 

@@ -67,6 +67,8 @@
     <ClCompile Include="..\..\src\common-cxx\textfile.c" />
     <ClCompile Include="..\..\test\EngineDeviceDetectionTests.cpp" />
     <ClCompile Include="..\..\test\ExampleDeviceDetectionTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleHashFindProfilesTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleHashMatchForDeviceIdTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashOfflineProcessingTests.cpp" />
     <ClCompile Include="..\..\test\hash\EngineHashTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashGettingStartedTests.cpp" />
@@ -83,8 +85,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Examples\C\Hash\Find Profiles\Find Profiles.vcxproj">
+      <Project>{22e3bb54-2542-4641-9a07-7efe0dd64670}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Examples\C\Hash\Getting Started\Getting Started.vcxproj">
       <Project>{b3e9fe89-cd37-4e20-973b-b091ea079076}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Examples\C\Hash\Match Metrics\Match Metrics.vcxproj">
+      <Project>{21918eb5-0a76-4cdf-860a-f3725c357260}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Examples\C\Hash\MemHash\MemHash.vcxproj">
       <Project>{7fc13028-d652-4275-a96d-d8efc8f0ccb8}</Project>
@@ -100,6 +108,9 @@
     </ProjectReference>
     <ProjectReference Include="..\Examples\C\Hash\Reload From Memory\Reload From Memory.vcxproj">
       <Project>{890b74f4-d72a-4f93-a500-4ef2196cb3eb}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Examples\C\Hash\Strongly Typed\Strongly Typed.vcxproj">
+      <Project>{0b2d19ca-0547-4ea7-89cb-e6c79a06647f}</Project>
     </ProjectReference>
     <ProjectReference Include="..\FiftyOne.DeviceDetection.Hash.Cpp\FiftyOne.DeviceDetection.Hash.Cpp.vcxproj">
       <Project>{401c012a-e5d9-4c00-9c5e-3fe078ced61b}</Project>

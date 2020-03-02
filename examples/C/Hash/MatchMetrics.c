@@ -89,18 +89,27 @@ the time taken to fetch the result.
 int iterations = results->items->iterations;
 ```
 
-8. Obtain the matched User-Agent: the matched substrings in the User-Agent
+8. Obtain match method: provides information about the algorithm that was used
+to perform detection for a particular User-Agent. For more information on what
+each method means please see:
+<a href="https://51degrees.com/support/documentation/hash">
+How device detection works</a>.
+```
+fiftyoneDegreesHashMatchMethod method = results->items->method;
+```
+
+9. Obtain the matched User-Agent: the matched substrings in the User-Agent
 separated with underscored.
 ```
 char *matchedUserAgent = results->items->b.matchedUserAgent;
 ```
 
-9. Release the memory used by the results.
+10. Release the memory used by the results.
 ```
 fiftyoneDegreesResultsHashFree(results);
 ```
 
-10. Finally release the memory used by the data set resource.
+11. Finally release the memory used by the data set resource.
 ```
 fiftyoneDegreesResourceManagerFree(&manager);
 ```
@@ -122,19 +131,20 @@ fiftyoneDegreesResourceManagerFree(&manager);
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV3.4.trie";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static char valueBuffer[1024] = "";
 
-static char* getPropertyValueAsString(
+static const char* getPropertyValueAsString(
 	ResultsHash *results,
 	const char *propertyName) {
 	EXCEPTION_CREATE;
-	ResultsHashGetValueString(
+	ResultsHashGetValuesString(
 		results,
 		propertyName,
 		valueBuffer,
 		sizeof(valueBuffer),
+		",",
 		exception);
 	EXCEPTION_THROW;
 	return valueBuffer;
@@ -143,9 +153,8 @@ static char* getPropertyValueAsString(
 static void outputMatchMetrics(ResultsHash *results) {
 	EXCEPTION_CREATE;
 	char deviceId[40];
-	ResultsHashGetValueString(
+	HashGetDeviceIdFromResults(
 		results,
-		"Id",
 		deviceId,
 		sizeof(deviceId),
 		exception);
@@ -153,13 +162,30 @@ static void outputMatchMetrics(ResultsHash *results) {
 	int drift = results->items->drift;
 	int difference = results->items->difference;
 	int iterations = results->items->iterations;
+	const char *method;
+	switch (results->items->method) {
+	case FIFTYONE_DEGREES_HASH_MATCH_METHOD_PERFORMANCE:
+		method = "PERFORMANCE";
+		break;
+	case FIFTYONE_DEGREES_HASH_MATCH_METHOD_COMBINED:
+		method = "COMBINED";
+		break;
+	case FIFTYONE_DEGREES_HASH_MATCH_METHOD_PREDICTIVE:
+		method = "PREDICTIVE";
+		break;
+	case FIFTYONE_DEGREES_HASH_MATCH_METHOD_NONE:
+	default:
+		method = "NONE";
+		break;
+	}
 	char *matchedUserAgent = results->items->b.matchedUserAgent;
-	printf("   IsMobile: %s\n",
+	printf("   IsMobile:    %s\n",
 		getPropertyValueAsString(results, "IsMobile"));
-	printf("   Id: %s\n", deviceId);
-	printf("   Drift: %d\n", drift);
-	printf("   Difference: %d\n", difference);
-	printf("   Iterations: %d\n", iterations);
+	printf("   Id:          %s\n", deviceId);
+	printf("   Drift:       %d\n", drift);
+	printf("   Difference:  %d\n", difference);
+	printf("   Iterations:  %d\n", iterations);
+	printf("   Method:      %s\n", method);
 	printf("   Sub Strings: %s\n", matchedUserAgent);
 	return;
 }

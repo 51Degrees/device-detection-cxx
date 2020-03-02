@@ -27,26 +27,29 @@
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV3.4.trie";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static void buildString(
 	fiftyoneDegreesResultsHash *results,
 	char *output) {
+	EXCEPTION_CREATE;
 	int i;
 	const char *property, *value;
 	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
-	EXCEPTION_CREATE;
 	for (i = 0; i < (int)dataSet->b.b.available->count; i++) {
 		property = STRING(
 			PropertiesGetNameFromRequiredIndex(
 				dataSet->b.b.available,
 				i));
-		value = STRING(
-			ResultsHashGetValue(results, i, exception));
-		EXCEPTION_THROW;
-		output = output + sprintf(output, "%s: %s\n",
-			property,
-			value);
+		if (ResultsHashGetValues(
+			results,
+			i,
+			exception) != NULL && EXCEPTION_OKAY) {
+			value = STRING(results->values.items[0].data.ptr);
+			output = output + sprintf(output, "%s: %s\n",
+				property,
+				value);
+		}
 	}
 }
 
@@ -64,9 +67,9 @@ static void reportStatus(
 }
 
 static int run(fiftyoneDegreesResourceManager *manager) {
+	EXCEPTION_CREATE;
 	char userAgent[500], output[50000];
 	int count = 0;
-	EXCEPTION_CREATE;
 	ResultsHash *results = ResultsHashCreate(
 		manager,
 		1,
@@ -93,11 +96,11 @@ static int run(fiftyoneDegreesResourceManager *manager) {
 }
 
 int fiftyoneDegreesProcHashRun(
-	const char *dataFilePath, 
+	const char *dataFilePath,
 	const char *requiredProperties,
 	fiftyoneDegreesConfigHash *config) {
-	int count = 0;
 	EXCEPTION_CREATE;
+	int count = 0;
 	ResourceManager manager;
 	PropertiesRequired properties = PropertiesDefault;
 	properties.string = requiredProperties;

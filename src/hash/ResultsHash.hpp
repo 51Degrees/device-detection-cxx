@@ -23,6 +23,7 @@
 #ifndef FIFTYONE_DEGREES_RESULTS_HASH_HPP
 #define FIFTYONE_DEGREES_RESULTS_HASH_HPP
 
+#include <sstream>
 #include "../ResultsDeviceDetection.hpp"
 #include "hash.h"
 
@@ -36,8 +37,8 @@ namespace FiftyoneDegrees {
 			/**
 			 * Encapsulates the results of a Hash device detection engine's
 			 * processing. The class is constructed using an instance of a C
-			 * #fiftyoneDegreesResultsHash structure which are then referenced
-			 * to return associated values and metrics.
+			 * #fiftyoneDegreesResultsHash structure which are then
+			 * referenced to return associated values and metrics.
 			 *
 			 * Additional get methods are included on top of the device
 			 * detection methods to return Hash specific metrics.
@@ -54,8 +55,8 @@ namespace FiftyoneDegrees {
 			 * using namespace FiftyoneDegrees::DeviceDetection::Hash;
 			 * ResultsHash *results;
 			 *
-			 * // Get the number of iterations used to get the result
-			 * int iterations = results->getIterations();
+			 * // Get the maximum drift used to arrive at the result
+			 * int drift = results->getDrift();
 			 *
 			 * // Delete the results
 			 * delete results;
@@ -69,9 +70,9 @@ namespace FiftyoneDegrees {
 				 * @{
 				 */
 
-				/**
-				 * @copydoc ResultsDeviceDetection::ResultsDeviceDetection
-				 */
+				 /**
+				  * @copydoc ResultsDeviceDetection::ResultsDeviceDetection
+				  */
 				ResultsHash(
 					fiftyoneDegreesResultsHash *results,
 					shared_ptr<fiftyoneDegreesResourceManager> manager);
@@ -89,11 +90,14 @@ namespace FiftyoneDegrees {
 				 */
 
 				/**
-				 * Returns the Rank of the signature found.
-				 * TODO - add rank data to the Hash data set
-				 * @return 0 as this is not implemented in Hash
+				 * Returns the unique device id if the Id property was included
+				 * in the required list of properties when the Provider was
+				 * constructed.
+				 * @param resultIndex index of the individual User-Agent in the
+				 * results
+				 * @return device id string
 				 */
-				int getRank();
+				string getDeviceId(uint32_t resultIndex);
 
 				/**
 				 * Get the number of iterations carried out in order to find a
@@ -102,21 +106,6 @@ namespace FiftyoneDegrees {
 				 * @return number of iterations
 				 */
 				int getIterations();
-
-				/**
-				 * Returns the method used to determine the match result.
-				 * Always 0 as Hash only has one method available.
-				 * @return 0
-				 */
-				int getMethod();
-
-				/**
-				 * Returns the total difference in matching hash values found
-				 * in the evidence. The higher this value, the less accurate
-				 * the results should be considered.
-				 * @return int total difference
-				 */
-				int getDifference();
 
 				/**
 				 * Returns the maximum drift for a matched substring from the
@@ -128,18 +117,62 @@ namespace FiftyoneDegrees {
 				int getDrift();
 
 				/**
+				 * Returns the drift for a matched substring from the character
+				 * position where it was expected to be found. The higher this
+				 * value, the lass accurate the results should be considered.
+				 * @param resultIndex index of the individual User-Agent in the
+				 * results
+				 * @return individual drift
+				 */
+				int getDrift(uint32_t resultIndex);
+
+				/**
 				 * Returns the number of hash nodes matched within the
 				 * evidence.
-				 * @return 
+				 * @return
 				 */
 				int getMatchedNodes();
+
+				/**
+				 * Returns the total difference between the results returned
+				 * and the target User-Agents. Where multiple evidence items
+				 * are used, this is
+				 * the total difference.
+				 * @return total difference
+				 */
+				int getDifference();
+
+				/**
+				 * Returns the difference between the result returned and the
+				 * target User-Agent.
+				 * @param resultIndex index of the individual User-Agent in the
+				 * results
+				 * @return individual difference
+				 */
+				int getDifference(uint32_t resultIndex);
+
+				/**
+				 * Returns the method used to determine the match result. See
+				 * #fiftyoneDegreesHashMatchMethod
+				 * @return highest method used
+				 */
+				int getMethod();
+
+				/**
+				 * Returns the method used to determine the match result. See
+				 * #fiftyoneDegreesHashMatchMethod
+				 * @param resultIndex index of the individual User-Agent in the
+				 * results
+				 * @return individual method used
+				 */
+				int getMethod(uint32_t resultIndex);
 
 				/**
 				 * @}
 				 * @name DeviceDetection::ResultsDeviceDetection Implementation
 				 * @{
 				 */
-				
+
 				string getDeviceId();
 
 				int getUserAgents();
@@ -149,6 +182,7 @@ namespace FiftyoneDegrees {
 				/**
 				 * @}
 				 */
+
 			protected:
 				void getValuesInternal(
 					int requiredPropertyIndex,
@@ -164,6 +198,12 @@ namespace FiftyoneDegrees {
 
 			private:
 				fiftyoneDegreesResultsHash *results;
+
+				/**
+				 * The index in the available properties of the
+				 * JavaScriptHardwareProfile property.
+				 */
+				int _jsHardwareProfileRequiredIndex;
 			};
 		}
 	}

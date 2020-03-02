@@ -51,10 +51,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\hash\graph.c" />
     <ClCompile Include="..\..\src\hash\hash.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\hash\fiftyone.h" />
+    <ClInclude Include="..\..\src\hash\graph.h" />
     <ClInclude Include="..\..\src\hash\hash.h" />
   </ItemGroup>
   <ItemGroup>
@@ -67,8 +69,8 @@
     <ProjectGuid>{1D1FB480-9E69-4C1D-A120-1601B00B2457}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>FiftyOneDeviceDetectionHash</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
     <ProjectName>FiftyOne.DeviceDetection.Hash.C</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

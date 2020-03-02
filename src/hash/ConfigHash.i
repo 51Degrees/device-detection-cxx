@@ -25,7 +25,7 @@
 %include "../ConfigDeviceDetection.i"
 %include "../common-cxx/CollectionConfig.i"
 
-%rename(ConfigHashSwig) ConfigHash;
+%rename (ConfigHashSwig) ConfigHash;
 
 class ConfigHash : public ConfigDeviceDetection {
 public:
@@ -35,14 +35,20 @@ public:
 	void setBalancedTemp();
 	void setLowMemory();
 	void setMaxPerformance();
-	void setDrift(int drift);
-	void setDifference(int difference);
+	void setDrift(int32_t drift);
+	void setDifference(int32_t difference);
 	void setConcurrency(uint16_t concurrency);
+	void setUsePerformanceGraph(bool use);
+	void setUsePredictiveGraph(bool use);
 	CollectionConfig getStrings();
+	CollectionConfig getProperties();
+	CollectionConfig getValues();
 	CollectionConfig getProfiles();
-	CollectionConfig getDevices();
 	CollectionConfig getNodes();
+	CollectionConfig getProfileOffsets();
 	int getDrift();
 	int getDifference();
+	bool getUsePerformanceGraph();
+	bool getUsePredictiveGraph();
 	uint16_t getConcurrency();
 };

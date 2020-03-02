@@ -42,7 +42,7 @@ initialised with, and the configuration.
 ```
 using namespace FiftyoneDegrees;
 
-string fileName = "51Degrees-V3.4.trie";
+string fileName = "51Degrees-V4.1.hash";
 string propertiesString = "ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName";
 Common::RequiredPropertiesConfig *properties =
 	new Common::RequiredPropertiesConfig(&propertiesString);

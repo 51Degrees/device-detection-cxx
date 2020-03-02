@@ -42,10 +42,10 @@ namespace FiftyoneDegrees {
 		namespace Hash {
 			/**
 			 * Encapsulates the Hash engine class which implements
-			 * #EngineDeviceDetection. This carries out processing using a Hash
-			 * data set.
+			 * #EngineDeviceDetection. This carries out processing using a
+			 * Hash data set.
 			 *
-			 * An engine is constructed with a configuration, and either a 
+			 * An engine is constructed with a configuration, and either a
 			 * data file, or an in memory data set, then used to process
 			 * evidence in order to return a set of results. It also exposes
 			 * methods to refresh the data using a new data set, and get
@@ -84,10 +84,6 @@ namespace FiftyoneDegrees {
 			 * // Or just process a single User-Agent string
 			 * ResultsHash *results = engine->process("some User-Agent");
 			 *
-			 * // Or do either of the above, while specifying the values of
-			 * // drift and difference to use for processing
-			 * ResultsHash *results = engine->process(evidence, 2, 10);
-			 *
 			 * // Do something with the results
 			 * // ...
 			 *
@@ -97,18 +93,19 @@ namespace FiftyoneDegrees {
 			 * ```
 			 */
 			class EngineHash : public EngineDeviceDetection {
+				friend class ::EngineHashTests;
 			public:
 				/**
 				 * @name Constructors
 				 * @{
 				 */
 
-				/**
-				 * @copydoc Common::EngineBase::EngineBase
-				 * The data set is constructed from the file provided.
-				 * @param fileName path to the file containing the data file to
-				 * load
-				 */
+				 /**
+				  * @copydoc Common::EngineBase::EngineBase
+				  * The data set is constructed from the file provided.
+				  * @param fileName path to the file containing the data file
+				  * to load
+				  */
 				EngineHash(
 					const char *fileName,
 					ConfigHash *config,
@@ -156,32 +153,6 @@ namespace FiftyoneDegrees {
 				 * @name Engine Methods
 				 * @{
 				 */
-
-				 /**
-				  * Process the evidence and return the results.
-				  * @param evidence to process
-				  * @param drift to extend the search range by
-				  * @param difference to allow in hash values
-				  * @return new Results instance containing the result of
-				  * processing the evidence
-				  */
-				ResultsHash* process(
-					EvidenceDeviceDetection *evidence,
-					int drift,
-					int difference);
-
-				/**
-				 * Process the User-Agent and return the results.
-				 * @param userAgent to process
-				 * @param drift to extend the search range by
-				 * @param difference to allow in hash values
-				 * @return new Results instance containing the result of
-				 * processing the User-Agent
-				 */
-				ResultsHash* process(
-					const char *userAgent,
-					int drift,
-					int difference);
 
 				/**
 				 * @copydoc EngineDeviceDetection::processDeviceDetection(EvidenceDeviceDetection*)
@@ -247,6 +218,8 @@ namespace FiftyoneDegrees {
 				void initMetaData();
 
 				void init();
+
+				void* copyData(void *data, size_t length);
 			};
 		}
 	}

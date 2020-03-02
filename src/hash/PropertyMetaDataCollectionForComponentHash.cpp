@@ -21,6 +21,7 @@
  * ********************************************************************* */
 
 #include "PropertyMetaDataCollectionForComponentHash.hpp"
+#include "../common-cxx/Exceptions.hpp"
 #include "fiftyone.h"
 
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
@@ -28,10 +29,62 @@ using namespace FiftyoneDegrees::DeviceDetection::Hash;
 PropertyMetaDataCollectionForComponentHash::PropertyMetaDataCollectionForComponentHash(
 	fiftyoneDegreesResourceManager *manager,
 	ComponentMetaData *component) : Collection<string, PropertyMetaData>() {
-	this->dataSet = DataSetHashGet(manager);
-	this->componentId = component->getComponentId();
+	EXCEPTION_CREATE;
+	Item item;
+	Property *property;
+	Component *propertyComponent;
+	DataSetHash *dataSet = DataSetHashGet(manager);
+	if (dataSet != nullptr) {
+		DataReset(&item.data);
+		uint32_t propertiesCount = CollectionGetCount(dataSet->properties);
+		for (uint32_t i = 0; i < propertiesCount; i++) {
+			property = (Property*)PropertyGet(
+				dataSet->properties,
+				i,
+				&item,
+				exception);
+			EXCEPTION_THROW;
+			if (property != nullptr) {
+				propertyComponent = (Component*)dataSet->componentsList.items[
+					property->componentIndex].data.ptr;
+				if (propertyComponent->componentId ==
+					component->getComponentId()) {
+					properties.push_back(shared_ptr<PropertyMetaData>(
+						PropertyMetaDataBuilderHash::build(
+							dataSet,
+							property)));
+				}
+				COLLECTION_RELEASE(dataSet->properties, &item);
+			}
+		}
+		DataSetHashRelease(dataSet);
+	}
 }
 
-PropertyMetaDataCollectionForComponentHash::~PropertyMetaDataCollectionForComponentHash() {
-	DataSetHashRelease(dataSet);
+PropertyMetaDataCollectionForComponentHash::
+~PropertyMetaDataCollectionForComponentHash() {
+	properties.clear();
+}
+
+PropertyMetaData* PropertyMetaDataCollectionForComponentHash::getByIndex(
+	uint32_t index) {
+	return new PropertyMetaData(*properties.at(index));
+}
+
+PropertyMetaData* PropertyMetaDataCollectionForComponentHash::getByKey(
+	string name) {
+	PropertyMetaData *result = nullptr;
+	for (vector<shared_ptr<PropertyMetaData>>::iterator i = properties.begin();
+		i != properties.end();
+		i++) {
+		if (name == (*i)->getName()) {
+			result = new PropertyMetaData(**i);
+			break;
+		}
+	}
+	return result;
+}
+
+uint32_t PropertyMetaDataCollectionForComponentHash::getSize() {
+	return (uint32_t)properties.size();
 }

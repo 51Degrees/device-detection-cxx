@@ -106,24 +106,23 @@ fiftyoneDegreesResourceManagerFree(&manager);
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV3.4.trie";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
+
+static char valueBuffer[1024] = "";
 
 static const char* getPropertyValueAsString(
 	ResultsHash *results,
 	const char *propertyName) {
-	EXCEPTION_CREATE
-	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
-	const int requiredPropertyIndex =
-		PropertiesGetRequiredPropertyIndexFromName(
-			dataSet->b.b.available,
-			propertyName);
-	const char *string =
-		STRING(ResultsHashGetValue(
+	EXCEPTION_CREATE;
+	ResultsHashGetValuesString(
 		results,
-		requiredPropertyIndex,
-		exception));
-	EXCEPTION_THROW
-	return string;
+		propertyName,
+		valueBuffer,
+		sizeof(valueBuffer),
+		",",
+		exception);
+	EXCEPTION_THROW;
+	return valueBuffer;
 }
 
 /**

@@ -86,12 +86,12 @@ requiredPropertyIndex =
 		dataSet->available,
 		propertyName);
 if (requiredPropertyIndex >= 0) {
-valueName = FIFTYONE_DEGREES_STRING(
-	fiftyoneDegreesResultsHashGetValue(
-		results,
-		requiredPropertyIndex,
-		exception));
-bool value = strcmp(valueName, "True") == 0;
+	valueName = FIFTYONE_DEGREES_STRING(
+		fiftyoneDegreesResultsHashGetValues(
+			results,
+			requiredPropertyIndex,
+			exception));
+	bool value = strcmp(valueName, "True") == 0;
 ```
 
 6. Release the memory used by the results.
@@ -124,7 +124,27 @@ values for the isMobile property instead of string values.
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV3.4.trie";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
+
+static bool getPropertyIsBool(
+	ResultsHash *results,
+	const char *propertyName) {
+	EXCEPTION_CREATE;
+	Item item;
+	DataReset(&item.data);
+
+	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
+	Property *property = PropertyGetByName(
+		dataSet->properties,
+		dataSet->strings,
+		propertyName,
+		&item,
+		exception);
+	EXCEPTION_THROW;
+	bool isBool = property->valueType == FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_BOOLEAN;
+	COLLECTION_RELEASE(item.collection, &item);
+	return isBool;
+}
 
 static bool getPropertyValueAsBool(
 	ResultsHash *results,
@@ -133,20 +153,22 @@ static bool getPropertyValueAsBool(
 	bool value = false;
 	int requiredPropertyIndex;
 	const char *valueName;
-	DataSetBase *dataSet =
-		(DataSetBase*)results->b.b.dataSet;
-	requiredPropertyIndex =
-		PropertiesGetRequiredPropertyIndexFromName(
-			dataSet->available,
-			propertyName);
-	if (requiredPropertyIndex >= 0) {
-		valueName = STRING(
-			ResultsHashGetValue(
+	DataSetBase *dataSet = (DataSetBase*)results->b.b.dataSet;
+	if (getPropertyIsBool(results, propertyName) == true) {
+		requiredPropertyIndex =
+			PropertiesGetRequiredPropertyIndexFromName(
+				dataSet->available,
+				propertyName);
+		if (requiredPropertyIndex >= 0) {
+			if (ResultsHashGetValues(
 				results,
 				requiredPropertyIndex,
-				exception));
-		if (strcmp(valueName, "True") == 0) {
-			value = true;
+				exception) != NULL && EXCEPTION_OKAY) {
+				valueName = STRING(results->values.items[0].data.ptr);
+				if (strcmp(valueName, "True") == 0) {
+					value = true;
+				}
+			}
 		}
 	}
 	return value;

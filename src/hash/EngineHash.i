@@ -23,36 +23,39 @@
  * If using the Work as, or as part of, a network application, by 
  * including the attribution notice(s) required under Article 5 of the EUPL
  * in the end user terms of the application under an appropriate heading, 
- * such notice(s) shall fulfil the requirements of that article.
+ * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
 %include "../EngineDeviceDetection.i"
 %include "ResultsHash.i"
 %include "ConfigHash.i"
 
-%rename(EngineHashSwig) EngineHash;
-
 %newobject process;
+
+%rename (EngineHashSwig) EngineHash;
 
 class EngineHash : public EngineDeviceDetection {
 public:
 	EngineHash(
-		const char *fileName,
-		ConfigHash *config,
-		RequiredPropertiesConfig *properties);
+			const std::string &fileName,
+			ConfigHash *config,
+			RequiredPropertiesConfig *properties);
 	EngineHash(
 		unsigned char data[],
 		long length,
 		ConfigHash *config,
 		RequiredPropertiesConfig *properties);
-	ResultsHash* process(
-		EvidenceDeviceDetection *evidence,
-		int drift,
-		int difference);
-	ResultsHash* process(
-		const char *userAgent,
-		int drift,
-		int difference);
+	Date getPublishedTime();
+	Date getUpdateAvailableTime();
+	std::string getDataFilePath();
+	std::string getDataFileTempPath();
+	void refreshData();
+	void refreshData(const char *fileName);
+	void refreshData(unsigned char data[], long length);
 	ResultsHash* process(EvidenceDeviceDetection *evidence);
 	ResultsHash* process(const char *userAgent);
+	ResultsBase* processBase(EvidenceBase *evidence);
+	ResultsDeviceDetection* processDeviceDetection(
+		EvidenceDeviceDetection *evidence);
+	ResultsDeviceDetection* processDeviceDetection(const char *userAgent);
 };

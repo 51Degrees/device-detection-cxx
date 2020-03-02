@@ -23,10 +23,9 @@
 #ifndef FIFTYONE_DEGREES_CONFIG_HASH_HPP
 #define FIFTYONE_DEGREES_CONFIG_HASH_HPP
 
-#include <algorithm>
-#include "hash.h"
 #include "../common-cxx/CollectionConfig.hpp"
 #include "../ConfigDeviceDetection.hpp"
+#include "hash.h"
 
 using namespace std;
 using namespace FiftyoneDegrees::Common;
@@ -91,7 +90,7 @@ namespace FiftyoneDegrees {
 				 */
 				ConfigHash(fiftyoneDegreesConfigHash *config);
 
-				/**
+				/** 
 				 * @}
 				 * @name Setters
 				 * @{
@@ -130,22 +129,52 @@ namespace FiftyoneDegrees {
 				void setMaxPerformance();
 
 				/**
-				 * Set maximum drift in hash position to allow when processing
-				 * HTTP headers.
-				 * @param drift to set
-				 */
-				void setDrift(int drift);
-
-				/**
 				 * Set the maximum difference in hash value to allow when
-				 * processing HTTP headers.
+				 * finding hashes during the processing of HTTP headers.
+				 * If the difference is exceeded, the result is considered
+				 * invalid and values will not be returned. By default
+				 * this is 0.
 				 * @param difference to set
 				 */
-				void setDifference(int difference);
+				void setDifference(int32_t difference);
+
+				/**
+				 * Set the maximum drift to allow when matching hashes. If the
+				 * drift is exceeded, the result is considered invalid and
+				 * values will not be returned. By default this is 0.
+				 * @param drift to set
+				 */
+				void setDrift(int32_t drift);
+
+				/**
+				 * Set whether or not the performance optimized graph is used
+				 * for processing. When processing evidence, the performance
+				 * graph is optimised to find an answer as quick as possible.
+				 * However, this can be at the expense of finding the best
+				 * match for evidence which was not in the training data. If
+				 * the predictive graph is also enabled, it will be used
+				 * next if there was no match in the performance graph.
+				 * @param use true if the performance graph should be used
+				 */
+				void setUsePerformanceGraph(bool use);
+
+				/**
+				 * Set whether or not the predictive optimized graph is used
+				 * for processing. When processing evidence, the predictive
+				 * graph is optimised to find the best answer for evidence
+				 * which was not in the training data. However, this is at the
+				 * expence of processing time, as more possibilies are taken into
+				 * consideration.
+				 * @param use true if the predictive graph should be used
+				 */
+				void setUsePredictiveGraph(bool use);
 
 				/**
 				 * Set the expected concurrent requests for all the data set's
-				 * collections. See CollectionConfig::setConcurrency
+				 * collections. All collections in the data set which use
+				 * cached elements will have their caches constructued to allow
+				 * for the concurrency value set here.
+				 * See CollectionConfig::setConcurrency
 				 * @param concurrency expected concurrent requests
 				 */
 				void setConcurrency(uint16_t concurrency);
@@ -163,22 +192,34 @@ namespace FiftyoneDegrees {
 				CollectionConfig getStrings();
 
 				/**
+				 * Get the configuration for the properties collection.
+				 * @return properties collection configuration
+				 */
+				CollectionConfig getProperties();
+
+				/**
+				 * Get the configuration for the values collection.
+				 * @return values collection configuration
+				 */
+				CollectionConfig getValues();
+
+				/**
 				 * Get the configuration for the profiles collection.
 				 * @return profiles collection configuration
 				 */
 				CollectionConfig getProfiles();
 
 				/**
-				 * Get the configuration for the devices collection.
-				 * @return devices collection configuration
-				 */
-				CollectionConfig getDevices();
-
-				/**
 				 * Get the configuration for the nodes collection.
 				 * @return nodes collection configuration
 				 */
 				CollectionConfig getNodes();
+
+				/**
+				 * Get the configuration for the profile offsets collection.
+				 * @return profile offsets collection configuration
+				 */
+				CollectionConfig getProfileOffsets();
 
 				/**
 				 * Gets the drift value that should be used for all device
@@ -196,21 +237,35 @@ namespace FiftyoneDegrees {
 				int getDifference();
 
 				/**
+				 * Get whether or not the performance optimized graph is used
+				 * for processing.
+				 * @return true if the performance graph will be used
+				 */
+				bool getUsePerformanceGraph();
+
+				/**
+				 * Get whether or not the predicitive optimized graph is used
+				 * for processing.
+				 * @return true if the performance graph will be used
+				 */
+				bool getUsePredictiveGraph();
+
+				/**
 				 * Get the lowest concurrency value in the list of possible
 				 * concurrencies.
 				 * @return a 16 bit integer with the minimum concurrency value.
 				 */
 				uint16_t getConcurrency();
 
-				/**
-				 * Gets the configuration data structure for use in C code.
-				 * Used internally.
-				 * @return pointer to the underlying configuration data
-				 * structure.
-				 */
+				 /**
+				  * Gets the configuration data structure for use in C code.
+				  * Used internally.
+				  * @return pointer to the underlying configuration data
+				  * structure.
+				  */
 				fiftyoneDegreesConfigHash* getConfig();
 
-				/**
+				/** 
 				 * @}
 				 */
 			private:
@@ -220,14 +275,26 @@ namespace FiftyoneDegrees {
 				/** The underlying strings configuration structure */
 				CollectionConfig strings;
 
+				/** The underlying properties configuration structure */
+				CollectionConfig properties;
+
+				/** The underlying values configuration structure */
+				CollectionConfig values;
+
 				/** The underlying profiles configuration structure */
 				CollectionConfig profiles;
 
-				/** The underlying devices configuration structure */
-				CollectionConfig devices;
-
 				/** The underlying nodes configuration structure */
 				CollectionConfig nodes;
+
+				/** The underlying profile offsets configuration structure */
+				CollectionConfig profileOffsets;
+
+				/** The underlying data set maps configuration structure */
+				CollectionConfig maps;
+
+				/** The underlying components configuration structure */
+				CollectionConfig components;
 
 				/**
 				 * Initialise the collection configurations by creating
@@ -243,8 +310,7 @@ namespace FiftyoneDegrees {
 				void setPerformanceFromExistingConfig(
 					fiftyoneDegreesConfigHash *existing);
 			};
-		}
+		};
 	}
 }
-
 #endif	

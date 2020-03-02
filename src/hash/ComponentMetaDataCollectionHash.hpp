@@ -23,12 +23,9 @@
 #ifndef FIFTYONE_DEGREES_COMPONENT_META_DATA_COLLECTION_HASH_HPP
 #define FIFTYONE_DEGREES_COMPONENT_META_DATA_COLLECTION_HASH_HPP
 
-#include <map>
-
-#include "hash.h"
-#include "../common-cxx/resource.h"
-#include "../common-cxx/ComponentMetaData.hpp"
 #include "../common-cxx/Collection.hpp"
+#include "ComponentMetaDataBuilderHash.hpp"
+#include "hash.h"
 
 using namespace std;
 using namespace FiftyoneDegrees::Common;
@@ -37,7 +34,8 @@ namespace FiftyoneDegrees {
 	namespace DeviceDetection {
 		namespace Hash {
 			/**
-			 * A collection of component meta data contained in a Hash engine.
+			 * A collection of component meta data contained in a Hash
+			 * engine.
 			 */
 			class ComponentMetaDataCollectionHash
 				: public Collection<byte, ComponentMetaData> {
@@ -50,8 +48,8 @@ namespace FiftyoneDegrees {
 				/**
 				 * Constructs a new instance of the collection from the data
 				 * set managed by the manager provided.
-				 * @param manager pointer to the manager which manages the data
-				 * set
+				 * @param manager pointer to the manager which manages the
+				 * data set
 				 */
 				ComponentMetaDataCollectionHash(
 					fiftyoneDegreesResourceManager *manager);
@@ -79,6 +77,9 @@ namespace FiftyoneDegrees {
 			private:
 				/** The underlying data set containing the components. */
 				fiftyoneDegreesDataSetHash *dataSet;
+
+				/** The underlying data set containing the components. */
+				fiftyoneDegreesList *components;
 			};
 		}
 	}

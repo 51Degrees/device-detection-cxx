@@ -110,7 +110,7 @@ results for multiple uses and only then release it.
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV3.4.trie";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static const char *userAgentFileName = "20000 User Agents.csv";
 
@@ -120,11 +120,12 @@ static char* getPropertyValueAsString(
 	ResultsHash*results,
 	uint32_t requiredPropertyIndex) {
 	EXCEPTION_CREATE;
-	ResultsHashGetValueStringByRequiredPropertyIndex(
+	ResultsHashGetValuesStringByRequiredPropertyIndex(
 		results,
 		requiredPropertyIndex,
 		valueBuffer,
 		sizeof(valueBuffer),
+		",",
 		exception);
 	EXCEPTION_THROW;
 	return valueBuffer;
@@ -179,19 +180,22 @@ static void process(const char *userAgent, void *state) {
 
 	// Write all the available properties.
 	for (i = 0; i < dataSet->b.b.available->count; i++) {
-		if (ResultsHashGetValue(
+		if (ResultsHashGetValues(
 			offline->results,
 			i,
-			exception) == NULL || EXCEPTION_FAILED) {
+			exception) == NULL ||
+			EXCEPTION_FAILED ||
+			offline->results->values.count == 0) {
+
 			// Write an empty value if one isn't available.
-			fprintf(offline->output,",\"\"");
-		} 
+			fprintf(offline->output, ",\"\"");
+		}
 		else {
 
 			// Write value(s) with comma separator.
 			fprintf(offline->output, ",\"");
 			fprintf(offline->output, "%s", getPropertyValueAsString(
-				offline->results, 
+				offline->results,
 				i));
 			fprintf(offline->output, "\"");
 		}
@@ -276,11 +280,11 @@ void fiftyoneDegreesOfflineProcessingRun(
 	EXCEPTION_CREATE;
 
 	// Set concurrency to ensure sufficient shared resources available.
-	config.components.concurrency =
-		config.nodes.concurrency =
+	config.nodes.concurrency =
 		config.profiles.concurrency =
-		config.properties.concurrency =
-		config.devices.concurrency =
+		config.profileOffsets.concurrency =
+		config.rootNodes.concurrency =
+		config.values.concurrency =
 		config.strings.concurrency = 1;
 
 	// If time can be sacrificed for a more thorough analysis of the different

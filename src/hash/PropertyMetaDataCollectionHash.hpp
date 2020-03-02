@@ -23,12 +23,9 @@
 #ifndef FIFTYONE_DEGREES_PROPERTY_META_DATA_COLLECTION_HASH_HPP
 #define FIFTYONE_DEGREES_PROPERTY_META_DATA_COLLECTION_HASH_HPP
 
-#include <map>
-
-#include "hash.h"
-#include "../common-cxx/resource.h"
-#include "../common-cxx/PropertyMetaData.hpp"
 #include "../common-cxx/Collection.hpp"
+#include "PropertyMetaDataBuilderHash.hpp"
+#include "hash.h"
 
 using namespace std;
 using namespace FiftyoneDegrees::Common;
@@ -43,16 +40,16 @@ namespace FiftyoneDegrees {
 			class PropertyMetaDataCollectionHash
 				: public Collection<string, PropertyMetaData> {
 			public:
-				/** 
+				/**
 				 * @name Constructor
 				 * @{
 				 */
 
-				/**
-				 * Construct a new instance from the data set provided within
-				 * the manager.
-				 * @param manager pointer to the which manages the data set
-				 * containing the properties
+				 /**
+				 * Constructs a new instance of the collection from the data
+				 * set managed by the manager provided.
+				 * @param manager pointer to the manager which manages the data
+				 * set
 				 */
 				PropertyMetaDataCollectionHash(
 					fiftyoneDegreesResourceManager *manager);
@@ -64,7 +61,7 @@ namespace FiftyoneDegrees {
 				 */
 
 				 /**
-				 * Releases the data set being referenced by the collection.
+				  * Releases the data set being referenced by the collection.
 				  */
 				~PropertyMetaDataCollectionHash();
 
@@ -73,16 +70,19 @@ namespace FiftyoneDegrees {
 				PropertyMetaData* getByKey(string name);
 
 				uint32_t getSize();
-
+				
 				/**
 				 * @}
 				 */
 			private:
 				/** Pointer to the data set managed by the resource manager */
 				fiftyoneDegreesDataSetHash *dataSet;
+
+				/** Pointer to the underlying properties collection */
+				fiftyoneDegreesCollection *properties;
 			};
 		}
 	}
 }
 
-#endif 
+#endif

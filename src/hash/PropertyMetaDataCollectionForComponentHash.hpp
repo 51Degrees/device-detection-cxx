@@ -26,6 +26,7 @@
 #include "../common-cxx/Collection.hpp"
 #include "../common-cxx/PropertyMetaData.hpp"
 #include "../common-cxx/ComponentMetaData.hpp"
+#include "ComponentMetaDataBuilderHash.hpp"
 #include "PropertyMetaDataCollectionHash.hpp"
 #include "hash.h"
 #include <memory>
@@ -48,11 +49,11 @@ namespace FiftyoneDegrees {
 				 * @{
 				 */
 
-				/**
-				 * Construct a new instance from the data set provided within
-				 * the manager.
-				 * @param manager pointer to the which manages the data set
-				 * containing the properties
+				 /**
+				 * Constructs a new instance of the collection from the data
+				 * set managed by the manager provided.
+				 * @param manager pointer to the manager which manages the data
+				 * set
 				 * @param component pointer to the component which the
 				 * properties must relate to
 				 */
@@ -66,9 +67,9 @@ namespace FiftyoneDegrees {
 				 * @{
 				 */
 
-				/**
-				 * Releases the data set being referenced by the collection.
-				 */
+				 /**
+				  * Releases the data set being referenced by the collection.
+				  */
 				~PropertyMetaDataCollectionForComponentHash();
 
 				PropertyMetaData* getByIndex(uint32_t index);
@@ -81,12 +82,11 @@ namespace FiftyoneDegrees {
 				 * @}
 				 */
 			private:
-				/** The unique id of the component which the properties relate
-				to */
-				byte componentId;
-
-				/** Pointer to the data set managed by the resource manager */
-				fiftyoneDegreesDataSetHash *dataSet;
+				/**
+				 * Vector of shared pointers to be handed out. This ensures
+				 * they are all cleaned up.
+				 */
+				vector<shared_ptr<PropertyMetaData>> properties;
 			};
 		}
 	}

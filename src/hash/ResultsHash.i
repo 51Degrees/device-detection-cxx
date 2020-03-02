@@ -6,8 +6,8 @@
  * This Original Work is the subject of the following patents and patent
  * applications, owned by 51 Degrees Mobile Experts Limited of 5 Charlotte
  * Close, Caversham, Reading, Berkshire, United Kingdom RG4 7BY:
- * European Patent No. 3438848; and 
- * United States Patent No. 10,482,175.
+ * European Patent No. 2871816; and 
+ * United States Patent Nos. 9,332,086 and 9,350,823.
  *
  * This Original Work is licensed under the European Union Public Licence (EUPL) 
  * v.1.2 and is subject to its terms as set out below.
@@ -23,23 +23,29 @@
  * If using the Work as, or as part of, a network application, by 
  * including the attribution notice(s) required under Article 5 of the EUPL
  * in the end user terms of the application under an appropriate heading, 
- * such notice(s) shall fulfil the requirements of that article.
+ * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+%include stdint.i
 %include "../ResultsDeviceDetection.i"
 
-%rename(ResultsHashSwig) ResultsHash;
-
 %nodefaultctor ResultsHash;
+
+%rename (ResultsHashSwig) ResultsHash;
 
 class ResultsHash : public ResultsDeviceDetection {
 public:
 	virtual ~ResultsHash();
 	std::string getDeviceId();
-	int getRank();
+	std::string getDeviceId(uint32_t resultIndex);
 	int getDifference();
-    int getDrift();
-	int getIterations();
+	int getDifference(uint32_t resultIndex);
 	int getMethod();
+	int getMethod(uint32_t resultIndex);
+	int getDrift();
+	int getDrift(uint32_t resultIndex);
 	int getMatchedNodes();
+	int getIterations();
+	std::string getUserAgent(uint32_t resultIndex);
+	int getUserAgents();
 };

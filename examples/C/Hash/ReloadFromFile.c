@@ -98,7 +98,7 @@ https://51degrees.com/Support/Documentation/APIs/C-V32/Benchmarks
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV3.4.trie";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static const char *userAgentFileName = "20000 User Agents.csv";
 
@@ -162,12 +162,14 @@ static unsigned long getHashCode(ResultsHash *results) {
 	for (requiredPropertyIndex = 0;
 		requiredPropertyIndex < dataSet->b.b.available->count;
 		requiredPropertyIndex++) {
-		valueName = STRING(ResultsHashGetValue(
+		if (ResultsHashGetValues(
 			results,
 			requiredPropertyIndex,
-			exception));
-		EXCEPTION_THROW;
-		hashCode ^= generateHash((unsigned char*)(valueName));
+			exception) != NULL &&
+			EXCEPTION_OKAY) {
+			valueName = STRING(results->values.items[0].data.ptr);
+			hashCode ^= generateHash((unsigned char*)(valueName));
+		}
 	}
 	return hashCode;
 }
@@ -327,8 +329,10 @@ void fiftyoneDegreesHashReloadFromFileRun(
 
 	// Set concurrency to ensure sufficient shared resources available.
 	config.nodes.concurrency =
-		config.devices.concurrency =
 		config.profiles.concurrency =
+		config.profileOffsets.concurrency =
+		config.rootNodes.concurrency =
+		config.values.concurrency =
 		config.strings.concurrency = THREAD_COUNT;
 
 	// Set the device detection specific parameters to avoid checking for 

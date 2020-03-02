@@ -28,9 +28,42 @@ using namespace FiftyoneDegrees::DeviceDetection::Hash;
 ComponentMetaDataCollectionHash::ComponentMetaDataCollectionHash(
 	fiftyoneDegreesResourceManager *manager)
 	: Collection<byte, ComponentMetaData>() {
-	this->dataSet = DataSetHashGet(manager);
+	dataSet = DataSetHashGet(manager);
+	if (dataSet == nullptr) {
+		throw new runtime_error("Data set pointer can not be null");
+	}
+	components = &dataSet->componentsList;
 }
 
 ComponentMetaDataCollectionHash::~ComponentMetaDataCollectionHash() {
 	DataSetHashRelease(dataSet);
+}
+
+ComponentMetaData* ComponentMetaDataCollectionHash::getByIndex(
+	uint32_t index) {
+	ComponentMetaData *component = nullptr;
+	if (index < components->count) {
+		component = ComponentMetaDataBuilderHash::build(
+			dataSet, 
+			(Component*)components->items[index].data.ptr);
+	}
+	return component;
+}
+
+ComponentMetaData* ComponentMetaDataCollectionHash::getByKey(
+	byte componentId) {
+	ComponentMetaData *result = nullptr;
+	Component *component;
+	uint32_t i;
+	for (i = 0; i < dataSet->componentsList.count; i++) {
+		component = (Component*)dataSet->componentsList.items[i].data.ptr;
+		if (component->componentId == componentId) {
+			result = ComponentMetaDataBuilderHash::build(dataSet, component);
+		}
+	}
+	return result;
+}
+
+uint32_t ComponentMetaDataCollectionHash::getSize() {
+	return components->count;
 }

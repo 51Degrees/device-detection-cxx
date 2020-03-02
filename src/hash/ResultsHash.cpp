@@ -21,77 +21,79 @@
  * ********************************************************************* */
 
 #include "ResultsHash.hpp"
-#include <sstream>
 #include "fiftyone.h"
 
 using namespace FiftyoneDegrees;
-using namespace FiftyoneDegrees::DeviceDetection::Hash;
+
+#define RESULT(r,i) ((ResultHash*)r->b.b.items + i)
 
 DeviceDetection::Hash::ResultsHash::ResultsHash(
 	fiftyoneDegreesResultsHash *results,
 	shared_ptr<fiftyoneDegreesResourceManager> manager)
 	: ResultsDeviceDetection(&results->b, manager) {
 	this->results = results;
+	_jsHardwareProfileRequiredIndex =
+		PropertiesGetRequiredPropertyIndexFromName(
+			this->available,
+			"javascripthardwareprofile");
 }
+
 
 DeviceDetection::Hash::ResultsHash::~ResultsHash() {
 	ResultsHashFree(results);
 }
 
-int DeviceDetection::Hash::ResultsHash::getUserAgents() {
-	return results->count;
-}
-
-string DeviceDetection::Hash::ResultsHash::getUserAgent(
-	int resultIndex) {
-	string userAgent;
-	if (resultIndex >= 0 && (uint32_t)resultIndex < results->count) {
-		if (results->items[resultIndex].b.matchedUserAgent != NULL) {
-			userAgent.assign(results->items[resultIndex].b.matchedUserAgent);
-		}
-	}
-	return userAgent;
-}
-
 void DeviceDetection::Hash::ResultsHash::getValuesInternal(
 	int requiredPropertyIndex,
 	vector<string> &values) {
-	const char *current, *previous;
-	bool containsNonPrintable = false;
-	String *value = NULL;
 	EXCEPTION_CREATE;
-
-	// Get the value and throw an exception if not value is available.
-	value = ResultsHashGetValue(
+	uint32_t i;
+	Item *valuesItems;
+	String *valueName;
+	
+	// Get a pointer to the first value item for the property.
+	valuesItems = ResultsHashGetValues(
 		results,
 		requiredPropertyIndex,
 		exception);
 	EXCEPTION_THROW;
-	if (value == NULL) {
+
+	if (valuesItems == NULL) {
+		// No pointer to values was returned. 
 		throw NoValuesAvailableException();
 	}
 
-	// Add all the strings to the vector unless non printable characters 
-	// are present in which case just add the string as provided by the
-	// data source.
-	current = &value->value;
-	previous = &value->value;
-	while (*current != 0 && containsNonPrintable == false) {
-		if (isprint(*current) == false) {
-			containsNonPrintable = true;
+	// Set enough space in the vector for all the strings that will be 
+	// inserted.
+	values.reserve(results->values.count);
+
+	if (_jsHardwareProfileRequiredIndex >= 0 &&
+		(int)requiredPropertyIndex == _jsHardwareProfileRequiredIndex) {
+
+		// Add the values as JavaScript snippets to the result.
+		for (i = 0; i < results->values.count; i++) {
+			valueName = (String*)valuesItems[i].data.ptr;
+			if (valueName != nullptr) {
+				stringstream stream;
+				stream <<
+					"var profileIds = []\n" <<
+					STRING(valueName) <<
+					"\ndocument.cookie = \"51D_ProfileIds=\" + " <<
+					"profileIds.join(\"|\")";
+				values.push_back(stream.str());
+			}
 		}
-		if (*current == '|') {
-			values.push_back(string(previous, current - previous));
-			previous = current + 1;
-		}
-		current++;
-	}
-	if (containsNonPrintable == true) {
-		values.clear();
-		values.push_back(string(&value->value));
 	}
 	else {
-		values.push_back(string(previous, current - previous));
+
+		// Add the values in their original form to the result.
+		for (i = 0; i < results->values.count; i++) {
+			valueName = (String*)valuesItems[i].data.ptr;
+			if (valueName != nullptr)
+			{
+				values.push_back(string(STRING(valueName)));
+			}
+		}
 	}
 }
 
@@ -124,63 +126,32 @@ DeviceDetection::Hash::ResultsHash::getNoValueReasonInternal(
 	return reason;
 }
 
+string DeviceDetection::Hash::ResultsHash::getDeviceId(
+	uint32_t resultIndex) {
+	EXCEPTION_CREATE;
+	char deviceId[50] = "";
+	if (resultIndex < results->count) {
+		HashGetDeviceIdFromResult(
+			(DataSetHash*)results->b.b.dataSet,
+			&results->items[resultIndex],
+			deviceId,
+			sizeof(deviceId),
+			exception);
+		EXCEPTION_THROW;
+	}
+	return string(deviceId);
+}
+
 string DeviceDetection::Hash::ResultsHash::getDeviceId() {
-	vector<string> values;
-	stringstream s;
-	uint32_t i;
-	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
-	int requiredPropertyIndex = getRequiredPropertyIndex("Id");
-	if (hasValuesInternal(requiredPropertyIndex)) {
-		getValuesInternal(requiredPropertyIndex, values);
-		return *values.begin();
-	}
-	else
-	{
-		for (i = 0; i < dataSet->components->count; i++) {
-			if (i > 0) {
-				s << "-";
-			}
-			s << 0;
-		}
-		return s.str();
-	}
-}
-
-int DeviceDetection::Hash::ResultsHash::getRank() {
-	return 0;
-}
-
-int DeviceDetection::Hash::ResultsHash::getDifference() {
-	uint32_t i;
-	int difference = 0;
-	if (results != NULL) {
-		for (i = 0; i < results->count; i++) {
-			difference += results->items[i].difference;
-		}
-	}
-	return difference;
-}
-
-int DeviceDetection::Hash::ResultsHash::getDrift() {
-	uint32_t i;
-	int drift = 0;
-	if (results != NULL) {
-		for (i = 0; i < results->count; i++) {
-			drift += results->items[i].drift;
-		}
-	}
-	return drift;
-}
-
-int DeviceDetection::Hash::ResultsHash::getMatchedNodes() {
-	uint32_t i;
-	int matchedNodes = 0;
-	if (results != NULL) {
-		for (i = 0; i < results->count; i++) {
-			matchedNodes += results->items[i].matchedNodes;
-		}
-	}
-	return matchedNodes;
+	EXCEPTION_CREATE;
+	char deviceId[50] = "";
+	HashGetDeviceIdFromResults(
+		results,
+		deviceId,
+		sizeof(deviceId),
+		exception);
+	EXCEPTION_THROW;
+	return string(deviceId);
 }
 
 int DeviceDetection::Hash::ResultsHash::getIterations() {
@@ -194,6 +165,78 @@ int DeviceDetection::Hash::ResultsHash::getIterations() {
 	return iterations;
 }
 
-int DeviceDetection::Hash::ResultsHash::getMethod() {
+int DeviceDetection::Hash::ResultsHash::getMatchedNodes() {
+	uint32_t i;
+	int matchedNodes = 0;
+	if (results != NULL) {
+		for (i = 0; i < results->count; i++) {
+			matchedNodes += results->items[i].matchedNodes;
+		}
+	}
+	return matchedNodes;
+}
+
+int DeviceDetection::Hash::ResultsHash::getDrift(uint32_t resultIndex) {
+	return results->items[resultIndex].drift;
+}
+
+int DeviceDetection::Hash::ResultsHash::getDrift() {
+	uint32_t i;
+	int drift = 0;
+	if (results != NULL) {
+		for (i = 0; i < results->count; i++) {
+			drift += results->items[i].drift;
+		}
+	}
+	return drift;
+}
+
+int DeviceDetection::Hash::ResultsHash::getDifference(
+	uint32_t resultIndex) {
+	return results->items[resultIndex].difference;
+}
+
+int DeviceDetection::Hash::ResultsHash::getDifference() {
+	uint32_t i;
+	int difference = 0;
+	for (i = 0; i < results->count; i++) {
+		difference += getDifference(i);
+	}
+	return difference;
+}
+
+int DeviceDetection::Hash::ResultsHash::getMethod(uint32_t resultIndex) {
+	if (resultIndex < results->count) {
+		return results->items[resultIndex].method;
+	}
 	return 0;
+}
+
+int DeviceDetection::Hash::ResultsHash::getMethod() {
+	uint32_t i;
+	int method = getMethod(0),
+		nextMethod;
+
+	for (i = 1; i < results->count; i++) {
+		nextMethod = getMethod(i);
+		if (nextMethod > method) {
+			method = nextMethod;
+		}
+	}
+	return method;
+}
+
+int DeviceDetection::Hash::ResultsHash::getUserAgents() {
+	return results->count;
+}
+
+string DeviceDetection::Hash::ResultsHash::getUserAgent(
+	int resultIndex) {
+	string userAgent;
+	if (resultIndex >= 0 && (uint32_t)resultIndex < results->count) {
+		if (results->items[resultIndex].b.matchedUserAgent != NULL) {
+			userAgent.assign(results->items[resultIndex].b.matchedUserAgent);
+		}
+	}
+	return userAgent;
 }

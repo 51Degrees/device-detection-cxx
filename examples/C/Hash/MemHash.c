@@ -45,7 +45,7 @@
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV3.4.trie";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static const char *userAgentFileName = "20000 User Agents.csv";
 
@@ -108,23 +108,25 @@ void printLoadBar(memoryThreadState *state) {
 /**
  * Reports progress using the required property index specified.
  * @param state of the performance test
- * @param requiredPropertyIndex
  */
-void reportProgress(memoryThreadState *state, int requiredPropertyIndex) {
-
+void reportProgress(memoryThreadState *state) {
 	EXCEPTION_CREATE;
+	char deviceId[40] = "";
+
 	// Update the user interface.
 	printLoadBar(state);
 
 	// If in real detection mode then print the id of the device found
 	// to prove it's actually doing something!
 	if (state->results != NULL) {
-		printf(" %s  ", STRING(
-			ResultsHashGetValue(
-				state->results,
-				requiredPropertyIndex,
-				exception)));
+		printf(" ");
+		HashGetDeviceIdFromResults(
+			state->results,
+			deviceId,
+			sizeof(deviceId),
+			exception);
 		EXCEPTION_THROW;
+		printf("%s", deviceId);
 	}
 }
 
@@ -153,7 +155,7 @@ static void executeTest(const char *userAgent, void *state) {
 	threadState->count++;
 	if (threadState->reportProgress == true &&
 		threadState->count % threadState->main->progress == 0) {
-		reportProgress(threadState, 0);
+		reportProgress(threadState);
 	}
 }
 
@@ -326,8 +328,10 @@ void fiftyoneDegreesMemHashRun(
 	
 	// Set concurrency to ensure sufficient shared resources available.
 	config.nodes.concurrency =
-		config.devices.concurrency =
 		config.profiles.concurrency =
+		config.profileOffsets.concurrency =
+		config.rootNodes.concurrency =
+		config.values.concurrency =
 		config.strings.concurrency = THREAD_COUNT;
 
 	// Set the device detection specific parameters to avoid checking for 

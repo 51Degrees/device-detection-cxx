@@ -20,17 +20,18 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+#include <algorithm>
 #include "ConfigHash.hpp"
 
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
 
-ConfigHash::ConfigHash() 
+ConfigHash::ConfigHash()
 	: ConfigDeviceDetection(&this->config.b) {
 	config = fiftyoneDegreesHashDefaultConfig;
 	initCollectionConfig();
 }
 
-ConfigHash::ConfigHash(fiftyoneDegreesConfigHash *config) 
+ConfigHash::ConfigHash(fiftyoneDegreesConfigHash *config)
 	: ConfigDeviceDetection(&this->config.b) {
 	this->config = config != nullptr ?
 		*config : fiftyoneDegreesHashBalancedConfig;
@@ -41,8 +42,12 @@ void ConfigHash::setPerformanceFromExistingConfig(
 	fiftyoneDegreesConfigHash *existing) {
 	config.strings = existing->strings;
 	config.properties = existing->properties;
+	config.values = existing->values;
 	config.profiles = existing->profiles;
 	config.nodes = existing->nodes;
+	config.profileOffsets = existing->profileOffsets;
+	config.maps = existing->maps;
+	config.components = existing->components;
 	config.b.b.allInMemory = existing->b.b.allInMemory;
 }
 
@@ -66,26 +71,35 @@ void ConfigHash::setMaxPerformance() {
 	setPerformanceFromExistingConfig(&fiftyoneDegreesHashInMemoryConfig);
 }
 
-void ConfigHash::setDrift(int drift) {
-	config.drift = drift;
-}
-
-void ConfigHash::setDifference(int difference) {
+void ConfigHash::setDifference(int32_t difference) {
 	config.difference = difference;
 }
 
-void ConfigHash::setConcurrency(uint16_t concurrency) {
-	strings.setConcurrency(concurrency);
-	profiles.setConcurrency(concurrency);
-	devices.setConcurrency(concurrency);
-	nodes.setConcurrency(concurrency);
+void ConfigHash::setDrift(int32_t drift) {
+	config.drift = drift;
 }
 
-int ConfigHash::getDrift() {
+void ConfigHash::setUsePerformanceGraph(bool use) {
+	config.usePerformanceGraph = use;
+}
+
+void ConfigHash::setUsePredictiveGraph(bool use) {
+	config.usePredictiveGraph = use;
+}
+
+bool ConfigHash::getUsePerformanceGraph() {
+	return config.usePerformanceGraph;
+}
+
+bool ConfigHash::getUsePredictiveGraph() {
+	return config.usePredictiveGraph;
+}
+
+int32_t ConfigHash::getDrift() {
 	return config.drift;
 }
 
-int ConfigHash::getDifference() {
+int32_t ConfigHash::getDifference() {
 	return config.difference;
 }
 
@@ -93,36 +107,70 @@ CollectionConfig ConfigHash::getStrings() {
 	return strings;
 }
 
-CollectionConfig ConfigHash::getProfiles() {
-	return profiles;
+CollectionConfig ConfigHash::getProperties() {
+	return properties;
 }
 
-CollectionConfig ConfigHash::getDevices() {
-	return devices;
+CollectionConfig ConfigHash::getValues() {
+	return values;
+}
+
+CollectionConfig ConfigHash::getProfiles() {
+	return profiles;
 }
 
 CollectionConfig ConfigHash::getNodes() {
 	return nodes;
 }
 
-void ConfigHash::initCollectionConfig() {
-	strings = CollectionConfig(&config.strings);
-	profiles = CollectionConfig(&config.profiles);
-	devices = CollectionConfig(&config.devices);
-	nodes = CollectionConfig(&config.nodes);
+CollectionConfig ConfigHash::getProfileOffsets() {
+	return profileOffsets;
 }
 
+void ConfigHash::initCollectionConfig() {
+	strings = CollectionConfig(&config.strings);
+	properties = CollectionConfig(&config.properties);
+	values = CollectionConfig(&config.values);
+	profiles = CollectionConfig(&config.profiles);
+	nodes = CollectionConfig(&config.nodes);
+	profileOffsets = CollectionConfig(&config.profileOffsets);
+	maps = CollectionConfig(&config.maps);
+	components = CollectionConfig(&config.components);
+}
+
+/**
+ * Gets the configuration data structure for use in C code. Used internally.
+ * @return the underlying configuration data structure.
+ */
 fiftyoneDegreesConfigHash* ConfigHash::getConfig() {
 	return &config;
 }
 
+/**
+ * Provides the lowest concurrency value in the list of possible concurrencies.
+ * @return a 16 bit integer with the minimum concurrency value.
+ */
 uint16_t ConfigHash::getConcurrency() {
-	uint16_t concurrencies[] = { 
-		config.strings.concurrency,
-		config.profiles.concurrency,
-		config.devices.concurrency, 
-		config.nodes.concurrency };
-	return *min_element(
-		concurrencies,
+	uint16_t concurrencies[] = {
+		strings.getConcurrency(),
+		properties.getConcurrency(),
+		values.getConcurrency(),
+		profiles.getConcurrency(),
+		nodes.getConcurrency(),
+		profileOffsets.getConcurrency(),
+		maps.getConcurrency(),
+		components.getConcurrency()};
+	return *min_element(concurrencies, 
 		concurrencies + (sizeof(concurrencies) / sizeof(uint16_t)));
+}
+
+void ConfigHash::setConcurrency(uint16_t concurrency) {
+	strings.setConcurrency(concurrency);
+	properties.setConcurrency(concurrency);
+	values.setConcurrency(concurrency);
+	profiles.setConcurrency(concurrency);
+	nodes.setConcurrency(concurrency);
+	profileOffsets.setConcurrency(concurrency);
+	maps.setConcurrency(concurrency);
+	components.setConcurrency(concurrency);
 }

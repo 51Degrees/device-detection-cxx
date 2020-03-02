@@ -20,18 +20,17 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+#include <iostream>
 #include "EngineHash.hpp"
 #include "fiftyone.h"
 
 using namespace FiftyoneDegrees;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
 
-#define SUFFIX_LENGTH 20
-
 EngineHash::EngineHash(
 	const char *fileName,
 	DeviceDetection::Hash::ConfigHash *config,
-	RequiredPropertiesConfig *properties) 
+	Common::RequiredPropertiesConfig *properties)
 	: EngineDeviceDetection(config, properties) {
 	EXCEPTION_CREATE;
 	StatusCode status = HashInitManagerFromFile(
@@ -51,7 +50,7 @@ EngineHash::EngineHash(
 EngineHash::EngineHash(
 	const string &fileName,
 	DeviceDetection::Hash::ConfigHash *config,
-	RequiredPropertiesConfig *properties) 
+	Common::RequiredPropertiesConfig *properties)
 	: EngineHash(fileName.c_str(), config, properties) {
 }
 
@@ -59,20 +58,23 @@ EngineHash::EngineHash(
 	void *data,
 	long length,
 	DeviceDetection::Hash::ConfigHash *config,
-	RequiredPropertiesConfig *properties) 
-	: EngineDeviceDetection(config, properties) {
+	Common::RequiredPropertiesConfig *properties) 
+	: DeviceDetection::EngineDeviceDetection(config, properties) {
 	EXCEPTION_CREATE;
-	StatusCode status = 
-		HashInitManagerFromMemory(
-			manager.get(),
-			config->getConfig(),
-			properties->getConfig(),
-			data,
-			(size_t)length,
-			exception);
+
+	// Copy the data and hand the responsibility for cleaning up to the C layer
+	config->getConfig()->b.b.freeData = true;
+	void *dataCopy = copyData(data, length);
+
+	StatusCode status = HashInitManagerFromMemory(
+		manager.get(),
+		config->getConfig(),
+		properties->getConfig(),
+		dataCopy,
+		(size_t)length,
+		exception);
 	if (status != SUCCESS) {
 		throw StatusCodeException(status);
-		return;
 	}
 	EXCEPTION_THROW;
 	init();
@@ -82,7 +84,7 @@ EngineHash::EngineHash(
 	unsigned char data[],
 	long length,
 	DeviceDetection::Hash::ConfigHash *config,
-	RequiredPropertiesConfig *properties)
+	Common::RequiredPropertiesConfig *properties)
 	: EngineHash((void*)data, length, config, properties) {
 }
 
@@ -92,15 +94,28 @@ void EngineHash::init() {
 	DataSetHashRelease(dataSet);
 }
 
-void EngineHash::init(fiftyoneDegreesDataSetHash *dataSet) {
+void EngineHash::init(
+	fiftyoneDegreesDataSetHash *dataSet) {
 	EngineDeviceDetection::init(&dataSet->b);
 	initMetaData();
+	
+	// Two new override properties available.
+	keys.push_back("query.51D_ProfileIds");
+	keys.push_back("cookie.51D_ProfileIds");
 }
 
-void EngineHash::initMetaData() {
-	metaData = new MetaDataHash(manager);
+void* EngineHash::copyData(void *data, size_t length) {
+	void *dataCopy = (void*)Malloc(length);
+	if (dataCopy == nullptr) {
+		throw new StatusCodeException(INSUFFICIENT_MEMORY);
+	}
+	memcpy(dataCopy, data, length);
+	return dataCopy;
 }
 
+/**
+ * @return the name of the data set used contained in the source file.
+ */
 string EngineHash::getProduct() {
 	stringstream stream;
 	DataSetHash *dataSet = DataSetHashGet(manager.get());
@@ -109,17 +124,27 @@ string EngineHash::getProduct() {
 	return stream.str();
 }
 
+/**
+ * Returns the string that represents the type of data file when requesting an
+ * updated file.
+ */
 string EngineHash::getType() {
-	return string("HashTrieV34");
+	return string("HashV41");
 }
 
+/**
+ * @return the date that 51Degrees published the data file.
+ */
 Date EngineHash::getPublishedTime() {
-	DataSetHash *dataSet = DataSetHashGet(manager.get());
+	DataSetHash*dataSet = DataSetHashGet(manager.get());
 	Date date = Date(&dataSet->header.published);
 	DataSetHashRelease(dataSet);
 	return date;
 }
 
+/**
+ * @return the date that 51Degrees will publish an updated data file.
+ */
 Date EngineHash::getUpdateAvailableTime() {
 	DataSetHash *dataSet = DataSetHashGet(manager.get());
 	Date date = Date(&dataSet->header.nextUpdate);
@@ -156,7 +181,6 @@ void EngineHash::refreshData() {
 		exception);
 	if (status != SUCCESS) {
 		throw StatusCodeException(status);
-		return;
 	}
 	EXCEPTION_THROW;
 }
@@ -169,21 +193,20 @@ void EngineHash::refreshData(const char *fileName) {
 		exception);
 	if (status != SUCCESS) {
 		throw StatusCodeException(status);
-		return;
 	}
 	EXCEPTION_THROW;
 }
 
 void EngineHash::refreshData(void *data, long length) {
 	EXCEPTION_CREATE;
+	void *dataCopy = copyData(data, length);
 	StatusCode status = HashReloadManagerFromMemory(
 		manager.get(),
-		data,
+		dataCopy,
 		length,
 		exception);
 	if (status != SUCCESS) {
 		throw StatusCodeException(status);
-		return;
 	}
 	EXCEPTION_THROW;
 }
@@ -195,48 +218,6 @@ void EngineHash::refreshData(
 }
 
 DeviceDetection::Hash::ResultsHash* EngineHash::process(
-	DeviceDetection::EvidenceDeviceDetection *evidence,
-	int drift,
-	int difference) {
-	EXCEPTION_CREATE;
-	uint32_t size = evidence == nullptr ? 0 : (uint32_t)evidence->size();
-	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
-		manager.get(),
-		size,
-		size);
-	results->drift = drift;
-	results->difference = difference;
-	ResultsHashFromEvidence(
-		results,
-		evidence == nullptr ? nullptr : evidence->get(),
-		exception);
-	EXCEPTION_THROW;
-	// TODO override properties/profiles.
-	return new ResultsHash(results, manager);
-}
-
-DeviceDetection::Hash::ResultsHash* EngineHash::process(
-	const char *userAgent,
-	int drift,
-	int difference) {
-	EXCEPTION_CREATE;
-	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
-		manager.get(),
-		1,
-		0);
-	results->drift = drift;
-	results->difference = difference;
-	ResultsHashFromUserAgent(
-		results, 
-		userAgent, 
-		userAgent == nullptr ? 0 : (int)strlen(userAgent),
-		exception);
-	EXCEPTION_THROW;
-	// TODO override properties/profiles.
-	return new ResultsHash(results, manager);
-}
-
-DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	DeviceDetection::EvidenceDeviceDetection *evidence) {
 	EXCEPTION_CREATE;
 	uint32_t size = evidence == nullptr ? 0 : (uint32_t)evidence->size();
@@ -245,11 +226,11 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 		size,
 		size);
 	ResultsHashFromEvidence(
-		results,
+		results, 
 		evidence == nullptr ? nullptr : evidence->get(),
 		exception);
 	EXCEPTION_THROW;
-	// TODO override properties/profiles.
+
 	return new ResultsHash(results, manager);
 }
 
@@ -263,15 +244,14 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	ResultsHashFromUserAgent(
 		results,
 		userAgent,
-		userAgent == nullptr ? 0 : (int)strlen(userAgent),
+		userAgent == nullptr ? 0 : strlen(userAgent),
 		exception);
 	EXCEPTION_THROW;
-	// TODO override properties/profiles.
 	return new ResultsHash(results, manager);
 }
 
-ResultsBase* EngineHash::processBase(
-	EvidenceBase *evidence) {
+Common::ResultsBase* EngineHash::processBase(
+	Common::EvidenceBase *evidence) {
 	EXCEPTION_CREATE;
 	uint32_t size = evidence == nullptr ? 0 : (uint32_t)evidence->size();
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
@@ -279,7 +259,7 @@ ResultsBase* EngineHash::processBase(
 		size,
 		size);
 	ResultsHashFromEvidence(
-		results,
+		results, 
 		evidence == nullptr ? nullptr : evidence->get(),
 		exception);
 	EXCEPTION_THROW;
@@ -294,4 +274,8 @@ DeviceDetection::ResultsDeviceDetection* EngineHash::processDeviceDetection(
 DeviceDetection::ResultsDeviceDetection* EngineHash::processDeviceDetection(
 	const char *userAgent) {
 	return process(userAgent);
+}
+
+void EngineHash::initMetaData() {
+	metaData = new MetaDataHash(manager);
 }

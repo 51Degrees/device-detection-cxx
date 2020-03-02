@@ -20,15 +20,6 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-/**
- * To ensure compatibility with larger projects where naming conflicts could
- * occur this aliases file enables references to 51degrees functions,
- * structures and types to be made without requiring the prefix
- * fiftyoneDegrees to be provided. This is similar to the use of namespaces
- * in languages which support them and leads to code that is shorter and easier
- * to read.
- */
-
 #ifndef FIFTYONE_DEGREES_SYNONYM_HASH_INCLUDED
 #define FIFTYONE_DEGREES_SYNONYM_HASH_INCLUDED
 
@@ -50,30 +41,36 @@
  * @{
  */
 
-#include "hash.h"
 
+#include "hash.h"
 #include "../fiftyone.h"
 
 MAP_TYPE(DataSetHash)
 MAP_TYPE(ResultHash)
 MAP_TYPE(ResultsHash)
 MAP_TYPE(ConfigHash)
+MAP_TYPE(DataSetHashHeader)
 MAP_TYPE(ResultHashArray)
+MAP_TYPE(HashRootNodes)
 
+#define ResultsHashGetValues fiftyoneDegreesResultsHashGetValues /**< Synonym for #fiftyoneDegreesResultsHashGetValues function. */
+#define ResultsHashGetValuesString fiftyoneDegreesResultsHashGetValuesString /**< Synonym for #fiftyoneDegreesResultsHashGetValuesString function. */
+#define ResultsHashGetValuesStringByRequiredPropertyIndex fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex /**< Synonym for #fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex function. */
+#define HashGetDeviceIdFromResult fiftyoneDegreesHashGetDeviceIdFromResult /**< Synonym for #fiftyoneDegreesHashGetDeviceIdFromResult function. */
+#define HashGetDeviceIdFromResults fiftyoneDegreesHashGetDeviceIdFromResults /**< Synonym for #fiftyoneDegreesHashGetDeviceIdFromResults function. */
 #define ResultsHashCreate fiftyoneDegreesResultsHashCreate /**< Synonym for #fiftyoneDegreesResultsHashCreate function. */
 #define ResultsHashFree fiftyoneDegreesResultsHashFree /**< Synonym for #fiftyoneDegreesResultsHashFree function. */
-#define DataSetHashGet fiftyoneDegreesDataSetHashGet /**< Synonym for #fiftyoneDegreesDataSetHashGet function. */
-#define DataSetHashRelease fiftyoneDegreesDataSetHashRelease /**< Synonym for #fiftyoneDegreesDataSetHashRelease function. */
-#define ResultsHashGetValue fiftyoneDegreesResultsHashGetValue /**< Synonym for #fiftyoneDegreesResultsHashGetValue function. */
-#define ResultsHashGetValueString fiftyoneDegreesResultsHashGetValueString /**< Synonym for #fiftyoneDegreesResultsHashGetValueString function. */
-#define ResultsHashGetValueStringByRequiredPropertyIndex fiftyoneDegreesResultsHashGetValueStringByRequiredPropertyIndex /**< Synonym for #fiftyoneDegreesResultsHashGetValueStringByRequiredPropertyIndex function. */
+#define ResultsHashFromDeviceId fiftyoneDegreesResultsHashFromDeviceId /**< Synonym for #fiftyoneDegreesResultsHashFromDeviceId function. */
 #define ResultsHashFromUserAgent fiftyoneDegreesResultsHashFromUserAgent /**< Synonym for #fiftyoneDegreesResultsHashFromUserAgent function. */
 #define ResultsHashFromEvidence fiftyoneDegreesResultsHashFromEvidence /**< Synonym for #fiftyoneDegreesResultsHashFromEvidence function. */
-#define HashInitManagerFromMemory fiftyoneDegreesHashInitManagerFromMemory /**< Synonym for #fiftyoneDegreesHashInitManagerFromMemory function. */
+#define DataSetHashGet fiftyoneDegreesDataSetHashGet /**< Synonym for #fiftyoneDegreesDataSetHashGet function. */
+#define DataSetHashRelease fiftyoneDegreesDataSetHashRelease /**< Synonym for #fiftyoneDegreesDataSetHashRelease function. */
 #define HashInitManagerFromFile fiftyoneDegreesHashInitManagerFromFile /**< Synonym for #fiftyoneDegreesHashInitManagerFromFile function. */
+#define HashInitManagerFromMemory fiftyoneDegreesHashInitManagerFromMemory /**< Synonym for #fiftyoneDegreesHashInitManagerFromMemory function. */
 #define HashReloadManagerFromOriginalFile fiftyoneDegreesHashReloadManagerFromOriginalFile /**< Synonym for #fiftyoneDegreesHashReloadManagerFromOriginalFile function. */
 #define HashReloadManagerFromFile fiftyoneDegreesHashReloadManagerFromFile /**< Synonym for #fiftyoneDegreesHashReloadManagerFromFile function. */
 #define HashReloadManagerFromMemory fiftyoneDegreesHashReloadManagerFromMemory /**< Synonym for #fiftyoneDegreesHashReloadManagerFromMemory function. */
+#define HashIterateProfilesForPropertyAndValue fiftyoneDegreesHashIterateProfilesForPropertyAndValue /**< Synonym for #fiftyoneDegreesHashIterateProfilesForPropertyAndValue function. */
 
 #define HashInMemoryConfig fiftyoneDegreesHashInMemoryConfig /**< Synonym for #fiftyoneDegreesHashInMemoryConfig config. */
 #define HashHighPerformanceConfig fiftyoneDegreesHashHighPerformanceConfig /**< Synonym for #fiftyoneDegreesHashHighPerformanceConfig config. */
@@ -82,6 +79,16 @@ MAP_TYPE(ResultHashArray)
 #define HashBalancedTempConfig fiftyoneDegreesHashBalancedTempConfig /**< Synonym for #fiftyoneDegreesHashBalancedTempConfig config. */
 #define HashDefaultConfig fiftyoneDegreesHashDefaultConfig /**< Synonym for #fiftyoneDegreesHashDefaultConfig config. */
 
+MAP_TYPE(GraphNode)
+MAP_TYPE(GraphNodeHash)
+
+#define GraphNodeReadFromFile fiftyoneDegreesGraphNodeReadFromFile /**< Synonym for #fiftonyeDegreesGraphNodeReadFromFile function. */
+#define GraphGetNode fiftyoneDegreesGraphGetNode /**< Synonym for #fiftyoneDegreesGraphGetNode function. */
+#define GraphGetMatchingHashFromListNodeTable fiftyoneDegreesGraphGetMatchingHashFromListNodeTable /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromListNodeTable function. */
+#define GraphGetMatchingHashFromListNodeSearch fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch function. */
+#define GraphGetMatchingHashFromListNode fiftyoneDegreesGraphGetMatchingHashFromListNode /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromListNode function. */
+#define GraphGetMatchingHashFromBinaryNode fiftyoneDegreesGraphGetMatchingHashFromBinaryNode /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromBinaryNode function. */
+#define GraphGetMatchingHashFromNode fiftyoneDegreesGraphGetMatchingHashFromNode /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromNode function. */
 /**
  * @}
  */

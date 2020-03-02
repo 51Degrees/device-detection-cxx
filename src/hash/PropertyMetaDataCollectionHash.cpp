@@ -21,6 +21,7 @@
  * ********************************************************************* */
 
 #include "PropertyMetaDataCollectionHash.hpp"
+#include "../common-cxx/Exceptions.hpp"
 #include "fiftyone.h"
 
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
@@ -28,9 +29,57 @@ using namespace FiftyoneDegrees::DeviceDetection::Hash;
 PropertyMetaDataCollectionHash::PropertyMetaDataCollectionHash(
 	fiftyoneDegreesResourceManager *manager)
 	: Collection<string, PropertyMetaData>() {
-	this->dataSet = fiftyoneDegreesDataSetHashGet(manager);
+	dataSet = DataSetHashGet(manager);
+	if (dataSet == nullptr) {
+		throw new runtime_error("Data set pointer can not be null");
+	}
+	properties = dataSet->properties;
 }
 
 PropertyMetaDataCollectionHash::~PropertyMetaDataCollectionHash() {
-	fiftyoneDegreesDataSetHashRelease(dataSet);
+	DataSetHashRelease(dataSet);
+}
+
+PropertyMetaData* PropertyMetaDataCollectionHash::getByIndex(
+	uint32_t index) {
+	EXCEPTION_CREATE;
+	Item item;
+	Property *property;
+	PropertyMetaData *result = nullptr;
+	DataReset(&item.data);
+	property = PropertyGet(
+		dataSet->properties,
+		index,
+		&item,
+		exception);
+	EXCEPTION_THROW;
+	if (property != nullptr) {
+		result = PropertyMetaDataBuilderHash::build(dataSet, property);
+		COLLECTION_RELEASE(item.collection, &item);
+	}
+	return result;
+}
+
+PropertyMetaData* PropertyMetaDataCollectionHash::getByKey(string name) {
+	EXCEPTION_CREATE;
+	Item item;
+	Property *property;
+	PropertyMetaData *result = nullptr;
+	DataReset(&item.data);
+	property = PropertyGetByName(
+		dataSet->properties,
+		dataSet->strings,
+		name.c_str(),
+		&item,
+		exception);
+	EXCEPTION_THROW;
+	if (property != nullptr) {
+		result = PropertyMetaDataBuilderHash::build(dataSet, property);
+		COLLECTION_RELEASE(item.collection, &item);
+	}
+	return result;
+}
+
+uint32_t PropertyMetaDataCollectionHash::getSize() {
+	return CollectionGetCount(properties);
 }

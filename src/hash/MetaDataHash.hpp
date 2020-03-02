@@ -23,14 +23,17 @@
 #ifndef FIFTYONE_DEGREES_METADATA_HASH_HPP
 #define FIFTYONE_DEGREES_METADATA_HASH_HPP
 
-#include "hash.h"
-#include "ComponentMetaDataCollectionHash.hpp"
-#include "PropertyMetaDataCollectionHash.hpp"
-#include "PropertyMetaDataCollectionForComponentHash.hpp"
-#include "../common-cxx/MetaData.hpp"
 #include "../common-cxx/Exceptions.hpp"
-#include "../common-cxx/threading.h"
-#include <memory>
+#include "../common-cxx/MetaData.hpp"
+#include "PropertyMetaDataCollectionHash.hpp"
+#include "ValueMetaDataCollectionHash.hpp"
+#include "ValueMetaDataCollectionForPropertyHash.hpp"
+#include "ValueMetaDataCollectionForProfileHash.hpp"
+#include "ComponentMetaDataCollectionHash.hpp"
+#include "ProfileMetaDataCollectionHash.hpp"
+#include "PropertyMetaDataCollectionForComponentHash.hpp"
+#include "PropertyMetaDataBuilderHash.hpp"
+#include "hash.h"
 
 using namespace FiftyoneDegrees::Common;
 
@@ -48,9 +51,9 @@ namespace FiftyoneDegrees {
 				 * @{
 				 */
 
-				/**
-				 * @copydoc Common::MetaData::MetaData
-				 */
+				 /**
+				  * @copydoc Common::MetaData::MetaData
+				  */
 				MetaDataHash(
 					shared_ptr<fiftyoneDegreesResourceManager> manager);
 
@@ -95,7 +98,6 @@ namespace FiftyoneDegrees {
 					getPropertiesForComponent(ComponentMetaData *component);
 
 				PropertyMetaData* getPropertyForValue(ValueMetaData *value);
-
 				/**
 				 * @}
 				 */

@@ -21,82 +21,115 @@
  * ********************************************************************* */
 
 #include "MetaDataHash.hpp"
-#include "fiftyone.h"
 
+using namespace FiftyoneDegrees::Common;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
-using namespace std;
 
-MetaDataHash::MetaDataHash(shared_ptr<fiftyoneDegreesResourceManager> manager)
+MetaDataHash::MetaDataHash(
+	shared_ptr<fiftyoneDegreesResourceManager> manager)
 	: MetaData(manager) {
 }
 
 MetaDataHash::~MetaDataHash() {
 }
 
-Collection<byte, ComponentMetaData>* MetaDataHash::getComponents() {
+Collection<byte, ComponentMetaData>* MetaDataHash::getComponents()
+{
 	return new ComponentMetaDataCollectionHash(manager.get());
 }
 
-Collection<string, PropertyMetaData>* MetaDataHash::getProperties() {
+Collection<string, PropertyMetaData>* MetaDataHash::getProperties()
+{
 	return new PropertyMetaDataCollectionHash(manager.get());
+}
+
+Collection<ValueMetaDataKey, ValueMetaData>* MetaDataHash::getValues()
+{
+	return new ValueMetaDataCollectionHash(manager.get());
+}
+
+Collection<uint32_t, ProfileMetaData>* MetaDataHash::getProfiles()
+{
+	return new ProfileMetaDataCollectionHash(manager.get());
+}
+
+Collection<ValueMetaDataKey, ValueMetaData>*
+MetaDataHash::getValuesForProperty(
+	PropertyMetaData *property) {
+	return new ValueMetaDataCollectionForPropertyHash(
+		manager.get(),
+		property);
+}
+
+Collection<ValueMetaDataKey, ValueMetaData>*
+MetaDataHash::getValuesForProfile(
+	ProfileMetaData *profile) {
+	return new ValueMetaDataCollectionForProfileHash(
+		manager.get(),
+		profile);
+}
+
+ComponentMetaData* MetaDataHash::getComponentForProfile(
+	ProfileMetaData *profile) {
+	ComponentMetaData *result = nullptr;
+	Collection<byte, ComponentMetaData> *components = getComponents();
+	if (components != nullptr) {
+		result = components->getByKey(profile->getComponentId());
+		delete components;
+	}
+	return result;
 }
 
 ComponentMetaData* MetaDataHash::getComponentForProperty(
 	PropertyMetaData *property) {
+	ComponentMetaData *result = nullptr;
 	Collection<byte, ComponentMetaData> *components = getComponents();
-	ComponentMetaData *component = components->getByKey(
-		property->getComponentId());
-	delete components;
-	return component;
+	if (components != nullptr) {
+		result = components->getByKey(property->getComponentId());
+		delete components;
+	}
+	return result;
 }
 
-Collection<string, PropertyMetaData>* MetaDataHash::getPropertiesForComponent(
+ProfileMetaData* MetaDataHash::getDefaultProfileForComponent(
+	ComponentMetaData *component) {
+	ProfileMetaData *result = nullptr;
+	Collection<uint32_t, ProfileMetaData> *profiles = getProfiles();
+	if (profiles != nullptr) {
+		result = profiles->getByKey(component->getDefaultProfileId());
+		delete profiles;
+	}
+	return result;
+}
+
+ValueMetaData* MetaDataHash::getDefaultValueForProperty(
+	PropertyMetaData *property) {
+	ValueMetaData *result = nullptr;
+	Collection<ValueMetaDataKey, ValueMetaData> *values = getValues();
+	if (values != nullptr) {
+		result = values->getByKey(ValueMetaDataKey(
+			property->getName(), 
+			property->getDefaultValue()));
+		delete values;
+	}
+	return result;
+}
+
+Collection<string, PropertyMetaData>*
+MetaDataHash::getPropertiesForComponent(
 	ComponentMetaData *component) {
 	return new PropertyMetaDataCollectionForComponentHash(
 		manager.get(),
 		component);
 }
 
-#ifdef _MSC_VER
-#pragma warning (disable:4100)  
-#endif
-
-Collection<uint32_t, ProfileMetaData>* MetaDataHash::getProfiles() {
-	throw NotImplementedException();
+PropertyMetaData* MetaDataHash::getPropertyForValue(
+	ValueMetaData *value) {
+	PropertyMetaData *result = nullptr;
+	Collection<string, PropertyMetaData> *properties = getProperties();
+	if (properties != nullptr) {
+		result = properties->getByKey(value->getKey().getPropertyName());
+		delete properties;
+	}
+	return result;
 }
-
-Collection<ValueMetaDataKey, ValueMetaData>* MetaDataHash::getValues() {
-	throw NotImplementedException();
-}
-
-Collection<ValueMetaDataKey, ValueMetaData>* MetaDataHash::getValuesForProperty(
-	PropertyMetaData *property) {
-	throw NotImplementedException();
-}
-
-Collection<ValueMetaDataKey, ValueMetaData>* MetaDataHash::getValuesForProfile(
-	ProfileMetaData *profile) {
-	throw NotImplementedException();
-}
-
-PropertyMetaData* MetaDataHash::getPropertyForValue(ValueMetaData *value) {
-	throw NotImplementedException();
-}
-
-ComponentMetaData* MetaDataHash::getComponentForProfile(
-	ProfileMetaData *profile) {
-	throw NotImplementedException();
-}
-ProfileMetaData* MetaDataHash::getDefaultProfileForComponent(
-	ComponentMetaData *component) {
-	throw NotImplementedException();
-}
-
-ValueMetaData* MetaDataHash::getDefaultValueForProperty(
-	PropertyMetaData *property) {
-	throw NotImplementedException();
-}
-
-#ifdef _MSC_VER
-#pragma warning (default:4100)  
-#endif

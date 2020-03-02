@@ -52,6 +52,12 @@
     <ClCompile Include="..\..\test\hash\ExampleHashOfflineProcessingTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\hash\ExampleHashFindProfilesTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\hash\ExampleHashMatchForDeviceIdTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\hash\hash.h">

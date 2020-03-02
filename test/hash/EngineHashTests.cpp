@@ -1,4 +1,4 @@
-/* *********************************************************************
+﻿/* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
  * Copyright 2019 51 Degrees Mobile Experts Limited, 5 Charlotte Close,
  * Caversham, Reading, Berkshire, United Kingdom RG4 7BY.
@@ -62,25 +62,49 @@ public:
 	virtual void reload() {}
 	virtual void metaDataReload() {}
 	void validate(ResultsBase *results) {
-		ResultsHash *hashResults = (ResultsHash*)results;
 		EngineTests::validate(results);
+		validateMatchMetrics((ResultsHash*)results);
+	}
 
-		// Validate there are one or more iterations if User-Agents are 
-		// available in the results.
-		if (hashResults->getUserAgents() > 0) {
-			EXPECT_GT(hashResults->getIterations(), 0) <<
-				"Iterations must be greater than 0";
+	void validateMatchMetrics(ResultsHash *results) {
+		uint32_t i;
+		ASSERT_STRNE("", results->getDeviceId().c_str()) <<
+			L"Device id string should not be empty.";
+		ASSERT_TRUE(results->getDifference() >= 0) <<
+			L"Difference should be positive but was '" << results->getDifference() << "'.";
+		ASSERT_TRUE(
+			results->getMethod() >= 0 &&
+			results->getMethod() < FIFTYONE_DEGREES_HASH_MATCH_METHODS_LENGTH) <<
+			L"Match method was out of range ('" << results->getMethod() << "').";
+		if (results->getUserAgents() > 0) {
+			ASSERT_TRUE(results->getIterations() >= 0) <<
+				L"Iterations must be greater than 0 (or equal to when only " <<
+				L"overrides are present).";
+		}
+
+		for (i = 0; i < (uint32_t)results->getUserAgents(); i++) {
+			ASSERT_STRNE("", results->getDeviceId(i).c_str()) <<
+				L"Device id string should not be empty.";
+			ASSERT_TRUE(results->getDifference(i) >= 0) <<
+				L"Difference should be positive but was '" << results->getDifference(i) << "'.";
+			ASSERT_TRUE(
+				results->getMethod(i) >= 0 &&
+				results->getMethod(i) < FIFTYONE_DEGREES_HASH_MATCH_METHODS_LENGTH) <<
+				L"Match method was out of range ('" << results->getMethod(i) << "').";
 		}
 	}
-	void verifyComponentMetaData(MetaData *metaData);
-	void verifyPropertyMetaData(MetaData *metaData);
-	void verifyProfileMetaData(MetaData *metaData);
-	void verifyValueMetaData(MetaData *metaData);
 	void metaData() {
-		EngineHashTests::verifyMetaData(getEngine());
+		EngineTests::verifyMetaData(getEngine());
 	}
+
 	void verify() {
 		EngineDeviceDetectionTests::verify();
+		verifyProfileOverrideDefault();
+		verifyProfileOverrideBad();
+		verifyProfileOverrideNoUserAgent();
+		verifyProcessDeviceId();
+		verifyProfileOverridePartial();
+		verifyProfileOverrideZero();
 		verifyNoMatchedNodes();
 	}
 	bool setResultsMatchedNodes(
@@ -123,6 +147,190 @@ public:
 		setResultsMatchedNodes(results, 0, originalMatchedNodes);
 
 		delete results;
+	}
+
+	void verifyProfileOverrideDefault() {
+		EvidenceDeviceDetection evidence;
+		ComponentMetaData *component;
+		ProfileMetaData *defaultProfile;
+		Common::Collection<byte, ComponentMetaData> *components =
+			getEngine()->getMetaData()->getComponents();
+		stringstream expectedDeviceId;
+		stringstream evidenceValue;
+		evidence["header.User-Agent"] = mobileUserAgent;
+		for (uint32_t i = 0; i < components->getSize(); i++) {
+			if (i != 0) {
+				expectedDeviceId << "-";
+				evidenceValue << "|";
+			}
+			component = components->getByIndex(i);
+			defaultProfile = getEngine()->getMetaData()
+				->getDefaultProfileForComponent(component);
+			evidenceValue << defaultProfile->getProfileId();
+			expectedDeviceId << defaultProfile->getProfileId();
+			delete defaultProfile;
+			delete component;
+		}
+		evidence["query.ProfileIds"] = evidenceValue.str();
+		EngineTests::verifyWithEvidence(&evidence);
+		ResultsHash *results =
+			((EngineHash*)getEngine())->process(&evidence);
+		EXPECT_EQ(results->getDeviceId(), expectedDeviceId.str());
+		delete results;
+		delete components;
+	}
+
+	void verifyProfileOverrideNoUserAgent() {
+		EvidenceDeviceDetection evidence;
+		const char *expectedDeviceId = "12280-17779-17470-18092";
+		const char *evidenceValue = "12280|17779|17470|18092";
+		evidence["query.ProfileIds"] = evidenceValue;
+		EngineTests::verifyWithEvidence(&evidence);
+		ResultsHash *results =
+			((EngineHash*)getEngine())->process(&evidence);
+
+		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId) <<
+			L"The device id was not correct.";
+		delete results;
+	}
+	bool setAllowUnmatched(
+		EngineHash *engine,
+		bool allowUnmatched) {
+		fiftyoneDegreesDataSetHash *dataSet =
+			fiftyoneDegreesDataSetHashGet(engine->manager.get());
+		// Discard the const qualifier to allow changing for the test.
+		fiftyoneDegreesConfigHash *configSource =
+			(fiftyoneDegreesConfigHash*)&dataSet->config;
+
+		int original = configSource->b.allowUnmatched;
+		configSource->b.allowUnmatched = allowUnmatched;
+
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+
+		return original;
+	}
+
+	void verifyProfileOverridePartial() {
+		EvidenceDeviceDetection evidence;
+		const char *evidenceValue = "17779|17470|18092";
+		char expectedDeviceId2[24];
+		const char* expectedDeviceId1 = "0-17779-17470-18092";
+		EngineHash *engine = (EngineHash*)getEngine();
+
+		// Get the expected device id for the case where a default profile is
+		// used.
+		Common::Collection<byte, ComponentMetaData> *components =
+			getEngine()->getMetaData()->getComponents();
+		ComponentMetaData *component = components->getByIndex(0);
+		sprintf(expectedDeviceId2, "%d-17779-17470-18092", component->getDefaultProfileId());
+
+		// Get a property to check which belongs to the component with no
+		// profile.
+		Common::Collection<string, PropertyMetaData> *properties =
+			getEngine()->getMetaData()->getPropertiesForComponent(component);
+		PropertyMetaData *property = properties->getByIndex(0);
+
+		// First test the behavior when unmatched is not allowed. This means
+		// null profiles instead of the default being used.
+		bool originalAllowUnmatched = setAllowUnmatched(engine, false);
+		evidence["query.ProfileIds"] = evidenceValue;
+		ResultsHash *results = engine->process(&evidence);
+
+		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId1) <<
+			L"The device id was not correct.";
+		EXPECT_FALSE(results->getValueAsString(property->getName()).hasValue()) <<
+			L"No value should be returned for a missing profile.";
+		ASSERT_EQ(FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE,
+			results->getValueAsString(property->getName()).getNoValueReason()) <<
+			L"The reason for the missing value was not reported as being due " <<
+			L"to a null profile.";
+		delete results;
+
+		// Now test the behavior when unmatched is allowed. This means that
+		// where there is no profile, the default is used.
+		setAllowUnmatched(engine, true);
+		results = engine->process(&evidence);
+
+		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId2) <<
+			L"The device id was not correct.";
+		EXPECT_STREQ((*results->getValueAsString(property->getName())).c_str(), property->getDefaultValue().c_str()) <<
+			L"The value returned was not the default.";
+
+		setAllowUnmatched(engine, originalAllowUnmatched);
+
+		delete property;
+		delete properties;
+		delete component;
+		delete components;
+		delete results;
+	}
+
+	void verifyProfileOverrideZero() {
+		EvidenceDeviceDetection evidence;
+		const char *expectedDeviceId = "12280-0-0-0";
+		const char *evidenceValue = "12280|0|0|0";
+		bool originalAllowUnmatched = setAllowUnmatched(engine, false);
+
+		Common::Collection<byte, ComponentMetaData> *components =
+			getEngine()->getMetaData()->getComponents();
+		ComponentMetaData *component = components->getByIndex(0);
+		// Get a property to check which belongs to the only component with a
+		// profile.
+		Common::Collection<string, PropertyMetaData> *properties =
+			getEngine()->getMetaData()->getPropertiesForComponent(component);
+		PropertyMetaData *property = properties->getByIndex(0);
+
+		evidence["query.ProfileIds"] = evidenceValue;
+		ResultsHash *results = engine->process(&evidence);
+
+		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId) <<
+			L"The device id was not correct.";
+		EXPECT_TRUE(results->getValueAsString(property->getName()).hasValue()) <<
+			L"The results did not contain a value for the populated component.";
+
+		setAllowUnmatched(engine, originalAllowUnmatched);
+		delete property;
+		delete properties;
+		delete component;
+		delete components;
+		delete results;
+	}
+
+	void verifyProcessDeviceId() {
+		EvidenceDeviceDetection evidence;
+		const char *expectedDeviceId = "12280-17779-17470-18092";
+		const char *evidenceValue = "12280-17779-17470-18092";
+		evidence["query.ProfileIds"] = evidenceValue;
+		EngineTests::verifyWithEvidence(&evidence);
+		ResultsHash *results =
+			((EngineHash*)getEngine())->process(&evidence);
+
+		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId) <<
+			L"The device id was not correct.";
+		delete results;
+	}
+
+	void verifyProfileOverrideBad() {
+		EvidenceDeviceDetection evidence;
+		evidence["header.user-agent"] = mobileUserAgent;
+		ResultsHash *goodResults =
+			((EngineHash*)getEngine())->process(&evidence);
+		evidence["query.51D_ProfileIds"] = string("");
+		ResultsHash *emptyResults =
+			((EngineHash*)getEngine())->process(&evidence);
+		evidence["query.51D_ProfileIds"] = string("2147483646|2147483647");
+		ResultsHash *highResults =
+			((EngineHash*)getEngine())->process(&evidence);
+		evidence["query.51D_ProfileIds"] = string("!�*&:@~{}_+");
+		ResultsHash *wrongResults =
+			((EngineHash*)getEngine())->process(&evidence);
+		EXPECT_EQ(emptyResults->getDeviceId(), goodResults->getDeviceId());
+		EXPECT_EQ(highResults->getDeviceId(), goodResults->getDeviceId());
+		EXPECT_EQ(wrongResults->getDeviceId(), goodResults->getDeviceId());
+		delete goodResults;
+		delete emptyResults;
+		delete highResults;
+		delete wrongResults;
 	}
 	EngineHash *engine;
 	ConfigHash *config;
@@ -218,89 +426,5 @@ public:
 		}
 	}
 };
-
-void EngineHashTests::verifyComponentMetaData(MetaData *metaData) {
-	Collection<byte, ComponentMetaData> *components =
-		metaData->getComponents();
-	ASSERT_NE(nullptr, components) << L"Components should not be null.";
-	uint32_t componentIndex, propertyIndex;
-	ComponentMetaData *component, *otherComponent;
-	Collection<string, PropertyMetaData> *properties;
-	PropertyMetaData *property;
-	for (componentIndex = 0;
-		componentIndex < components->getSize();
-		componentIndex++) {
-		component = components->getByIndex(componentIndex);
-		otherComponent = components->getByKey(component->getKey());
-		ASSERT_EQ(*component, *otherComponent) <<
-			L"The same component should be returned for the same key.";
-		ASSERT_NE(component, otherComponent) <<
-			L"The component should be a unique instance.";
-		delete otherComponent;
-		properties = metaData->getPropertiesForComponent(component);
-		for (propertyIndex = 0;
-			propertyIndex < properties->getSize();
-			propertyIndex += 10) {
-			property = properties->getByIndex(propertyIndex);
-			otherComponent = metaData->getComponentForProperty(property);
-			ASSERT_EQ(*component, *otherComponent) <<
-				L"The component and its properties are not linked. " <<
-				L"\nComponent Id = " << (int)component->getComponentId() <<
-				L"\nOther Component Id = " << (int)otherComponent->getComponentId() <<
-				L"\nProperty = " << property->getName() << L".";
-			delete property;
-			delete otherComponent;
-		}
-		delete properties;
-		delete component;
-	}
-	delete components;
-}
-
-void EngineHashTests::verifyPropertyMetaData(MetaData *metaData) {
-	Collection<string, PropertyMetaData> *properties =
-		metaData->getProperties();
-	ASSERT_NE(nullptr, properties) << L"Properties should not be null.";
-	PropertyMetaData *property, *otherProperty;
-	ComponentMetaData *component;
-	Collection<string, PropertyMetaData> *componentProperties;
-	uint32_t propertyIndex, componentPropertyIndex;
-	for (propertyIndex = 0;
-		propertyIndex < properties->getSize();
-		propertyIndex += 10) {
-		property = properties->getByIndex(propertyIndex);
-
-		bool found = false;
-		component = metaData->getComponentForProperty(property);
-		componentProperties = metaData->getPropertiesForComponent(component);
-		for (componentPropertyIndex = 0;
-			componentPropertyIndex < componentProperties->getSize();
-			componentPropertyIndex++) {
-			otherProperty = componentProperties->getByIndex(
-				componentPropertyIndex);
-			if (*property == *otherProperty) {
-				found = true;
-				delete otherProperty;
-				break;
-			}
-			delete otherProperty;
-		}
-		delete componentProperties;
-		delete component;
-		ASSERT_TRUE(found) << L"The property was not added to its component." <<
-			L"The property and its values are not linked." <<
-			L"\nProperty = " << property->getName();
-		delete property;
-	}
-	delete properties;
-}
-
-void EngineHashTests::verifyProfileMetaData(MetaData *metaData) {
-	EXPECT_THROW(metaData->getProfiles(), NotImplementedException);
-}
-
-void EngineHashTests::verifyValueMetaData(MetaData *metaData) {
-	EXPECT_THROW(metaData->getProfiles(), NotImplementedException);
-}
 
 ENGINE_TESTS(Hash)

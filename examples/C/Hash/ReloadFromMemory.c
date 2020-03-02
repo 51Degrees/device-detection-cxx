@@ -109,7 +109,7 @@ https://51degrees.com/Support/Documentation/APIs/C-V32/Benchmarks
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV3.4.trie";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static const char *userAgentFileName = "20000 User Agents.csv";
 
@@ -169,17 +169,18 @@ static unsigned long getHashCode(ResultsHash *results) {
 	unsigned long hashCode = 0;
 	uint32_t requiredPropertyIndex;
 	const char *valueName;
-	DataSetHash *dataSet =
-		(DataSetHash*)results->b.b.dataSet;
+	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
 	for (requiredPropertyIndex = 0;
 		requiredPropertyIndex < dataSet->b.b.available->count;
 		requiredPropertyIndex++) {
-		valueName = STRING(ResultsHashGetValue(
+		if (ResultsHashGetValues(
 			results,
 			requiredPropertyIndex,
-			exception));
-		EXCEPTION_THROW;
-		hashCode ^= generateHash((unsigned char*)(valueName));
+			exception) != NULL &&
+			EXCEPTION_OKAY) {
+			valueName = STRING(results->values.items[0].data.ptr);
+			hashCode ^= generateHash((unsigned char*)(valueName));
+		}
 	}
 	return hashCode;
 }

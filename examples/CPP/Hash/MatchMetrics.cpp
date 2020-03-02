@@ -42,7 +42,7 @@ initialised with, and the configuration.
 ```
 using namespace FiftyoneDegrees;
 
-string fileName = "51Degrees-V3.4.trie";
+string fileName = "51Degrees-V4.1.hash";
 string propertiesString = "ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName";
 Common::RequiredPropertiesConfig *properties =
 	new Common::RequiredPropertiesConfig(&propertiesString);
@@ -102,19 +102,28 @@ the time taken to fetch the result.
 int iterations = results->getIterations();
 ```
 
-8. Obtain the matched User-Agent: the matched substrings in the User-Agent
+8. Obtain match method: provides information about the algorithm that was used
+to perform detection for a particular User-Agent. For more information on what
+each method means please see:
+<a href="https://51degrees.com/support/documentation/hash">
+How device detection works</a>.
+```
+fiftyoneDegreesHashMatchMethod method = results->getMethod();
+```
+
+9. Obtain the matched User-Agent: the matched substrings in the User-Agent
 separated with underscored.
 ```
 string matchedUserAgent = results->getUserAgent(0);
 ```
 
-9. Release the memory used by the results and the evidence.
+10. Release the memory used by the results and the evidence.
 ```
 delete results;
 delete evidence;
 ```
 
-10. Finally release the memory used by the engine.
+11. Finally release the memory used by the engine.
 ```
 delete engine;
 ```
@@ -135,6 +144,20 @@ namespace FiftyoneDegrees {
 					: ExampleBase(dataFilePath)
 				{};
 
+				const char* getMethodString(int method) {
+					switch (method) {
+					case FIFTYONE_DEGREES_HASH_MATCH_METHOD_PERFORMANCE:
+						return "PERFORMANCE";
+					case FIFTYONE_DEGREES_HASH_MATCH_METHOD_COMBINED:
+						return "COMBINED";
+					case FIFTYONE_DEGREES_HASH_MATCH_METHOD_PREDICTIVE:
+						return "PREDICTIVE";
+					case FIFTYONE_DEGREES_HASH_MATCH_METHOD_NONE:
+					default:
+						return "NONE";
+					}
+				}
+
 				/**
 				 * @copydoc ExampleBase::run
 				 */
@@ -152,12 +175,15 @@ namespace FiftyoneDegrees {
 					evidence->operator[]("header.user-agent")
 						= mobileUserAgent;
 					results = engine->process(evidence);
-					cout << "   IsMobile: " <<
+					cout <<
+						"   IsMobile:    " <<
 						(*results->getValueAsString("IsMobile")).c_str() << "\n" <<
-						"   Id: " << results->getDeviceId() << "\n" <<
-						"   Drift: " << results->getDrift() << "\n" <<
-						"   Difference: " << results->getDifference() << "\n" <<
-						"   Iterations: " << results->getIterations() << "\n" <<
+						"   Id:          " << results->getDeviceId() << "\n" <<
+						"   Drift:       " << results->getDrift() << "\n" <<
+						"   Difference:  " << results->getDifference() << "\n" <<
+						"   Iterations:  " << results->getIterations() << "\n" <<
+						"   Method:      " <<
+						getMethodString(results->getMethod()) << "\n" <<
 						"   Sub Strings: " << results->getUserAgent(0);
 					delete results;
 
@@ -167,12 +193,14 @@ namespace FiftyoneDegrees {
 					evidence->operator[]("header.user-agent")
 						= desktopUserAgent;
 					results = engine->process(evidence);
-					cout << "   IsMobile: " <<
+					cout <<
+						"   IsMobile:    " <<
 						(*results->getValueAsString("IsMobile")).c_str() << "\n" <<
-						"   Id: " << results->getDeviceId() << "\n" <<
-						"   Drift: " << results->getDrift() << "\n" <<
-						"   Difference: " << results->getDifference() << "\n" <<
-						"   Iterations: " << results->getIterations() << "\n" <<
+						"   Id:          " << results->getDeviceId() << "\n" <<
+						"   Drift:       " << results->getDrift() << "\n" <<
+						"   Difference:  " << results->getDifference() << "\n" <<
+						"   Iterations:  " << results->getIterations() << "\n" <<
+						"   Method:      " << results->getMethod() << "\n" <<
 						"   Sub Strings: " << results->getUserAgent(0);
 					delete results;
 
@@ -182,12 +210,14 @@ namespace FiftyoneDegrees {
 					evidence->operator[]("header.user-agent")
 						= mediaHubUserAgent;
 					results = engine->process(evidence);
-					cout << "   IsMobile: " <<
+					cout <<
+						"   IsMobile:    " <<
 						(*results->getValueAsString("IsMobile")).c_str() << "\n" <<
-						"   Id: " << results->getDeviceId() << "\n" <<
-						"   Drift: " << results->getDrift() << "\n" <<
-						"   Difference: " << results->getDifference() << "\n" <<
-						"   Iterations: " << results->getIterations() << "\n" <<
+						"   Id:          " << results->getDeviceId() << "\n" <<
+						"   Drift:       " << results->getDrift() << "\n" <<
+						"   Difference:  " << results->getDifference() << "\n" <<
+						"   Iterations:  " << results->getIterations() << "\n" <<
+						"   Method:      " << results->getMethod() << "\n" <<
 						"   Sub Strings: " << results->getUserAgent(0);
 					delete results;
 
