@@ -205,3 +205,111 @@ fiftyoneDegreesGraphGetMatchingHashFromNode(
 		return GraphGetMatchingHashFromListNode(node, hash);
 	}
 }
+
+fiftyoneDegreesGraphTraceNode* fiftyoneDegreesGraphTraceCreate(
+	const char *fmt,
+	...) {
+	va_list args;
+	va_start(args, fmt);
+
+	size_t length = vsnprintf(NULL, 0, fmt, args);
+
+	GraphTraceNode* root = (GraphTraceNode*)Malloc(sizeof(GraphTraceNode));
+	root->rootName = (char *)Malloc((length + 1) * sizeof(char));
+	vsprintf(root->rootName, fmt, args);
+
+	root->hashCode = 0;
+	root->index = -1;
+	root->matched = false;
+	root->next = NULL;
+	return root;
+}
+
+
+void fiftyoneDegreesGraphTraceFree(fiftyoneDegreesGraphTraceNode* route) {
+	GraphTraceNode *tmp, *current = route;
+	while (current != NULL) {
+		tmp = current->next;
+		if (current->rootName != NULL) {
+			Free(current->rootName);
+		}
+		Free(current);
+		current = tmp;
+	}
+}
+
+void fiftyoneDegreesGraphTraceAppend(
+	fiftyoneDegreesGraphTraceNode* route,
+	fiftyoneDegreesGraphTraceNode* node) {
+	GraphTraceNode *last = route;
+	while (last->next != NULL) {
+		last = last->next;
+	}
+	last->next = node;
+}
+
+size_t fiftyoneDegreesGraphTraceGet(
+	fiftyoneDegreesGraphTraceNode* route,
+	char *destination,
+	size_t length) {
+	int written, remaining;
+	// TODO track size needed.
+	char *current = destination;
+	GraphTraceNode *node = route;
+
+	while (node != NULL) {
+		remaining = length - (current - destination);
+		if (node->rootName != NULL) {
+			written = snprintf(current, remaining, "--- Start of '%s'---\n", node->rootName);
+		}
+		else {
+			if (node->index >= remaining) {
+				// TODO
+				return -1;
+			}
+			memset(current, ' ', node->firstIndex);
+			current += node->firstIndex;
+			remaining -= node->firstIndex;
+			if (remaining < node->lastIndex - node->firstIndex) {
+				// todo.
+				return -1;
+			}
+			if (node->lastIndex == node->firstIndex) {
+				current[0] = '^';
+			}
+			else {
+				for (int i = 0; i <= node->lastIndex - node->firstIndex; i++) {
+					if (i == node->index - node->firstIndex) {
+						current[i] = '^';
+					}
+					else if (i == 0 || i == node->lastIndex - node->firstIndex) {
+						current[i] = '|';
+					}
+					else {
+						current[i] = '-';
+					}
+				}
+			}
+			current += (node->lastIndex - node->firstIndex) + 1;
+			remaining -= (node->lastIndex - node->firstIndex) + 1;
+
+			if (node->matched == true) {
+				written = snprintf(current, remaining, "(%d) %x\n", node->index, node->hashCode);
+			}
+			else {
+				written = snprintf(current, remaining, "(%d)\n", node->index);
+			}
+
+		}
+		if (written >= 0 && written < remaining) {
+			current += written;
+			remaining -= written;
+		}
+		else {
+			// TODO
+			return -1;
+		}
+		node = node->next;
+	}
+	return current - destination;
+}

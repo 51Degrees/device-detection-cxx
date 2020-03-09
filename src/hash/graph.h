@@ -128,6 +128,21 @@ typedef struct fiftyoneDegrees_graph_node_hash_t {
 } fiftyoneDegreesGraphNodeHash;
 #pragma pack(pop)
 
+/** @cond FORWARD_DECLARATIONS */
+typedef struct fiftyoneDegrees_graph_trace_node_t fiftyoneDegreesGraphTraceNode;
+/** @endcond */
+
+
+typedef struct fiftyoneDegrees_graph_trace_node_t {
+    uint32_t index;
+    uint32_t firstIndex;
+    uint32_t lastIndex;
+    uint32_t hashCode;
+    bool matched;
+    char *rootName;
+    fiftyoneDegreesGraphTraceNode* next;
+} fiftyoneDegreesGraphTraceNode;
+
 /**
  * Graph node structure used to construct the directed acyclic graph to search.
  */
@@ -205,7 +220,7 @@ fiftyoneDegreesGraphGetMatchingHashFromListNodeTable(
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
  *                                       or null if none match.
  */
-fiftyoneDegreesGraphNodeHash*
+EXTERNAL fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash);
@@ -218,7 +233,7 @@ fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch(
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
  *                                       or null if none match.
  */
-fiftyoneDegreesGraphNodeHash*
+EXTERNAL fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromListNode(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash);
@@ -231,7 +246,7 @@ fiftyoneDegreesGraphGetMatchingHashFromListNode(
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
  *                                       or null if none match.
  */
-fiftyoneDegreesGraphNodeHash*
+EXTERNAL fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromBinaryNode(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash);
@@ -244,10 +259,26 @@ fiftyoneDegreesGraphGetMatchingHashFromBinaryNode(
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
  *                                       or null if none match.
  */
-fiftyoneDegreesGraphNodeHash*
+EXTERNAL fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromNode(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash);
+
+EXTERNAL fiftyoneDegreesGraphTraceNode* fiftyoneDegreesGraphTraceCreate(
+    const char *fmt,
+    ...);
+
+EXTERNAL void fiftyoneDegreesGraphTraceFree(
+    fiftyoneDegreesGraphTraceNode *route);
+
+EXTERNAL void fiftyoneDegreesGraphTraceAppend(
+    fiftyoneDegreesGraphTraceNode *route,   
+    fiftyoneDegreesGraphTraceNode *node);
+
+EXTERNAL size_t fiftyoneDegreesGraphTraceGet(
+    fiftyoneDegreesGraphTraceNode *route,
+    char *destination,
+    size_t length);
 
 /**
  * @}

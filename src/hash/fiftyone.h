@@ -81,6 +81,7 @@ MAP_TYPE(HashRootNodes)
 
 MAP_TYPE(GraphNode)
 MAP_TYPE(GraphNodeHash)
+MAP_TYPE(GraphTraceNode)
 
 #define GraphNodeReadFromFile fiftyoneDegreesGraphNodeReadFromFile /**< Synonym for #fiftonyeDegreesGraphNodeReadFromFile function. */
 #define GraphGetNode fiftyoneDegreesGraphGetNode /**< Synonym for #fiftyoneDegreesGraphGetNode function. */
@@ -89,6 +90,10 @@ MAP_TYPE(GraphNodeHash)
 #define GraphGetMatchingHashFromListNode fiftyoneDegreesGraphGetMatchingHashFromListNode /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromListNode function. */
 #define GraphGetMatchingHashFromBinaryNode fiftyoneDegreesGraphGetMatchingHashFromBinaryNode /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromBinaryNode function. */
 #define GraphGetMatchingHashFromNode fiftyoneDegreesGraphGetMatchingHashFromNode /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromNode function. */
+#define GraphTraceCreate fiftyoneDegreesGraphTraceCreate /** Synonym for #fiftyoneDegreesGraphTraceCreate method. */
+#define GraphTraceFree fiftyoneDegreesGraphTraceFree /**< Synonym for #fiftyoneDegreesGraphTraceFree function. */
+#define GraphTraceAppend fiftyoneDegreesGraphTraceAppend /**< Synonym for #fiftyoneDegreesGraphTraceAppend function. */
+#define GraphTraceGet fiftyoneDegreesGraphTraceGet /**< Synonym for #fiftyoneDegreesGraphTraceGet function. */
 /**
  * @}
  */

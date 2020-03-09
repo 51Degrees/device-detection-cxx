@@ -398,6 +398,25 @@ static void updateMatchedUserAgent(detectionState *state) {
 	}
 }
 
+static void traceRoute(detectionState *state, GraphNodeHash* hash) {
+	/// TODO set default for trace in config
+	GraphTraceNode* node = (GraphTraceNode*)Malloc(sizeof(GraphTraceNode));
+	node->index = MAX(state->currentIndex, state->firstIndex);
+	node->next = NULL;
+	node->rootName = NULL;
+	node->firstIndex = state->firstIndex;
+	node->lastIndex = state->lastIndex;
+	if (hash != NULL) {
+		node->hashCode = hash->hashCode;
+		node->matched = true;
+	}
+	else {
+		node->hashCode = 0;
+		node->matched = false;
+	}
+	GraphTraceAppend(state->result->trace, node);
+}
+
 /**
  * Checks to see if the offset represents a node or a device index.
  * If the offset is positive then it is a an offset from the root node in the
@@ -642,12 +661,14 @@ static void evaluateListNode(detectionState *state) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
+		traceRoute(state, nodeHash);
 		setNextNode(state, nodeHash->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
+		traceRoute(state, NULL);
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -663,7 +684,7 @@ static void evaluateBinaryNode(detectionState *state) {
 	bool found = false;
 	int initialFirstIndex = state->firstIndex;
 	int initialLastIndex = state->lastIndex;
-	fiftyoneDegreesGraphNodeHash *hashes = HASHES(state);
+	GraphNodeHash *hashes = HASHES(state);
 	if (setInitialHash(state)) {
 		// Keep rolling the hash until the hash is found or the last index is
 		// reached and there is no possibility of finding the hash value.
@@ -755,12 +776,14 @@ static void evaluateBinaryNode(detectionState *state) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
+		traceRoute(state, hashes);
 		setNextNode(state, hashes->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
+		traceRoute(state, NULL);
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -768,8 +791,8 @@ static void evaluateBinaryNode(detectionState *state) {
 static bool processFromRoot(
 	DataSetHash *dataSet,
 	uint32_t rootNodeOffset,
-	detectionState *state,
-	Exception *exception) {
+	detectionState *state) {
+	Exception *exception = state->exception;
 	int previouslyMatchedNodes = state->matchedNodes;
 	// Set the state to the current root node.
 	if (GraphGetNode(
@@ -798,6 +821,27 @@ static bool processFromRoot(
 		state->iterations++;
 	} while (state->complete == false);
 	return state->matchedNodes > previouslyMatchedNodes;
+}
+
+static void addTraceRootName(
+	detectionState *state,
+	const char *key,
+	Component *component,
+	Header *header) {
+	Exception* exception = state->exception;
+	String* componentName;
+	Item componentNameItem;
+	GraphTraceNode *node;
+	DataReset(&componentNameItem.data);
+
+	componentName = StringGet(state->dataSet->strings, component->nameOffset, &componentNameItem, exception);
+	if (EXCEPTION_FAILED) {
+		return;
+	}
+
+	node = GraphTraceCreate("%s %s %s", STRING(componentName), STRING(header->name.data.ptr), key);
+	COLLECTION_RELEASE(state->dataSet->strings, &componentNameItem);
+	GraphTraceAppend(state->result->trace, node);
 }
 
 static void setResultFromUserAgent(
@@ -844,13 +888,27 @@ static void setResultFromUserAgent(
 						// TODO the lines below need to be thoroughly documented to
 						// explain the two graphs.
 						if (dataSet->config.usePerformanceGraph == true) {
-							matched = processFromRoot(dataSet, rootNodes->performanceNodeOffset, &state, exception);
+							if (dataSet->config.traceRoute == true) {
+								addTraceRootName(
+									&state,
+									"Performance",
+									component,
+									&dataSet->b.b.uniqueHeaders->items[state.result->b.uniqueHttpHeaderIndex]);
+							}
+							matched = processFromRoot(dataSet, rootNodes->performanceNodeOffset, &state);
 							if (matched) {
 								state.performanceMatches++;
 							}
 						}
 						if (matched == false && dataSet->config.usePredictiveGraph == true) {
-							matched = processFromRoot(dataSet, rootNodes->predictiveNodeOffset, &state, exception);
+							if (dataSet->config.traceRoute == true) {
+								addTraceRootName(
+									&state,
+									"Performance",
+									component,
+									&dataSet->b.b.uniqueHeaders->items[state.result->b.uniqueHttpHeaderIndex]);
+							}
+							matched = processFromRoot(dataSet, rootNodes->predictiveNodeOffset, &state);
 							if (matched) {
 								state.predictiveMatches++;
 							}
@@ -1997,6 +2055,9 @@ void fiftyoneDegreesResultsHashFree(
 		ResultsUserAgentFree(&results->items[i].b);
 		Free(results->items[i].profileOffsets);
 		Free(results->items[i].profileIsOverriden);
+		if (results->items[i].trace != NULL) {
+			GraphTraceFree(results->items[i].trace);
+		}
 	}
 	ResultsDeviceDetectionFree(&results->b);
 	DataSetRelease((DataSetBase*)results->b.b.dataSet);
@@ -2026,7 +2087,8 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			&dataSet->b,
 			overridesCapacity);
 
-		// Set the memory for matched User-Agents, or make the pointer NULL.
+		// Set the memory for matched User-Agents and route, or make the
+		// pointer NULL.
 		for (i = 0; i < results->capacity; i++) {
 			ResultsUserAgentInit(&dataSet->config.b, &results->items[i].b);
 			results->items[i].profileOffsets = (uint32_t*)Malloc(
@@ -2035,6 +2097,12 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			results->items[i].profileIsOverriden = (bool*)Malloc(
 				sizeof(bool) *
 				dataSet->componentsList.count);
+			if (dataSet->config.traceRoute == true) {
+				results->items[i].trace = GraphTraceCreate("Hash Result %d", i); // todo i
+			}
+			else {
+				results->items[i].trace = NULL;
+			}
 		}
 
 		// Reset the property and values list ready for first use sized for 

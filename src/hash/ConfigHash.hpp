@@ -179,6 +179,9 @@ namespace FiftyoneDegrees {
 				 */
 				void setConcurrency(uint16_t concurrency);
 
+				// TODO comment.
+				void setTraceRoute(bool shouldTrace);
+
 				/**
 				 * @}
 				 * @name Getters
@@ -256,6 +259,9 @@ namespace FiftyoneDegrees {
 				 * @return a 16 bit integer with the minimum concurrency value.
 				 */
 				uint16_t getConcurrency();
+
+				// TODO comment.
+				bool getTraceRoute();
 
 				 /**
 				  * Gets the configuration data structure for use in C code.

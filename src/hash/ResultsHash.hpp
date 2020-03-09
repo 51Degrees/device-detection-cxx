@@ -167,6 +167,10 @@ namespace FiftyoneDegrees {
 				 */
 				int getMethod(uint32_t resultIndex);
 
+				string getTrace();
+
+				string getTrace(uint32_t resultIndex);
+
 				/**
 				 * @}
 				 * @name DeviceDetection::ResultsDeviceDetection Implementation
