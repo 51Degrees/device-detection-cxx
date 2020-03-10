@@ -180,6 +180,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig = {
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
 	true,
+	false,
 	false
 };
 #undef FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY
@@ -200,6 +201,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
 	true,
+	false,
 	false
 };
 
@@ -217,7 +219,8 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig = {
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
 	true,
-	true
+	true,
+	false
 };
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
@@ -234,7 +237,8 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
 	true,
-	true
+	true,
+	false
 };
 
 #define FIFTYONE_DEGREES_HASH_CONFIG_BALANCED \
@@ -251,7 +255,8 @@ FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT, \
 FIFTYONE_DEGREES_HASH_DIFFERENCE, \
 FIFTYONE_DEGREES_HASH_DRIFT, \
 true, \
-true
+true, \
+false
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedConfig = {
 	FIFTYONE_DEGREES_HASH_CONFIG_BALANCED
@@ -399,13 +404,13 @@ static void updateMatchedUserAgent(detectionState *state) {
 }
 
 static void traceRoute(detectionState *state, GraphNodeHash* hash) {
-	/// TODO set default for trace in config
 	GraphTraceNode* node = (GraphTraceNode*)Malloc(sizeof(GraphTraceNode));
 	node->index = MAX(state->currentIndex, state->firstIndex);
 	node->next = NULL;
 	node->rootName = NULL;
 	node->firstIndex = state->firstIndex;
 	node->lastIndex = state->lastIndex;
+	node->length = NODE(state)->length;
 	if (hash != NULL) {
 		node->hashCode = hash->hashCode;
 		node->matched = true;

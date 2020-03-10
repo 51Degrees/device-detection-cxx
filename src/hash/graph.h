@@ -135,6 +135,7 @@ typedef struct fiftyoneDegrees_graph_trace_node_t fiftyoneDegreesGraphTraceNode;
 
 typedef struct fiftyoneDegrees_graph_trace_node_t {
     uint32_t index;
+    uint32_t length;
     uint32_t firstIndex;
     uint32_t lastIndex;
     uint32_t hashCode;
@@ -275,7 +276,7 @@ EXTERNAL void fiftyoneDegreesGraphTraceAppend(
     fiftyoneDegreesGraphTraceNode *route,   
     fiftyoneDegreesGraphTraceNode *node);
 
-EXTERNAL size_t fiftyoneDegreesGraphTraceGet(
+EXTERNAL int fiftyoneDegreesGraphTraceGet(
     fiftyoneDegreesGraphTraceNode *route,
     char *destination,
     size_t length);
