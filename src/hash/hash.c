@@ -751,6 +751,12 @@ static void evaluateBinaryNode(detectionState *state) {
 			}
 		}
 	}
+
+	// Reset the first and last indexes as they may have been changed by the
+	// drift option.
+	state->firstIndex = initialFirstIndex;
+	state->lastIndex = initialLastIndex;
+
 	if (found == true) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
