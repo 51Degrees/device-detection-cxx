@@ -253,9 +253,9 @@ void fiftyoneDegreesGraphTraceAppend(
 #define CURRENT(s,w) s == NULL ? NULL : s + w
 
 int fiftyoneDegreesGraphTraceGet(
-	fiftyoneDegreesGraphTraceNode* route,
 	char *destination,
-	size_t length) {
+	size_t length,
+	fiftyoneDegreesGraphTraceNode* route) {
 	int written = 0;
 	GraphTraceNode *node = route;
 

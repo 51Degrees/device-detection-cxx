@@ -44,7 +44,7 @@ ExampleBase::ExampleBase(byte *data, long length, ConfigHash *config) {
 
 	// Set the properties to be returned for each User-Agent.
 	string propertiesString =
-		"ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName";
+		"HardwareModel";
 	properties = new RequiredPropertiesConfig(propertiesString);
 
 	// Initialise the engine for device detection.
@@ -58,10 +58,13 @@ ExampleBase::ExampleBase(byte *data, long length, ConfigHash *config) {
 ExampleBase::ExampleBase(string dataFilePath, ConfigHash *config) {
 	this->config = config;
 
+	//this->config->setUsePerformanceGraph(false);
+	this->config->setTraceRoute(true);
+	this->config->setAllowUnmatched(true);
+	this->config->setUsePerformanceGraph(false);
+	this->config->setUsePredictiveGraph(true);
 	// Set the properties to be returned for each User-Agent.
-	string propertiesString =
-		"ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName,Id";
-	properties = new RequiredPropertiesConfig(propertiesString);
+	properties = new RequiredPropertiesConfig();
 
 	// Initialise the engine for device detection.
 	engine = new EngineHash(

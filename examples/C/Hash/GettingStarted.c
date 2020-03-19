@@ -144,6 +144,8 @@ void fiftyoneDegreesHashGettingStarted(
 	// Set the properties to be returned for each User-Agent.
 	PropertiesRequired properties = PropertiesDefault;
 	properties.string = "ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName";
+	
+	config->traceRoute = true;
 
 	// Initialise the manager for device detection.
 	StatusCode status = HashInitManagerFromFile(

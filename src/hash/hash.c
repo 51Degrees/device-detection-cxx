@@ -404,22 +404,24 @@ static void updateMatchedUserAgent(detectionState *state) {
 }
 
 static void traceRoute(detectionState *state, GraphNodeHash* hash) {
-	GraphTraceNode* node = (GraphTraceNode*)Malloc(sizeof(GraphTraceNode));
-	node->index = MAX(state->currentIndex, state->firstIndex);
-	node->next = NULL;
-	node->rootName = NULL;
-	node->firstIndex = state->firstIndex;
-	node->lastIndex = state->lastIndex;
-	node->length = NODE(state)->length;
-	if (hash != NULL) {
-		node->hashCode = hash->hashCode;
-		node->matched = true;
+	if (state->dataSet->config.traceRoute == true) {
+		GraphTraceNode* node = (GraphTraceNode*)Malloc(sizeof(GraphTraceNode));
+		node->index = MAX(state->currentIndex, state->firstIndex);
+		node->next = NULL;
+		node->rootName = NULL;
+		node->firstIndex = state->firstIndex;
+		node->lastIndex = state->lastIndex;
+		node->length = NODE(state)->length;
+		if (hash != NULL) {
+			node->hashCode = hash->hashCode;
+			node->matched = true;
+		}
+		else {
+			node->hashCode = 0;
+			node->matched = false;
+		}
+		GraphTraceAppend(state->result->trace, node);
 	}
-	else {
-		node->hashCode = 0;
-		node->matched = false;
-	}
-	GraphTraceAppend(state->result->trace, node);
 }
 
 /**
@@ -815,6 +817,9 @@ static bool processFromRoot(
 	}
 
 	do {
+		if (state->firstIndex == 34) {
+			int a = 1;
+		}
 		if (NODE(state)->hashesCount == 1) {
 			// If there is only 1 hash then it's a binary node.
 			evaluateBinaryNode(state);

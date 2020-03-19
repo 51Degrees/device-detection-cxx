@@ -228,11 +228,15 @@ int DeviceDetection::Hash::ResultsHash::getMethod() {
 
 string DeviceDetection::Hash::ResultsHash::getTrace(uint32_t resultIndex) {
 	string trace;
-	char traceStr[100000];
+	char *traceStr;
+	int length;
 	if (resultIndex >= 0 && (uint32_t)resultIndex < results->count) {
 		if (results->items[resultIndex].trace != NULL) {
-			GraphTraceGet(results->items[resultIndex].trace, traceStr, sizeof(traceStr) / sizeof(char));
+			length = GraphTraceGet(nullptr, 0, results->items[resultIndex].trace);
+			traceStr = (char*)Malloc(length * sizeof(char));
+			GraphTraceGet(traceStr, length, results->items[resultIndex].trace);
 			trace.assign(traceStr);
+			Free(traceStr);
 		}
 	}
 	return trace;

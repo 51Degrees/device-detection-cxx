@@ -131,11 +131,17 @@ namespace FiftyoneDegrees {
 					// Carries out a match for a mobile User-Agent.
 					cout << "\nMobile User-Agent: " <<
 						 mobileUserAgent << "\n";
-					evidence->operator[]("header.user-agent")
-							= mobileUserAgent;
+					//evidence->operator[]("header.user-agent")
+						//= "Mozilla/5.0 (Linux; Android 10; SM-N960U Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.132 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/262.0.0.25.117;]";//mobileUserAgent;
+					evidence
 					results = engine->process(evidence);
 					cout << "   IsMobile: " <<
 						 (*results->getValueAsString("IsMobile")).c_str() << "\n";
+
+					cout << "Mozilla/5.0 (Linux; Android 10; SM-N960U Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/80.0.3987.132 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/262.0.0.25.117;]" << "\n";
+					cout << results->getUserAgent(0) << "\n";
+					cout << results->getTrace(0) << "\n";
+					cout << results->getDeviceId(0) << "\n";
 					delete results;
 
 					// Carries out a match for a desktop User-Agent.
@@ -195,7 +201,8 @@ int main(int argc, char* argv[]) {
 #endif
 #endif
 
-	GettingStarted *gettingStarted = new GettingStarted(dataFilePath);
+
+	GettingStarted *gettingStarted = new GettingStarted("D:\\Lite-HashV41.hash");
 	gettingStarted->run();
 	delete gettingStarted;
 

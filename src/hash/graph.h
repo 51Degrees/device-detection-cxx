@@ -277,9 +277,9 @@ EXTERNAL void fiftyoneDegreesGraphTraceAppend(
     fiftyoneDegreesGraphTraceNode *node);
 
 EXTERNAL int fiftyoneDegreesGraphTraceGet(
-    fiftyoneDegreesGraphTraceNode *route,
     char *destination,
-    size_t length);
+    size_t length,
+    fiftyoneDegreesGraphTraceNode* route);
 
 /**
  * @}
