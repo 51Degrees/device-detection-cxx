@@ -1,5 +1,0 @@
-<map id="FiftyoneDegrees::DeviceDetection::Pattern::ProfileMetaDataCollectionPattern" name="FiftyoneDegrees::DeviceDetection::Pattern::ProfileMetaDataCollectionPattern">
-<area shape="rect" id="node1" title="A collection of all profile meta data contained in a Pattern engine." alt="" coords="5,215,235,271"/>
-<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_common_1_1_collection.html" title=" " alt="" coords="32,109,208,165"/>
-<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_common_1_1_collection.html" title="A group of items accessible by index or key." alt="" coords="32,5,208,47"/>
-</map>

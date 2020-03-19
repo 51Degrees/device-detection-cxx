@@ -1,5 +1,0 @@
-<map id="sharedState" name="sharedState">
-<area shape="rect" id="node1" title="State containing the states for all threads running in the example." alt="" coords="5,95,97,121"/>
-<area shape="rect" id="node2" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="31,5,247,32"/>
-<area shape="rect" id="node3" href="$structfiftyone_degrees_resource_handle.html" title="Tracks the number of active uses of the resource within the manager." alt="" coords="121,95,328,121"/>
-</map>

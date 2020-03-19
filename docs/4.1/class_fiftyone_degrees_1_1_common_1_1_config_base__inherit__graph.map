@@ -1,6 +1,0 @@
-<map id="FiftyoneDegrees::Common::ConfigBase" name="FiftyoneDegrees::Common::ConfigBase">
-<area shape="rect" id="node1" title="C++ class wrapper for the fiftyoneDegreesConfigBase configuration structure." alt="" coords="5,39,181,80"/>
-<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_device_detection_1_1_config_device_detection.html" title="C++ class wrapper for the fiftyoneDegreesConfigDeviceDetection configuration structure." alt="" coords="229,39,447,80"/>
-<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_device_detection_1_1_hash_1_1_config_hash.html" title="C++ class wrapper for the fiftyoneDegreesConfigHash configuration structure." alt="" coords="495,5,712,47"/>
-<area shape="rect" id="node4" href="$class_fiftyone_degrees_1_1_device_detection_1_1_pattern_1_1_config_pattern.html" title="C++ class wrapper for the fiftyoneDegreesConfigPattern configuration structure." alt="" coords="495,71,712,112"/>
-</map>
