@@ -28,6 +28,7 @@
 
 #include "graph.h"
 #include "fiftyone.h"
+#include <stdarg.h>
 
  /**
   * The prime number used by the Rabin-Karp rolling hash method.
