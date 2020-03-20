@@ -265,17 +265,48 @@ fiftyoneDegreesGraphGetMatchingHashFromNode(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash);
 
+/**
+ * Creates a new graph trace node. Importantly, this is not a graph node, but a
+ * graph trace node, used to trace the route taken through a graph. The node
+ * is allocated and initialized.
+ * @param fmt the format string to use as the name of the node
+ * @param ... arguments for the format string
+ * @return a newly allocated graph trace node
+ */
 EXTERNAL fiftyoneDegreesGraphTraceNode* fiftyoneDegreesGraphTraceCreate(
     const char *fmt,
     ...);
 
+/**
+ * Frees a graph trace structure. This method frees all nodes in the linked
+ * list, so should be called with the root node.
+ * @param route root node for the trace route
+ */
 EXTERNAL void fiftyoneDegreesGraphTraceFree(
     fiftyoneDegreesGraphTraceNode *route);
 
+/**
+ * Appends a node to an existing trace route. The new node is added to the tail
+ * of the linked list pointed to by route.
+ * @param route the root of the trace route linked list
+ * @param node the new node to append to the trace route
+ */
 EXTERNAL void fiftyoneDegreesGraphTraceAppend(
     fiftyoneDegreesGraphTraceNode *route,   
     fiftyoneDegreesGraphTraceNode *node);
 
+/**
+ * Writes a trace route in a readable format to a destination will the memory
+ * allocated, and returns the number of characters written to the destination.
+ * If called with NULL as the destination, and 0 as length, nothing will be
+ * written, but the number of characters which would have been written will
+ * still be returned.
+ * @param destination pointer to the memory to write the trace string to
+ * @param length the number of characters that can be written to the
+ * destination memory
+ * @return the number of characters written, or the number of characters which
+ * would have been written if length was long enough
+ */
 EXTERNAL int fiftyoneDegreesGraphTraceGet(
     char *destination,
     size_t length,

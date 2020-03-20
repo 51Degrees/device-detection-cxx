@@ -405,20 +405,14 @@ static void updateMatchedUserAgent(detectionState *state) {
 
 static void traceRoute(detectionState *state, GraphNodeHash* hash) {
 	if (state->dataSet->config.traceRoute == true) {
-		GraphTraceNode* node = (GraphTraceNode*)Malloc(sizeof(GraphTraceNode));
+		GraphTraceNode* node = GraphTraceCreate(NULL);
 		node->index = MAX(state->currentIndex, state->firstIndex);
-		node->next = NULL;
-		node->rootName = NULL;
 		node->firstIndex = state->firstIndex;
 		node->lastIndex = state->lastIndex;
 		node->length = NODE(state)->length;
 		if (hash != NULL) {
 			node->hashCode = hash->hashCode;
 			node->matched = true;
-		}
-		else {
-			node->hashCode = 0;
-			node->matched = false;
 		}
 		GraphTraceAppend(state->result->trace, node);
 	}
@@ -668,14 +662,18 @@ static void evaluateListNode(detectionState *state) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
+#ifndef NDEBUG
 		traceRoute(state, nodeHash);
+#endif
 		setNextNode(state, nodeHash->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
+#ifndef NDEBUG
 		traceRoute(state, NULL);
+#endif
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -783,14 +781,18 @@ static void evaluateBinaryNode(detectionState *state) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
+#ifndef NDEBUG
 		traceRoute(state, hashes);
+#endif
 		setNextNode(state, hashes->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
+#ifndef NDEBUG
 		traceRoute(state, NULL);
+#endif
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -817,9 +819,6 @@ static bool processFromRoot(
 	}
 
 	do {
-		if (state->firstIndex == 34) {
-			int a = 1;
-		}
 		if (NODE(state)->hashesCount == 1) {
 			// If there is only 1 hash then it's a binary node.
 			evaluateBinaryNode(state);
@@ -898,6 +897,7 @@ static void setResultFromUserAgent(
 						// TODO the lines below need to be thoroughly documented to
 						// explain the two graphs.
 						if (dataSet->config.usePerformanceGraph == true) {
+#ifndef NDEBUG
 							if (dataSet->config.traceRoute == true) {
 								addTraceRootName(
 									&state,
@@ -905,12 +905,14 @@ static void setResultFromUserAgent(
 									component,
 									&dataSet->b.b.uniqueHeaders->items[state.result->b.uniqueHttpHeaderIndex]);
 							}
+#endif
 							matched = processFromRoot(dataSet, rootNodes->performanceNodeOffset, &state);
 							if (matched) {
 								state.performanceMatches++;
 							}
 						}
 						if (matched == false && dataSet->config.usePredictiveGraph == true) {
+#ifndef NDEBUG
 							if (dataSet->config.traceRoute == true) {
 								addTraceRootName(
 									&state,
@@ -918,6 +920,7 @@ static void setResultFromUserAgent(
 									component,
 									&dataSet->b.b.uniqueHeaders->items[state.result->b.uniqueHttpHeaderIndex]);
 							}
+#endif
 							matched = processFromRoot(dataSet, rootNodes->predictiveNodeOffset, &state);
 							if (matched) {
 								state.predictiveMatches++;
@@ -2107,12 +2110,16 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			results->items[i].profileIsOverriden = (bool*)Malloc(
 				sizeof(bool) *
 				dataSet->componentsList.count);
+#ifndef NDEBUG
 			if (dataSet->config.traceRoute == true) {
-				results->items[i].trace = GraphTraceCreate("Hash Result %d", i); // todo i
+				results->items[i].trace = GraphTraceCreate("Hash Result %d", i);
 			}
 			else {
 				results->items[i].trace = NULL;
 			}
+#else
+			results->items[i].trace = NULL;
+#endif
 		}
 
 		// Reset the property and values list ready for first use sized for 

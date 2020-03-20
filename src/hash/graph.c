@@ -207,17 +207,22 @@ fiftyoneDegreesGraphGetMatchingHashFromNode(
 }
 
 fiftyoneDegreesGraphTraceNode* fiftyoneDegreesGraphTraceCreate(
-	const char *fmt,
+	const char* fmt,
 	...) {
-	va_list args;
-	va_start(args, fmt);
-
-	size_t length = vsnprintf(NULL, 0, fmt, args);
-
+	size_t length;
 	GraphTraceNode* root = (GraphTraceNode*)Malloc(sizeof(GraphTraceNode));
-	root->rootName = (char *)Malloc((length + 1) * sizeof(char));
-	vsprintf(root->rootName, fmt, args);
+	if (fmt != NULL) {
+		va_list args;
+		va_start(args, fmt);
 
+		length = vsnprintf(NULL, 0, fmt, args);
+		root->rootName = (char*)Malloc((length + 1) * sizeof(char));
+		vsprintf(root->rootName, fmt, args);
+	}
+	else {
+		root->rootName = NULL;
+	}
+	
 	root->hashCode = 0;
 	root->index = 0;
 	root->length = 0;

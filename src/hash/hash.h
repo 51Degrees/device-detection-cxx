@@ -262,7 +262,10 @@ typedef struct fiftyone_degrees_config_hash_t {
 							  should be used for processing. */
 	bool usePredictiveGraph; /** True if the predictive optimized graph should
 							 be used for processing. */
-    bool traceRoute; // TODO comment.
+    bool traceRoute; /**< True if the route through each graph should be traced
+                     during processing. The trace can then be printed to debug
+                     the matching after the fact. Note that this option is only
+                     considered when compiled in debug mode. */
 } fiftyoneDegreesConfigHash;
 
 typedef struct fiftyone_degrees_hash_rootnodes_t {
@@ -326,7 +329,12 @@ typedef struct fiftyone_degrees_result_hash_t {
 	int32_t drift; /**< The maximum drift for a matched substring from the
 				   character position where it was expected to be found */
 	int32_t matchedNodes; /**< The number of hashes matched in the User-Agent */
-    fiftyoneDegreesGraphTraceNode* trace;
+    fiftyoneDegreesGraphTraceNode* trace; /**< The graph trace constructed
+                                          during processing if the option was
+                                          enabled (and the executable was
+                                          compiled in debug mode). This can be
+                                          printed using the
+                                          fiftyoneDegreesGraphTraceGet method */
 } fiftyoneDegreesResultHash;
 
 /**
