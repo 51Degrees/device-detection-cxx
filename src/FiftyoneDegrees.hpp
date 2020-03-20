@@ -32,12 +32,6 @@ namespace FiftyoneDegrees {
 		 */
 		namespace Hash {
 		}
-		/**
-		 * Pattern Device Detection specific classes. These implement all the
-		 * abstract classes to form a complete engine.
-		 */
-		namespace Pattern {
-		}
 	}
 	/**
 	 * C++ Examples.
