@@ -179,7 +179,13 @@ namespace FiftyoneDegrees {
 				 */
 				void setConcurrency(uint16_t concurrency);
 
-				// TODO comment.
+				/**
+				 * Sets whether the route through each graph should be traced
+				 * during processing. The trace can then be printed to debug
+				 * the matching after the fact. Note that this option is only
+				 * considered when compiled in debug mode.
+				 * @param shouldTrace true if graphs should be traced
+				 */
 				void setTraceRoute(bool shouldTrace);
 
 				/**
@@ -260,7 +266,13 @@ namespace FiftyoneDegrees {
 				 */
 				uint16_t getConcurrency();
 
-				// TODO comment.
+				/**
+				 * Gets whether the route through each graph should be traced
+				 * during processing. The trace can then be printed to debug
+				 * the matching after the fact. Note that this option is only
+				 * considered when compiled in debug mode.
+				 * @return true if graphs should be traced
+				 */
 				bool getTraceRoute();
 
 				 /**
