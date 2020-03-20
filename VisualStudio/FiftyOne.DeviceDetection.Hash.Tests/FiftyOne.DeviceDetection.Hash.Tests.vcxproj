@@ -28,6 +28,10 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <!-- Force Spectre mitigations off due to missing libraries on the Azure windows 2019 build agent -->
+  <PropertyGroup>
+    <SpectreMitigation></SpectreMitigation>
+  </PropertyGroup>
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
@@ -117,6 +121,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemDefinitionGroup />
+  <!-- Force Spectre mitigations off due to missing libraries on the Azure windows 2019 build agent -->
+  <PropertyGroup>
+    <SpectreMitigation></SpectreMitigation>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.googletest.v140.windesktop.msvcstl.dyn.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.dyn.rt-dyn.targets" Condition="Exists('..\packages\Microsoft.googletest.v140.windesktop.msvcstl.dyn.rt-dyn.1.8.0\build\native\Microsoft.googletest.v140.windesktop.msvcstl.dyn.rt-dyn.targets')" />

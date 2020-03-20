@@ -1,9 +1,0 @@
-<map id="FiftyoneDegrees::Examples::Pattern::ExampleBase::ThreadState" name="FiftyoneDegrees::Examples::Pattern::ExampleBase::ThreadState">
-<area shape="rect" id="node1" title="State for a single thread carrying out processing in order to store a hash of the results." alt="" coords="1139,63,1321,119"/>
-<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_device_detection_1_1_pattern_1_1_engine_pattern.html" title="Encapsulates the Pattern engine class which implements EngineDeviceDetection." alt="" coords="831,71,1048,112"/>
-<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_device_detection_1_1_engine_device_detection.html" title="Encapsulates the device detection engine class to be extended by device detection engine implementati..." alt="" coords="564,71,781,112"/>
-<area shape="rect" id="node4" href="$class_fiftyone_degrees_1_1_common_1_1_engine_base.html" title="Encapsulates the engine class to be extended by engine implementations." alt="" coords="339,71,515,112"/>
-<area shape="rect" id="node5" href="$class_fiftyone_degrees_1_1_common_1_1_required_properties_config.html" title="C++ class wrapper for the fiftyoneDegreesPropertiesRequired structure." alt="" coords="5,5,181,47"/>
-<area shape="rect" id="node6" href="$class_fiftyone_degrees_1_1_common_1_1_meta_data.html" title="Contains meta data for the properties, values, profiles and components that exist within the engine i..." alt="" coords="5,71,181,112"/>
-<area shape="rect" id="node7" href="$class_fiftyone_degrees_1_1_common_1_1_config_base.html" title="C++ class wrapper for the fiftyoneDegreesConfigBase configuration structure." alt="" coords="5,136,181,177"/>
-</map>

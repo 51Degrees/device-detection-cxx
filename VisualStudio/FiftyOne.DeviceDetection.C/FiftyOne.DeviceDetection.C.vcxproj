@@ -58,6 +58,10 @@
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <!-- Force Spectre mitigations off due to missing libraries on the Azure windows 2019 build agent -->
+  <PropertyGroup>
+    <SpectreMitigation></SpectreMitigation>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -456,6 +460,10 @@
     <ClCompile Include="..\..\src\dataset-dd.c" />
     <ClCompile Include="..\..\src\results-dd.c" />
   </ItemGroup>
+  <!-- Force Spectre mitigations off due to missing libraries on the Azure windows 2019 build agent -->
+  <PropertyGroup>
+    <SpectreMitigation></SpectreMitigation>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\common-cxx\VisualStudio\FiftyOne.Common.C\FiftyOne.Common.C.vcxproj">
       <Project>{8e1b0b4c-8220-4e7b-a838-b4b3ddb4cf15}</Project>
