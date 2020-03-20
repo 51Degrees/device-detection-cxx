@@ -268,9 +268,15 @@ typedef struct fiftyone_degrees_config_hash_t {
                      considered when compiled in debug mode. */
 } fiftyoneDegreesConfigHash;
 
+/**
+ * Data structure containing the root nodes for the combination of an evidence
+ * item and a component.
+ */
 typedef struct fiftyone_degrees_hash_rootnodes_t {
-	uint32_t performanceNodeOffset;
-	uint32_t predictiveNodeOffset;
+	uint32_t performanceNodeOffset; /**< Offset in the nodes collection of the
+                                    root node for the performance graph. */
+	uint32_t predictiveNodeOffset; /**< Offset in the nodes collection of the
+                                   root node for the predictive graph. */
 } fiftyoneDegreesHashRootNodes;
 
 /**

@@ -132,16 +132,26 @@ typedef struct fiftyoneDegrees_graph_node_hash_t {
 typedef struct fiftyoneDegrees_graph_trace_node_t fiftyoneDegreesGraphTraceNode;
 /** @endcond */
 
-
+/**
+ * Trace node structure used to trace the route taken when evaluating a graph.
+ * This contains information from a node which was evaluated, and forms part of
+ * a linked list which describes the route taken through a graph.
+ */
 typedef struct fiftyoneDegrees_graph_trace_node_t {
-    uint32_t index;
-    uint32_t length;
-    uint32_t firstIndex;
-    uint32_t lastIndex;
-    uint32_t hashCode;
-    bool matched;
-    char *rootName;
-    fiftyoneDegreesGraphTraceNode* next;
+    uint32_t index; /**< The index in the evidence where the hash was found, or
+                    the last index which was evaluated if no matching hash was
+                    found */
+    uint32_t length; /**< The length of the hashed value being evaluated */
+    uint32_t firstIndex; /**< The first index in the hash node */
+    uint32_t lastIndex; /**< The last index in the hash node */
+    uint32_t hashCode; /**< The matched hash code, or zero if no matching hash
+                       was found */
+    bool matched; /**< True if a matching hash was found */
+    char *rootName; /**< The name title of the node. This is null for most
+                    nodes, but for root nodes this is usually the name of the
+                    graph */
+    fiftyoneDegreesGraphTraceNode* next; /**< Pointer to the next node in the
+                                         linked list */
 } fiftyoneDegreesGraphTraceNode;
 
 /**
