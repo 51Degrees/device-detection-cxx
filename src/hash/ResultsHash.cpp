@@ -231,10 +231,18 @@ string DeviceDetection::Hash::ResultsHash::getTrace(uint32_t resultIndex) {
 	char *traceStr;
 	int length;
 	if (resultIndex >= 0 && (uint32_t)resultIndex < results->count) {
-		if (results->items[resultIndex].trace != NULL) {
-			length = GraphTraceGet(nullptr, 0, results->items[resultIndex].trace);
+		if (results->items[resultIndex].trace != nullptr) {
+			length = GraphTraceGet(
+				nullptr,
+				0,
+				results->items[resultIndex].trace,
+				nullptr);
 			traceStr = (char*)Malloc(length * sizeof(char));
-			GraphTraceGet(traceStr, length, results->items[resultIndex].trace);
+			GraphTraceGet(
+				traceStr,
+				length,
+				results->items[resultIndex].trace,
+				results->items[resultIndex].b.targetUserAgent);
 			trace.assign(traceStr);
 			Free(traceStr);
 		}

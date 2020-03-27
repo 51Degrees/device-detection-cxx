@@ -261,8 +261,10 @@ void fiftyoneDegreesGraphTraceAppend(
 int fiftyoneDegreesGraphTraceGet(
 	char *destination,
 	size_t length,
-	fiftyoneDegreesGraphTraceNode* route) {
+	fiftyoneDegreesGraphTraceNode* route,
+	const char *source) {
 	int written = 0;
+	uint32_t i;
 	GraphTraceNode *node = route;
 
 	while (node != NULL) {
@@ -274,14 +276,16 @@ int fiftyoneDegreesGraphTraceGet(
 				node->rootName);
 		}
 		else {
-			for (int i = 0; i < node->lastIndex + node->length; i++) {
+			for (i = 0; i < node->lastIndex + node->length; i++) {
 				if (REMAINING(length, written) > 0) {
 					if (i < node->firstIndex) {
 						(destination + written)[0] = ' ';
 					}
 					else if (i >= node->index &&
 						i < node->index + node->length) {
-						(destination + written)[0] = '^';
+						(destination + written)[0] =
+							(source == NULL || node->matched == false) ?
+							'^' : source[i];
 					}
 					else if (i == node->firstIndex || i == node->lastIndex + node->length - 1) {
 						(destination + written)[0] = '|';
