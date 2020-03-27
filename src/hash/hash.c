@@ -992,10 +992,6 @@ static void setResultFromUserAgent(
 							// Set all the values in the result.
 							addProfile(state.result, (byte)componentIndex, state.profileOffset, false);
 						}
-						else {
-							// Set the 'null' profile as there was no match.
-							addProfile(state.result, (byte)componentIndex, NULL_PROFILE_OFFSET, false);
-						}
 						COLLECTION_RELEASE(dataSet->rootNodes, &rootNodesItem);
 					}
 				}
