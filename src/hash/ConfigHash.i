@@ -40,6 +40,7 @@ public:
 	void setConcurrency(uint16_t concurrency);
 	void setUsePerformanceGraph(bool use);
 	void setUsePredictiveGraph(bool use);
+	void setTraceRoute(bool trace);
 	CollectionConfig getStrings();
 	CollectionConfig getProperties();
 	CollectionConfig getValues();
@@ -51,4 +52,5 @@ public:
 	bool getUsePerformanceGraph();
 	bool getUsePredictiveGraph();
 	uint16_t getConcurrency();
+	bool getTraceRoute();
 };
