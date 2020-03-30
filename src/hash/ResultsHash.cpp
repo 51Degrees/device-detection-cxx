@@ -226,6 +226,40 @@ int DeviceDetection::Hash::ResultsHash::getMethod() {
 	return method;
 }
 
+string DeviceDetection::Hash::ResultsHash::getTrace(uint32_t resultIndex) {
+	string trace;
+	char *traceStr;
+	int length;
+	if (resultIndex >= 0 && (uint32_t)resultIndex < results->count) {
+		if (results->items[resultIndex].trace != nullptr) {
+			length = GraphTraceGet(
+				nullptr,
+				0,
+				results->items[resultIndex].trace,
+				nullptr);
+			traceStr = (char*)Malloc(length * sizeof(char));
+			GraphTraceGet(
+				traceStr,
+				length,
+				results->items[resultIndex].trace,
+				results->items[resultIndex].b.targetUserAgent);
+			trace.assign(traceStr);
+			Free(traceStr);
+		}
+	}
+	return trace;
+}
+
+string DeviceDetection::Hash::ResultsHash::getTrace() {
+	uint32_t i;
+	stringstream trace;
+	for (i = 0; i < results->count; i++) {
+		trace << getTrace(i);
+	}
+	return trace.str();
+}
+
+
 int DeviceDetection::Hash::ResultsHash::getUserAgents() {
 	return results->count;
 }

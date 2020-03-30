@@ -128,6 +128,32 @@ typedef struct fiftyoneDegrees_graph_node_hash_t {
 } fiftyoneDegreesGraphNodeHash;
 #pragma pack(pop)
 
+/** @cond FORWARD_DECLARATIONS */
+typedef struct fiftyoneDegrees_graph_trace_node_t fiftyoneDegreesGraphTraceNode;
+/** @endcond */
+
+/**
+ * Trace node structure used to trace the route taken when evaluating a graph.
+ * This contains information from a node which was evaluated, and forms part of
+ * a linked list which describes the route taken through a graph.
+ */
+typedef struct fiftyoneDegrees_graph_trace_node_t {
+    uint32_t index; /**< The index in the evidence where the hash was found, or
+                    the last index which was evaluated if no matching hash was
+                    found */
+    uint32_t length; /**< The length of the hashed value being evaluated */
+    uint32_t firstIndex; /**< The first index in the hash node */
+    uint32_t lastIndex; /**< The last index in the hash node */
+    uint32_t hashCode; /**< The matched hash code, or zero if no matching hash
+                       was found */
+    bool matched; /**< True if a matching hash was found */
+    char *rootName; /**< The name title of the node. This is null for most
+                    nodes, but for root nodes this is usually the name of the
+                    graph */
+    fiftyoneDegreesGraphTraceNode* next; /**< Pointer to the next node in the
+                                         linked list */
+} fiftyoneDegreesGraphTraceNode;
+
 /**
  * Graph node structure used to construct the directed acyclic graph to search.
  */
@@ -205,7 +231,7 @@ fiftyoneDegreesGraphGetMatchingHashFromListNodeTable(
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
  *                                       or null if none match.
  */
-fiftyoneDegreesGraphNodeHash*
+EXTERNAL fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash);
@@ -218,7 +244,7 @@ fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch(
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
  *                                       or null if none match.
  */
-fiftyoneDegreesGraphNodeHash*
+EXTERNAL fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromListNode(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash);
@@ -231,7 +257,7 @@ fiftyoneDegreesGraphGetMatchingHashFromListNode(
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
  *                                       or null if none match.
  */
-fiftyoneDegreesGraphNodeHash*
+EXTERNAL fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromBinaryNode(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash);
@@ -244,10 +270,58 @@ fiftyoneDegreesGraphGetMatchingHashFromBinaryNode(
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
  *                                       or null if none match.
  */
-fiftyoneDegreesGraphNodeHash*
+EXTERNAL fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromNode(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash);
+
+/**
+ * Creates a new graph trace node. Importantly, this is not a graph node, but a
+ * graph trace node, used to trace the route taken through a graph. The node
+ * is allocated and initialized.
+ * @param fmt the format string to use as the name of the node
+ * @param ... arguments for the format string
+ * @return a newly allocated graph trace node
+ */
+EXTERNAL fiftyoneDegreesGraphTraceNode* fiftyoneDegreesGraphTraceCreate(
+    const char *fmt,
+    ...);
+
+/**
+ * Frees a graph trace structure. This method frees all nodes in the linked
+ * list, so should be called with the root node.
+ * @param route root node for the trace route
+ */
+EXTERNAL void fiftyoneDegreesGraphTraceFree(
+    fiftyoneDegreesGraphTraceNode *route);
+
+/**
+ * Appends a node to an existing trace route. The new node is added to the tail
+ * of the linked list pointed to by route.
+ * @param route the root of the trace route linked list
+ * @param node the new node to append to the trace route
+ */
+EXTERNAL void fiftyoneDegreesGraphTraceAppend(
+    fiftyoneDegreesGraphTraceNode *route,   
+    fiftyoneDegreesGraphTraceNode *node);
+
+/**
+ * Writes a trace route in a readable format to a destination will the memory
+ * allocated, and returns the number of characters written to the destination.
+ * If called with NULL as the destination, and 0 as length, nothing will be
+ * written, but the number of characters which would have been written will
+ * still be returned.
+ * @param destination pointer to the memory to write the trace string to
+ * @param length the number of characters that can be written to the
+ * destination memory
+ * @return the number of characters written, or the number of characters which
+ * would have been written if length was long enough
+ */
+EXTERNAL int fiftyoneDegreesGraphTraceGet(
+    char *destination,
+    size_t length,
+    fiftyoneDegreesGraphTraceNode* route,
+    const char *source);
 
 /**
  * @}

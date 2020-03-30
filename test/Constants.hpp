@@ -27,11 +27,7 @@ const static char _dataFolderName[] = "device-detection-data";
 
 const static char _HashFileName[] = "51Degrees-LiteV4.1.hash";
 
-const static char _PatternFileName[] = "51Degrees-LiteV3.2.dat";
-
 const static char _HashProduct[] = "HashV41";
-
-const static char _PatternProduct[] = "BinaryV32";
 
 const static char _userAgentsFileName[] = "20000 User Agents.csv";
 

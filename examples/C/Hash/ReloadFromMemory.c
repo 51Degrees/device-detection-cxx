@@ -166,19 +166,26 @@ static unsigned long generateHash(unsigned char *value) {
  */
 static unsigned long getHashCode(ResultsHash *results) {
 	EXCEPTION_CREATE;
+	Item* valueItem;
 	unsigned long hashCode = 0;
 	uint32_t requiredPropertyIndex;
-	const char *valueName;
-	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
+	const char* valueName;
+	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 	for (requiredPropertyIndex = 0;
 		requiredPropertyIndex < dataSet->b.b.available->count;
 		requiredPropertyIndex++) {
-		if (ResultsHashGetValues(
+		EXCEPTION_CLEAR;
+		if (ResultsHashGetHasValues(
 			results,
 			requiredPropertyIndex,
-			exception) != NULL &&
-			EXCEPTION_OKAY) {
-			valueName = STRING(results->values.items[0].data.ptr);
+			exception) == true) {
+			EXCEPTION_THROW;
+			valueItem = ResultsHashGetValues(
+				results,
+				requiredPropertyIndex,
+				exception);
+			EXCEPTION_THROW;
+			valueName = STRING(valueItem->data.ptr);
 			hashCode ^= generateHash((unsigned char*)(valueName));
 		}
 	}

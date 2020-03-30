@@ -28,6 +28,7 @@
 
 #include "graph.h"
 #include "fiftyone.h"
+#include <stdarg.h>
 
  /**
   * The prime number used by the Rabin-Karp rolling hash method.
@@ -204,4 +205,105 @@ fiftyoneDegreesGraphGetMatchingHashFromNode(
 	else {
 		return GraphGetMatchingHashFromListNode(node, hash);
 	}
+}
+
+fiftyoneDegreesGraphTraceNode* fiftyoneDegreesGraphTraceCreate(
+	const char* fmt,
+	...) {
+	size_t length;
+	GraphTraceNode* root = (GraphTraceNode*)Malloc(sizeof(GraphTraceNode));
+	if (fmt != NULL) {
+		va_list args;
+		va_start(args, fmt);
+
+		length = vsnprintf(NULL, 0, fmt, args);
+		root->rootName = (char*)Malloc((length + 1) * sizeof(char));
+		vsprintf(root->rootName, fmt, args);
+	}
+	else {
+		root->rootName = NULL;
+	}
+	
+	root->hashCode = 0;
+	root->index = 0;
+	root->length = 0;
+	root->matched = false;
+	root->next = NULL;
+	return root;
+}
+
+
+void fiftyoneDegreesGraphTraceFree(fiftyoneDegreesGraphTraceNode* route) {
+	GraphTraceNode *tmp, *current = route;
+	while (current != NULL) {
+		tmp = current->next;
+		if (current->rootName != NULL) {
+			Free(current->rootName);
+		}
+		Free(current);
+		current = tmp;
+	}
+}
+
+void fiftyoneDegreesGraphTraceAppend(
+	fiftyoneDegreesGraphTraceNode* route,
+	fiftyoneDegreesGraphTraceNode* node) {
+	GraphTraceNode *last = route;
+	while (last->next != NULL) {
+		last = last->next;
+	}
+	last->next = node;
+}
+
+#define REMAINING(l,w) l == 0 ? 0 : l - w
+#define CURRENT(s,w) s == NULL ? NULL : s + w
+
+int fiftyoneDegreesGraphTraceGet(
+	char *destination,
+	size_t length,
+	fiftyoneDegreesGraphTraceNode* route,
+	const char *source) {
+	int written = 0;
+	uint32_t i;
+	GraphTraceNode *node = route;
+
+	while (node != NULL) {
+		if (node->rootName != NULL) {
+			written += snprintf(
+				CURRENT(destination, written),
+				REMAINING(length, written),
+				"--- Start of '%s'---\n",
+				node->rootName);
+		}
+		else {
+			for (i = 0; i < node->lastIndex + node->length; i++) {
+				if (REMAINING(length, written) > 0) {
+					if (i < node->firstIndex) {
+						(destination + written)[0] = ' ';
+					}
+					else if (i >= node->index &&
+						i < node->index + node->length) {
+						(destination + written)[0] =
+							(source == NULL || node->matched == false) ?
+							'^' : source[i];
+					}
+					else if (i == node->firstIndex || i == node->lastIndex + node->length - 1) {
+						(destination + written)[0] = '|';
+					}
+					else {
+						(destination + written)[0] = '-';
+					}
+				}
+				written++;
+			}
+
+			written += snprintf(
+				CURRENT(destination, written),
+				REMAINING(length, written),
+				node->matched ? "(%d) %x\n" : "(%d)\n",
+				node->index, node->hashCode);
+		}
+		node = node->next;
+	}
+	return written;
 }

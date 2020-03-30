@@ -149,6 +149,8 @@ typedef struct detection_state_t {
 	int firstIndex; /* First index to consider */
 	int lastIndex; /* Last index to consider */
 	uint32_t profileOffset;
+	int currentDepth;
+	int breakDepth;
 	bool complete;
 	int matchedNodes;
 	int performanceMatches;
@@ -179,8 +181,9 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig = {
 	{0,0,0}, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true,
-	false
+	true, // Performance graph
+	false, // Predictive graph
+	false // Trace
 };
 #undef FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY
 #define FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY \
@@ -199,8 +202,9 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
 	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true,
-	false
+	true, // Performance graph
+	false, // Predictive graph
+	false // Trace
 };
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig = {
@@ -216,8 +220,9 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig = {
 	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true,
-	true
+	true, // Performance graph
+	true, // Predictive graph
+	false // Trace
 };
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
@@ -233,8 +238,9 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
 	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true,
-	true
+	true, // Performance graph
+	true, // Predictive graph
+	false // Trace
 };
 
 #define FIFTYONE_DEGREES_HASH_CONFIG_BALANCED \
@@ -250,8 +256,9 @@ FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT, \
 { FIFTYONE_DEGREES_PROFILE_LOADED, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* ProfileOffsets */ \
 FIFTYONE_DEGREES_HASH_DIFFERENCE, \
 FIFTYONE_DEGREES_HASH_DRIFT, \
-true, \
-true
+true, /* Performance graph */ \
+true,  /* Predictive graph */ \
+false /* Trace */
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedConfig = {
 	FIFTYONE_DEGREES_HASH_CONFIG_BALANCED
@@ -330,8 +337,10 @@ static void detectionStateInit(
 	state->exception = exception;
 	state->dataSet = dataSet;
 	state->result = result;
-	state->allowedDifference = dataSet->config.difference;
-	state->allowedDrift = dataSet->config.drift;
+	state->allowedDifference = 0;
+	state->allowedDrift = 0;
+	state->currentDepth = 0;
+	state->breakDepth = INT_MAX;
 
 	// Reset the metric values.
 	state->difference = 0;
@@ -395,6 +404,21 @@ static void updateMatchedUserAgent(detectionState *state) {
 		for (i = state->currentIndex; i < end; i++) {
 			state->result->b.matchedUserAgent[i] = state->result->b.targetUserAgent[i];
 		}
+	}
+}
+
+static void traceRoute(detectionState *state, GraphNodeHash* hash) {
+	if (state->dataSet->config.traceRoute == true) {
+		GraphTraceNode* node = GraphTraceCreate(NULL);
+		node->index = MAX(state->currentIndex, state->firstIndex);
+		node->firstIndex = state->firstIndex;
+		node->lastIndex = state->lastIndex;
+		node->length = NODE(state)->length;
+		if (hash != NULL) {
+			node->hashCode = hash->hashCode;
+			node->matched = true;
+		}
+		GraphTraceAppend(state->result->trace, node);
 	}
 }
 
@@ -564,90 +588,98 @@ static void evaluateListNode(detectionState *state) {
 	int initialFirstIndex = state->firstIndex;
 	int initialLastIndex = state->lastIndex;
 
-	// Set the match structure with the initial hash value.
-	if (setInitialHash(state)) {
-		// Loop between the first and last indexes checking the hash values.
-		do {
-			nodeHash = GraphGetMatchingHashFromListNode(NODE(state), state->hash);
-		} while (nodeHash == NULL && advanceHash(state));
-
-		if (nodeHash == NULL && state->allowedDifference > 0) {
-			// DIFFERENCE
-			// A match was not found, and the difference feature is enabled, so
-			// search again allowing for the difference tolerance.
-			if (setInitialHash(state)) {
-				do {
-					nodeHash =
-						getMatchingHashFromListNodeWithinDifference(state);
-				} while (nodeHash == NULL && advanceHash(state));
-			}
-		}
-
-		if (nodeHash == NULL && state->allowedDrift > 0) {
-			// DRIFT
-			// A match was not found, and the drift feature is enabled, so
-			// search again in the extended range defined by the drift.
-			applyDrift(state);
-			if (setInitialHash(state)) {
-				do {
-					nodeHash = GraphGetMatchingHashFromListNode(
-						NODE(state),
-						state->hash);
-				} while (nodeHash == NULL && advanceHash(state));
-				if (nodeHash != NULL) {
-					// A match was found within the drift tolerance, so update
-					// the drift.
-					state->drift = MAX(
-						state->drift,
-						state->currentIndex < initialFirstIndex ?
-						initialFirstIndex - state->currentIndex :
-						state->currentIndex - initialLastIndex);
-				}
-			}
-		}
-
-		if (nodeHash == NULL &&
-			state->allowedDifference > 0 &&
-			state->allowedDrift > 0) {
-			// DIFFERENCE + DRIFT
-			// A match was still not found, and both the drift and difference
-			// features are enabled, so search again with both tolerances.
-			// Note the drift has already been applied to the match structure.
-			if (setInitialHash(state)) {
-				do {
-					nodeHash =
-						getMatchingHashFromListNodeWithinDifference(state);
-				} while (nodeHash == NULL && advanceHash(state));
-				if (nodeHash != NULL) {
-					// A match was found within the difference and drift
-					// tolerances, so update the drift. The difference has been
-					// updated in the call to get the node, so there is no need
-					// to update again here.
-					state->drift = MAX(
-						state->drift,
-						state->currentIndex < initialFirstIndex ?
-						initialFirstIndex - state->currentIndex :
-						state->currentIndex - initialLastIndex);
-				}
+	if (state->currentDepth >= state->breakDepth &&
+		state->allowedDifference > 0 &&
+		state->allowedDrift > 0) {
+		// DIFFERENCE + DRIFT
+		// A match was still not found, and both the drift and difference
+		// features are enabled, so search again with both tolerances.
+		// Note the drift has already been applied to the match structure.
+		if (setInitialHash(state)) {
+			do {
+				nodeHash =
+					getMatchingHashFromListNodeWithinDifference(state);
+			} while (nodeHash == NULL && advanceHash(state));
+			if (nodeHash != NULL) {
+				// A match was found within the difference and drift
+				// tolerances, so update the drift. The difference has been
+				// updated in the call to get the node, so there is no need
+				// to update again here.
+				state->drift = MAX(
+					state->drift,
+					state->currentIndex < initialFirstIndex ?
+					initialFirstIndex - state->currentIndex :
+					state->currentIndex - initialLastIndex);
 			}
 		}
 	}
-
+	else if (state->currentDepth >= state->breakDepth &&
+		state->allowedDifference > 0) {
+		// DIFFERENCE
+		// A match was not found, and the difference feature is enabled, so
+		// search again allowing for the difference tolerance.
+		if (setInitialHash(state)) {
+			do {
+				nodeHash =
+					getMatchingHashFromListNodeWithinDifference(state);
+			} while (nodeHash == NULL && advanceHash(state));
+		}
+	}
+	else if (state->currentDepth >= state->breakDepth &&
+		state->allowedDrift > 0) {
+		// DRIFT
+		// A match was not found, and the drift feature is enabled, so
+		// search again in the extended range defined by the drift.
+		applyDrift(state);
+		if (setInitialHash(state)) {
+			do {
+				nodeHash = GraphGetMatchingHashFromListNode(
+					NODE(state),
+					state->hash);
+			} while (nodeHash == NULL && advanceHash(state));
+			if (nodeHash != NULL) {
+				// A match was found within the drift tolerance, so update
+				// the drift.
+				state->drift = MAX(
+					state->drift,
+					state->currentIndex < initialFirstIndex ?
+					initialFirstIndex - state->currentIndex :
+					state->currentIndex - initialLastIndex);
+			}
+		}
+	}
+	else {
+		// Set the match structure with the initial hash value.
+		if (setInitialHash(state)) {
+			// Loop between the first and last indexes checking the hash values.
+			do {
+				nodeHash = GraphGetMatchingHashFromListNode(NODE(state), state->hash);
+			} while (nodeHash == NULL && advanceHash(state));
+		}
+	}
+	
 	// Reset the first and last indexes as they may have been changed by the
 	// drift option.
 	state->firstIndex = initialFirstIndex;
 	state->lastIndex = initialLastIndex;
 
+
 	if (nodeHash != NULL) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
+#ifndef NDEBUG
+		traceRoute(state, nodeHash);
+#endif
 		setNextNode(state, nodeHash->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
+#ifndef NDEBUG
+		traceRoute(state, NULL);
+#endif
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -659,25 +691,47 @@ static void evaluateListNode(detectionState *state) {
  * @param match
  */
 static void evaluateBinaryNode(detectionState *state) {
-	int difference, currentDifference;
-	bool found = false;
+	uint32_t difference, currentDifference;
+	GraphNodeHash *hashes = HASHES(state);
 	int initialFirstIndex = state->firstIndex;
 	int initialLastIndex = state->lastIndex;
-	fiftyoneDegreesGraphNodeHash *hashes = HASHES(state);
-	if (setInitialHash(state)) {
-		// Keep rolling the hash until the hash is found or the last index is
-		// reached and there is no possibility of finding the hash value.
-		while (state->hash != hashes->hashCode && advanceHash(state)) {
+	bool found = false;
+	if (state->currentDepth >= state->breakDepth &&
+		state->allowedDrift > 0 &&
+		state->allowedDifference > 0) {
+		// DIFFERENCE + DRIFT
+		// A match was still not found, and both the drift and difference
+		// features are enabled, so search again with both tolerances.
+		// Note the drift has already been applied to the match structure.
+		if (setInitialHash(state)) {
+			difference = abs((int)(state->hash - hashes->hashCode));
+			while (advanceHash(state)) {
+				currentDifference = abs((int)(state->hash - hashes->hashCode));
+				if (currentDifference < difference) {
+					difference = currentDifference;
+				}
+			}
+			if ((int)difference <= state->allowedDifference) {
+				// A match was found within the difference and drift
+				// tolerances, so update the difference and drift, and set the
+				// found flag.
+				state->difference += difference;
+				if (state->currentIndex < initialFirstIndex) {
+					state->drift = MAX(
+						state->drift,
+						initialFirstIndex - state->currentIndex);
+				}
+				else if (state->currentIndex > initialLastIndex) {
+					state->drift = MAX(
+						state->drift,
+						state->currentIndex - initialLastIndex);
+				}
+				found = true;
+			}
 		}
 	}
-
-	if (state->hash == hashes->hashCode) {
-		// A match was found without the need to resort to allowing for drift
-		// or difference.
-		found = true;
-	}
-
-	if (found == false && state->allowedDifference > 0) {
+	else if (state->currentDepth >= state->breakDepth &&
+		state->allowedDifference > 0) {
 		// DIFFERENCE
 		// A match was not found, and the difference feature is enabled, so
 		// search again allowing for the difference tolerance.
@@ -689,7 +743,7 @@ static void evaluateBinaryNode(detectionState *state) {
 					difference = currentDifference;
 				}
 			}
-			if (difference <= state->allowedDifference) {
+			if ((int)difference <= state->allowedDifference) {
 				// A match was found within the difference tolerance, so update
 				// the difference and set the found flag. 
 				state->difference += difference;
@@ -697,7 +751,8 @@ static void evaluateBinaryNode(detectionState *state) {
 			}
 		}
 	}
-	if (found == false && state->allowedDrift > 0) {
+	else if (state->currentDepth >= state->breakDepth &&
+		state->allowedDrift > 0) {
 		// DRIFT
 		// A match was not found, and the drift feature is enabled, so
 		// search again in the extended range defined by the drift.
@@ -717,40 +772,17 @@ static void evaluateBinaryNode(detectionState *state) {
 			}
 		}
 	}
-	if (found == false &&
-		state->allowedDrift > 0 &&
-		state->allowedDifference > 0) {
-		// DIFFERENCE + DRIFT
-		// A match was still not found, and both the drift and difference
-		// features are enabled, so search again with both tolerances.
-		// Note the drift has already been applied to the match structure.
+	else {
 		if (setInitialHash(state)) {
-			difference = abs((int)(state->hash - hashes->hashCode));
-			while (advanceHash(state)) {
-				currentDifference = abs((int)(state->hash - hashes->hashCode));
-				if (currentDifference < difference) {
-					difference = currentDifference;
-				}
-			}
-			if (difference <= state->allowedDifference) {
-				// A match was found within the difference and drift
-				// tolerances, so update the difference and drift, and set the
-				// found flag.
-				state->difference += difference;
-				if (state->currentIndex < initialFirstIndex) {
-					state->drift = MAX(
-						state->drift,
-						initialFirstIndex - state->currentIndex);
-				}
-				else if (state->currentIndex > initialLastIndex) {
-					state->drift = MAX(
-						state->drift,
-						state->currentIndex - initialLastIndex);
-				}
-				found = true;
+			// Keep rolling the hash until the hash is found or the last index is
+			// reached and there is no possibility of finding the hash value.
+			while (state->hash != hashes->hashCode && advanceHash(state)) {
 			}
 		}
+		found = state->hash == hashes->hashCode;
 	}
+	
+	
 
 	// Reset the first and last indexes as they may have been changed by the
 	// drift option.
@@ -761,12 +793,18 @@ static void evaluateBinaryNode(detectionState *state) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
+#ifndef NDEBUG
+		traceRoute(state, hashes);
+#endif
 		setNextNode(state, hashes->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
+#ifndef NDEBUG
+		traceRoute(state, NULL);
+#endif
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -774,9 +812,10 @@ static void evaluateBinaryNode(detectionState *state) {
 static bool processFromRoot(
 	DataSetHash *dataSet,
 	uint32_t rootNodeOffset,
-	detectionState *state,
-	Exception *exception) {
+	detectionState *state) {
+	Exception *exception = state->exception;
 	int previouslyMatchedNodes = state->matchedNodes;
+	state->currentDepth = 0;
 	// Set the state to the current root node.
 	if (GraphGetNode(
 		dataSet->nodes,
@@ -802,8 +841,112 @@ static bool processFromRoot(
 			evaluateListNode(state);
 		}
 		state->iterations++;
+		state->currentDepth++;
 	} while (state->complete == false);
 	return state->matchedNodes > previouslyMatchedNodes;
+}
+
+static void addTraceRootName(
+	detectionState *state,
+	const char *key,
+	Component *component,
+	Header *header) {
+	Exception* exception = state->exception;
+	String* componentName;
+	Item componentNameItem;
+	GraphTraceNode *node;
+	DataReset(&componentNameItem.data);
+
+	componentName = StringGet(state->dataSet->strings, component->nameOffset, &componentNameItem, exception);
+	if (EXCEPTION_FAILED) {
+		return;
+	}
+
+	node = GraphTraceCreate("%s %s %s", STRING(componentName), STRING(header->name.data.ptr), key);
+	COLLECTION_RELEASE(state->dataSet->strings, &componentNameItem);
+	GraphTraceAppend(state->result->trace, node);
+}
+
+static bool processRoot(
+	detectionState* state,
+	DataSetHash* dataSet,
+	Component* component,
+	uint32_t rootNodeOffset) {
+	bool matched = processFromRoot(dataSet, rootNodeOffset, state);
+	int depth = state->currentDepth;
+	if (matched == false && dataSet->config.difference > 0) {
+		state->allowedDifference = dataSet->config.difference;
+		state->breakDepth = depth;
+		while (matched == false && state->breakDepth > 0) {
+			matched = processFromRoot(dataSet, rootNodeOffset, state);
+			state->breakDepth--;
+		}
+		state->allowedDifference = 0;
+	}
+	if (matched == false && dataSet->config.drift > 0) {
+		state->allowedDrift = dataSet->config.drift;
+		state->breakDepth = depth;
+		while (matched == false && state->breakDepth > 0) {
+			
+			matched = processFromRoot(dataSet, rootNodeOffset, state);
+			state->breakDepth--;
+		}
+		state->allowedDrift = 0;
+	}
+	if (matched == false && dataSet->config.difference > 0 && dataSet->config.drift > 0) {
+		state->allowedDifference = dataSet->config.difference;
+		state->allowedDrift = dataSet->config.drift;
+		state->breakDepth = depth;
+		while (matched == false && state->breakDepth > 0) {
+			matched = processFromRoot(dataSet, rootNodeOffset, state);
+			state->breakDepth--;
+		}
+		state->allowedDifference = 0;
+		state->allowedDrift = 0;
+	}
+	return matched;
+}
+
+static bool processRoots(
+	detectionState *state,
+	DataSetHash *dataSet,
+	Component *component,
+	HashRootNodes *rootNodes) {
+	bool matched = false;
+	// TODO the lines below need to be thoroughly documented to
+	// explain the two graphs.
+	if (dataSet->config.usePerformanceGraph == true) {
+#ifndef NDEBUG
+		if (dataSet->config.traceRoute == true) {
+			addTraceRootName(
+				state,
+				"Performance",
+				component,
+				&dataSet->b.b.uniqueHeaders->items[state->result->b.uniqueHttpHeaderIndex]);
+		}
+#endif
+		matched = processRoot(state, dataSet, component, rootNodes->performanceNodeOffset);
+
+		if (matched) {
+			state->performanceMatches++;
+		}
+	}
+	if (matched == false && dataSet->config.usePredictiveGraph == true) {
+#ifndef NDEBUG
+		if (dataSet->config.traceRoute == true) {
+			addTraceRootName(
+				state,
+				"Predictive",
+				component,
+				&dataSet->b.b.uniqueHeaders->items[state->result->b.uniqueHttpHeaderIndex]);
+		}
+#endif
+		matched = processRoot(state, dataSet, component, rootNodes->performanceNodeOffset);
+		if (matched) {
+			state->predictiveMatches++;
+		}
+	}
+	return matched;
 }
 
 static void setResultFromUserAgent(
@@ -812,7 +955,6 @@ static void setResultFromUserAgent(
 	Exception *exception) {
 	detectionState state;
 	uint32_t componentIndex, headerIndex;
-	bool matched;
 	HashRootNodes *rootNodes;
 	Item rootNodesItem;
 	const ComponentKeyValuePair *graphKey;
@@ -846,24 +988,10 @@ static void setResultFromUserAgent(
 						EXCEPTION_OKAY) {
 						rootNodes = (HashRootNodes*)rootNodesItem.data.ptr;
 
-						matched = false;
-						// TODO the lines below need to be thoroughly documented to
-						// explain the two graphs.
-						if (dataSet->config.usePerformanceGraph == true) {
-							matched = processFromRoot(dataSet, rootNodes->performanceNodeOffset, &state, exception);
-							if (matched) {
-								state.performanceMatches++;
-							}
+						if (processRoots(&state, dataSet, component, rootNodes) == true) {
+							// Set all the values in the result.
+							addProfile(state.result, (byte)componentIndex, state.profileOffset, false);
 						}
-						if (matched == false && dataSet->config.usePredictiveGraph == true) {
-							matched = processFromRoot(dataSet, rootNodes->predictiveNodeOffset, &state, exception);
-							if (matched) {
-								state.predictiveMatches++;
-							}
-						}
-
-						// Set all the values in the result.
-						addProfile(state.result, (byte)componentIndex, state.profileOffset, false);
 						COLLECTION_RELEASE(dataSet->rootNodes, &rootNodesItem);
 					}
 				}
@@ -2003,6 +2131,9 @@ void fiftyoneDegreesResultsHashFree(
 		ResultsUserAgentFree(&results->items[i].b);
 		Free(results->items[i].profileOffsets);
 		Free(results->items[i].profileIsOverriden);
+		if (results->items[i].trace != NULL) {
+			GraphTraceFree(results->items[i].trace);
+		}
 	}
 	ResultsDeviceDetectionFree(&results->b);
 	DataSetRelease((DataSetBase*)results->b.b.dataSet);
@@ -2032,7 +2163,8 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			&dataSet->b,
 			overridesCapacity);
 
-		// Set the memory for matched User-Agents, or make the pointer NULL.
+		// Set the memory for matched User-Agents and route, or make the
+		// pointer NULL.
 		for (i = 0; i < results->capacity; i++) {
 			ResultsUserAgentInit(&dataSet->config.b, &results->items[i].b);
 			results->items[i].profileOffsets = (uint32_t*)Malloc(
@@ -2041,6 +2173,16 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			results->items[i].profileIsOverriden = (bool*)Malloc(
 				sizeof(bool) *
 				dataSet->componentsList.count);
+#ifndef NDEBUG
+			if (dataSet->config.traceRoute == true) {
+				results->items[i].trace = GraphTraceCreate("Hash Result %d", i);
+			}
+			else {
+				results->items[i].trace = NULL;
+			}
+#else
+			results->items[i].trace = NULL;
+#endif
 		}
 
 		// Reset the property and values list ready for first use sized for 

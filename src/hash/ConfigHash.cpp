@@ -87,12 +87,20 @@ void ConfigHash::setUsePredictiveGraph(bool use) {
 	config.usePredictiveGraph = use;
 }
 
+void ConfigHash::setTraceRoute(bool shouldTrace) {
+	config.traceRoute = shouldTrace;
+}
+
 bool ConfigHash::getUsePerformanceGraph() {
 	return config.usePerformanceGraph;
 }
 
 bool ConfigHash::getUsePredictiveGraph() {
 	return config.usePredictiveGraph;
+}
+
+bool ConfigHash::getTraceRoute() {
+	return config.traceRoute;
 }
 
 int32_t ConfigHash::getDrift() {

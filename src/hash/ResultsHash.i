@@ -44,6 +44,7 @@ public:
 	int getMethod(uint32_t resultIndex);
 	int getDrift();
 	int getDrift(uint32_t resultIndex);
+	std::string getTrace();
 	int getMatchedNodes();
 	int getIterations();
 	std::string getUserAgent(uint32_t resultIndex);
