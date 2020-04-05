@@ -324,7 +324,9 @@ void fiftyoneDegreesMemHashRun(
 	// reset.
 	MemoryTrackingReset();
 	Malloc = MemoryTrackingMalloc;
+	MallocAligned = MemoryTrackingMallocAligned;
 	Free = MemoryTrackingFree;
+	FreeAligned = MemoryTrackingFreeAligned;
 	
 	// Set concurrency to ensure sufficient shared resources available.
 	config.nodes.concurrency =
@@ -369,7 +371,9 @@ void fiftyoneDegreesMemHashRun(
 	// Ensure the standard malloc and free methods are reinstated now the
 	// tracking has finished.
 	Malloc = MemoryStandardMalloc;
+	MallocAligned = MemoryStandardMallocAligned;
 	Free = MemoryStandardFree;
+	FreeAligned = MemoryStandardFreeAligned;
 	MemoryTrackingReset();
 }
 

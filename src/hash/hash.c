@@ -1652,7 +1652,9 @@ size_t fiftyoneDegreesHashSizeManagerFromFile(
 	// Set the memory allocation and free methods for tracking.
 	MemoryTrackingReset();
 	Malloc = MemoryTrackingMalloc;
+	MallocAligned = MemoryTrackingMallocAligned;
 	Free = MemoryTrackingFree;
+	FreeAligned = MemoryTrackingFreeAligned;
 
 	// Initialise the manager with the tracking methods in use to determine
 	// the amount of memory that is allocated.
@@ -1680,7 +1682,9 @@ size_t fiftyoneDegreesHashSizeManagerFromFile(
 
 	// Return the malloc and free methods to standard operation.
 	Malloc = MemoryStandardMalloc;
+	MallocAligned = MemoryStandardMallocAligned;
 	Free = MemoryStandardFree;
+	FreeAligned = MemoryStandardFreeAligned;
 	MemoryTrackingReset();
 
 	return allocated;
@@ -1785,7 +1789,9 @@ size_t fiftyoneDegreesHashSizeManagerFromMemory(
 	// Set the memory allocation and free methods for tracking.
 	MemoryTrackingReset();
 	Malloc = MemoryTrackingMalloc;
+	MallocAligned = MemoryTrackingMallocAligned;
 	Free = MemoryTrackingFree;
+	FreeAligned = MemoryTrackingFreeAligned;
 
 	// Ensure that the memory used is not freed with the data set.
 	ConfigHash sizeConfig = *config;
@@ -1818,7 +1824,9 @@ size_t fiftyoneDegreesHashSizeManagerFromMemory(
 
 	// Return the malloc and free methods to standard operation.
 	Malloc = MemoryStandardMalloc;
+	MallocAligned = MemoryStandardMallocAligned;
 	Free = MemoryStandardFree;
+	FreeAligned = MemoryStandardFreeAligned;
 	MemoryTrackingReset();
 
 	return allocated;
@@ -2289,7 +2297,7 @@ static uint32_t addValuesFromResult(
 	Property *property,
 	Exception *exception) {
 	uint32_t count = 0;
-	Profile *profile;
+	Profile *profile = NULL;
 	uint32_t profileOffset;
 	Item item;
 	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
@@ -2297,12 +2305,13 @@ static uint32_t addValuesFromResult(
 	// Get the profile associated with the property.
 	DataReset(&item.data);
 	profileOffset = result->profileOffsets[property->componentIndex];
-	profile = (Profile*)dataSet->profiles->get(
-		dataSet->profiles,
-		profileOffset, 
-		&item, 
-		exception);
-
+	if (profileOffset != NULL_PROFILE_OFFSET) {
+		profile = (Profile*)dataSet->profiles->get(
+			dataSet->profiles,
+			profileOffset, 
+			&item, 
+			exception);
+	}
 	// If the profile was found then use the profile to add the values to the
 	// results.
 	if (profile != NULL) {
