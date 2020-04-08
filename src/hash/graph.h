@@ -161,12 +161,13 @@ typedef struct fiftyoneDegrees_graph_trace_node_t {
 typedef struct fiftyoneDegrees_graph_node_t {
 	int32_t unmatchedNodeOffset; /**< Offset of the node to use if there is no
 								 matching hash record. */
-	int16_t firstIndex; /**< First character index to search for a matching
+    byte flags;
+    int16_t firstIndex; /**< First character index to search for a matching
 						hash code. */
 	int16_t lastIndex; /**< Last character index to search for a matching hash
 					   code. */
 	byte length; /**< Length of the substring to hash. */
-	int32_t hashesCount; /**< Number of hash records in the node. */
+    int32_t hashesCount; /**< Number of hash records in the node. */
 	int32_t modulo; /**< Modulo to use when the hashes are a hash table. */
 } fiftyoneDegreesGraphNode;
 #pragma pack(pop)

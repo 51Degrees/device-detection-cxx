@@ -90,7 +90,9 @@ ValueMetaData* ValueMetaDataCollectionForPropertyHash::getByKey(
 }
 
 uint32_t ValueMetaDataCollectionForPropertyHash::getSize() {
-	return getProperty()->lastValueIndex - getProperty()->firstValueIndex + 1;
+	return (int)getProperty()->firstValueIndex == -1 ?
+		0 :
+		getProperty()->lastValueIndex - getProperty()->firstValueIndex + 1;
 }
 
 fiftyoneDegreesProperty* ValueMetaDataCollectionForPropertyHash::getProperty() {
