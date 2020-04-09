@@ -62,7 +62,7 @@ stages:
         testResultsFormat: 'JUnit'
         testRunTitle: 'Visual Studio x64 Hash'
         testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\x64\Release\testoutput.xml'
-        
+
   - job: Build_And_Test_Hash
     steps:
 

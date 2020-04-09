@@ -2754,7 +2754,7 @@ fiftyoneDegreesCollectionItem* fiftyoneDegreesResultsHashGetValues(
 
 			// There are no values for the property requested. Reset the values 
 			// list to zero count.
-			ListReset(&results->values);
+			ListRelease(&results->values);
 		}
 	}
 	return firstValue;

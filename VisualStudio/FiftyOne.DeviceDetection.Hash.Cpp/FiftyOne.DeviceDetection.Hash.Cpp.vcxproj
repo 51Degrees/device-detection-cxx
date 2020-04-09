@@ -103,10 +103,6 @@
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <!-- Force Spectre mitigations off due to missing libraries on the Azure windows 2019 build agent -->
-  <PropertyGroup>
-    <SpectreMitigation></SpectreMitigation>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -457,14 +453,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <!-- Force Spectre mitigations off due to missing libraries on the Azure windows 2019 build agent -->
-  <PropertyGroup>
-    <SpectreMitigation></SpectreMitigation>
-  </PropertyGroup>
-  <!-- Force Spectre mitigations off due to missing libraries on the Azure windows 2019 build agent -->
-  <PropertyGroup>
-    <SpectreMitigation></SpectreMitigation>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
