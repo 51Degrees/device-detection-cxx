@@ -161,7 +161,7 @@ typedef struct fiftyoneDegrees_graph_trace_node_t {
 typedef struct fiftyoneDegrees_graph_node_t {
 	int32_t unmatchedNodeOffset; /**< Offset of the node to use if there is no
 								 matching hash record. */
-    byte flags;
+    byte flags; /**< Flags available for future implementation. */
     int16_t firstIndex; /**< First character index to search for a matching
 						hash code. */
 	int16_t lastIndex; /**< Last character index to search for a matching hash
@@ -195,7 +195,7 @@ EXTERNAL void* fiftyoneDegreesGraphNodeReadFromFile(
 /**
  * Gets the graph node at the requested offset from the graph node collection
  * provided.
- * @param nodes to get the node from
+ * @param collection to get the node from
  * @param offset of the node to get
  * @param item to store the node item in
  * @param exception pointer to an exception data structure to be used if an
@@ -315,6 +315,10 @@ EXTERNAL void fiftyoneDegreesGraphTraceAppend(
  * @param destination pointer to the memory to write the trace string to
  * @param length the number of characters that can be written to the
  * destination memory
+ * @param route the highest node in the route to write the trace for. This can
+ * be the root node, or any other node along the trace
+ * @param source the source string. Usually a User-Agent to get the matched
+ * characters from
  * @return the number of characters written, or the number of characters which
  * would have been written if length was long enough
  */

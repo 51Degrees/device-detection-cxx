@@ -167,8 +167,20 @@ namespace FiftyoneDegrees {
 				 */
 				int getMethod(uint32_t resultIndex);
 
+				/**
+				 * Get the trace route in a readable format showing the hash
+				 * nodes which were visited during processing.
+				 * @return trace route string
+				 */
 				string getTrace();
 
+				/**
+				 * Get the trace route in a readable format for the result
+				 * index specified showing the hash nodes which were visited
+				 * during processing.
+				 * @param resultIndex index to get the trace route for
+				 * @return trace route string
+				 */
 				string getTrace(uint32_t resultIndex);
 
 				/**

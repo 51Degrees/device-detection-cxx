@@ -260,7 +260,7 @@ typedef struct fiftyone_degrees_config_hash_t {
 				   values will not be returned. By default this is 0. */
 	bool usePerformanceGraph; /**< True if the performance optimized graph
 							  should be used for processing. */
-	bool usePredictiveGraph; /** True if the predictive optimized graph should
+	bool usePredictiveGraph; /**< True if the predictive optimized graph should
 							 be used for processing. */
     bool traceRoute; /**< True if the route through each graph should be traced
                      during processing. The trace can then be printed to debug

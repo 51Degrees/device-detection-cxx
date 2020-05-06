@@ -141,7 +141,9 @@ vector<string> PropertyMetaDataBuilderHash::getPropertyMap(
 			&item,
 			exception));
 		EXCEPTION_THROW;
-		map.push_back(string(name));
+		if (name != nullptr) {
+			map.push_back(string(name));
+		}
 		COLLECTION_RELEASE(stringsCollection, &item);
 	}
 	return map;
