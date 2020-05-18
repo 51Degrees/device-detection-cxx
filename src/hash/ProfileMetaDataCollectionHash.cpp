@@ -31,7 +31,7 @@ ProfileMetaDataCollectionHash::ProfileMetaDataCollectionHash(
 	: Collection<uint32_t, ProfileMetaData>() {
 	dataSet = DataSetHashGet(manager);
 	if (dataSet == nullptr) {
-		throw new runtime_error("Data set pointer can not be null");
+		throw runtime_error("Data set pointer can not be null");
 	}
 	profiles = dataSet->profiles;
 	profileOffsets = dataSet->profileOffsets;

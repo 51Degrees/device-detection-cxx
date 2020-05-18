@@ -107,7 +107,7 @@ void EngineHash::init(
 void* EngineHash::copyData(void *data, size_t length) {
 	void *dataCopy = (void*)Malloc(length);
 	if (dataCopy == nullptr) {
-		throw new StatusCodeException(INSUFFICIENT_MEMORY);
+		throw StatusCodeException(INSUFFICIENT_MEMORY);
 	}
 	memcpy(dataCopy, data, length);
 	return dataCopy;

@@ -31,7 +31,7 @@ PropertyMetaDataCollectionHash::PropertyMetaDataCollectionHash(
 	: Collection<string, PropertyMetaData>() {
 	dataSet = DataSetHashGet(manager);
 	if (dataSet == nullptr) {
-		throw new runtime_error("Data set pointer can not be null");
+		throw runtime_error("Data set pointer can not be null");
 	}
 	properties = dataSet->properties;
 }
