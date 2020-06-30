@@ -35,6 +35,19 @@ stages:
       workingDirectory: 'device-detection-data'
       displayName: 'Fetch LFS Data Files'
 
+    - script: |
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
+      displayName: 'Download Latest Data File'
+
+    - task: ExtractFiles@1
+      displayName: 'Extract Data File'
+      inputs:
+        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
+        cleanDestinationFolder: false
+
+    - script: |
+         mv $(Build.SourcesDirectory)\Enterprise-HashV41.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+
     - task: NuGetCommand@2
       inputs:
         command: 'restore'
@@ -86,6 +99,18 @@ stages:
         targetType: 'inline'
         script: 'mkdir build'
 
+    - script: |
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
+      displayName: 'Download Latest Data File'
+
+    - task: ExtractFiles@1
+      displayName: 'Extract Data File'
+      inputs:
+        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
+        cleanDestinationFolder: false
+
+    - script: |
+         mv $(Build.SourcesDirectory)\Enterprise-HashV41.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
 
     - task: CMake@1
       displayName: 'CMake Configure'
@@ -123,6 +148,19 @@ stages:
     - checkout: self
       submodules: recursive
       lfs: true
+
+    - script: |
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
+      displayName: 'Download Latest Data File'
+
+    - task: ExtractFiles@1
+      displayName: 'Extract Data File'
+      inputs:
+        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
+        cleanDestinationFolder: false
+
+    - script: |
+         mv $(Build.SourcesDirectory)\Enterprise-HashV41.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
 
     - task: Bash@3
       displayName: 'Create Build Directory'
