@@ -19,6 +19,8 @@ stages:
   jobs:
   - job: Build_VisualStudio
 
+    timeoutInMinutes: 120
+
     steps:
 
     - checkout: self
@@ -78,6 +80,9 @@ stages:
         testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\x64\Release\testoutput.xml'
 
   - job: Build_And_Test_Hash
+
+    timeoutInMinutes: 120
+
     steps:
 
     - checkout: self
@@ -142,6 +147,9 @@ stages:
   dependsOn: []
   jobs:
   - job: Build_And_Test
+
+    timeoutInMinutes: 120
+
     pool:
       name: Hosted Ubuntu 1604
 
