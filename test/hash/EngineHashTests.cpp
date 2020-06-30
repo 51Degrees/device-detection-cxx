@@ -64,11 +64,7 @@ public:
 	virtual string getExpectedFileType() {
 		int i;
 		for (i = 0; i < _HashFileNamesLength; i++) {
-			string filePath = getEngine()->getDataFilePath();
-			if (filePath.compare(
-				filePath.length() - strlen(_HashFileNames[i]),
-				strlen(_HashFileNames[i]),
-				_HashFileNames[i]) == 0) {
+			if (strcmp(fileName, _HashFileNames[i]) == 0) {
 				return _fileTypes[i];
 			}
 		}
