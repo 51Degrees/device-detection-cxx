@@ -25,7 +25,8 @@
 class ExampleHashTest : public ExampleDeviceDetectionTest {
 public:
 	ExampleHashTest() : ExampleDeviceDetectionTest(
-		_HashFileName, 
+		_HashFileNames,
+        _HashFileNamesLength,
 		_userAgentsFileName) {}
 };
 

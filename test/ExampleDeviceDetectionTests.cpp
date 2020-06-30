@@ -23,9 +23,16 @@
 #include "ExampleDeviceDetectionTests.hpp"
 
 ExampleDeviceDetectionTest::ExampleDeviceDetectionTest(
-	const char *dataFileName,
+	const char **dataFileNames,
+    int dataFileNamesLength,
 	const char *userAgentFileName) : ExampleTests() {
-	dataFilePath = GetFilePath(_dataFolderName, dataFileName);
+    dataFilePath = "";
+    for (int i = 0;
+        i < dataFileNamesLength && strcmp("", dataFilePath.c_str()) == 0;
+        i++) {
+        dataFilePath = GetFilePath(_dataFolderName, dataFileNames[i]);
+    }
+
 	userAgentFilePath = GetFilePath(_dataFolderName, userAgentFileName);
 	requiredProperties = "Id,IsMobile,BrowserName,DeviceType";
 };

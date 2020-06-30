@@ -25,12 +25,14 @@
 
 const static char _dataFolderName[] = "device-detection-data";
 
-const static char _HashFileName[] = "51Degrees-LiteV4.1.hash";
+const static char* _HashFileNames[] = { "51Degrees-EnterpriseV4.1.hash", "51Degrees-LiteV4.1.hash" };
+
+const static int _HashFileNamesLength = 2;
 
 const static char _HashProduct[] = "HashV41";
 
 const static char _userAgentsFileName[] = "20000 User Agents.csv";
 
-const static char _fileType[] = "Lite";
+const static char* _fileTypes[] = { "Enterprise", "Lite" };
 
 #endif
