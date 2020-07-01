@@ -38,7 +38,7 @@ stages:
       displayName: 'Fetch LFS Data Files'
 
     - script: |
-        curl https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise --output Enterprise-HashV41.hash.gz
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
       displayName: 'Download Latest Data File'
 
     - task: ExtractFiles@1
@@ -106,7 +106,7 @@ stages:
         script: 'mkdir build'
 
     - script: |
-        curl https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise --output Enterprise-HashV41.hash.gz
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
       displayName: 'Download Latest Data File'
 
     - task: ExtractFiles@1
@@ -160,7 +160,7 @@ stages:
       lfs: true
 
     - script: |
-        curl https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise --output Enterprise-HashV41.hash.gz
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
       displayName: 'Download Latest Data File'
 
     - task: ExtractFiles@1
