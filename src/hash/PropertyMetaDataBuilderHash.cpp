@@ -54,7 +54,8 @@ PropertyMetaData* PropertyMetaDataBuilderHash::build(
 		getString(dataSet->strings, property->descriptionOffset) :
 		string(),
 		getDefaultValue(dataSet, property->defaultValueIndex),
-		getComponentId(dataSet, property));
+		getComponentId(dataSet, property),
+		getEvidenceProperties(dataSet, property));
 }
 
 byte PropertyMetaDataBuilderHash::getComponentId(
@@ -64,6 +65,41 @@ byte PropertyMetaDataBuilderHash::getComponentId(
 		property->componentIndex].data.ptr)->componentId;
 }
 
+vector<uint32_t> PropertyMetaDataBuilderHash::getEvidenceProperties(
+	fiftyoneDegreesDataSetHash *dataSet,
+	fiftyoneDegreesProperty *property) {
+	EXCEPTION_CREATE;
+	vector<uint32_t> indexes;
+	uint32_t i;
+	int index;
+	Item item;
+	String* name;
+	DataReset(&item.data);
+	name = PropertyGetName(
+		dataSet->strings,
+		property,
+		&item,
+		exception);
+	index = PropertiesGetRequiredPropertyIndexFromName(
+		dataSet->b.b.available,
+		&name->value);
+	COLLECTION_RELEASE(dataSet->strings, &item);
+
+	if (index >= 0) {
+		fiftyoneDegreesEvidenceProperties* evidenceProperties =
+			dataSet->b.b.available->items[index].evidenceProperties;
+		EXCEPTION_THROW;
+
+		indexes.reserve(evidenceProperties->count);
+		for (i = 0;
+			i < evidenceProperties->count;
+			i++) {
+			indexes.push_back(evidenceProperties->items[i]);
+		}
+	}
+	return indexes;
+
+}
 string PropertyMetaDataBuilderHash::getDefaultValue(
 	fiftyoneDegreesDataSetHash *dataSet,
 	uint32_t valueIndex) {

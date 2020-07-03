@@ -123,6 +123,14 @@ MetaDataHash::getPropertiesForComponent(
 		component);
 }
 
+Collection<string, PropertyMetaData>*
+MetaDataHash::getEvidencePropertiesForProperty(
+	PropertyMetaData *property) {
+	return new PropertyMetaDataCollectionForPropertyHash(
+		manager.get(),
+		property);
+}
+
 PropertyMetaData* MetaDataHash::getPropertyForValue(
 	ValueMetaData *value) {
 	PropertyMetaData *result = nullptr;

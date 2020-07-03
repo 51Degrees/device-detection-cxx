@@ -1191,6 +1191,116 @@ static StatusCode initComponentsAvailable(
 	return SUCCESS;
 }
 
+int findPropertyName(
+	Collection *properties,
+	Collection *strings,
+	const char *name,
+	Exception *exception) {
+	int i;
+	Property *property;
+	String *propertyName;
+	Item propertyItem, nameItem;
+	int count = CollectionGetCount(properties);
+	DataReset(&propertyItem.data);
+	DataReset(&nameItem.data);
+	for (i = 0; i < count; i++) {
+		property = PropertyGet(
+			properties,
+			i,
+			&propertyItem,
+			exception);
+		if (property != NULL &&
+			EXCEPTION_OKAY) {
+			propertyName = PropertyGetName(
+				strings,
+				property,
+				&nameItem,
+				exception);
+			if (propertyName != NULL && EXCEPTION_OKAY) {
+				if (StringCompare(name, &propertyName->value) == 0) {
+					COLLECTION_RELEASE(strings, &nameItem);
+					COLLECTION_RELEASE(properties, &propertyItem);
+					return i;
+				}
+				COLLECTION_RELEASE(strings, &nameItem);
+			}
+			COLLECTION_RELEASE(properties, &propertyItem);
+		}
+	}
+	return -1;
+}
+
+
+uint32_t initGetEvidenceProperties(
+	void* state,
+	fiftyoneDegreesPropertyAvailable *availableProperty,
+	fiftyoneDegreesEvidencePropertyIndexArray *evidenceProperties) {
+	int count = 0;
+	int index;
+	Item item;
+	Component* component;
+	String* name;
+	char *jsName;
+	DataSetHash* dataSet =
+		(DataSetHash*)((stateWithException*)state)->state;
+	Exception* exception = ((stateWithException*)state)->exception;
+
+	index = -1;
+	DataReset(&item.data);
+
+	Property* property = PropertyGet(
+		dataSet->properties,
+		availableProperty->propertyIndex,
+		&item,
+		exception);
+
+	component = (Component*)dataSet->componentsList.items[property->componentIndex].data.ptr;
+	// todo check
+	COLLECTION_RELEASE(dataSet->properties, &item);
+
+	name = StringGet(
+		dataSet->strings,
+		component->nameOffset,
+		&item,
+		exception);
+
+	if (strcmp("HardwarePlatform", &name->value) == 0) {
+		if (evidenceProperties != NULL) {
+			index = findPropertyName(
+				dataSet->properties,
+				dataSet->strings,
+				"JavaScriptHardwareProfile",
+				exception);
+			evidenceProperties->items[count] = index;
+
+		}
+		count++;
+	}
+
+	COLLECTION_RELEASE(dataSet->strings, &item);
+
+	name = (String*)availableProperty->name.data.ptr;
+
+	jsName = Malloc(sizeof(char) * (name->size + strlen("javascript") + 1));
+	strcpy(jsName, &name->value);
+	strcpy(jsName + name->size - 1, "javascript");
+	index = -1;
+	index = findPropertyName(
+		dataSet->properties,
+		dataSet->strings,
+		jsName,
+		exception);
+	// todo check exception
+	Free(jsName);
+	if (index >= 0) {
+		if (evidenceProperties != NULL) {
+			evidenceProperties->items[count] = index;
+		}
+		count++;
+	}
+	return count;
+}
+
 static StatusCode initPropertiesAndHeaders(
 	DataSetHash *dataSet,
 	PropertiesRequired *properties,
@@ -1204,7 +1314,8 @@ static StatusCode initPropertiesAndHeaders(
 		&state,
 		initGetPropertyString,
 		initGetHttpHeaderString,
-		initOverridesFilter);
+		initOverridesFilter,
+		initGetEvidenceProperties);
 	if (status != SUCCESS) {
 		return status;
 	}
@@ -2981,3 +3092,4 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 	}
 	return destination;
 }
+

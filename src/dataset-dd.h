@@ -87,6 +87,8 @@ fiftyoneDegreesDataSetDeviceDetectionGet(
  * header at a specified index from the data set
  * @param overridesFilter pointer to a filter method which determines whether
  * or not a property is eligible to be overridden
+ * @param getEvidencePropertiesMethod method used to populate the list of
+ * evidence required for a property in the data set
  * @return the status associated with the header initialisation. Any value
  * other than #FIFTYONE_DEGREES_STATUS_SUCCESS  means the headers were not
  * initialised correctly
@@ -98,7 +100,8 @@ fiftyoneDegreesDataSetDeviceDetectionInitPropertiesAndHeaders(
 	void *state,
 	fiftyoneDegreesPropertiesGetMethod getPropertyMethod,
 	fiftyoneDegreesHeadersGetMethod getHeaderMethod,
-	fiftyoneDegreesOverridesFilterMethod overridesFilter);
+	fiftyoneDegreesOverridesFilterMethod overridesFilter,
+    fiftyoneDegreesEvidencePropertiesGetMethod getEvidencePropertiesMethod) ;
 
 /**
  * @copydoc fiftyoneDegreesDataSetReset
