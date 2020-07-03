@@ -1234,7 +1234,7 @@ int findPropertyName(
 uint32_t initGetEvidenceProperties(
 	void* state,
 	fiftyoneDegreesPropertyAvailable *availableProperty,
-	fiftyoneDegreesEvidencePropertyIndexArray *evidenceProperties) {
+	fiftyoneDegreesEvidenceProperties *evidenceProperties) {
 	int count = 0;
 	int index;
 	Item item;
@@ -1245,58 +1245,82 @@ uint32_t initGetEvidenceProperties(
 		(DataSetHash*)((stateWithException*)state)->state;
 	Exception* exception = ((stateWithException*)state)->exception;
 
-	index = -1;
 	DataReset(&item.data);
 
+	// First get the property to check its component.
 	Property* property = PropertyGet(
 		dataSet->properties,
 		availableProperty->propertyIndex,
 		&item,
 		exception);
+	if (property != NULL && EXCEPTION_OKAY) {
+		// Get the name of the component which the property belongs to.
+		component = (Component*)dataSet->componentsList.items[property->componentIndex].data.ptr;
+		name = StringGet(
+			dataSet->strings,
+			component->nameOffset,
+			&item,
+			exception);
+		// Release the property before the findPropertyName method is called.
+		// If this is not done, and the collection is configured in low memory
+		// there could be a problem fetching from the collection.
+		COLLECTION_RELEASE(dataSet->properties, &item);
+		if (name != NULL && EXCEPTION_OKAY) {
+			if (strcmp("HardwarePlatform", &name->value) == 0) {
+				// In this specific case, anything hardware is affected by the
+				// JavaScriptHardwareProfile property.
+				if (evidenceProperties != NULL) {
+					// Add the index if the structure has been allocated.
+					index = findPropertyName(
+						dataSet->properties,
+						dataSet->strings,
+						"JavaScriptHardwareProfile",
+						exception);
+					evidenceProperties->items[count] = index;
+				}
+				count++;
+			}
+			COLLECTION_RELEASE(dataSet->strings, &item);
+		}
+	}
 
-	component = (Component*)dataSet->componentsList.items[property->componentIndex].data.ptr;
-	// todo check
-	COLLECTION_RELEASE(dataSet->properties, &item);
-
-	name = StringGet(
-		dataSet->strings,
-		component->nameOffset,
-		&item,
-		exception);
-
-	if (strcmp("HardwarePlatform", &name->value) == 0) {
-		if (evidenceProperties != NULL) {
+	// Only carry on doing this if there was no exception from the section
+	// above.
+	if (EXCEPTION_OKAY) {
+		name = (String*)availableProperty->name.data.ptr;
+		// Allocate some space to set the name of a target property. This
+		// follows the convension of a 'JavaScript' suffix. For example, a
+		// property named 'IsMobileJavaScript' would contain JavaScript which
+		// produced evidence for the 'IsMobile' property.
+		jsName = (char*)Malloc(sizeof(char) * (name->size + strlen("javascript") + 1));
+		if (jsName != NULL) {
+			// Construct the name to look for.
+			strcpy(jsName, &name->value);
+			strcpy(jsName + name->size - 1, "javascript");
+			// Do a sequential search for the property name just constructed.
+			// Ideally this would be a binary search, but the properties are not
+			// guaranteed to be in alphabetical order. Besides, this method only
+			// runs at startup and the number of properties is relatively
+			// small, so performance is not such an issue.
 			index = findPropertyName(
 				dataSet->properties,
 				dataSet->strings,
-				"JavaScriptHardwareProfile",
+				jsName,
 				exception);
-			evidenceProperties->items[count] = index;
-
+			if (EXCEPTION_OKAY) {
+				if (index >= 0) {
+					if (evidenceProperties != NULL) {
+						// Add the index if the structure has been allocated.
+						evidenceProperties->items[count] = index;
+					}
+					count++;
+				}
+			}
+			Free(jsName);
 		}
-		count++;
-	}
-
-	COLLECTION_RELEASE(dataSet->strings, &item);
-
-	name = (String*)availableProperty->name.data.ptr;
-
-	jsName = Malloc(sizeof(char) * (name->size + strlen("javascript") + 1));
-	strcpy(jsName, &name->value);
-	strcpy(jsName + name->size - 1, "javascript");
-	index = -1;
-	index = findPropertyName(
-		dataSet->properties,
-		dataSet->strings,
-		jsName,
-		exception);
-	// todo check exception
-	Free(jsName);
-	if (index >= 0) {
-		if (evidenceProperties != NULL) {
-			evidenceProperties->items[count] = index;
+		else {
+			EXCEPTION_SET(INSUFFICIENT_MEMORY);
 		}
-		count++;
 	}
 	return count;
 }
