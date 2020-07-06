@@ -19,6 +19,8 @@ stages:
   jobs:
   - job: Build_VisualStudio
 
+    timeoutInMinutes: 120
+
     steps:
 
     - checkout: self
@@ -34,6 +36,20 @@ stages:
         ls
       workingDirectory: 'device-detection-data'
       displayName: 'Fetch LFS Data Files'
+
+    - script: |
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
+      displayName: 'Download Latest Data File'
+
+    - task: ExtractFiles@1
+      displayName: 'Extract Data File'
+      inputs:
+        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
+        cleanDestinationFolder: false
+
+    - script: |
+         mv $(Build.SourcesDirectory)\Enterprise-HashV41.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+      displayName: 'Move Data File'
 
     - task: NuGetCommand@2
       inputs:
@@ -64,6 +80,9 @@ stages:
         testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\x64\Release\testoutput.xml'
 
   - job: Build_And_Test_Hash
+
+    timeoutInMinutes: 120
+
     steps:
 
     - checkout: self
@@ -86,6 +105,19 @@ stages:
         targetType: 'inline'
         script: 'mkdir build'
 
+    - script: |
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
+      displayName: 'Download Latest Data File'
+
+    - task: ExtractFiles@1
+      displayName: 'Extract Data File'
+      inputs:
+        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
+        cleanDestinationFolder: false
+
+    - script: |
+         mv $(Build.SourcesDirectory)\Enterprise-HashV41.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+      displayName: 'Move Data File'
 
     - task: CMake@1
       displayName: 'CMake Configure'
@@ -115,6 +147,9 @@ stages:
   dependsOn: []
   jobs:
   - job: Build_And_Test
+
+    timeoutInMinutes: 120
+
     pool:
       name: Hosted Ubuntu 1604
 
@@ -123,6 +158,20 @@ stages:
     - checkout: self
       submodules: recursive
       lfs: true
+
+    - script: |
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
+      displayName: 'Download Latest Data File'
+
+    - task: ExtractFiles@1
+      displayName: 'Extract Data File'
+      inputs:
+        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
+        cleanDestinationFolder: false
+
+    - script: |
+         mv $(Build.SourcesDirectory)/Enterprise-HashV41.hash  $(Build.SourcesDirectory)/device-detection-data/51Degrees-EnterpriseV4.1.hash
+      displayName: 'Move Data File'
 
     - task: Bash@3
       displayName: 'Create Build Directory'
