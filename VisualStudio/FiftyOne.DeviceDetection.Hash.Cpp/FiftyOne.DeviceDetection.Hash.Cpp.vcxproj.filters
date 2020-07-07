@@ -63,6 +63,9 @@
     <ClCompile Include="..\..\src\hash\ValueMetaDataCollectionHash.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\hash\PropertyMetaDataCollectionForPropertyHash.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\hash\ComponentMetaDataBuilderHash.hpp">
@@ -111,6 +114,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\hash\ValueMetaDataCollectionHash.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hash\PropertyMetaDataCollectionForPropertyHash.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

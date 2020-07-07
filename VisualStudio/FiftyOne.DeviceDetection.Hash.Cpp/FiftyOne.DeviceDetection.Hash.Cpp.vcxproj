@@ -68,6 +68,7 @@
     <ClCompile Include="..\..\src\hash\ProfileMetaDataCollectionHash.cpp" />
     <ClCompile Include="..\..\src\hash\PropertyMetaDataBuilderHash.cpp" />
     <ClCompile Include="..\..\src\hash\PropertyMetaDataCollectionForComponentHash.cpp" />
+    <ClCompile Include="..\..\src\hash\PropertyMetaDataCollectionForPropertyHash.cpp" />
     <ClCompile Include="..\..\src\hash\PropertyMetaDataCollectionHash.cpp" />
     <ClCompile Include="..\..\src\hash\ResultsHash.cpp" />
     <ClCompile Include="..\..\src\hash\ValueMetaDataBuilderHash.cpp" />
@@ -86,6 +87,7 @@
     <ClInclude Include="..\..\src\hash\ProfileMetaDataCollectionHash.hpp" />
     <ClInclude Include="..\..\src\hash\PropertyMetaDataBuilderHash.hpp" />
     <ClInclude Include="..\..\src\hash\PropertyMetaDataCollectionForComponentHash.hpp" />
+    <ClInclude Include="..\..\src\hash\PropertyMetaDataCollectionForPropertyHash.hpp" />
     <ClInclude Include="..\..\src\hash\PropertyMetaDataCollectionHash.hpp" />
     <ClInclude Include="..\..\src\hash\ResultsHash.hpp" />
     <ClInclude Include="..\..\src\hash\ValueMetaDataBuilderHash.hpp" />
