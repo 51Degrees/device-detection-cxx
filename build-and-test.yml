@@ -73,7 +73,11 @@ stages:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'enterpriseFile'
-        downloadPath: '$(System.SourcesDirectory)\device-detection-data'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - script: |
+          mv $(Build.ArtifactsDirectory)\*  $(Build.SourcesDirectory)\device-detection-data\
+      displayName: 'Move Data File'
 
     - task: NuGetCommand@2
       inputs:
@@ -135,7 +139,11 @@ stages:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'enterpriseFile'
-        downloadPath: '$(System.SourcesDirectory)\device-detection-data'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - script: |
+          mv $(Build.ArtifactsDirectory)\*  $(Build.SourcesDirectory)\device-detection-data\
+      displayName: 'Move Data File'
 
     - task: CMake@1
       displayName: 'CMake Configure'
@@ -183,7 +191,11 @@ stages:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'enterpriseFile'
-        downloadPath: '$(System.SourcesDirectory)/device-detection-data'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - script: |
+          mv $(Build.ArtifactsDirectory)/*  $(Build.SourcesDirectory)/device-detection-data/
+      displayName: 'Move Data File'
 
     - task: Bash@3
       displayName: 'Create Build Directory'
