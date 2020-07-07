@@ -101,11 +101,13 @@ public:
 	EngineDeviceDetectionTests(
 		RequiredPropertiesConfig *requiredProperties,
 		const char *directory,
-		const char *fileName,
+		const char **fileNames,
+		int fileNamesLength,
 		const char *userAgentsFileName);
 	virtual ~EngineDeviceDetectionTests();
 	virtual void SetUp();
 	virtual void TearDown();
+	virtual string getExpectedFileType() = 0;
 	virtual void verify();
 	virtual void randomWithUserAgent(int count);
 	virtual void randomWithEvidence(int count);
@@ -150,14 +152,15 @@ public: \
 		new Config##e(ENGINE_CLASS_NAME_CONFIG_POINTER(e,c)), \
 		new RequiredPropertiesConfig(p##Pointer), \
 		_dataFolderName, \
-		_##e##FileName, \
+		_##e##FileNames, \
+		_##e##FileNamesLength, \
 		_userAgentsFileName) {} \
 	void SetUp() { ENGINE_CLASS_NAME_BASE(e,t)::SetUp(); } \
 	void TearDown() { ENGINE_CLASS_NAME_BASE(e,t)::TearDown(); } \
 }; \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Attributes) { \
 	testType(_##e##Product); \
-	testProduct(_fileType); \
+	testProduct(getExpectedFileType()); \
 	testPublishedDate(); \
 	testUpdateDate(); \
 	properties(); } \

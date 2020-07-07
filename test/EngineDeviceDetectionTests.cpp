@@ -33,9 +33,10 @@
 EngineDeviceDetectionTests::EngineDeviceDetectionTests(
 	RequiredPropertiesConfig *requiredProperties,
 	const char *directory,
-	const char *fileName,
+	const char **fileNames,
+	int fileNamesLength,
 	const char *userAgentsFileName)
-	: EngineTests(requiredProperties, directory, fileName) {
+	: EngineTests(requiredProperties, directory, fileNames, fileNamesLength) {
 	char userAgentsFullName[FIFTYONE_DEGREES_FILE_MAX_PATH];
 	const char userAgent[500] = "";
 	fiftyoneDegreesFileGetPath(
@@ -100,8 +101,13 @@ void EngineDeviceDetectionTests::verifyWithEvidenceMultiHeaderQuery() {
 	ResultsBase *results = getEngine()->processBase(&evidence);
 	verifyPropertyValue(results, "BrowserName", "Opera Mini");
 	verifyPropertyValue(results, "PlatformName", "iOS");
-	verifyPropertyValue(results, "ScreenPixelsWidth", "250");
-	verifyPropertyValue(results, "ScreenPixelsHeight", "350");
+	if (strcmp(getEngine()->getProduct().c_str(), "Lite") != 0) {
+		verifyPropertyValue(results, "ScreenPixelsWidth", "250");
+		verifyPropertyValue(results, "ScreenPixelsHeight", "350");
+	}
+	else {
+		cout << "Lite data file does not support overrides, so they are not being tested.";
+	}
 	delete results;
 }
 
@@ -118,8 +124,14 @@ void EngineDeviceDetectionTests::verifyWithEvidenceMultiHeaderCookie() {
 	ResultsBase *results = getEngine()->processBase(&evidence);
 	verifyPropertyValue(results, "BrowserName", "Opera Mini");
 	verifyPropertyValue(results, "PlatformName", "iOS");
-	verifyPropertyValue(results, "ScreenPixelsWidth", "250");
-	verifyPropertyValue(results, "ScreenPixelsHeight", "350");
+	if (strcmp(getEngine()->getProduct().c_str(), "Lite") != 0) {
+		verifyPropertyValue(results, "ScreenPixelsWidth", "250");
+		verifyPropertyValue(results, "ScreenPixelsHeight", "350");
+	}
+	else {
+		cout << "Lite data file does not support overrides, so they are not being tested.";
+	}
+
 	delete results;
 }
 

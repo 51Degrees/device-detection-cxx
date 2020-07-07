@@ -34,12 +34,14 @@ public:
 		ConfigHash *config,
 		RequiredPropertiesConfig *properties,
 		const char *dataDirectory,
-		const char *hashFileName,
+		const char **hashFileNames,
+		int hashFileNamesLength,
 		const char *userAgentsFileName) 
 		: EngineDeviceDetectionTests(
 			properties, 
 			dataDirectory, 
-			hashFileName, 
+			hashFileNames,
+			hashFileNamesLength,
 			userAgentsFileName) {
 		this->config = config;
 		// Unset allow unmatched nodes as the tests for this will explicitly set it.
@@ -59,6 +61,17 @@ public:
 		}
 		EngineDeviceDetectionTests::TearDown();
 	}
+	virtual string getExpectedFileType() {
+		int i;
+		for (i = 0; i < _HashFileNamesLength; i++) {
+			if (strcmp(fileName, _HashFileNames[i]) == 0) {
+				return _fileTypes[i];
+			}
+		}
+		return nullptr;
+	}
+
+
 	virtual void reload() {}
 	virtual void metaDataReload() {}
 	void validate(ResultsBase *results) {
@@ -342,13 +355,15 @@ public:
 		ConfigHash *config,
 		RequiredPropertiesConfig *properties,
 		const char *dataDirectory,
-		const char *hashFileName,
+		const char **hashFileNames,
+		int hashFileNamesLength,
 		const char *userAgentsFileName)
 		: EngineHashTests(
 			config, 
 			properties, 
 			dataDirectory,
-			hashFileName, 
+			hashFileNames, 
+			hashFileNamesLength,
 			userAgentsFileName) {
 	};
 	void SetUp() {
@@ -386,13 +401,15 @@ public:
 		ConfigHash *config,
 		RequiredPropertiesConfig *properties,
 		const char *dataDirectory,
-		const char *hashFileName,
+		const char **hashFileNames,
+		int hashFileNamesLength,
 		const char *userAgentsFileName)
 		: EngineHashTests(
 			config,
 			properties,
 			dataDirectory,
-			hashFileName,
+			hashFileNames,
+			hashFileNamesLength,
 			userAgentsFileName) {
 	};
 	void SetUp() {
