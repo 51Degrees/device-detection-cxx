@@ -1261,12 +1261,12 @@ uint32_t initGetEvidenceProperties(
 			component->nameOffset,
 			&item,
 			exception);
-		// Release the property before the findPropertyName method is called.
-		// If this is not done, and the collection is configured in low memory
-		// there could be a problem fetching from the collection.
-		COLLECTION_RELEASE(dataSet->properties, &item);
 		if (name != NULL && EXCEPTION_OKAY) {
 			if (strcmp("HardwarePlatform", &name->value) == 0) {
+				// Release the property before the findPropertyName method is called.
+				// If this is not done, and the collection is configured in low memory
+				// there could be a problem fetching from the collection.
+				COLLECTION_RELEASE(dataSet->properties, &item);
 				// In this specific case, anything hardware is affected by the
 				// JavaScriptHardwareProfile property.
 				if (evidenceProperties != NULL) {
@@ -1279,6 +1279,11 @@ uint32_t initGetEvidenceProperties(
 					evidenceProperties->items[count] = index;
 				}
 				count++;
+			}
+			else {
+				// A release is also needed here as the release in the if block
+				// has not been reached.
+				COLLECTION_RELEASE(dataSet->properties, &item);
 			}
 			COLLECTION_RELEASE(dataSet->strings, &item);
 		}
