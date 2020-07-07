@@ -73,10 +73,10 @@ stages:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'enterpriseFile'
-        downloadPath: '$(System.SourcesDirectory)'
+        downloadPath: '$(System.ArtifactsDirectory)'
 
     - script: |
-          mv $(Build.SourcesDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+          mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
 
     - task: NuGetCommand@2
@@ -139,10 +139,10 @@ stages:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'enterpriseFile'
-        downloadPath: '$(System.SourcesDirectory)'
+        downloadPath: '$(System.ArtifactsDirectory)'
 
     - script: |
-          mv $(Build.SourcesDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+          mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
 
     - task: CMake@1
@@ -191,10 +191,10 @@ stages:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'enterpriseFile'
-        downloadPath: '$(System.SourcesDirectory)'
+        downloadPath: '$(System.ArtifactsDirectory)'
 
     - script: |
-          mv $(Build.SourcesDirectory)/enterpriseFile/51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)/device-detection-data/51Degrees-EnterpriseV4.1.hash
+          mv $(System.ArtifactsDirectory)/enterpriseFile/51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)/device-detection-data/51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
 
     - task: Bash@3
