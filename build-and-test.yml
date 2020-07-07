@@ -27,7 +27,7 @@ stages:
         cleanDestinationFolder: false
 
     - script: |
-          mv $(Build.SourcesDirectory)\Enterprise-HashV41.hash  $(Build.ArtifactStagingDirectory)\51Degrees-EnterpriseV4.1.hash
+          mv $(Build.SourcesDirectory)/Enterprise-HashV41.hash  $(Build.ArtifactStagingDirectory)/51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
 
     - task: PublishBuildArtifacts@1
