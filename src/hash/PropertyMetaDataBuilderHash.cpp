@@ -80,6 +80,7 @@ vector<uint32_t> PropertyMetaDataBuilderHash::getEvidenceProperties(
 		property,
 		&item,
 		exception);
+	EXCEPTION_THROW;
 	index = PropertiesGetRequiredPropertyIndexFromName(
 		dataSet->b.b.available,
 		&name->value);
@@ -88,7 +89,6 @@ vector<uint32_t> PropertyMetaDataBuilderHash::getEvidenceProperties(
 	if (index >= 0) {
 		fiftyoneDegreesEvidenceProperties* evidenceProperties =
 			dataSet->b.b.available->items[index].evidenceProperties;
-		EXCEPTION_THROW;
 
 		indexes.reserve(evidenceProperties->count);
 		for (i = 0;
