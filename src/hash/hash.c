@@ -1191,6 +1191,145 @@ static StatusCode initComponentsAvailable(
 	return SUCCESS;
 }
 
+int findPropertyName(
+	Collection *properties,
+	Collection *strings,
+	const char *name,
+	Exception *exception) {
+	int i;
+	Property *property;
+	String *propertyName;
+	Item propertyItem, nameItem;
+	int count = CollectionGetCount(properties);
+	DataReset(&propertyItem.data);
+	DataReset(&nameItem.data);
+	for (i = 0; i < count; i++) {
+		property = PropertyGet(
+			properties,
+			i,
+			&propertyItem,
+			exception);
+		if (property != NULL &&
+			EXCEPTION_OKAY) {
+			propertyName = PropertyGetName(
+				strings,
+				property,
+				&nameItem,
+				exception);
+			if (propertyName != NULL && EXCEPTION_OKAY) {
+				if (StringCompare(name, &propertyName->value) == 0) {
+					COLLECTION_RELEASE(strings, &nameItem);
+					COLLECTION_RELEASE(properties, &propertyItem);
+					return i;
+				}
+				COLLECTION_RELEASE(strings, &nameItem);
+			}
+			COLLECTION_RELEASE(properties, &propertyItem);
+		}
+	}
+	return -1;
+}
+
+
+uint32_t initGetEvidenceProperties(
+	void* state,
+	fiftyoneDegreesPropertyAvailable *availableProperty,
+	fiftyoneDegreesEvidenceProperties *evidenceProperties) {
+	int count = 0;
+	int index;
+	Item item;
+	Component* component;
+	String* name;
+	char *jsName;
+	DataSetHash* dataSet =
+		(DataSetHash*)((stateWithException*)state)->state;
+	Exception* exception = ((stateWithException*)state)->exception;
+
+	DataReset(&item.data);
+
+	// First get the property to check its component.
+	Property* property = PropertyGet(
+		dataSet->properties,
+		availableProperty->propertyIndex,
+		&item,
+		exception);
+	if (property != NULL && EXCEPTION_OKAY) {
+		// Get the name of the component which the property belongs to.
+		component = (Component*)dataSet->componentsList.items[property->componentIndex].data.ptr;
+		name = StringGet(
+			dataSet->strings,
+			component->nameOffset,
+			&item,
+			exception);
+		if (name != NULL && EXCEPTION_OKAY) {
+			if (strcmp("HardwarePlatform", &name->value) == 0) {
+				// Release the property before the findPropertyName method is called.
+				// If this is not done, and the collection is configured in low memory
+				// there could be a problem fetching from the collection.
+				COLLECTION_RELEASE(dataSet->properties, &item);
+				// In this specific case, anything hardware is affected by the
+				// JavaScriptHardwareProfile property.
+				if (evidenceProperties != NULL) {
+					// Add the index if the structure has been allocated.
+					index = findPropertyName(
+						dataSet->properties,
+						dataSet->strings,
+						"JavaScriptHardwareProfile",
+						exception);
+					evidenceProperties->items[count] = index;
+				}
+				count++;
+			}
+			else {
+				// A release is also needed here as the release in the if block
+				// has not been reached.
+				COLLECTION_RELEASE(dataSet->properties, &item);
+			}
+			COLLECTION_RELEASE(dataSet->strings, &item);
+		}
+	}
+
+	// Only carry on doing this if there was no exception from the section
+	// above.
+	if (EXCEPTION_OKAY) {
+		name = (String*)availableProperty->name.data.ptr;
+		// Allocate some space to set the name of a target property. This
+		// follows the convension of a 'JavaScript' suffix. For example, a
+		// property named 'IsMobileJavaScript' would contain JavaScript which
+		// produced evidence for the 'IsMobile' property.
+		jsName = (char*)Malloc(sizeof(char) * (name->size + strlen("javascript") + 1));
+		if (jsName != NULL) {
+			// Construct the name to look for.
+			strcpy(jsName, &name->value);
+			strcpy(jsName + name->size - 1, "javascript");
+			// Do a sequential search for the property name just constructed.
+			// Ideally this would be a binary search, but the properties are not
+			// guaranteed to be in alphabetical order. Besides, this method only
+			// runs at startup and the number of properties is relatively
+			// small, so performance is not such an issue.
+			index = findPropertyName(
+				dataSet->properties,
+				dataSet->strings,
+				jsName,
+				exception);
+			if (EXCEPTION_OKAY) {
+				if (index >= 0) {
+					if (evidenceProperties != NULL) {
+						// Add the index if the structure has been allocated.
+						evidenceProperties->items[count] = index;
+					}
+					count++;
+				}
+			}
+			Free(jsName);
+		}
+		else {
+			EXCEPTION_SET(INSUFFICIENT_MEMORY);
+		}
+	}
+	return count;
+}
+
 static StatusCode initPropertiesAndHeaders(
 	DataSetHash *dataSet,
 	PropertiesRequired *properties,
@@ -1204,7 +1343,8 @@ static StatusCode initPropertiesAndHeaders(
 		&state,
 		initGetPropertyString,
 		initGetHttpHeaderString,
-		initOverridesFilter);
+		initOverridesFilter,
+		initGetEvidenceProperties);
 	if (status != SUCCESS) {
 		return status;
 	}
@@ -2981,3 +3121,4 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 	}
 	return destination;
 }
+

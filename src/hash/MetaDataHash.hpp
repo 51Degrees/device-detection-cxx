@@ -32,6 +32,7 @@
 #include "ComponentMetaDataCollectionHash.hpp"
 #include "ProfileMetaDataCollectionHash.hpp"
 #include "PropertyMetaDataCollectionForComponentHash.hpp"
+#include "PropertyMetaDataCollectionForPropertyHash.hpp"
 #include "PropertyMetaDataBuilderHash.hpp"
 #include "hash.h"
 
@@ -96,6 +97,9 @@ namespace FiftyoneDegrees {
 
 				Collection<string, PropertyMetaData>*
 					getPropertiesForComponent(ComponentMetaData *component);
+
+				Collection<string, PropertyMetaData>*
+					getEvidencePropertiesForProperty(PropertyMetaData *property);
 
 				PropertyMetaData* getPropertyForValue(ValueMetaData *value);
 				/**

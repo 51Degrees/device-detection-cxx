@@ -114,6 +114,10 @@ namespace FiftyoneDegrees {
 				static byte getComponentId(
 					fiftyoneDegreesDataSetHash *dataSet,
 					fiftyoneDegreesProperty *property);
+
+				static vector<uint32_t> getEvidenceProperties(
+					fiftyoneDegreesDataSetHash *dataSet,
+					fiftyoneDegreesProperty *property);
 			};
 		}
 	}

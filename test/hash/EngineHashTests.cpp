@@ -110,6 +110,64 @@ public:
 		EngineTests::verifyMetaData(getEngine());
 	}
 
+	void checkEvidenceProperty(EngineHash *engine, string propertyName, string evidencePropertyName) {
+		PropertyMetaData* property, * evidenceProperty;
+		Collection<string, PropertyMetaData>* properties, * evidenceProperties;
+		MetaData* metaData = engine->getMetaData();
+		properties = metaData->getProperties();
+		property = properties->getByKey(propertyName);
+		if (property->getAvailable() == true) {
+			evidenceProperties = metaData->getEvidencePropertiesForProperty(property);
+			ASSERT_GT(evidenceProperties->getSize(), (uint32_t)0);
+			evidenceProperty = evidenceProperties->getByKey(evidencePropertyName);
+			ASSERT_NE(nullptr, evidenceProperty);
+			if (evidenceProperty != nullptr) {
+				delete evidenceProperty;
+			}
+			delete evidenceProperties;
+		}
+		delete property;
+		delete properties;
+
+	}
+
+	void availableProperties() {
+		uint32_t i;
+		MetaData *metaData;
+		ComponentMetaData *hardwareComponent;
+		Collection<string, PropertyMetaData> *properties, *hardwareProperties;
+		PropertyMetaData *hardwareProperty, *property;
+		EngineHash* engine = (EngineHash*)getEngine();
+		if (strcmp("Lite", engine->getProduct().c_str()) != 0) {
+			if (this->requiredProperties->containsProperty("ScreenPixelsWidth") == true ||
+				this->requiredProperties->getCount() == 0) {
+				checkEvidenceProperty(engine, "ScreenPixelsWidth", "ScreenPixelsWidthJavaScript");
+			}
+			if (this->requiredProperties->containsProperty("ScreenPixelsHeight") == true ||
+				this->requiredProperties->getCount() == 0) {
+				checkEvidenceProperty(engine, "ScreenPixelsHeight", "ScreenPixelsHeightJavaScript");
+			}
+			
+			metaData = engine->getMetaData();
+			properties = metaData->getProperties();
+
+			hardwareProperty = properties->getByKey("JavascriptHardwareProfile");
+			hardwareComponent = metaData->getComponentForProperty(hardwareProperty);
+			hardwareProperties = metaData->getPropertiesForComponent(hardwareComponent);
+			for (i = 0; i < hardwareProperties->getSize(); i++) {
+				property = hardwareProperties->getByIndex(i);
+				if (property->getAvailable() == true) {
+					checkEvidenceProperty(engine, property->getName(), "JavascriptHardwareProfile");
+				}
+				delete property;
+			}
+			delete hardwareProperties;
+			delete hardwareComponent;
+			delete hardwareProperty;
+			delete properties;
+		}
+	}
+
 	void verify() {
 		EngineDeviceDetectionTests::verify();
 		verifyProfileOverrideDefault();

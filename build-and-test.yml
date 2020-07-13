@@ -8,8 +8,37 @@ trigger: none
 
 stages:
 
+- stage: Data
+  jobs:
+  - job: Get_Enterprise_DataFile
+    pool:
+      name: Hosted Ubuntu 1604
+
+    steps:
+    
+    - script: |
+        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
+      displayName: 'Download Latest Data File'
+
+    - task: ExtractFiles@1
+      displayName: 'Extract Data File'
+      inputs:
+        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
+        cleanDestinationFolder: false
+
+    - script: |
+          mv $(Build.SourcesDirectory)/Enterprise-HashV41.hash  $(Build.ArtifactStagingDirectory)/51Degrees-EnterpriseV4.1.hash
+      displayName: 'Move Data File'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'enterpriseFile'
+        publishLocation: 'Container'
+
+
 - stage: Windows
-  dependsOn: []
+  dependsOn: [Data]
   pool:
     name: Hosted VS2017
     demands:
@@ -17,6 +46,7 @@ stages:
     - vstest
 
   jobs:
+ 
   - job: Build_VisualStudio
 
     timeoutInMinutes: 120
@@ -37,18 +67,16 @@ stages:
       workingDirectory: 'device-detection-data'
       displayName: 'Fetch LFS Data Files'
 
-    - script: |
-        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
-      displayName: 'Download Latest Data File'
-
-    - task: ExtractFiles@1
-      displayName: 'Extract Data File'
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Enterprise Data File'
       inputs:
-        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
-        cleanDestinationFolder: false
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'enterpriseFile'
+        downloadPath: '$(System.ArtifactsDirectory)'
 
     - script: |
-         mv $(Build.SourcesDirectory)\Enterprise-HashV41.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+          mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
 
     - task: NuGetCommand@2
@@ -105,18 +133,16 @@ stages:
         targetType: 'inline'
         script: 'mkdir build'
 
-    - script: |
-        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
-      displayName: 'Download Latest Data File'
-
-    - task: ExtractFiles@1
-      displayName: 'Extract Data File'
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Enterprise Data File'
       inputs:
-        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
-        cleanDestinationFolder: false
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'enterpriseFile'
+        downloadPath: '$(System.ArtifactsDirectory)'
 
     - script: |
-         mv $(Build.SourcesDirectory)\Enterprise-HashV41.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+          mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
 
     - task: CMake@1
@@ -144,7 +170,7 @@ stages:
         testResultsFiles: '**/Test.xml'
 
 - stage: Linux
-  dependsOn: []
+  dependsOn: [Data]
   jobs:
   - job: Build_And_Test
 
@@ -159,18 +185,16 @@ stages:
       submodules: recursive
       lfs: true
 
-    - script: |
-        curl "https://distributor.51degrees.com/api/v2/download?LicenseKeys=$(licensekey)&Type=HashV41&Download=True&Product=V4Enterprise" --output Enterprise-HashV41.hash.gz
-      displayName: 'Download Latest Data File'
-
-    - task: ExtractFiles@1
-      displayName: 'Extract Data File'
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Enterprise Data File'
       inputs:
-        archiveFilePatterns: 'Enterprise-HashV41.hash.gz'
-        cleanDestinationFolder: false
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'enterpriseFile'
+        downloadPath: '$(System.ArtifactsDirectory)'
 
     - script: |
-         mv $(Build.SourcesDirectory)/Enterprise-HashV41.hash  $(Build.SourcesDirectory)/device-detection-data/51Degrees-EnterpriseV4.1.hash
+          mv $(System.ArtifactsDirectory)/enterpriseFile/51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)/device-detection-data/51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
 
     - task: Bash@3

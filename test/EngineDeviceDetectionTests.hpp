@@ -109,6 +109,7 @@ public:
 	virtual void TearDown();
 	virtual string getExpectedFileType() = 0;
 	virtual void verify();
+	virtual void availableProperties() = 0;
 	virtual void randomWithUserAgent(int count);
 	virtual void randomWithEvidence(int count);
 	virtual void userAgentPresent(const char *userAgent);
@@ -166,6 +167,7 @@ TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Attributes) { \
 	properties(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Verify) { verify(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), MetaData) { metaData(); } \
+TEST_F(ENGINE_CLASS_NAME(e,t,c,p), AvailableProperties) { availableProperties(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), MetaDataReload) { metaDataReload(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Reload) { reload(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Size) { size(); } \
