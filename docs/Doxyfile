@@ -819,7 +819,6 @@ WARN_LOGFILE           =
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../ \
-                         ../src/pattern \
                          ../src/hash \
                          ../src \
                          ../src/common-cxx \
@@ -830,27 +829,12 @@ INPUT                  = ../ \
                          ../examples/CPP/Hash/ReloadFromFile.cpp \
                          ../examples/CPP/Hash/ReloadFromMemory.cpp \
                          ../examples/CPP/Hash/StronglyTyped.cpp \
-                         ../examples/CPP/Pattern \
-                         ../examples/CPP/Pattern/GettingStarted.cpp \
-                         ../examples/CPP/Pattern/MatchMetrics.cpp \
-                         ../examples/CPP/Pattern/MetaData.cpp \
-                         ../examples/CPP/Pattern/ReloadFromFile.cpp \
-                         ../examples/CPP/Pattern/ReloadFromMemory.cpp \
-                         ../examples/CPP/Pattern/StronglyTyped.cpp \
                          ../examples/C/Hash/GettingStarted.c \
                          ../examples/C/Hash/MatchMetrics.c \
                          ../examples/C/Hash/OfflineProcessing.c \
                          ../examples/C/Hash/ReloadFromFile.c \
                          ../examples/C/Hash/ReloadFromMemory.c \
-                         ../examples/C/Hash/StronglyTyped.c \
-                         ../examples/C/Pattern/GettingStarted.c \
-                         ../examples/C/Pattern/MatchForDeviceId.c \
-                         ../examples/C/Pattern/FindProfiles.c \
-                         ../examples/C/Pattern/MatchMetrics.c \
-                         ../examples/C/Pattern/OfflineProcessing.c \
-                         ../examples/C/Pattern/ReloadFromFile.c \
-                         ../examples/C/Pattern/ReloadFromMemory.c \
-                         ../examples/C/Pattern/StronglyTyped.c
+                         ../examples/C/Hash/StronglyTyped.c
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
