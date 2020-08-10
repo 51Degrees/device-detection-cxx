@@ -4,7 +4,61 @@
 
 [C Documentation](https://docs.51degrees.com/device-detection-cxx/4.0/modules.html) and the [C++ Documentation](https://docs.51degrees.com/device-detection-cxx/4.0/namespaces.html).
 
-The 51Degrees device detection API provides the functionality of both Hash and Pattern device detection algorithms. All of the code shared by Hash and Pattern is in the [Common API](https://github.com/51Degrees/common-cxx/blob/master/readme.md) and the `src/` directory (depending on whether it is shared with other 51Degrees products or specific to device detection).
+The 51Degrees device detection API is built on the 51Degrees [common API](https://github.com/51Degrees/common-cxx).
+
+# Pre-requisites
+
+## Data File
+
+In order to perform device detection, you will need to use a 51Degrees data file. 
+This repository includes a free, 'lite' file in the 'device-detection-data' 
+sub-module that has a significantly reduced set of properties. To obtain a 
+file with a more complete set of device properties see the 
+[51Degrees website](https://51degrees.com/pricing). 
+If you want to use the lite file, you will need to install [GitLFS](https://git-lfs.github.com/).
+
+For Linux:
+```
+sudo apt-get install git-lfs
+git lfs install
+```
+
+Then, navigate to the device-detection-data directory and execute:
+
+```
+git lfs pull
+```
+
+## Fetching sub-modules
+
+This repository has sub-modules that must be fetched.
+If cloning for the first time, use:
+
+```
+git clone --recurse-submodules https://github.com/51Degrees/device-detection-cxx.git
+```
+
+If you have already cloned the repository and want to fetch the sub modules, use:
+
+```
+git submodule update --init --recursive
+```
+
+If you have downloaded this repository as a zip file then these sub modules need 
+to be downloaded separately as GitHub does not include then in the archive. 
+In particular, note that the zip download will contain links to LFS content,
+rather than the files themselves. As such, these need to be downloaded individually.
+
+## Build tools
+
+### Windows
+
+You will need either Visual Studio 2019 or the [C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) installed.
+If you have Visual Studio Code, you'll still need to install the build tools from the link above.
+
+### Linux 
+
+You will need [CMake 3.10](https://cmake.org/) or greater installed to build the project. In addition, you will need a C++ compiler which supports C++11. The compiler will and other build tools will be selected by CMake automatically based on your environment.
 
 # Installing
 
@@ -43,7 +97,7 @@ All unit, integration, and performance tests are built using the [Google test fr
 
 CMake automatically pulls in the latest Google Test from GitHub.
 
-Building the project builds two test executables to the `bin/` directory: `HashTests` and `PatternTests`.
+Building the project builds multiple test executables to the `bin/` directory: `HashTests` and any common testing included in the common-cxx library.
 
 These can be run by calling
 ```
@@ -56,7 +110,7 @@ If CMake has been used in an MSVC environment, then the tests will be set up and
 
 Tests in the Visual Studio solution automatically install the GTest dependency via a NuGet package. However, in order for the tests to show up in the Visual Studio test explorer, the [Test Adapter for Google Test](https://marketplace.visualstudio.com/items?itemName=VisualCPPTeam.TestAdapterforGoogleTest) extension must be installed.
 
-The VisualStudio solution includes `FiftyOne.DeviceDetection.Hash.Tests` and `FiftyOne.DeviceDetection.Pattern.Tests`, which can both be run through the standard Visual Studio test runner. 
+The VisualStudio solution includes `FiftyOne.DeviceDetection.Hash.Tests`, which can be run through the standard Visual Studio test runner. 
 
 # Referencing the API
 
@@ -80,26 +134,22 @@ The Visual Studio solution contains static libraries which have all the dependen
 
 # Examples
 
-There are several examples available, the source files can be found in the `examples/` folder. The examples are written in C or CPP, for Hash or Pattern.
+There are several examples available, the source files can be found in the `examples/` folder. The examples are written in C or CPP.
 
 ### Visual Studio
 All the examples are available to run in the `VisualStudio/DeviceDetection.sln` solution.
 
 ## Device Detection Examples
 
-|Example|Description|Language|Algorithm|
-|-------|-----------|--------|---------|
-|Getting Started|This example shows how to get set up with a Device Detection Cloud aspect engine and begin using it to process User-Agents.|C / C++|Hash / Pattern|
-|Match For Device Id|This example shows how store device ids for processing later using a Device Detection aspect engine using the Pattern algorithm.|C|Pattern|
-|Match Metrics|This example shows how to view metrics associated with the results of processing with a Device Detection aspect engine using the Hash algorithm.|C / C++|Hash / Pattern|
-|Meta Data|This example shows how to interrogate the meta data associated with the contents of a Device Detection Hash data file.|C++|Hash / Pattern|
-|MemHash|This example measures the memory usage of the Hash algorithm.|C|Hash|
-|MemPat|This example measures the memory usage of the Pattern algorithm.|C|Pattern|
-|Offline Processing|This example shows how process data for later viewing using a Device Detection Hash data file.|C|Hash / Pattern|
-|PerfHash|Command line performance evaluation program which takes a file of user agents and returns a performance score measured in detections per second per CPU core.|C|Hash|
-|PerfPat|Command line performance evaluation program which takes a file of user agents and returns a performance score measured in detections per second per CPU core.|C|Pattern|
-|ProcHash|Command line process which takes a user agent via stdin and return device properties via stdout.|C|Hash|
-|ProcPat|Command line process which takes a user agent via stdin and return device properties via stdout.|C|Pattern|
-|Reload From File|This example illustrates how to reload the data file from the data file on disk without restarting the application.|C / C++|Hash / Pattern|
-|Reload From Memory|This example illustrates how to reload the data file from a continuous memory space that the data file was read into without restarting the application.|C / C++|Hash / Pattern|
-|Strongly Typed|This example  takes some common User-Agents and returns the value of the IsMobile property as a boolean.|C / C++|Hash / Pattern|
+|Example|Description|Language|
+|-------|-----------|--------|
+|Getting Started|This example shows how to get set up with a Device Detection Cloud aspect engine and begin using it to process User-Agents.|C / C++|
+|Match Metrics|This example shows how to view metrics associated with the results of processing with a Device Detection aspect engine using the Hash algorithm.|C / C++|
+|Meta Data|This example shows how to interrogate the meta data associated with the contents of a Device Detection Hash data file.|C++|
+|MemHash|This example measures the memory usage of the Hash algorithm.|C|
+|Offline Processing|This example shows how process data for later viewing using a Device Detection Hash data file.|C|
+|PerfHash|Command line performance evaluation program which takes a file of user agents and returns a performance score measured in detections per second per CPU core.|C|
+|ProcHash|Command line process which takes a user agent via stdin and return device properties via stdout.|C|
+|Reload From File|This example illustrates how to reload the data file from the data file on disk without restarting the application.|C / C++|
+|Reload From Memory|This example illustrates how to reload the data file from a continuous memory space that the data file was read into without restarting the application.|C / C++|
+|Strongly Typed|This example  takes some common User-Agents and returns the value of the IsMobile property as a boolean.|C / C++|
