@@ -12,7 +12,7 @@ stages:
   jobs:
   - job: Get_Enterprise_DataFile
     pool:
-      name: Hosted Ubuntu 1604
+      vmImage: macOS-10.14
 
     steps:
     
@@ -36,139 +36,6 @@ stages:
         ArtifactName: 'enterpriseFile'
         publishLocation: 'Container'
 
-
-- stage: Windows
-  dependsOn: [Data]
-  pool:
-    name: Hosted VS2017
-    demands:
-    - msbuild
-    - vstest
-
-  jobs:
- 
-  - job: Build_VisualStudio
-
-    timeoutInMinutes: 120
-
-    steps:
-
-    - checkout: self
-      submodules: recursive
-      lfs: true
-      persistCredentials: true
-
-    - powershell: |
-        git lfs install
-        ls
-        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs fetch
-        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs checkout
-        ls
-      workingDirectory: 'device-detection-data'
-      displayName: 'Fetch LFS Data Files'
-
-    - task: DownloadBuildArtifacts@0
-      displayName: 'Download Enterprise Data File'
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: 'enterpriseFile'
-        downloadPath: '$(System.ArtifactsDirectory)'
-
-    - script: |
-          mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
-      displayName: 'Move Data File'
-
-    - task: NuGetCommand@2
-      inputs:
-        command: 'restore'
-        restoreSolution: 'VisualStudio/DeviceDetection.sln'
-        feedsToUse: 'select'
-        vstsFeed: 'd2431f86-c1e6-4d8b-8d27-311cf3614847'
-
-    - task: MSBuild@1
-      displayName: 'Build Visual Studio Solution x64'
-      inputs:
-        solution: 'VisualStudio/DeviceDetection.sln'
-        msbuildArchitecture: x64
-        platform: x64
-        configuration: Release
-        clean: true
-
-    - bash: './FiftyOne.DeviceDetection.Hash.Tests.exe --gtest_filter="-*TestMem*:*TestPerf*:*TestOfflineProcessing*" --gtest_catch_exceptions=1 --gtest_break_on_failure=0 --gtest_output=xml:testoutput.xml'
-      workingDirectory: VisualStudio/FiftyOne.DeviceDetection.Hash.Tests/x64/Release
-      failOnStderr: true
-      displayName: 'Run Hash Tests'
-
-    - task: PublishTestResults@2
-      condition: true
-      inputs:
-        testResultsFormat: 'JUnit'
-        testRunTitle: 'Visual Studio x64 Hash'
-        testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\x64\Release\testoutput.xml'
-
-  - job: Build_And_Test_Hash
-
-    timeoutInMinutes: 120
-
-    steps:
-
-    - checkout: self
-      submodules: recursive
-      lfs: true
-      persistCredentials: true
-
-    - powershell: |
-        git lfs install
-        ls
-        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs fetch
-        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs checkout
-        ls
-      workingDirectory: 'device-detection-data'
-      displayName: 'Fetch LFS Data Files'
-
-    - task: Bash@3
-      displayName: 'Create Build Directory'
-      inputs:
-        targetType: 'inline'
-        script: 'mkdir build'
-
-    - task: DownloadBuildArtifacts@0
-      displayName: 'Download Enterprise Data File'
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: 'enterpriseFile'
-        downloadPath: '$(System.ArtifactsDirectory)'
-
-    - script: |
-          mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
-      displayName: 'Move Data File'
-
-    - task: CMake@1
-      displayName: 'CMake Configure'
-      inputs:
-        workingDirectory: build
-        cmakeArgs: '.. -A x64'
-
-    - task: CMake@1
-      displayName: 'CMake Build'
-      inputs:
-        workingDirectory: build
-        cmakeArgs: '--build . --config Release'
-
-    - bash: 'ctest -R ".*Hash.*" -E ".*TestMem|TestPerf|TestOfflineProcessing.*" -T test --no-compress-output'
-      workingDirectory: build
-      failOnStderr: true
-      displayName: 'Run Tests'
-
-    - task: PublishTestResults@2
-      condition: true
-      inputs:
-        testResultsFormat: 'CTest'
-        testRunTitle: 'Windows CTest Hash'
-        testResultsFiles: '**/Test.xml'
-
 - stage: Linux
   dependsOn: [Data]
   jobs:
@@ -177,7 +44,7 @@ stages:
     timeoutInMinutes: 120
 
     pool:
-      name: Hosted Ubuntu 1604
+      vmImage: macOS-10.14
 
     steps:
 
