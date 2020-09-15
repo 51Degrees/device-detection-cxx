@@ -148,13 +148,19 @@ typedef struct detection_state_t {
 	int currentIndex; /* Current index */
 	int firstIndex; /* First index to consider */
 	int lastIndex; /* Last index to consider */
-	uint32_t profileOffset;
-	int currentDepth;
-	int breakDepth;
-	bool complete;
-	int matchedNodes;
-	int performanceMatches;
-	int predictiveMatches;
+	uint32_t profileOffset; /* The profile offset found as the result of 
+							searching a graph */
+	int currentDepth; /* The depth in the graph of the current node bwing
+					  evaluated */
+	int breakDepth; /* The depth at which to start applying drift and
+					difference */
+	bool complete; /* True if a leaf node has been found and a profile offset
+				   set */
+	int matchedNodes; /* Total number of nodes that matched in all graphs */
+	int performanceMatches; /* Number of nodes that matched in the performance 
+							   graph */
+	int predictiveMatches; /* Number of nodes that matched in the predictive 
+						      graph */
 	Exception *exception; /* Exception pointer */
 } detectionState;
 
@@ -822,7 +828,14 @@ static bool processFromRoot(
 		rootNodeOffset,
 		&state->node,
 		exception) == NULL) {
-		EXCEPTION_SET(COLLECTION_FAILURE);
+		if (EXCEPTION_OKAY) {
+			// Only set the exception if a more precise one was not
+			// set by the get method.
+			EXCEPTION_SET(COLLECTION_FAILURE);
+		}
+		// Return false as we cannot continue with a null node. The caller
+		// will check the exception.
+		return false;
 	}
 	else {
 		// Set the default flags and indexes.
@@ -913,11 +926,13 @@ static bool processRoots(
 	Component *component,
 	HashRootNodes *rootNodes) {
 	bool matched = false;
-	// TODO the lines below need to be thoroughly documented to
-	// explain the two graphs.
+
+	// First try searching in the performance graph if it is enabled.
 	if (dataSet->config.usePerformanceGraph == true) {
 #ifndef NDEBUG
 		if (dataSet->config.traceRoute == true) {
+			// Add the start point to the trace if it is enabled (and we are in
+			// a debug build).
 			addTraceRootName(
 				state,
 				"Performance",
@@ -925,15 +940,23 @@ static bool processRoots(
 				&dataSet->b.b.uniqueHeaders->items[state->result->b.uniqueHttpHeaderIndex]);
 		}
 #endif
+		// Find a match from the performance graph, starting from the performance
+		// graph root defined by the root nodes structure.
 		matched = processRoot(state, dataSet, component, rootNodes->performanceNodeOffset);
-
 		if (matched) {
+			// Increment the performance matches used to track which method has
+			// been used to get the result.
 			state->performanceMatches++;
 		}
 	}
+
+	// Now try searching in the predictive graph if it is enabled and there was
+	// no match found in the performance graph.
 	if (matched == false && dataSet->config.usePredictiveGraph == true) {
 #ifndef NDEBUG
 		if (dataSet->config.traceRoute == true) {
+			// Add the start point to the trace if it is enabled (and we are in
+			// a debug build).
 			addTraceRootName(
 				state,
 				"Predictive",
@@ -941,8 +964,12 @@ static bool processRoots(
 				&dataSet->b.b.uniqueHeaders->items[state->result->b.uniqueHttpHeaderIndex]);
 		}
 #endif
-		matched = processRoot(state, dataSet, component, rootNodes->performanceNodeOffset);
+		// Find a match from the predictive graph, starting from the predictive
+		// graph root defined by the root nodes structure.
+		matched = processRoot(state, dataSet, component, rootNodes->predictiveNodeOffset);
 		if (matched) {
+			// Increment the predictive matches used to track which method has
+			// been used to get the result.
 			state->predictiveMatches++;
 		}
 	}

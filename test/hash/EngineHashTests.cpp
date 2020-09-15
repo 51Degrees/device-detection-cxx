@@ -177,6 +177,8 @@ public:
 		verifyProfileOverridePartial();
 		verifyProfileOverrideZero();
 		verifyNoMatchedNodes();
+		verifyPerformanceGraph();
+		verifyPredictiveGraph();
 	}
 	bool setResultsMatchedNodes(
 		ResultsHash *results,
@@ -218,6 +220,248 @@ public:
 		setResultsMatchedNodes(results, 0, originalMatchedNodes);
 
 		delete results;
+	}
+
+	/**
+	 * This replaces the graph roots collection in the data set so that
+	 * -1 is always returned for the predictive root.
+	 */
+	static void* collectionMockGetPerf(
+		fiftyoneDegreesCollection* collection,
+		uint32_t indexOrOffset,
+		fiftyoneDegreesCollectionItem* item,
+		fiftyoneDegreesException* exception) {
+		// Get the original item to an internal item.
+		fiftyoneDegreesCollectionItem internalItem;
+		fiftyoneDegreesDataReset(&internalItem.data);
+		fiftyoneDegreesCollection* original =
+			(fiftyoneDegreesCollection*)collection->state;
+		fiftyoneDegreesHashRootNodes* originalRoots =
+			(fiftyoneDegreesHashRootNodes*)original->get(
+				original,
+				indexOrOffset,
+				&internalItem,
+				exception);
+		if (originalRoots == nullptr) {
+			return nullptr;
+		}
+		// Create a new roots to return, we don't want to edit the ones
+		// returned by the real collection in case it is in memory (in which
+		// case we would be breaking the data set).
+		fiftyoneDegreesHashRootNodes* roots =
+			(fiftyoneDegreesHashRootNodes*)fiftyoneDegreesDataMalloc(
+				&item->data,
+				sizeof(fiftyoneDegreesGraphNode));
+		// Set the new roots.
+		roots->performanceNodeOffset = originalRoots->performanceNodeOffset;
+		roots->predictiveNodeOffset = -1;
+		// Release the original roots.
+		FIFTYONE_DEGREES_COLLECTION_RELEASE(original, &internalItem);
+		item->collection = collection;
+		return item->data.ptr;
+	}
+
+	/**
+	 * This replaces the graph roots collection in the data set so that
+	 * -1 is always returned for the performance root.
+	 */
+	static void* collectionMockGetPred(
+		fiftyoneDegreesCollection* collection,
+		uint32_t indexOrOffset,
+		fiftyoneDegreesCollectionItem* item,
+		fiftyoneDegreesException* exception) {
+		// Get the original item to an internal item.
+		fiftyoneDegreesCollectionItem internalItem;
+		fiftyoneDegreesDataReset(&internalItem.data);
+		fiftyoneDegreesCollection* original =
+			(fiftyoneDegreesCollection*)collection->state;
+		fiftyoneDegreesHashRootNodes* originalRoots =
+			(fiftyoneDegreesHashRootNodes*)original->get(
+				original,
+				indexOrOffset,
+				&internalItem,
+				exception);
+		if (originalRoots == nullptr) {
+			return nullptr;
+		}
+		// Create a new roots to return, we don't want to edit the ones
+		// returned by the real collection in case it is in memory (in which
+		// case we would be breaking the data set).
+		fiftyoneDegreesHashRootNodes* roots =
+			(fiftyoneDegreesHashRootNodes*)fiftyoneDegreesDataMalloc(
+				&item->data,
+				sizeof(fiftyoneDegreesGraphNode));
+		// Set the new roots.
+		roots->performanceNodeOffset = -1;
+		roots->predictiveNodeOffset = originalRoots->predictiveNodeOffset;
+		// Release the original roots.
+		FIFTYONE_DEGREES_COLLECTION_RELEASE(original, &internalItem);
+		item->collection = collection;
+		return item->data.ptr;
+	}
+
+	/**
+	 * Release method for the mocked roots collection. The items are always
+	 * allocated by the get method, so this just freed them.
+	 */
+	static void collectionMockRelease(fiftyoneDegreesCollectionItem* item) {
+		fiftyoneDegreesFree(item->data.ptr);
+		fiftyoneDegreesDataReset(&item->data);
+		item->collection = nullptr;
+	}
+
+	/**
+	 * Mock the graph roots collection to return a modified version of the
+	 * graph roots.
+	 */
+	void mockRootsCollection(fiftyoneDegreesCollectionGetMethod get) {
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		fiftyoneDegreesCollection* original = dataSet->rootNodes;
+		fiftyoneDegreesCollection* collection =
+			(fiftyoneDegreesCollection*)fiftyoneDegreesMalloc(
+				sizeof(fiftyoneDegreesCollection));
+		collection->count = fiftyoneDegreesCollectionGetCount(original);
+		collection->elementSize = original->elementSize;
+		collection->freeCollection = nullptr; // won't be used, so no need to set.
+		collection->get = get;
+		collection->release = EngineHashTests::collectionMockRelease;
+		collection->size = original->size;
+		collection->next = nullptr;
+		collection->state = original;
+		dataSet->rootNodes = collection;
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+	}
+
+	/**
+	 * Reverts the graph roots collection to the original collection.
+	 * The collection was stored as a state by the mock collection.
+	 */
+	void revertMockRootsCollection() {
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		fiftyoneDegreesCollection* mock = dataSet->rootNodes;
+		dataSet->rootNodes = (fiftyoneDegreesCollection*)mock->state;
+		fiftyoneDegreesFree(mock);
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+	}
+
+	void verifyPerformanceGraph() {
+		// Set the graph roots collection to return invalid offsets for
+		// predictive.
+		mockRootsCollection(EngineHashTests::collectionMockGetPerf);
+		
+		// Enable only performance graph.
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		fiftyoneDegreesConfigHash* editableConfig =
+			(fiftyoneDegreesConfigHash*)&dataSet->config;
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+		bool originalPerf = editableConfig->usePerformanceGraph;
+		bool originalPred = editableConfig->usePredictiveGraph;
+		editableConfig->usePerformanceGraph = true;
+		editableConfig->usePredictiveGraph = false;
+
+		// Process some evidence. This will throw an exception if the wrong
+		// graph is used.
+		EvidenceDeviceDetection evidence;
+		evidence["header.user-agent"] = mobileUserAgent;
+		ResultsHash* goodResults;
+		try {
+			goodResults = ((EngineHash*)getEngine())->process(&evidence);
+		}
+		catch (exception e){
+			FAIL() << L"Processing should not throw an exception if it is "
+				<< L"only using the graph it is supposed to. Exception was: "
+				<< e.what();
+		}
+		evidence["header.user-agent"] = badUserAgent;
+		ResultsHash* badResults;
+		try {
+			badResults = ((EngineHash*)getEngine())->process(&evidence);
+		}
+		catch (exception e) {
+			FAIL() << L"Processing should not throw an exception if it is "
+				<< L"only using the graph it is supposed to. Exception was: "
+				<< e.what();
+		}
+
+		// Check the results are reporting the correct method.
+		EXPECT_EQ(
+			FIFTYONE_DEGREES_HASH_MATCH_METHOD_PERFORMANCE,
+			goodResults->getMethod())
+			<< L"Only the performance graph was used, but that was not "
+			<< L"reflected by the method.";
+		EXPECT_EQ(
+			FIFTYONE_DEGREES_HASH_MATCH_METHOD_NONE,
+			badResults->getMethod())
+			<< L"No graph should have been used.";
+
+		// Clean up
+		delete goodResults;
+		delete badResults;
+		revertMockRootsCollection();
+		editableConfig->usePerformanceGraph = originalPerf;
+		editableConfig->usePredictiveGraph = originalPred;
+	}
+
+	void verifyPredictiveGraph() {
+		// Set the graph roots collection to return invalid offsets for
+		// performance.
+		mockRootsCollection(EngineHashTests::collectionMockGetPred);
+
+		// Enable only predictive graph.
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		fiftyoneDegreesConfigHash* editableConfig =
+			(fiftyoneDegreesConfigHash*)&dataSet->config;
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+		bool originalPerf = editableConfig->usePerformanceGraph;
+		bool originalPred = editableConfig->usePredictiveGraph;
+		editableConfig->usePerformanceGraph = false;
+		editableConfig->usePredictiveGraph = true;
+
+		// Process some evidence. This will throw an exception if the wrong
+		// graph is used.
+		EvidenceDeviceDetection evidence;
+		evidence["header.user-agent"] = mobileUserAgent;
+		ResultsHash* goodResults;
+		try {
+			goodResults = ((EngineHash*)getEngine())->process(&evidence);
+		}
+		catch (exception e) {
+			FAIL() << L"Processing should not throw an exception if it is "
+				<< L"only using the graph it is supposed to. Exception was: "
+				<< e.what();
+		}
+		evidence["header.user-agent"] = badUserAgent;
+		ResultsHash* badResults;
+		try {
+			badResults = ((EngineHash*)getEngine())->process(&evidence);
+		}
+		catch (exception e) {
+			FAIL() << L"Processing should not throw an exception if it is "
+				<< L"only using the graph it is supposed to. Exception was: "
+				<< e.what();
+		}
+
+		// Check the results are reporting the correct method.
+		EXPECT_EQ(
+			FIFTYONE_DEGREES_HASH_MATCH_METHOD_PREDICTIVE,
+			goodResults->getMethod())
+			<< L"Only the predictive graph was used, but that was not "
+			<< L"reflected by the method.";
+		EXPECT_EQ(
+			FIFTYONE_DEGREES_HASH_MATCH_METHOD_NONE,
+			badResults->getMethod())
+			<< L"No graph should have been used.";
+
+		// Clean up
+		delete goodResults;
+		delete badResults;
+		revertMockRootsCollection();
+		editableConfig->usePerformanceGraph = originalPerf;
+		editableConfig->usePredictiveGraph = originalPred;
 	}
 
 	void verifyProfileOverrideDefault() {
