@@ -104,6 +104,7 @@ int fiftyoneDegreesProcHashRun(
 	ResourceManager manager;
 	PropertiesRequired properties = PropertiesDefault;
 	properties.string = requiredProperties;
+	config->b.allowUnmatched = true;
 	StatusCode status = HashInitManagerFromFile(
 		&manager,
 		config,
