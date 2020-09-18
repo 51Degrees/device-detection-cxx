@@ -187,8 +187,8 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig = {
 	{0,0,0}, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true, // Performance graph
-	false, // Predictive graph
+	false, // Performance graph
+	true, // Predictive graph
 	false // Trace
 };
 #undef FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY
@@ -208,8 +208,8 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
 	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true, // Performance graph
-	false, // Predictive graph
+	false, // Performance graph
+	true, // Predictive graph
 	false // Trace
 };
 
@@ -226,7 +226,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig = {
 	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true, // Performance graph
+	false, // Performance graph
 	true, // Predictive graph
 	false // Trace
 };
@@ -244,7 +244,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
 	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true, // Performance graph
+	false, // Performance graph
 	true, // Predictive graph
 	false // Trace
 };
@@ -262,7 +262,7 @@ FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT, \
 { FIFTYONE_DEGREES_PROFILE_LOADED, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* ProfileOffsets */ \
 FIFTYONE_DEGREES_HASH_DIFFERENCE, \
 FIFTYONE_DEGREES_HASH_DRIFT, \
-true, /* Performance graph */ \
+false, /* Performance graph */ \
 true,  /* Predictive graph */ \
 false /* Trace */
 
