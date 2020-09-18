@@ -1099,7 +1099,8 @@ static long initGetHttpHeaderString(
 		(DataSetHash*)((stateWithException*)state)->state;
 	Exception *exception = ((stateWithException*)state)->exception;
 	uint32_t i = 0, c = 0;
-	Component *component = COMPONENT(dataSet, c++);
+	Component *component = COMPONENT(dataSet, c);
+	c++;
 	while (component != NULL) {
 		if (index < i + component->keyValuesCount) {
 			const ComponentKeyValuePair *keyValue =
@@ -1116,7 +1117,8 @@ static long initGetHttpHeaderString(
 			return keyValue->key;
 		}
 		i += component->keyValuesCount;
-		component = COMPONENT(dataSet, c++);
+		component = COMPONENT(dataSet, c);
+		c++;
 	}
 	return -1;
 }
