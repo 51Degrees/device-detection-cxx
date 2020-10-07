@@ -168,6 +168,7 @@ TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Attributes) { \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Verify) { verify(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), MetaData) { metaData(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), AvailableProperties) { availableProperties(); } \
+TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Headers) { headers(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), MetaDataReload) { metaDataReload(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Reload) { reload(); } \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Size) { size(); } \

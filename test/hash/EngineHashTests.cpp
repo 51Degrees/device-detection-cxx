@@ -168,6 +168,23 @@ public:
 		}
 	}
 
+	void headers() {
+		int count = 0;
+		EngineHash* engine = (EngineHash*)getEngine();
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		for (int i = 0; i < dataSet->componentsList.count; i++) {
+			fiftyoneDegreesComponent* component =
+				(fiftyoneDegreesComponent*)
+				dataSet->componentsList.items[i].data.ptr;
+			count += component->keyValuesCount;
+		}
+		ASSERT_EQ(dataSet->b.b.uniqueHeaders->capacity, count) <<
+			L"The HTTP headers counted when initialising the headers was not " <<
+			L"equal to the total headers from all components.";
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+	}
+
 	void verify() {
 		EngineDeviceDetectionTests::verify();
 		verifyProfileOverrideDefault();
