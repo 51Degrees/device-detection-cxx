@@ -57,7 +57,7 @@ static const char *userAgentFileName = "20000 User Agents.csv";
 // #define CONFIG fiftyoneDegreesHashInMemoryConfig
 // #define CONFIG fiftyoneDegreesHashHighPerformanceConfig
 #define CONFIG fiftyoneDegreesHashLowMemoryConfig
-//#define CONFIG fiftyoneDegreesHashBalancedConfig
+// #define CONFIG fiftyoneDegreesHashBalancedConfig
 // #define CONFIG fiftyoneDegreesHashBalancedTempConfig
 
 /**
@@ -165,7 +165,7 @@ static void executeTest(const char *userAgent, void *state) {
  * @param mainState state information about the main test
  */
 static void runMemoryThread(void* mainState) {
-	const char userAgent[1000] = "";
+	char userAgent[1000] = "";
 	memoryThreadState threadState;
 	threadState.main = (memoryState*)mainState;
 
@@ -344,7 +344,7 @@ void fiftyoneDegreesMemHashRun(
 
 	// Configure to return the device Id properties.
 	PropertiesRequired properties = PropertiesDefault;
-	properties.string = "Id";
+	properties.string = "IsMobile,BrowserVendor,PlatformVendor,IsCrawler";
 
 	ResourceManager manager;
 	EXCEPTION_CREATE;

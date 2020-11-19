@@ -71,7 +71,6 @@ public:
 		return nullptr;
 	}
 
-
 	virtual void reload() {}
 	virtual void metaDataReload() {}
 	void validate(ResultsBase *results) {
@@ -110,10 +109,10 @@ public:
 		EngineTests::verifyMetaData(getEngine());
 	}
 
-	void checkEvidenceProperty(EngineHash *engine, string propertyName, string evidencePropertyName) {
+	void checkEvidenceProperty(EngineHash *localEngine, string propertyName, string evidencePropertyName) {
 		PropertyMetaData* property, * evidenceProperty;
 		Collection<string, PropertyMetaData>* properties, * evidenceProperties;
-		MetaData* metaData = engine->getMetaData();
+		MetaData* metaData = localEngine->getMetaData();
 		properties = metaData->getProperties();
 		property = properties->getByKey(propertyName);
 		if (property->getAvailable() == true) {
@@ -137,18 +136,18 @@ public:
 		ComponentMetaData *hardwareComponent;
 		Collection<string, PropertyMetaData> *properties, *hardwareProperties;
 		PropertyMetaData *hardwareProperty, *property;
-		EngineHash* engine = (EngineHash*)getEngine();
-		if (strcmp("Lite", engine->getProduct().c_str()) != 0) {
+		EngineHash* localEngine = (EngineHash*)getEngine();
+		if (strcmp("Lite", localEngine->getProduct().c_str()) != 0) {
 			if (this->requiredProperties->containsProperty("ScreenPixelsWidth") == true ||
 				this->requiredProperties->getCount() == 0) {
-				checkEvidenceProperty(engine, "ScreenPixelsWidth", "ScreenPixelsWidthJavaScript");
+				checkEvidenceProperty(localEngine, "ScreenPixelsWidth", "ScreenPixelsWidthJavaScript");
 			}
 			if (this->requiredProperties->containsProperty("ScreenPixelsHeight") == true ||
 				this->requiredProperties->getCount() == 0) {
-				checkEvidenceProperty(engine, "ScreenPixelsHeight", "ScreenPixelsHeightJavaScript");
+				checkEvidenceProperty(localEngine, "ScreenPixelsHeight", "ScreenPixelsHeightJavaScript");
 			}
 			
-			metaData = engine->getMetaData();
+			metaData = localEngine->getMetaData();
 			properties = metaData->getProperties();
 
 			hardwareProperty = properties->getByKey("JavascriptHardwareProfile");
@@ -157,7 +156,7 @@ public:
 			for (i = 0; i < hardwareProperties->getSize(); i++) {
 				property = hardwareProperties->getByIndex(i);
 				if (property->getAvailable() == true) {
-					checkEvidenceProperty(engine, property->getName(), "JavascriptHardwareProfile");
+					checkEvidenceProperty(localEngine, property->getName(), "JavascriptHardwareProfile");
 				}
 				delete property;
 			}
@@ -170,10 +169,10 @@ public:
 
 	void headers() {
 		int count = 0;
-		EngineHash* engine = (EngineHash*)getEngine();
+		EngineHash* localEngine = (EngineHash*)getEngine();
 		fiftyoneDegreesDataSetHash* dataSet =
-			fiftyoneDegreesDataSetHashGet(&*engine->manager);
-		for (int i = 0; i < dataSet->componentsList.count; i++) {
+			fiftyoneDegreesDataSetHashGet(&*localEngine->manager);
+		for (uint32_t i = 0; i < dataSet->componentsList.count; i++) {
 			fiftyoneDegreesComponent* component =
 				(fiftyoneDegreesComponent*)
 				dataSet->componentsList.items[i].data.ptr;
@@ -271,7 +270,7 @@ public:
 				sizeof(fiftyoneDegreesGraphNode));
 		// Set the new roots.
 		roots->performanceNodeOffset = originalRoots->performanceNodeOffset;
-		roots->predictiveNodeOffset = -1;
+		roots->predictiveNodeOffset = (uint32_t)-1;
 		// Release the original roots.
 		FIFTYONE_DEGREES_COLLECTION_RELEASE(original, &internalItem);
 		item->collection = collection;
@@ -309,7 +308,7 @@ public:
 				&item->data,
 				sizeof(fiftyoneDegreesGraphNode));
 		// Set the new roots.
-		roots->performanceNodeOffset = -1;
+		roots->performanceNodeOffset = (uint32_t)-1;
 		roots->predictiveNodeOffset = originalRoots->predictiveNodeOffset;
 		// Release the original roots.
 		FIFTYONE_DEGREES_COLLECTION_RELEASE(original, &internalItem);
@@ -424,7 +423,7 @@ public:
 
 	void verifyPredictiveGraph() {
 		// Set the graph roots collection to return invalid offsets for
-		// performance.
+		// predictive.
 		mockRootsCollection(EngineHashTests::collectionMockGetPred);
 
 		// Enable only predictive graph.
@@ -526,10 +525,10 @@ public:
 		delete results;
 	}
 	bool setAllowUnmatched(
-		EngineHash *engine,
+		EngineHash *localEngine,
 		bool allowUnmatched) {
 		fiftyoneDegreesDataSetHash *dataSet =
-			fiftyoneDegreesDataSetHashGet(engine->manager.get());
+			fiftyoneDegreesDataSetHashGet(localEngine->manager.get());
 		// Discard the const qualifier to allow changing for the test.
 		fiftyoneDegreesConfigHash *configSource =
 			(fiftyoneDegreesConfigHash*)&dataSet->config;
@@ -547,7 +546,7 @@ public:
 		const char *evidenceValue = "17779|17470|18092";
 		char expectedDeviceId2[24];
 		const char* expectedDeviceId1 = "0-17779-17470-18092";
-		EngineHash *engine = (EngineHash*)getEngine();
+		EngineHash *localEngine = (EngineHash*)getEngine();
 
 		// Get the expected device id for the case where a default profile is
 		// used.
@@ -564,9 +563,9 @@ public:
 
 		// First test the behavior when unmatched is not allowed. This means
 		// null profiles instead of the default being used.
-		bool originalAllowUnmatched = setAllowUnmatched(engine, false);
+		bool originalAllowUnmatched = setAllowUnmatched(localEngine, false);
 		evidence["query.ProfileIds"] = evidenceValue;
-		ResultsHash *results = engine->process(&evidence);
+		ResultsHash *results = localEngine->process(&evidence);
 
 		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId1) <<
 			L"The device id was not correct.";
@@ -580,15 +579,15 @@ public:
 
 		// Now test the behavior when unmatched is allowed. This means that
 		// where there is no profile, the default is used.
-		setAllowUnmatched(engine, true);
-		results = engine->process(&evidence);
+		setAllowUnmatched(localEngine, true);
+		results = localEngine->process(&evidence);
 
 		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId2) <<
 			L"The device id was not correct.";
 		EXPECT_STREQ((*results->getValueAsString(property->getName())).c_str(), property->getDefaultValue().c_str()) <<
 			L"The value returned was not the default.";
 
-		setAllowUnmatched(engine, originalAllowUnmatched);
+		setAllowUnmatched(localEngine, originalAllowUnmatched);
 
 		delete property;
 		delete properties;

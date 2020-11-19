@@ -58,6 +58,9 @@
     <ClCompile Include="..\..\test\hash\ExampleHashMatchForDeviceIdTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\hash\HashMemLeakReloadFromFileTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\hash\hash.h">

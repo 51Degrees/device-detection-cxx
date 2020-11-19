@@ -142,9 +142,9 @@ typedef struct thread_state_t {
  */
 static unsigned long generateHash(unsigned char *value) {
 	unsigned long hashCode = 5381;
-	int i;
-	while ((i = *value++)) {
-		hashCode = ((hashCode << 5) + hashCode) + i;
+	while (*value != '\0') {
+		hashCode = ((hashCode << 5) + hashCode) + (unsigned long)*value;
+		value++;
 	}
 	return hashCode;
 }
@@ -208,7 +208,7 @@ static void executeTest(const char *userAgent, void *state) {
 }
 
 static void runRequestsSingle(sharedState *state) {
-	const char userAgent[500] = "";
+	char userAgent[500] = "";
 	sharedState *shared = (sharedState*)state;
 	threadState thread;
 	thread.hashCode = 0;
