@@ -2909,8 +2909,9 @@ const char* fiftyoneDegreesResultsHashGetNoValueReasonMessage(
 		return "There were no values because no hash nodes were matched in "
 			"the evidence.";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE:
-		return "The results contained a null profile for the component which "
-			"the required property belongs to.";
+	    return "No matching profiles could be found for the supplied evidence. "
+	        "A 'best guess' can be returned by configuring more lenient "
+	        "matching rules. See https://51degrees.com/documentation/4.1/_device_detection__features__false_positive_control.html";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_UNKNOWN:
 	default:
 		return "The reason for missing values is unknown.";
