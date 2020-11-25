@@ -2897,7 +2897,9 @@ const char* fiftyoneDegreesResultsHashGetNoValueReasonMessage(
 		return "The property index provided is invalid, either the property "
 			"does not exist, or the data set has been initialized without it.";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_RESULTS:
-		return "The results are empty. This is probably because there was no evidence.";
+		return "The evidence required to determine this property was not "
+		    "supplied. The most common evidence passed to this engine is "
+		    "'header.user-agent'.";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_RESULT_FOR_PROPERTY:
 		return "None of the results contain a value for the requested property.";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_DIFFERENCE:
