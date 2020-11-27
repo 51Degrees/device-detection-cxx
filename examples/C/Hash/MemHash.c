@@ -24,6 +24,10 @@
 #include <string.h>
 #include <time.h>
 
+#include "../../../src/hash/hash.h"
+#include "../../../src/hash/fiftyone.h"
+#include "../.././../src/common-cxx/textfile.h"
+
 #ifdef _DEBUG
 #ifdef _MSC_VER
 #define _CRTDBG_MAP_ALLOC
@@ -32,10 +36,6 @@
 #include "dmalloc.h"
 #endif
 #endif
-
-#include "../../../src/hash/hash.h"
-#include "../../../src/hash/fiftyone.h"
-#include "../.././../src/common-cxx/textfile.h"
 
 // Number of marks to make when showing progress.
 #define PROGRESS_MARKS 40

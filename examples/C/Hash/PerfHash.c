@@ -20,6 +20,11 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+#include <time.h>
+#include "../../../src/hash/hash.h"
+#include "../../../src/hash/fiftyone.h"
+#include "../.././../src/common-cxx/textfile.h"
+
 #ifdef _DEBUG
 #define PASSES 1
 #ifdef _MSC_VER
@@ -31,11 +36,6 @@
 #else
 #define PASSES 1
 #endif
-
-#include <time.h>
-#include "../../../src/hash/hash.h"
-#include "../../../src/hash/fiftyone.h"
-#include "../.././../src/common-cxx/textfile.h"
 
 // Size of the character buffers
 #define BUFFER 1000

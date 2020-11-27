@@ -107,6 +107,10 @@ For more information on how device detection works please see:
 https://51degrees.com/support/documentation/how-device-detection-works
 */
 
+#include <stdio.h>
+#include "../../../src/hash/hash.h"
+#include "../../../src/hash/fiftyone.h"
+
 #ifdef _DEBUG
 #ifdef _MSC_VER
 #define _CRTDBG_MAP_ALLOC
@@ -116,10 +120,6 @@ https://51degrees.com/support/documentation/how-device-detection-works
 #include "dmalloc.h"
 #endif
 #endif
-
-#include <stdio.h>
-#include "../../../src/hash/hash.h"
-#include "../../../src/hash/fiftyone.h"
 
 static const char *dataDir = "device-detection-data";
 

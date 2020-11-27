@@ -108,6 +108,10 @@ This example differs from the Getting Started example by using boolean
 values for the isMobile property instead of string values.
 */
 
+#include <stdio.h>
+#include "../../../src/hash/hash.h"
+#include "../../../src/hash/fiftyone.h"
+
 #ifdef _DEBUG
 #ifdef _MSC_VER
 #define _CRTDBG_MAP_ALLOC
@@ -117,10 +121,6 @@ values for the isMobile property instead of string values.
 #include "dmalloc.h"
 #endif
 #endif
-
-#include <stdio.h>
-#include "../../../src/hash/hash.h"
-#include "../../../src/hash/fiftyone.h"
 
 static const char *dataDir = "device-detection-data";
 

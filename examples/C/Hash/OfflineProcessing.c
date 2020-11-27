@@ -95,6 +95,10 @@ offline data processing. It also demonstrates that you can reuse the retrieved
 results for multiple uses and only then release it.
 */
 
+#include "../../../src/hash/hash.h"
+#include "../../../src/common-cxx/textfile.h"
+#include "../../../src/hash/fiftyone.h"
+
 #ifdef _DEBUG
 #ifdef _MSC_VER
 #define _CRTDBG_MAP_ALLOC
@@ -103,10 +107,6 @@ results for multiple uses and only then release it.
 #include "dmalloc.h"
 #endif
 #endif
-
-#include "../../../src/hash/hash.h"
-#include "../../../src/common-cxx/textfile.h"
-#include "../../../src/hash/fiftyone.h"
 
 static const char *dataDir = "device-detection-data";
 

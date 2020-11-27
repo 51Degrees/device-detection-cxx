@@ -92,6 +92,10 @@ https://51degrees.com/Support/Documentation/APIs/C-V32/Benchmarks
 #include <unistd.h>
 #endif
 
+#include "../../../src/common-cxx/textfile.h"
+#include "../../../src/hash/hash.h"
+#include "../../../src/hash/fiftyone.h"
+
 #ifdef _DEBUG
 #ifdef _MSC_VER
 #define _CRTDBG_MAP_ALLOC
@@ -100,10 +104,6 @@ https://51degrees.com/Support/Documentation/APIs/C-V32/Benchmarks
 #include "dmalloc.h"
 #endif
 #endif
-
-#include "../../../src/common-cxx/textfile.h"
-#include "../../../src/hash/hash.h"
-#include "../../../src/hash/fiftyone.h"
 
 #define THREAD_COUNT 4
 

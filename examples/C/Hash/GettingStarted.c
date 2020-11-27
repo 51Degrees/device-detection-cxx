@@ -89,6 +89,10 @@ fiftyoneDegreesResourceManagerFree(&manager);
 ```
 */
 
+#include <stdio.h>
+#include "../../../src/hash/hash.h"
+#include "../../../src/hash/fiftyone.h"
+
 #ifdef _DEBUG
 #ifdef _MSC_VER
 #define _CRTDBG_MAP_ALLOC
@@ -98,11 +102,6 @@ fiftyoneDegreesResourceManagerFree(&manager);
 #include "dmalloc.h"
 #endif
 #endif
-
-#include <stdio.h>
-#include "../../../src/hash/hash.h"
-#include "../../../src/hash/fiftyone.h"
-
 
 static const char *dataDir = "device-detection-data";
 
