@@ -29,6 +29,11 @@
 #include <unistd.h>
 #endif
 
+#include "../../src/common-cxx/textfile.h"
+#include "../../src/hash/hash.h"
+#include "../../src/hash/fiftyone.h"
+#include "ExampleHashTests.hpp"
+
 #ifdef _DEBUG
 #ifdef _MSC_VER
 #define _CRTDBG_MAP_ALLOC
@@ -37,11 +42,6 @@
 #include "dmalloc.h"
 #endif
 #endif
-
-#include "../../src/common-cxx/textfile.h"
-#include "../../src/hash/hash.h"
-#include "../../src/hash/fiftyone.h"
-#include "ExampleHashTests.hpp"
 
 #define THREAD_COUNT 4
 
