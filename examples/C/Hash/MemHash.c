@@ -24,17 +24,21 @@
 #include <string.h>
 #include <time.h>
 
+ // Windows 'crtdbg.h' needs to be included
+ // before 'malloc.h'
+#if defined(_DEBUG) && defined(_MSC_VER)
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
 #include "../.././../src/common-cxx/textfile.h"
 
-#ifdef _DEBUG
-#ifdef _MSC_VER
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#else
+// 'dmalloc.h' needs to be included after
+// 'string.h'
+#if defined(_DEBUG) && !defined(_MSC_VER)
 #include "dmalloc.h"
-#endif
 #endif
 
 // Number of marks to make when showing progress.

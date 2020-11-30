@@ -95,17 +95,21 @@ offline data processing. It also demonstrates that you can reuse the retrieved
 results for multiple uses and only then release it.
 */
 
+// Windows 'crtdbg.h' needs to be included
+// before 'malloc.h'
+#if defined(_DEBUG) && defined(_MSC_VER)
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+
 #include "../../../src/hash/hash.h"
 #include "../../../src/common-cxx/textfile.h"
 #include "../../../src/hash/fiftyone.h"
 
-#ifdef _DEBUG
-#ifdef _MSC_VER
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#else
+// 'dmalloc.h' needs to be included after
+// 'string.h'
+#if defined(_DEBUG) && !defined(_MSC_VER)
 #include "dmalloc.h"
-#endif
 #endif
 
 static const char *dataDir = "device-detection-data";

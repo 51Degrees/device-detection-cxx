@@ -20,19 +20,26 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+ // Windows 'crtdbg.h' needs to be included
+ // before 'malloc.h'
+#if defined(_DEBUG) && defined(_MSC_VER)
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+
 #include <time.h>
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
 #include "../.././../src/common-cxx/textfile.h"
 
-#ifdef _DEBUG
-#define PASSES 1
-#ifdef _MSC_VER
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#else
+// 'dmalloc.h' needs to be included after
+// 'string.h'
+#if defined(_DEBUG) && !defined(_MSC_VER)
 #include "dmalloc.h"
 #endif
+
+#ifdef _DEBUG
+#define PASSES 1
 #else
 #define PASSES 1
 #endif
