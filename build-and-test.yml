@@ -255,27 +255,35 @@ stages:
       matrix:
         debug x86 multi threads:
           BuildConfiguration: Debug
+          BuildPlatform: x86
           BuildArguments: -D32bit=ON -DNoThreading=OFF
         release x86 multi threads:
           BuildConfiguration: Release 
+          BuildPlatform: x86
           BuildArguments: -D32bit=ON -DNoThreading=OFF
         debug x64 multi threads:
           BuildConfiguration: Debug
+          BuildPlatform: x64
           BuildArguments: -DNoThreading=OFF
         release x64 multi threads:
           BuildConfiguration: Release 
+          BuildPlatform: x64
           BuildArguments: -DNoThreading=OFF
         debug x86 single thread:
           BuildConfiguration: Debug
+          BuildPlatform: x86
           BuildArguments: -D32bit=ON -DNoThreading=ON
         release x86 single thread:
           BuildConfiguration: Release  
+          BuildPlatform: x86
           BuildArguments: -D32bit=ON -DNoThreading=ON
         debug x64 single thread:
           BuildConfiguration: Debug
+          BuildPlatform: x64
           BuildArguments: -DNoThreading=ON
         release x64 single thread:
           BuildConfiguration: Release  
+          BuildPlatform: x64
           BuildArguments: -DNoThreading=ON
 
     steps:
@@ -289,7 +297,16 @@ stages:
           libdmalloc-dev \
           gcc-multilib \
           g++-multilib        
-      displayName: 'Install Required Software'
+      displayName: 'Install Required Packages'
+      
+    - script: |
+        wget http://ftp.br.debian.org/debian/pool/main/d/dmalloc/libdmalloc-dev_5.5.2-8_i386.deb \
+        sudo dpkg --add-architecture i386 \
+        sudo apt-get -y update \
+        sudo dpkg -i libdmalloc-dev_5.5.2-8_i386.deb \
+        sudo sudo apt-get -y install -f \
+      displayName: 'Install Required 32bit Packages'
+      condition: and(succeeded(), eq('${{ variables.BuildPlatform }}', x86))
 
     - task: DownloadBuildArtifacts@0
       displayName: 'Download Enterprise Data File'
