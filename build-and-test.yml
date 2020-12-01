@@ -300,11 +300,11 @@ stages:
       displayName: 'Install Required Packages'
       
     - script: |
-        wget http://ftp.br.debian.org/debian/pool/main/d/dmalloc/libdmalloc-dev_5.5.2-8_i386.deb \
-        sudo dpkg --add-architecture i386 \
-        sudo apt-get -y update \
-        sudo dpkg -i libdmalloc-dev_5.5.2-8_i386.deb \
-        sudo sudo apt-get -y install -f \
+        wget http://ftp.br.debian.org/debian/pool/main/d/dmalloc/libdmalloc-dev_5.5.2-8_i386.deb
+        sudo dpkg --add-architecture i386
+        sudo apt-get -y update
+        sudo dpkg -i libdmalloc-dev_5.5.2-8_i386.deb
+        sudo sudo apt-get -y install -f
       displayName: 'Install Required 32bit Packages'
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
 
