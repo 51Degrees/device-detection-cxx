@@ -306,7 +306,7 @@ stages:
         sudo dpkg -i libdmalloc-dev_5.5.2-8_i386.deb \
         sudo sudo apt-get -y install -f \
       displayName: 'Install Required 32bit Packages'
-      condition: and(succeeded(), eq('${{ variables.BuildPlatform }}', x86))
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
 
     - task: DownloadBuildArtifacts@0
       displayName: 'Download Enterprise Data File'
