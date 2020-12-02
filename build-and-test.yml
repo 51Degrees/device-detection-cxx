@@ -298,6 +298,8 @@ stages:
         cat /proc/sys/kernel/core_pattern
         echo "cat /proc/sys/kernel/core_uses_pid"
         cat /proc/sys/kernel/core_uses_pid
+        echo "sudo systemctl enable apport.service"
+        sudo systemctl enable apport.service
         echo "sysctl -w kernel.core_pattern=core.%p"
         sudo sysctl -w kernel.core_pattern="core.%p"
         cat /proc/sys/kernel/core_pattern
