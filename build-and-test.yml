@@ -293,7 +293,7 @@ stages:
       lfs: true
 
     - script: |
-        ulimit -c ulimited
+        ulimit -c unlimited
         echo "cat /proc/sys/kernel/core_pattern"
         cat /proc/sys/kernel/core_pattern
         sudo apt-get -y install \
@@ -356,6 +356,15 @@ stages:
         SourceFolder: '$(build.sourcesdirectory)'
         Contents: '**'
         TargetFolder: '$(build.artifactstagingdirectory)'
+        CleanTargetFolder: true
+      condition: failed()
+      
+    - task: CopyFiles@2
+      displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+      inputs:
+        SourceFolder: '/usr/share/apport'
+        Contents: '**'
+        TargetFolder: '$(build.artifactstagingdirectory)/core'
         CleanTargetFolder: true
       condition: failed()
       
