@@ -354,6 +354,7 @@ stages:
         Contents: '**'
         TargetFolder: '$(build.artifactstagingdirectory)'
         CleanTargetFolder: true
+      condition: failed()
       
     - task: PublishBuildArtifacts@1
       inputs:
