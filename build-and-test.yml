@@ -293,6 +293,9 @@ stages:
       lfs: true
 
     - script: |
+        ulimit -c ulimited
+        echo "cat /proc/sys/kernel/core_pattern"
+        cat /proc/sys/kernel/core_pattern
         sudo apt-get -y install \
           gcc-multilib \
           g++-multilib        
