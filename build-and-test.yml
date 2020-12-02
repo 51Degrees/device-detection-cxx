@@ -298,7 +298,8 @@ stages:
         cat /proc/sys/kernel/core_pattern
         echo "cat /proc/sys/kernel/core_uses_pid"
         cat /proc/sys/kernel/core_uses_pid
-        sudo echo core > /proc/sys/kernel/core_pattern
+        echo "sysctl -w kernel.core_pattern=tmp/hash_core.%p"
+        sudo sysctl -w kernel.core_pattern="tmp/hash_core.%p"
         cat /proc/sys/kernel/core_pattern
         sudo apt-get -y install \
           gcc-multilib \
@@ -366,9 +367,9 @@ stages:
     - task: CopyFiles@2
       displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
       inputs:
-        SourceFolder: '/var/crash'
-        Contents: '**'
-        TargetFolder: '$(build.artifactstagingdirectory)/crash_report'
+        SourceFolder: '/tmp'
+        Contents: '**/hash_core.*'
+        TargetFolder: '$(build.artifactstagingdirectory)/core_dump'
         CleanTargetFolder: true
       condition: failed()
       
