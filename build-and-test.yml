@@ -296,6 +296,10 @@ stages:
         ulimit -c unlimited
         echo "cat /proc/sys/kernel/core_pattern"
         cat /proc/sys/kernel/core_pattern
+        echo "cat /proc/sys/kernel/core_uses_pid"
+        cat /proc/sys/kernel/core_uses_pid
+        sudo echo core > /proc/sys/kernel/core_pattern
+        cat /proc/sys/kernel/core_pattern
         sudo apt-get -y install \
           gcc-multilib \
           g++-multilib        
@@ -362,9 +366,9 @@ stages:
     - task: CopyFiles@2
       displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
       inputs:
-        SourceFolder: '/usr/share/apport'
+        SourceFolder: '/var/crash'
         Contents: '**'
-        TargetFolder: '$(build.artifactstagingdirectory)/core'
+        TargetFolder: '$(build.artifactstagingdirectory)/crash_report'
         CleanTargetFolder: true
       condition: failed()
       
