@@ -1568,16 +1568,11 @@ static StatusCode initInMemory(
 		&dataSet->b.b, 
 		&reader);
 	if (status != SUCCESS) {
-		freeDataSet(dataSet);
 		return status;
 	}
 
 	// Use the memory reader to initialize the Hash data set.
 	status = initWithMemory(dataSet, &reader, exception);
-	if (status != SUCCESS || EXCEPTION_FAILED) {
-		freeDataSet(dataSet);
-		return status;
-	}
 
 	return status;
 }
