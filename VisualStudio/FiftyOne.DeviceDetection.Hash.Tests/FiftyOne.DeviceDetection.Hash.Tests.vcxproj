@@ -67,6 +67,7 @@
     <ClCompile Include="..\..\src\common-cxx\textfile.c" />
     <ClCompile Include="..\..\test\EngineDeviceDetectionTests.cpp" />
     <ClCompile Include="..\..\test\ExampleDeviceDetectionTests.cpp" />
+    <ClCompile Include="..\..\test\hash\EngineHashInitTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashFindProfilesTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashMatchForDeviceIdTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashOfflineProcessingTests.cpp" />
