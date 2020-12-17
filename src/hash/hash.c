@@ -3012,9 +3012,62 @@ uint32_t fiftyoneDegreesHashIterateProfilesForPropertyAndValue(
 	return count;
 }
 
-#define PRINT_PROFILE_SEP(d,b,s,f) d += snprintf(d, (b - d) + s, f)
-#define PRINT_PROFILE_ID(d,b,s,f,v) d += snprintf(d, (b - d) + s, f, v)
-#define PRINT_NULL_PROFILE_ID(d,b,s) PRINT_PROFILE_ID(d, b, s, "%i", 0)
+/*
+ * Print profile separation
+ * @param d pointer to the destination
+ * @param b pointer to the current position in destination
+ * @param s size of buffer available
+ * @param f the string to write to the buffer
+ */
+static int printProfileSep(
+	char** d,
+	char* b,
+	size_t s,
+	const char* f) {
+	int charAdded = -1;
+	if ((charAdded = snprintf(*d, b - *d + s, f)) > 0) {
+	  *d += charAdded;
+	}
+	return charAdded;
+}
+
+/*
+ * Print profile ID
+ * @param d pointer to the destination
+ * @param b pointer to the current position in destination
+ * @param s size of buffer available
+ * @param f the string format to write to the buffer
+ * @param v the profile ID to be substituted with in the string format
+ */
+static int printProfileId(
+	char** d,
+	char* b,
+	size_t s,
+	const char* f,
+	uint32_t v) {
+	int charAdded = -1;
+	if ((charAdded = snprintf(*d, b - *d + s, f, v)) > 0) {
+		*d += charAdded;
+	}
+	return charAdded;
+}
+
+/*
+ * Print null profile ID
+ * @param d pointer to the destination
+ * @param b pointer to the current position in destination
+ * @param s size of buffer available
+ */
+static int printNullProfileId(
+	char** d,
+	char* b,
+	size_t s) {
+	int charAdded = -1;
+	if ((charAdded = snprintf(*d, b - *d + s, "%i", 0)) > 0) {
+		*d += charAdded;
+	}
+	return charAdded;
+}
 
 char* fiftyoneDegreesHashGetDeviceIdFromResult(
 	fiftyoneDegreesDataSetHash *dataSet,
@@ -3029,11 +3082,15 @@ char* fiftyoneDegreesHashGetDeviceIdFromResult(
 	DataReset(&item.data);
 	for (i = 0; i < dataSet->componentsList.count; i++) {
 		if (i != 0) {
-			PRINT_PROFILE_SEP(destination, buffer, size, "-");
+			if (printProfileSep(&destination, buffer, size, "-") <= 0) {
+				break;
+			}
 		}
 		profileOffset = result->profileOffsets[i];
 		if (profileOffset == NULL_PROFILE_OFFSET) {
-			PRINT_NULL_PROFILE_ID(destination, buffer, size);
+			if (printNullProfileId(&destination, buffer, size) <= 0) {
+				break;
+			}
 		}
 		else {
 			profile = (Profile*)dataSet->profiles->get(
@@ -3042,19 +3099,25 @@ char* fiftyoneDegreesHashGetDeviceIdFromResult(
 				&item,
 				exception);
 			if (profile == NULL) {
-				PRINT_NULL_PROFILE_ID(destination, buffer, size);
+				if (printNullProfileId(&destination, buffer, size) <= 0) {
+					break;
+				}
 			}
 			else if (result->profileIsOverriden[i] == false &&
 				ISUNMATCHED(dataSet, result)) {
-				PRINT_NULL_PROFILE_ID(destination, buffer, size);
+				if (printNullProfileId(&destination, buffer, size) <= 0) {
+					break;
+				}
 			}
 			else {
-				PRINT_PROFILE_ID(
-					destination,
+				if (printProfileId(
+					&destination,
 					buffer,
 					size,
 					"%i",
-					profile->profileId);
+					profile->profileId) <= 0) {
+					break;
+				}
 			}
 			COLLECTION_RELEASE(dataSet->profiles, &item);
 		}
@@ -3075,8 +3138,9 @@ char *getDefaultDeviceId(
 	DataReset(&item.data);
 	for (i = 0; i < dataSet->componentsList.count; i++) {
 		if (i != 0) {
-			PRINT_PROFILE_SEP(destination, buffer, size, "-");
-
+			if (printProfileSep(&destination, buffer, size, "-") <= 0) {
+				break;
+			}
 		}
 		component = (Component*)dataSet->componentsList.items[i].data.ptr;
 		profile = (Profile*)dataSet->profiles->get(
@@ -3085,12 +3149,14 @@ char *getDefaultDeviceId(
 			&item,
 			exception);
 		if (profile != NULL) {
-			PRINT_PROFILE_ID(
-				destination,
+			if (printProfileId(
+				&destination,
 				buffer,
 				size,
 				"%i",
-				profile->profileId);
+				profile->profileId) <= 0) {
+				break;
+			}
 			COLLECTION_RELEASE(dataSet->profiles, &item);
 		}
 	}
@@ -3106,9 +3172,14 @@ char *getNullDeviceId(
 	char *buffer = destination;
 	for (i = 0; i < dataSet->componentsList.count; i++) {
 		if (i != 0) {
-			PRINT_PROFILE_SEP(destination, buffer, size, "-");
+			if (printProfileSep(&destination, buffer, size, "-") <= 0) {
+				break;
+			}
 		}
-		PRINT_NULL_PROFILE_ID(destination, buffer, size);
+		if (printNullProfileId(&destination, buffer, size) <= 0) {
+			break;
+		}
+
 	}
 	return destination;
 }
@@ -3158,11 +3229,22 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 						// next component.
 						found = true;
 						if (componentIndex != 0) {
-							PRINT_PROFILE_SEP(destination, buffer, size, "-");
+							if (printProfileSep(
+								&destination,
+								buffer,
+								size,
+								"-") <= 0) {
+								break;
+							}
 						}
 						if (result->profileOffsets[componentIndex] ==
 							NULL_PROFILE_OFFSET) {
-							PRINT_NULL_PROFILE_ID(destination, buffer, size);
+							if (printNullProfileId(
+								&destination,
+								buffer,
+								size) <= 0) {
+								break;
+							}
 						}
 						else {
 							profile = dataSet->profiles->get(
@@ -3171,19 +3253,33 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 								&profileItem,
 								exception);
 							if (profile == NULL) {
-								PRINT_NULL_PROFILE_ID(destination, buffer, size);
+								if (printNullProfileId(
+									&destination,
+									buffer,
+									size
+								) <= 0) {
+									break;
+								}
 							}
 							else if (ISUNMATCHED(dataSet, result)) {
-								PRINT_NULL_PROFILE_ID(destination, buffer, size);
+								if (printNullProfileId(
+									&destination,
+									buffer,
+									size
+								) <= 0) {
+									break;
+								}
 								COLLECTION_RELEASE(dataSet->profiles, &profileItem);
 							}
 							else {
-								PRINT_PROFILE_ID(
-									destination,
+								if (printProfileId(
+									&destination,
 									buffer,
 									size,
 									"%i",
-									profile->profileId);
+									profile->profileId) <= 0) {
+									break;
+								}
 								COLLECTION_RELEASE(dataSet->profiles, &profileItem);
 							}
 						}
