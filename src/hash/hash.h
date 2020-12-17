@@ -591,6 +591,7 @@ EXTERNAL void fiftyoneDegreesResultsHashFromUserAgent(
  */
 EXTERNAL void fiftyoneDegreesResultsHashFromDeviceId(
 	fiftyoneDegreesResultsHash *results,
+	const int uniqueHttpHeaderIndex,
 	const char* deviceId,
 	size_t deviceIdLength,
 	fiftyoneDegreesException *exception);

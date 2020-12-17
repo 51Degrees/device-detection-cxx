@@ -2326,6 +2326,7 @@ static void setProfileFromProfileId(
 
 void fiftyoneDegreesResultsHashFromDeviceId(
 	fiftyoneDegreesResultsHash *results,
+	const int uniqueHttpHeaderIndex,
 	const char* deviceId,
 	size_t deviceIdLength,
 	fiftyoneDegreesException *exception) {
@@ -2341,6 +2342,11 @@ void fiftyoneDegreesResultsHashFromDeviceId(
 	}
 	if (EXCEPTION_OKAY) {
 		setProfileFromProfileId(results, previous, exception);
+		// Update the uniqueHttpHeaderIndex
+		if (results->count > 0) {
+			// There can be one result from one device ID only
+			results->items[0].b.uniqueHttpHeaderIndex = uniqueHttpHeaderIndex;
+		}
 	}
 }
 
@@ -2571,8 +2577,10 @@ static ResultHash* getResultFromResultsWithProperty(
 	for (i = 0; i < component->keyValuesCount; i++) {
 		uniqueId = (&component->firstKeyValuePair)[i].key;
 		for (h = 0; h < results->count; h++) {
-			if (dataSet->b.b.uniqueHeaders->items[
-				results->items[h].b.uniqueHttpHeaderIndex].uniqueId == uniqueId) {
+			if (results->items[h].b.uniqueHttpHeaderIndex >= 0 &&
+				dataSet->b.b.uniqueHeaders->items[
+				  results->items[h].b.uniqueHttpHeaderIndex]
+				  .uniqueId == uniqueId) {
 				return &results->items[h];
 			}
 		}
