@@ -163,8 +163,8 @@ namespace FiftyoneDegrees {
 				 * for processing. When processing evidence, the predictive
 				 * graph is optimised to find the best answer for evidence
 				 * which was not in the training data. However, this is at the
-				 * expence of processing time, as more possibilies are taken into
-				 * consideration.
+				 * expense of processing time, as more possibilities are taken 
+                 * into consideration.
 				 * @param use true if the predictive graph should be used
 				 */
 				void setUsePredictiveGraph(bool use);

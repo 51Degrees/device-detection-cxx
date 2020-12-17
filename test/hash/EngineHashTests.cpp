@@ -71,7 +71,6 @@ public:
 		return nullptr;
 	}
 
-
 	virtual void reload() {}
 	virtual void metaDataReload() {}
 	void validate(ResultsBase *results) {
@@ -110,10 +109,10 @@ public:
 		EngineTests::verifyMetaData(getEngine());
 	}
 
-	void checkEvidenceProperty(EngineHash *engine, string propertyName, string evidencePropertyName) {
+	void checkEvidenceProperty(EngineHash *localEngine, string propertyName, string evidencePropertyName) {
 		PropertyMetaData* property, * evidenceProperty;
 		Collection<string, PropertyMetaData>* properties, * evidenceProperties;
-		MetaData* metaData = engine->getMetaData();
+		MetaData* metaData = localEngine->getMetaData();
 		properties = metaData->getProperties();
 		property = properties->getByKey(propertyName);
 		if (property->getAvailable() == true) {
@@ -137,18 +136,18 @@ public:
 		ComponentMetaData *hardwareComponent;
 		Collection<string, PropertyMetaData> *properties, *hardwareProperties;
 		PropertyMetaData *hardwareProperty, *property;
-		EngineHash* engine = (EngineHash*)getEngine();
-		if (strcmp("Lite", engine->getProduct().c_str()) != 0) {
+		EngineHash* localEngine = (EngineHash*)getEngine();
+		if (strcmp("Lite", localEngine->getProduct().c_str()) != 0) {
 			if (this->requiredProperties->containsProperty("ScreenPixelsWidth") == true ||
 				this->requiredProperties->getCount() == 0) {
-				checkEvidenceProperty(engine, "ScreenPixelsWidth", "ScreenPixelsWidthJavaScript");
+				checkEvidenceProperty(localEngine, "ScreenPixelsWidth", "ScreenPixelsWidthJavaScript");
 			}
 			if (this->requiredProperties->containsProperty("ScreenPixelsHeight") == true ||
 				this->requiredProperties->getCount() == 0) {
-				checkEvidenceProperty(engine, "ScreenPixelsHeight", "ScreenPixelsHeightJavaScript");
+				checkEvidenceProperty(localEngine, "ScreenPixelsHeight", "ScreenPixelsHeightJavaScript");
 			}
 			
-			metaData = engine->getMetaData();
+			metaData = localEngine->getMetaData();
 			properties = metaData->getProperties();
 
 			hardwareProperty = properties->getByKey("JavascriptHardwareProfile");
@@ -157,7 +156,7 @@ public:
 			for (i = 0; i < hardwareProperties->getSize(); i++) {
 				property = hardwareProperties->getByIndex(i);
 				if (property->getAvailable() == true) {
-					checkEvidenceProperty(engine, property->getName(), "JavascriptHardwareProfile");
+					checkEvidenceProperty(localEngine, property->getName(), "JavascriptHardwareProfile");
 				}
 				delete property;
 			}
@@ -166,6 +165,23 @@ public:
 			delete hardwareProperty;
 			delete properties;
 		}
+	}
+
+	void headers() {
+		int count = 0;
+		EngineHash* localEngine = (EngineHash*)getEngine();
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*localEngine->manager);
+		for (uint32_t i = 0; i < dataSet->componentsList.count; i++) {
+			fiftyoneDegreesComponent* component =
+				(fiftyoneDegreesComponent*)
+				dataSet->componentsList.items[i].data.ptr;
+			count += component->keyValuesCount;
+		}
+		ASSERT_EQ(dataSet->b.b.uniqueHeaders->capacity, count) <<
+			L"The HTTP headers counted when initialising the headers was not " <<
+			L"equal to the total headers from all components.";
+		fiftyoneDegreesDataSetHashRelease(dataSet);
 	}
 
 	void verify() {
@@ -177,6 +193,8 @@ public:
 		verifyProfileOverridePartial();
 		verifyProfileOverrideZero();
 		verifyNoMatchedNodes();
+		verifyPerformanceGraph();
+		verifyPredictiveGraph();
 	}
 	bool setResultsMatchedNodes(
 		ResultsHash *results,
@@ -218,6 +236,248 @@ public:
 		setResultsMatchedNodes(results, 0, originalMatchedNodes);
 
 		delete results;
+	}
+
+	/**
+	 * This replaces the graph roots collection in the data set so that
+	 * -1 is always returned for the predictive root.
+	 */
+	static void* collectionMockGetPerf(
+		fiftyoneDegreesCollection* collection,
+		uint32_t indexOrOffset,
+		fiftyoneDegreesCollectionItem* item,
+		fiftyoneDegreesException* exception) {
+		// Get the original item to an internal item.
+		fiftyoneDegreesCollectionItem internalItem;
+		fiftyoneDegreesDataReset(&internalItem.data);
+		fiftyoneDegreesCollection* original =
+			(fiftyoneDegreesCollection*)collection->state;
+		fiftyoneDegreesHashRootNodes* originalRoots =
+			(fiftyoneDegreesHashRootNodes*)original->get(
+				original,
+				indexOrOffset,
+				&internalItem,
+				exception);
+		if (originalRoots == nullptr) {
+			return nullptr;
+		}
+		// Create a new roots to return, we don't want to edit the ones
+		// returned by the real collection in case it is in memory (in which
+		// case we would be breaking the data set).
+		fiftyoneDegreesHashRootNodes* roots =
+			(fiftyoneDegreesHashRootNodes*)fiftyoneDegreesDataMalloc(
+				&item->data,
+				sizeof(fiftyoneDegreesGraphNode));
+		// Set the new roots.
+		roots->performanceNodeOffset = originalRoots->performanceNodeOffset;
+		roots->predictiveNodeOffset = (uint32_t)-1;
+		// Release the original roots.
+		FIFTYONE_DEGREES_COLLECTION_RELEASE(original, &internalItem);
+		item->collection = collection;
+		return item->data.ptr;
+	}
+
+	/**
+	 * This replaces the graph roots collection in the data set so that
+	 * -1 is always returned for the performance root.
+	 */
+	static void* collectionMockGetPred(
+		fiftyoneDegreesCollection* collection,
+		uint32_t indexOrOffset,
+		fiftyoneDegreesCollectionItem* item,
+		fiftyoneDegreesException* exception) {
+		// Get the original item to an internal item.
+		fiftyoneDegreesCollectionItem internalItem;
+		fiftyoneDegreesDataReset(&internalItem.data);
+		fiftyoneDegreesCollection* original =
+			(fiftyoneDegreesCollection*)collection->state;
+		fiftyoneDegreesHashRootNodes* originalRoots =
+			(fiftyoneDegreesHashRootNodes*)original->get(
+				original,
+				indexOrOffset,
+				&internalItem,
+				exception);
+		if (originalRoots == nullptr) {
+			return nullptr;
+		}
+		// Create a new roots to return, we don't want to edit the ones
+		// returned by the real collection in case it is in memory (in which
+		// case we would be breaking the data set).
+		fiftyoneDegreesHashRootNodes* roots =
+			(fiftyoneDegreesHashRootNodes*)fiftyoneDegreesDataMalloc(
+				&item->data,
+				sizeof(fiftyoneDegreesGraphNode));
+		// Set the new roots.
+		roots->performanceNodeOffset = (uint32_t)-1;
+		roots->predictiveNodeOffset = originalRoots->predictiveNodeOffset;
+		// Release the original roots.
+		FIFTYONE_DEGREES_COLLECTION_RELEASE(original, &internalItem);
+		item->collection = collection;
+		return item->data.ptr;
+	}
+
+	/**
+	 * Release method for the mocked roots collection. The items are always
+	 * allocated by the get method, so this just freed them.
+	 */
+	static void collectionMockRelease(fiftyoneDegreesCollectionItem* item) {
+		fiftyoneDegreesFree(item->data.ptr);
+		fiftyoneDegreesDataReset(&item->data);
+		item->collection = nullptr;
+	}
+
+	/**
+	 * Mock the graph roots collection to return a modified version of the
+	 * graph roots.
+	 */
+	void mockRootsCollection(fiftyoneDegreesCollectionGetMethod get) {
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		fiftyoneDegreesCollection* original = dataSet->rootNodes;
+		fiftyoneDegreesCollection* collection =
+			(fiftyoneDegreesCollection*)fiftyoneDegreesMalloc(
+				sizeof(fiftyoneDegreesCollection));
+		collection->count = fiftyoneDegreesCollectionGetCount(original);
+		collection->elementSize = original->elementSize;
+		collection->freeCollection = nullptr; // won't be used, so no need to set.
+		collection->get = get;
+		collection->release = EngineHashTests::collectionMockRelease;
+		collection->size = original->size;
+		collection->next = nullptr;
+		collection->state = original;
+		dataSet->rootNodes = collection;
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+	}
+
+	/**
+	 * Reverts the graph roots collection to the original collection.
+	 * The collection was stored as a state by the mock collection.
+	 */
+	void revertMockRootsCollection() {
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		fiftyoneDegreesCollection* mock = dataSet->rootNodes;
+		dataSet->rootNodes = (fiftyoneDegreesCollection*)mock->state;
+		fiftyoneDegreesFree(mock);
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+	}
+
+	void verifyPerformanceGraph() {
+		// Set the graph roots collection to return invalid offsets for
+		// predictive.
+		mockRootsCollection(EngineHashTests::collectionMockGetPerf);
+		
+		// Enable only performance graph.
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		fiftyoneDegreesConfigHash* editableConfig =
+			(fiftyoneDegreesConfigHash*)&dataSet->config;
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+		bool originalPerf = editableConfig->usePerformanceGraph;
+		bool originalPred = editableConfig->usePredictiveGraph;
+		editableConfig->usePerformanceGraph = true;
+		editableConfig->usePredictiveGraph = false;
+
+		// Process some evidence. This will throw an exception if the wrong
+		// graph is used.
+		EvidenceDeviceDetection evidence;
+		evidence["header.user-agent"] = mobileUserAgent;
+		ResultsHash* goodResults;
+		try {
+			goodResults = ((EngineHash*)getEngine())->process(&evidence);
+		}
+		catch (exception e){
+			FAIL() << L"Processing should not throw an exception if it is "
+				<< L"only using the graph it is supposed to. Exception was: "
+				<< e.what();
+		}
+		evidence["header.user-agent"] = badUserAgent;
+		ResultsHash* badResults;
+		try {
+			badResults = ((EngineHash*)getEngine())->process(&evidence);
+		}
+		catch (exception e) {
+			FAIL() << L"Processing should not throw an exception if it is "
+				<< L"only using the graph it is supposed to. Exception was: "
+				<< e.what();
+		}
+
+		// Check the results are reporting the correct method.
+		EXPECT_EQ(
+			FIFTYONE_DEGREES_HASH_MATCH_METHOD_PERFORMANCE,
+			goodResults->getMethod())
+			<< L"Only the performance graph was used, but that was not "
+			<< L"reflected by the method.";
+		EXPECT_EQ(
+			FIFTYONE_DEGREES_HASH_MATCH_METHOD_NONE,
+			badResults->getMethod())
+			<< L"No graph should have been used.";
+
+		// Clean up
+		delete goodResults;
+		delete badResults;
+		revertMockRootsCollection();
+		editableConfig->usePerformanceGraph = originalPerf;
+		editableConfig->usePredictiveGraph = originalPred;
+	}
+
+	void verifyPredictiveGraph() {
+		// Set the graph roots collection to return invalid offsets for
+		// predictive.
+		mockRootsCollection(EngineHashTests::collectionMockGetPred);
+
+		// Enable only predictive graph.
+		fiftyoneDegreesDataSetHash* dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		fiftyoneDegreesConfigHash* editableConfig =
+			(fiftyoneDegreesConfigHash*)&dataSet->config;
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+		bool originalPerf = editableConfig->usePerformanceGraph;
+		bool originalPred = editableConfig->usePredictiveGraph;
+		editableConfig->usePerformanceGraph = false;
+		editableConfig->usePredictiveGraph = true;
+
+		// Process some evidence. This will throw an exception if the wrong
+		// graph is used.
+		EvidenceDeviceDetection evidence;
+		evidence["header.user-agent"] = mobileUserAgent;
+		ResultsHash* goodResults;
+		try {
+			goodResults = ((EngineHash*)getEngine())->process(&evidence);
+		}
+		catch (exception e) {
+			FAIL() << L"Processing should not throw an exception if it is "
+				<< L"only using the graph it is supposed to. Exception was: "
+				<< e.what();
+		}
+		evidence["header.user-agent"] = badUserAgent;
+		ResultsHash* badResults;
+		try {
+			badResults = ((EngineHash*)getEngine())->process(&evidence);
+		}
+		catch (exception e) {
+			FAIL() << L"Processing should not throw an exception if it is "
+				<< L"only using the graph it is supposed to. Exception was: "
+				<< e.what();
+		}
+
+		// Check the results are reporting the correct method.
+		EXPECT_EQ(
+			FIFTYONE_DEGREES_HASH_MATCH_METHOD_PREDICTIVE,
+			goodResults->getMethod())
+			<< L"Only the predictive graph was used, but that was not "
+			<< L"reflected by the method.";
+		EXPECT_EQ(
+			FIFTYONE_DEGREES_HASH_MATCH_METHOD_NONE,
+			badResults->getMethod())
+			<< L"No graph should have been used.";
+
+		// Clean up
+		delete goodResults;
+		delete badResults;
+		revertMockRootsCollection();
+		editableConfig->usePerformanceGraph = originalPerf;
+		editableConfig->usePredictiveGraph = originalPred;
 	}
 
 	void verifyProfileOverrideDefault() {
@@ -265,10 +525,10 @@ public:
 		delete results;
 	}
 	bool setAllowUnmatched(
-		EngineHash *engine,
+		EngineHash *localEngine,
 		bool allowUnmatched) {
 		fiftyoneDegreesDataSetHash *dataSet =
-			fiftyoneDegreesDataSetHashGet(engine->manager.get());
+			fiftyoneDegreesDataSetHashGet(localEngine->manager.get());
 		// Discard the const qualifier to allow changing for the test.
 		fiftyoneDegreesConfigHash *configSource =
 			(fiftyoneDegreesConfigHash*)&dataSet->config;
@@ -286,7 +546,7 @@ public:
 		const char *evidenceValue = "17779|17470|18092";
 		char expectedDeviceId2[24];
 		const char* expectedDeviceId1 = "0-17779-17470-18092";
-		EngineHash *engine = (EngineHash*)getEngine();
+		EngineHash *localEngine = (EngineHash*)getEngine();
 
 		// Get the expected device id for the case where a default profile is
 		// used.
@@ -303,9 +563,9 @@ public:
 
 		// First test the behavior when unmatched is not allowed. This means
 		// null profiles instead of the default being used.
-		bool originalAllowUnmatched = setAllowUnmatched(engine, false);
+		bool originalAllowUnmatched = setAllowUnmatched(localEngine, false);
 		evidence["query.ProfileIds"] = evidenceValue;
-		ResultsHash *results = engine->process(&evidence);
+		ResultsHash *results = localEngine->process(&evidence);
 
 		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId1) <<
 			L"The device id was not correct.";
@@ -319,15 +579,15 @@ public:
 
 		// Now test the behavior when unmatched is allowed. This means that
 		// where there is no profile, the default is used.
-		setAllowUnmatched(engine, true);
-		results = engine->process(&evidence);
+		setAllowUnmatched(localEngine, true);
+		results = localEngine->process(&evidence);
 
 		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId2) <<
 			L"The device id was not correct.";
 		EXPECT_STREQ((*results->getValueAsString(property->getName())).c_str(), property->getDefaultValue().c_str()) <<
 			L"The value returned was not the default.";
 
-		setAllowUnmatched(engine, originalAllowUnmatched);
+		setAllowUnmatched(localEngine, originalAllowUnmatched);
 
 		delete property;
 		delete properties;

@@ -38,7 +38,7 @@ EngineDeviceDetectionTests::EngineDeviceDetectionTests(
 	const char *userAgentsFileName)
 	: EngineTests(requiredProperties, directory, fileNames, fileNamesLength) {
 	char userAgentsFullName[FIFTYONE_DEGREES_FILE_MAX_PATH];
-	const char userAgent[500] = "";
+	char userAgent[500] = "";
 	fiftyoneDegreesFileGetPath(
 		directory,
 		userAgentsFileName,

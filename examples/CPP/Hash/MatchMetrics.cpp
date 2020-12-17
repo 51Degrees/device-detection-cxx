@@ -200,7 +200,8 @@ namespace FiftyoneDegrees {
 						"   Drift:       " << results->getDrift() << "\n" <<
 						"   Difference:  " << results->getDifference() << "\n" <<
 						"   Iterations:  " << results->getIterations() << "\n" <<
-						"   Method:      " << results->getMethod() << "\n" <<
+						"   Method:      " <<
+						getMethodString(results->getMethod()) << "\n" <<
 						"   Sub Strings: " << results->getUserAgent(0);
 					delete results;
 
@@ -217,7 +218,8 @@ namespace FiftyoneDegrees {
 						"   Drift:       " << results->getDrift() << "\n" <<
 						"   Difference:  " << results->getDifference() << "\n" <<
 						"   Iterations:  " << results->getIterations() << "\n" <<
-						"   Method:      " << results->getMethod() << "\n" <<
+						"   Method:      " <<
+						getMethodString(results->getMethod()) << "\n" <<
 						"   Sub Strings: " << results->getUserAgent(0);
 					delete results;
 

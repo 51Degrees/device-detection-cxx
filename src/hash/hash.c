@@ -148,13 +148,19 @@ typedef struct detection_state_t {
 	int currentIndex; /* Current index */
 	int firstIndex; /* First index to consider */
 	int lastIndex; /* Last index to consider */
-	uint32_t profileOffset;
-	int currentDepth;
-	int breakDepth;
-	bool complete;
-	int matchedNodes;
-	int performanceMatches;
-	int predictiveMatches;
+	uint32_t profileOffset; /* The profile offset found as the result of 
+							searching a graph */
+	int currentDepth; /* The depth in the graph of the current node bwing
+					  evaluated */
+	int breakDepth; /* The depth at which to start applying drift and
+					difference */
+	bool complete; /* True if a leaf node has been found and a profile offset
+				   set */
+	int matchedNodes; /* Total number of nodes that matched in all graphs */
+	int performanceMatches; /* Number of nodes that matched in the performance 
+							   graph */
+	int predictiveMatches; /* Number of nodes that matched in the predictive 
+						      graph */
 	Exception *exception; /* Exception pointer */
 } detectionState;
 
@@ -181,8 +187,8 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig = {
 	{0,0,0}, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true, // Performance graph
-	false, // Predictive graph
+	false, // Performance graph
+	true, // Predictive graph
 	false // Trace
 };
 #undef FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY
@@ -202,8 +208,8 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
 	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true, // Performance graph
-	false, // Predictive graph
+	false, // Performance graph
+	true, // Predictive graph
 	false // Trace
 };
 
@@ -220,7 +226,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig = {
 	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true, // Performance graph
+	false, // Performance graph
 	true, // Predictive graph
 	false // Trace
 };
@@ -238,7 +244,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
 	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
-	true, // Performance graph
+	false, // Performance graph
 	true, // Predictive graph
 	false // Trace
 };
@@ -251,12 +257,12 @@ FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT, \
 { FIFTYONE_DEGREES_PROPERTY_LOADED, FIFTYONE_DEGREES_PROPERTY_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Properties */ \
 { FIFTYONE_DEGREES_VALUE_LOADED, FIFTYONE_DEGREES_VALUE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Values */ \
 { FIFTYONE_DEGREES_PROFILE_LOADED, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Profiles */ \
-{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Nodes */ \
+{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Root Nodes */ \
 { FIFTYONE_DEGREES_NODE_LOADED, FIFTYONE_DEGREES_NODE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Nodes */ \
 { FIFTYONE_DEGREES_PROFILE_LOADED, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* ProfileOffsets */ \
 FIFTYONE_DEGREES_HASH_DIFFERENCE, \
 FIFTYONE_DEGREES_HASH_DRIFT, \
-true, /* Performance graph */ \
+false, /* Performance graph */ \
 true,  /* Predictive graph */ \
 false /* Trace */
 
@@ -668,18 +674,14 @@ static void evaluateListNode(detectionState *state) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
-#ifndef NDEBUG
 		traceRoute(state, nodeHash);
-#endif
 		setNextNode(state, nodeHash->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
-#ifndef NDEBUG
 		traceRoute(state, NULL);
-#endif
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -793,18 +795,14 @@ static void evaluateBinaryNode(detectionState *state) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
-#ifndef NDEBUG
 		traceRoute(state, hashes);
-#endif
 		setNextNode(state, hashes->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
-#ifndef NDEBUG
 		traceRoute(state, NULL);
-#endif
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -822,7 +820,14 @@ static bool processFromRoot(
 		rootNodeOffset,
 		&state->node,
 		exception) == NULL) {
-		EXCEPTION_SET(COLLECTION_FAILURE);
+		if (EXCEPTION_OKAY) {
+			// Only set the exception if a more precise one was not
+			// set by the get method.
+			EXCEPTION_SET(COLLECTION_FAILURE);
+		}
+		// Return false as we cannot continue with a null node. The caller
+		// will check the exception.
+		return false;
 	}
 	else {
 		// Set the default flags and indexes.
@@ -870,7 +875,6 @@ static void addTraceRootName(
 static bool processRoot(
 	detectionState* state,
 	DataSetHash* dataSet,
-	Component* component,
 	uint32_t rootNodeOffset) {
 	bool matched = processFromRoot(dataSet, rootNodeOffset, state);
 	int depth = state->currentDepth;
@@ -913,40 +917,92 @@ static bool processRoots(
 	Component *component,
 	HashRootNodes *rootNodes) {
 	bool matched = false;
-	// TODO the lines below need to be thoroughly documented to
-	// explain the two graphs.
+
+	// First try searching in the performance graph if it is enabled.
 	if (dataSet->config.usePerformanceGraph == true) {
-#ifndef NDEBUG
 		if (dataSet->config.traceRoute == true) {
+			// Add the start point to the trace if it is enabled (and we are in
+			// a debug build).
 			addTraceRootName(
 				state,
 				"Performance",
 				component,
 				&dataSet->b.b.uniqueHeaders->items[state->result->b.uniqueHttpHeaderIndex]);
 		}
-#endif
-		matched = processRoot(state, dataSet, component, rootNodes->performanceNodeOffset);
-
+		// Find a match from the performance graph, starting from the performance
+		// graph root defined by the root nodes structure.
+		matched = processRoot(state, dataSet, rootNodes->performanceNodeOffset);
 		if (matched) {
+			// Increment the performance matches used to track which method has
+			// been used to get the result.
 			state->performanceMatches++;
 		}
 	}
+
+	// Now try searching in the predictive graph if it is enabled and there was
+	// no match found in the performance graph.
 	if (matched == false && dataSet->config.usePredictiveGraph == true) {
-#ifndef NDEBUG
 		if (dataSet->config.traceRoute == true) {
+			// Add the start point to the trace if it is enabled (and we are in
+			// a debug build).
 			addTraceRootName(
 				state,
 				"Predictive",
 				component,
 				&dataSet->b.b.uniqueHeaders->items[state->result->b.uniqueHttpHeaderIndex]);
 		}
-#endif
-		matched = processRoot(state, dataSet, component, rootNodes->performanceNodeOffset);
+		// Find a match from the predictive graph, starting from the predictive
+		// graph root defined by the root nodes structure.
+		matched = processRoot(state, dataSet, rootNodes->predictiveNodeOffset);
 		if (matched) {
+			// Increment the predictive matches used to track which method has
+			// been used to get the result.
 			state->predictiveMatches++;
 		}
 	}
 	return matched;
+}
+
+static void setResultFromUserAgentComponentIndex(
+	detectionState *state,
+	uint32_t componentIndex,
+	Item* rootNodesItem,
+	uint32_t graphOffset) {
+	const ComponentKeyValuePair* graphKey;
+	HashRootNodes* rootNodes;
+	uint32_t headerIndex;
+	Exception* exception = state->exception;
+	Component *component = COMPONENT(state->dataSet, componentIndex);
+	bool complete = false;
+	for (headerIndex = 0;
+		EXCEPTION_OKAY &&
+		component != NULL &&
+		headerIndex < component->keyValuesCount && 
+		complete == false;
+		headerIndex++) {
+		graphKey = &(&component->firstKeyValuePair)[headerIndex];
+		if (graphKey->key == graphOffset) {
+			rootNodes = (HashRootNodes*)getRootNodes(
+				state->dataSet,
+				graphKey->value,
+				rootNodesItem,
+				state->exception);
+			if (rootNodes != NULL && EXCEPTION_OKAY) {
+				if (processRoots(
+					state, state->dataSet,
+					component,
+					rootNodes) == true) {
+					addProfile(
+						state->result, 
+						(byte)componentIndex, 
+						state->profileOffset, 
+						false);
+					complete = true;
+				}
+				COLLECTION_RELEASE(state->dataSet->rootNodes, rootNodesItem);
+			}
+		}
+	}
 }
 
 static void setResultFromUserAgent(
@@ -954,48 +1010,21 @@ static void setResultFromUserAgent(
 	DataSetHash *dataSet,
 	Exception *exception) {
 	detectionState state;
-	uint32_t componentIndex, headerIndex;
-	HashRootNodes *rootNodes;
+	uint32_t componentIndex;
 	Item rootNodesItem;
-	const ComponentKeyValuePair *graphKey;
-	// Initialise the result and the memory used to perform the device 
-	// detection.
-	detectionStateInit(
-		&state,
-		result,
-		dataSet,
-		exception);
+	uint32_t graphOffset = dataSet->b.b.uniqueHeaders->items[
+		result->b.uniqueHttpHeaderIndex].uniqueId;
 	DataReset(&rootNodesItem.data);
-
+	detectionStateInit(&state, result, dataSet, exception);
 	for (componentIndex = 0;
 		componentIndex < dataSet->componentsList.count;
 		componentIndex++) {
-
 		if (dataSet->componentsAvailable[componentIndex] == true) {
-			Component *component = COMPONENT(dataSet, componentIndex);
-			for (headerIndex = 0;
-				headerIndex < component->keyValuesCount;
-				headerIndex++) {
-
-				graphKey = &(&component->firstKeyValuePair)[headerIndex];
-
-				if (graphKey->key == dataSet->b.b.uniqueHeaders->items[state.result->b.uniqueHttpHeaderIndex].uniqueId) {
-					if (getRootNodes(
-						dataSet,
-						graphKey->value,
-						&rootNodesItem,
-						exception) != NULL &&
-						EXCEPTION_OKAY) {
-						rootNodes = (HashRootNodes*)rootNodesItem.data.ptr;
-
-						if (processRoots(&state, dataSet, component, rootNodes) == true) {
-							// Set all the values in the result.
-							addProfile(state.result, (byte)componentIndex, state.profileOffset, false);
-						}
-						COLLECTION_RELEASE(dataSet->rootNodes, &rootNodesItem);
-					}
-				}
-			}
+			setResultFromUserAgentComponentIndex(
+				&state, 
+				componentIndex, 
+				&rootNodesItem, 
+				graphOffset);
 		}
 	}
 	state.result->iterations = state.iterations;
@@ -1048,7 +1077,9 @@ static void freeDataSet(void *dataSetPtr) {
 
 	// Free the memory used for the lists and collections.
 	ListFree(&dataSet->componentsList);
-	Free(dataSet->componentsAvailable);
+	if (dataSet->componentsAvailable != NULL) {
+		Free(dataSet->componentsAvailable);
+	}
 	FIFTYONE_DEGREES_COLLECTION_FREE(dataSet->strings);
 	FIFTYONE_DEGREES_COLLECTION_FREE(dataSet->components);
 	FIFTYONE_DEGREES_COLLECTION_FREE(dataSet->properties);
@@ -1072,7 +1103,8 @@ static long initGetHttpHeaderString(
 		(DataSetHash*)((stateWithException*)state)->state;
 	Exception *exception = ((stateWithException*)state)->exception;
 	uint32_t i = 0, c = 0;
-	Component *component = COMPONENT(dataSet, c++);
+	Component *component = COMPONENT(dataSet, c);
+	c++;
 	while (component != NULL) {
 		if (index < i + component->keyValuesCount) {
 			const ComponentKeyValuePair *keyValue =
@@ -1089,7 +1121,8 @@ static long initGetHttpHeaderString(
 			return keyValue->key;
 		}
 		i += component->keyValuesCount;
-		component = COMPONENT(dataSet, c++);
+		component = COMPONENT(dataSet, c);
+		c++;
 	}
 	return -1;
 }
@@ -1191,22 +1224,23 @@ static StatusCode initComponentsAvailable(
 	return SUCCESS;
 }
 
-int findPropertyName(
+static int findPropertyIndexByName(
 	Collection *properties,
 	Collection *strings,
-	const char *name,
+	char *name,
 	Exception *exception) {
-	int i;
+	int index;
+	int foundIndex = -1;
 	Property *property;
 	String *propertyName;
 	Item propertyItem, nameItem;
 	int count = CollectionGetCount(properties);
 	DataReset(&propertyItem.data);
 	DataReset(&nameItem.data);
-	for (i = 0; i < count; i++) {
+	for (index = 0; index < count && foundIndex == -1; index++) {
 		property = PropertyGet(
 			properties,
-			i,
+			index,
 			&propertyItem,
 			exception);
 		if (property != NULL &&
@@ -1218,116 +1252,161 @@ int findPropertyName(
 				exception);
 			if (propertyName != NULL && EXCEPTION_OKAY) {
 				if (StringCompare(name, &propertyName->value) == 0) {
-					COLLECTION_RELEASE(strings, &nameItem);
-					COLLECTION_RELEASE(properties, &propertyItem);
-					return i;
+					foundIndex = index;
 				}
 				COLLECTION_RELEASE(strings, &nameItem);
 			}
 			COLLECTION_RELEASE(properties, &propertyItem);
 		}
 	}
-	return -1;
+	return foundIndex;
 }
 
+static void initGetEvidenceProperty(
+	DataSetHash *dataSet,
+	PropertyAvailable* availableProperty,
+	EvidenceProperties* evidenceProperties,
+	int* count,
+	char* componentName,
+	char* relatedPropertyName,
+	Exception* exception) {
+	uint32_t index;
+	Component* component;
+	Property* property;
+	String* name;
+	Item propertyItem, nameItem;
+	DataReset(&propertyItem.data);
+	DataReset(&nameItem.data);
+
+	// Get the property to check its component.
+	property = PropertyGet(
+		dataSet->properties,
+		availableProperty->propertyIndex,
+		&propertyItem,
+		exception);
+	if (property != NULL && EXCEPTION_OKAY) {
+
+		// Get the name of the component which the property belongs to.
+		component = COMPONENT(dataSet, property->componentIndex);
+		name = StringGet(
+			dataSet->strings,
+			component->nameOffset,
+			&nameItem,
+			exception);
+
+		// If the component name matches the component of interest, then
+		// find the related property name, and if it's available then add
+		// it to the array, if the array is provided.
+		if (name != NULL && EXCEPTION_OKAY) {
+			if (StringCompare(componentName, &name->value) == 0) {
+				index = findPropertyIndexByName(
+					dataSet->properties,
+					dataSet->strings,
+					relatedPropertyName,
+					exception);
+				if (index >= 0) {
+					if (evidenceProperties != NULL) {
+						evidenceProperties->items[*count] = index;
+					}
+					(*count)++;
+				}
+			}
+			COLLECTION_RELEASE(dataSet->strings, &nameItem);
+		}
+		COLLECTION_RELEASE(dataSet->properties, &propertyItem);
+	}
+}
+
+static void initGetEvidencePropertyRelated(
+	DataSetHash* dataSet,
+	PropertyAvailable* availableProperty,
+	EvidenceProperties* evidenceProperties,
+	int* count,
+	char* suffix,
+	Exception* exception) {
+	Property* property;
+	String* name;
+	String* availableName = (String*)availableProperty->name.data.ptr;
+	int requiredLength = ((int)strlen(suffix)) + availableName->size - 1;
+	Item propertyItem, nameItem;
+	DataReset(&propertyItem.data);
+	DataReset(&nameItem.data);
+	int propertiesCount = CollectionGetCount(dataSet->properties);
+	for (int propertyIndex = 0; 
+		propertyIndex < propertiesCount && EXCEPTION_OKAY; 
+		propertyIndex++) {
+		property = PropertyGet(
+			dataSet->properties,
+			propertyIndex,
+			&propertyItem,
+			exception);
+		if (property != NULL && EXCEPTION_OKAY) {
+			name = StringGet(
+				dataSet->strings,
+				property->nameOffset,
+				&nameItem,
+				exception);
+			if (name != NULL && EXCEPTION_OKAY) {
+				if (requiredLength == name->size -1 &&
+					// Check that the available property matches the start of
+					// the possible related property.
+					StringCompareLength(
+						&availableName->value,
+						&name->value,
+						(size_t)availableName->size - 1) == 0 && 
+					// Check that the related property has a suffix that 
+					// matches the one provided to the method.
+					StringCompare(
+						&name->value + availableName->size - 1, 
+						suffix) == 0) {
+					if (evidenceProperties != NULL) {
+						evidenceProperties->items[*count] = propertyIndex;
+					}
+					(*count)++;
+				}
+				COLLECTION_RELEASE(dataSet->strings, &nameItem);
+			}
+			COLLECTION_RELEASE(dataSet->properties, &propertyItem);
+		}
+	}
+}
 
 uint32_t initGetEvidenceProperties(
 	void* state,
-	fiftyoneDegreesPropertyAvailable *availableProperty,
-	fiftyoneDegreesEvidenceProperties *evidenceProperties) {
+	fiftyoneDegreesPropertyAvailable* availableProperty,
+	fiftyoneDegreesEvidenceProperties* evidenceProperties) {
 	int count = 0;
-	int index;
-	Item item;
-	Component* component;
-	String* name;
-	char *jsName;
 	DataSetHash* dataSet =
 		(DataSetHash*)((stateWithException*)state)->state;
 	Exception* exception = ((stateWithException*)state)->exception;
 
-	DataReset(&item.data);
-
-	// First get the property to check its component.
-	Property* property = PropertyGet(
-		dataSet->properties,
-		availableProperty->propertyIndex,
-		&item,
+	// If the property is part of the HardwarePlatform component then add the
+	// additional property JavaScriptHardwareProfile as this can be used to get
+	// evidence from JavaScript.
+	initGetEvidenceProperty(
+		dataSet, 
+		availableProperty,
+		evidenceProperties,
+		&count,
+		"HardwarePlatform",
+		"JavaScriptHardwareProfile", 
 		exception);
-	if (property != NULL && EXCEPTION_OKAY) {
-		// Get the name of the component which the property belongs to.
-		component = (Component*)dataSet->componentsList.items[property->componentIndex].data.ptr;
-		name = StringGet(
-			dataSet->strings,
-			component->nameOffset,
-			&item,
-			exception);
-		if (name != NULL && EXCEPTION_OKAY) {
-			if (strcmp("HardwarePlatform", &name->value) == 0) {
-				// Release the property before the findPropertyName method is called.
-				// If this is not done, and the collection is configured in low memory
-				// there could be a problem fetching from the collection.
-				COLLECTION_RELEASE(dataSet->properties, &item);
-				// In this specific case, anything hardware is affected by the
-				// JavaScriptHardwareProfile property.
-				if (evidenceProperties != NULL) {
-					// Add the index if the structure has been allocated.
-					index = findPropertyName(
-						dataSet->properties,
-						dataSet->strings,
-						"JavaScriptHardwareProfile",
-						exception);
-					evidenceProperties->items[count] = index;
-				}
-				count++;
-			}
-			else {
-				// A release is also needed here as the release in the if block
-				// has not been reached.
-				COLLECTION_RELEASE(dataSet->properties, &item);
-			}
-			COLLECTION_RELEASE(dataSet->strings, &item);
-		}
+	if (EXCEPTION_FAILED) {
+		return 0;
 	}
 
-	// Only carry on doing this if there was no exception from the section
-	// above.
-	if (EXCEPTION_OKAY) {
-		name = (String*)availableProperty->name.data.ptr;
-		// Allocate some space to set the name of a target property. This
-		// follows the convension of a 'JavaScript' suffix. For example, a
-		// property named 'IsMobileJavaScript' would contain JavaScript which
-		// produced evidence for the 'IsMobile' property.
-		jsName = (char*)Malloc(sizeof(char) * (name->size + strlen("javascript") + 1));
-		if (jsName != NULL) {
-			// Construct the name to look for.
-			strcpy(jsName, &name->value);
-			strcpy(jsName + name->size - 1, "javascript");
-			// Do a sequential search for the property name just constructed.
-			// Ideally this would be a binary search, but the properties are not
-			// guaranteed to be in alphabetical order. Besides, this method only
-			// runs at startup and the number of properties is relatively
-			// small, so performance is not such an issue.
-			index = findPropertyName(
-				dataSet->properties,
-				dataSet->strings,
-				jsName,
-				exception);
-			if (EXCEPTION_OKAY) {
-				if (index >= 0) {
-					if (evidenceProperties != NULL) {
-						// Add the index if the structure has been allocated.
-						evidenceProperties->items[count] = index;
-					}
-					count++;
-				}
-			}
-			Free(jsName);
-		}
-		else {
-			EXCEPTION_SET(INSUFFICIENT_MEMORY);
-		}
-	}
-	return count;
+	// Any properties that have a suffix of JavaScript and are associated with
+	// an available property should also be added. These are used to gather
+	// evidence from JavaScript that might impact the value returned.
+	initGetEvidencePropertyRelated(
+		dataSet,
+		availableProperty,
+		evidenceProperties,
+		&count,
+		"JavaScript",
+		exception);
+
+	return (uint32_t)count;
 }
 
 static StatusCode initPropertiesAndHeaders(
@@ -1685,6 +1764,7 @@ static StatusCode initDataSetFromFile(
 		fileName,
 		sizeof(DataSetHashHeader));
 	if (status != SUCCESS) {
+		freeDataSet(dataSet);
 		return status;
 	}
 
@@ -1704,6 +1784,7 @@ static StatusCode initDataSetFromFile(
 
 	// Return the status code if something has gone wrong.
 	if (status != SUCCESS || EXCEPTION_FAILED) {
+		freeDataSet(dataSet);
 		// Delete the temp file if one has been created.
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
@@ -1715,6 +1796,7 @@ static StatusCode initDataSetFromFile(
 	// initialisation was successful.
 	status = initPropertiesAndHeaders(dataSet, properties, exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
+		freeDataSet(dataSet);
 		// Delete the temp file if one has been created.
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
@@ -1726,6 +1808,7 @@ static StatusCode initDataSetFromFile(
 	// properties which are to be returned (i.e. available properties).
 	status = initComponentsAvailable(dataSet, exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
+		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
 		}
@@ -1734,6 +1817,7 @@ static StatusCode initDataSetFromFile(
 
 	// Check there are properties available for retrieval.
 	if (dataSet->b.b.available->count == 0) {
+		freeDataSet(dataSet);
 		// Delete the temp file if one has been created.
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
@@ -2321,16 +2405,12 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			results->items[i].profileIsOverriden = (bool*)Malloc(
 				sizeof(bool) *
 				dataSet->componentsList.count);
-#ifndef NDEBUG
 			if (dataSet->config.traceRoute == true) {
 				results->items[i].trace = GraphTraceCreate("Hash Result %d", i);
 			}
 			else {
 				results->items[i].trace = NULL;
 			}
-#else
-			results->items[i].trace = NULL;
-#endif
 		}
 
 		// Reset the property and values list ready for first use sized for 

@@ -80,6 +80,7 @@
     <ClCompile Include="..\..\test\hash\ExampleHashReloadFromMemoryTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashStronglyTypedTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashTests.hpp" />
+    <ClCompile Include="..\..\test\hash\HashMemLeakReloadFromFileTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -128,7 +129,6 @@
       </PrecompiledHeaderFile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <WarningLevel>Level4</WarningLevel>
       <PrecompiledHeaderOutputFile />
@@ -147,7 +147,6 @@
       </PrecompiledHeaderFile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;X64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <WarningLevel>Level4</WarningLevel>
       <PrecompiledHeaderOutputFile />

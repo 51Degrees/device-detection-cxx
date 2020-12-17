@@ -171,7 +171,7 @@ static void executeTest(const char *userAgent, void *state) {
  * @param mainState state information about the main test
  */
 static void runPerformanceThread(void* mainState) {
-	const char userAgent[BUFFER] = "";
+	char userAgent[BUFFER] = "";
 	performanceThreadState threadState;
 	threadState.main = (performanceState*)mainState;
 
@@ -517,7 +517,10 @@ int main(int argc, char* argv[]) {
 	fgetc(stdin);
 
 	// Run the performance test.
-	fiftyoneDegreesPerfHashRun(dataFilePath, userAgentFilePath, CONFIG);
+	fiftyoneDegreesConfigHash config = CONFIG;
+	config.usePerformanceGraph = true;
+	config.usePredictiveGraph = false;
+	fiftyoneDegreesPerfHashRun(dataFilePath, userAgentFilePath, config);
 
 #ifdef _DEBUG
 #ifdef _MSC_VER

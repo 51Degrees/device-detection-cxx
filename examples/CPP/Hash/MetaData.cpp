@@ -117,11 +117,11 @@ namespace FiftyoneDegrees {
 				 */
 				void run() {
 					PropertyMetaData *property;
-					Collection<string, PropertyMetaData> *properties;
+					Collection<string, PropertyMetaData> *localProperties;
 					cout << "Starting MetaData Example.\n";
-					properties = engine->getMetaData()->getProperties();
-					for (uint32_t i = 0; i < properties->getSize(); i++){
-						property = properties->getByIndex(i);
+					localProperties = engine->getMetaData()->getProperties();
+					for (uint32_t i = 0; i < localProperties->getSize(); i++){
+						property = localProperties->getByIndex(i);
 						cout << property->getName() << " - " << property->getDescription() << "\n";
                         delete property;
 					}

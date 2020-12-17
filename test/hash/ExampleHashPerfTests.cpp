@@ -39,4 +39,11 @@ public:
 	}
 };
 
-EXAMPLE_HASH_TESTS(ExampleHashTestPerf)
+TEST_F(ExampleHashTestPerf, LowMemory) {
+    if (fiftyoneDegreesCollectionGetIsMemoryOnly() == false) {
+        run(fiftyoneDegreesHashLowMemoryConfig);
+    }
+}
+TEST_F(ExampleHashTestPerf, InMemory) {
+    run(fiftyoneDegreesHashInMemoryConfig);
+}
