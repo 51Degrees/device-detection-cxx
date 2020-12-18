@@ -157,7 +157,7 @@ void fiftyoneDegreesHashMatchForDeviceId(
 	const char *dataFilePath,
 	ConfigHash *config) {
 	EXCEPTION_CREATE;
-	const char deviceId[40] = "";
+	char deviceId[40] = "";
 	int uniqueHttpHeaderIndex = -1;
 	ResourceManager manager;
 
