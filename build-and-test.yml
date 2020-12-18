@@ -12,7 +12,7 @@ stages:
   jobs:
   - job: Get_Enterprise_DataFile
     pool:
-      vmImage: macOS-10.14
+      name: Hosted Ubuntu 1604
 
     steps:
     
@@ -36,21 +36,33 @@ stages:
         ArtifactName: 'enterpriseFile'
         publishLocation: 'Container'
 
-- stage: Linux
+- stage: MacOS
   dependsOn: [Data]
   jobs:
   - job: Build_And_Test
 
-    timeoutInMinutes: 120
+    timeoutInMinutes: 240
 
     pool:
       vmImage: macOS-10.14
+      
+    strategy:
+      matrix:
+        debug x64 multi threads:
+          BuildConfiguration: Debug
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=OFF
 
     steps:
 
     - checkout: self
       submodules: recursive
       lfs: true
+      
+    - script: |
+        sudo brew search dmalloc
+        sudo brew install dmalloc
+      displayName: 'Install Required Packages'
 
     - task: DownloadBuildArtifacts@0
       displayName: 'Download Enterprise Data File'
@@ -74,7 +86,7 @@ stages:
       displayName: 'CMake Configure'
       inputs:
         workingDirectory: build
-        cmakeArgs: '..'
+        cmakeArgs: '.. -DCMAKE_BUILD_TYPE=$(BuildConfiguration) $(BuildArguments)'
 
     - task: CMake@1
       displayName: 'CMake Build'
@@ -82,7 +94,7 @@ stages:
         workingDirectory: build
         cmakeArgs: '--build .'
 
-    - bash: 'ctest -E ".*TestMem|TestPerf|TestOfflineProcessing.*" -T test --no-compress-output'
+    - bash: 'ctest -E ".*TestOfflineProcessing.*" -T test --no-compress-output'
       workingDirectory: build
       failOnStderr: true
       displayName: 'Run Tests'
@@ -91,5 +103,5 @@ stages:
       condition: true
       inputs:
         testResultsFormat: 'CTest'
-        testRunTitle: 'Linux CTest'
+        testRunTitle: 'Linux CTest $(BuildConfiguration) $(BuildArguments)'
         testResultsFiles: '**/Test.xml'

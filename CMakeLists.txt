@@ -39,6 +39,7 @@ FILE(GLOB HASHC_H ${HASH}/*.h)
 
 add_library(fiftyone-hash-c ${HASHC_SRC} ${HASHC_H})
 target_link_libraries(fiftyone-hash-c fiftyone-device-detection-c)
+target_compile_options(fiftyone-hash-c PRIVATE ${COMPILE_OPTION_DEBUG})
 if (MSVC)
 	target_compile_options(fiftyone-hash-c PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
 endif()
@@ -80,20 +81,34 @@ foreach (api "Hash")
 			string( TOLOWER ${api} lowerapi)
 
 			if (NOT ${name} MATCHES ".*ExampleBase.*")
+				if (${name} MATCHES ".*Reload.*|.*Perf.*|.*Mem.*")
+					set(DMALLOC_LIB dmallocth)
+				else()
+					set(DMALLOC_LIB dmalloc)
+				endif()
 				if("${langext}" STREQUAL "cpp")
 					MESSAGE("-- Found C++ example '${name}'")
 					add_executable(${name} ${file}
 					${CMAKE_CURRENT_LIST_DIR}/examples/${upperlangext}/${api}/ExampleBase.cpp
 					${CMAKE_CURRENT_LIST_DIR}/examples/${upperlangext}/${api}/ExampleBase.hpp)
-					target_link_libraries(${name} fiftyone-${lowerapi}-cxx)
+					if (MSVC)
+						target_link_libraries(${name} fiftyone-${lowerapi}-cxx)
+					else()
+						target_link_libraries(${name} fiftyone-${lowerapi}-cxx ${DMALLOC_LIB})
+					endif()
 				elseif("${langext}" STREQUAL "c")
 					MESSAGE("-- Found C example '${name}'")
 					add_executable(${name} ${file})
-					target_link_libraries(${name} fiftyone-${lowerapi}-c)
+					if (MSVC)
+						target_link_libraries(${name} fiftyone-${lowerapi}-c)
+					else()
+						target_link_libraries(${name} fiftyone-${lowerapi}-c ${DMALLOC_LIB})
+					endif()
 				endif()
 				set_target_properties(${name}
 					PROPERTIES FOLDER
 					"Examples/Device Detection/${api}/${upperlangext}") 
+				target_compile_options(${name} PRIVATE ${COMPILE_OPTION_DEBUG})
 				if (MSVC)
 					target_compile_options(${name} PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
 				endif()
@@ -123,13 +138,21 @@ target_link_libraries(fiftyone-device-detection-test-base gtest_main)
 set_target_properties(fiftyone-device-detection-test-base PROPERTIES FOLDER "Tests") 
 
 add_executable(HashTests ${HASH_TEST_SRC} ${HASH_TEST_H})
-target_link_libraries(HashTests
-	fiftyone-device-detection-test-base
-    fiftyone-hash-cxx)
+if (MSVC)
+	target_link_libraries(HashTests
+		fiftyone-device-detection-test-base
+    		fiftyone-hash-cxx)
+else()
+	target_link_libraries(HashTests
+		fiftyone-device-detection-test-base
+    		fiftyone-hash-cxx
+		dmallocth)
+endif()
 gtest_discover_tests(HashTests)
 
 set_target_properties(HashTests PROPERTIES FOLDER "Tests")
 
+target_compile_options(HashTests PRIVATE ${COMPILE_OPTION_DEBUG})
 if (MSVC)
 	target_compile_options(HashTests PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
 endif()
