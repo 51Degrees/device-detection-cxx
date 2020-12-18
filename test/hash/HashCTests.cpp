@@ -63,7 +63,6 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 	ResultsHash* resultsDeviceId;
 
 	StatusCode status = SUCCESS;
-	int uniqueHttpHeaderIndex = -1;
 	char deviceId[40] = "";
 	char isMobile[40] = "";
 
@@ -104,13 +103,10 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 		sizeof(deviceId),
 		exception);
 	EXCEPTION_THROW;
-	uniqueHttpHeaderIndex =
-		resultsUserAgents->items[0].b.uniqueHttpHeaderIndex;
 
 	// Obtain result again from device ID
 	ResultsHashFromDeviceId(
 		resultsDeviceId,
-		uniqueHttpHeaderIndex,
 		deviceId,
 		sizeof(deviceId),
 		exception);
@@ -126,6 +122,79 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 			"isMobile",
 			isMobile,
 			sizeof(isMobile)))) << "Property isMobile should be true.\n";
+
+	// Free the results and resource
+	ResultsHashFree(resultsUserAgents);
+	ResultsHashFree(resultsDeviceId);
+	ResourceManagerFree(&manager);
+}
+
+/*
+ * Check that the API ResultsHashGetValuesString correctly
+ * deal with invalid uniqueHttpHeaderIndex for a single result.
+ */
+TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
+	PropertiesRequired properties = PropertiesDefault;
+	properties.string = commonProperties;
+
+	ConfigHash configHash = HashDefaultConfig;
+	ResourceManager manager;
+
+	ResultsHash* resultsUserAgents;
+	ResultsHash* resultsDeviceId;
+
+	StatusCode status = SUCCESS;
+	char deviceId[40] = "";
+	char isMobile[40] = "";
+
+	EXCEPTION_CREATE;
+	// Init manager
+	status = HashInitManagerFromFile(
+		&manager,
+		&configHash,
+		&properties,
+		dataFilePath.c_str(),
+		exception);
+	EXCEPTION_THROW;
+
+	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
+	resultsDeviceId = ResultsHashCreate(&manager, 1, 0);
+
+	// Obtain result again from device ID
+	// with invalid uniqueHttpHeaderIndex
+	resultsDeviceId->items[0].b.uniqueHttpHeaderIndex = -2;
+	memset(isMobile, 0, sizeof(isMobile));
+	size_t charsAdded = ResultsHashGetValuesString(
+		resultsDeviceId,
+		"isMobile",
+		isMobile,
+		sizeof(isMobile),
+		",",
+		exception);
+	EXCEPTION_THROW;
+	EXPECT_EQ(0, charsAdded) << "No result should have been found where "
+		<< "uniqueHttpHeaderIndex is "
+		<< resultsDeviceId->items[0].b.uniqueHttpHeaderIndex
+		<< "\n";
+
+	// Obtain result again from device ID
+	// with invalid uniqueHttpHeaderIndex
+	DataSetHash* dataSet = (DataSetHash*)resultsDeviceId->b.b.dataSet;
+	resultsDeviceId->items[0].b.uniqueHttpHeaderIndex =
+		dataSet->b.b.uniqueHeaders->count + 1;
+	memset(isMobile, 0, sizeof(isMobile));
+	charsAdded = ResultsHashGetValuesString(
+		resultsDeviceId,
+		"isMobile",
+		isMobile,
+		sizeof(isMobile),
+		",",
+		exception);
+	EXCEPTION_THROW;
+	EXPECT_EQ(0, charsAdded) << "No result should have been found where "
+		<< "uniqueHttpHeaderIndex is "
+		<< resultsDeviceId->items[0].b.uniqueHttpHeaderIndex
+		<< "\n";
 
 	// Free the results and resource
 	ResultsHashFree(resultsUserAgents);

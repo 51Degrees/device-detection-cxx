@@ -2326,7 +2326,6 @@ static void setProfileFromProfileId(
 
 void fiftyoneDegreesResultsHashFromDeviceId(
 	fiftyoneDegreesResultsHash *results,
-	const int uniqueHttpHeaderIndex,
 	const char* deviceId,
 	size_t deviceIdLength,
 	fiftyoneDegreesException *exception) {
@@ -2342,11 +2341,6 @@ void fiftyoneDegreesResultsHashFromDeviceId(
 	}
 	if (EXCEPTION_OKAY) {
 		setProfileFromProfileId(results, previous, exception);
-		// Update the uniqueHttpHeaderIndex
-		if (results->count > 0) {
-			// There can be one result from one device ID only
-			results->items[0].b.uniqueHttpHeaderIndex = uniqueHttpHeaderIndex;
-		}
 	}
 }
 
@@ -2576,12 +2570,22 @@ static ResultHash* getResultFromResultsWithProperty(
 	// headers.
 	for (i = 0; i < component->keyValuesCount; i++) {
 		uniqueId = (&component->firstKeyValuePair)[i].key;
-		for (h = 0; h < results->count; h++) {
-			if (results->items[h].b.uniqueHttpHeaderIndex >= 0 &&
-				dataSet->b.b.uniqueHeaders->items[
-				  results->items[h].b.uniqueHttpHeaderIndex]
-				  .uniqueId == uniqueId) {
-				return &results->items[h];
+		if (results->count == 1 &&
+			results->items[0].b.uniqueHttpHeaderIndex == -1) {
+			// If uniqueHttpHeaderIndex was not set then use
+			// the only result existed
+			return results->items;
+		}
+		else {
+			for (h = 0; h < results->count; h++) {
+				if (results->items[h].b.uniqueHttpHeaderIndex >= 0 &&
+					results->items[h].b.uniqueHttpHeaderIndex <
+					dataSet->b.b.uniqueHeaders->count &&
+					dataSet->b.b.uniqueHeaders->items[
+						results->items[h].b.uniqueHttpHeaderIndex]
+					.uniqueId == uniqueId) {
+					return &results->items[h];
+				}
 			}
 		}
 	}

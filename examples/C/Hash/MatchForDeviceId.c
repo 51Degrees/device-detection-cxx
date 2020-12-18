@@ -163,7 +163,6 @@ void fiftyoneDegreesHashMatchForDeviceId(
 	ConfigHash *config) {
 	EXCEPTION_CREATE;
 	char deviceId[40] = "";
-	int uniqueHttpHeaderIndex = -1;
 	ResourceManager manager;
 
 	// Set the properties to be returned for each User-Agent.
@@ -227,13 +226,10 @@ void fiftyoneDegreesHashMatchForDeviceId(
 		sizeof(deviceId),
 		exception);
 	EXCEPTION_THROW
-	uniqueHttpHeaderIndex =
-		resultsUserAgents->items[0].b.uniqueHttpHeaderIndex;
 	printf("\nMobile DeviceId: %s\n", deviceId);
 
 	ResultsHashFromDeviceId(
 		resultsDeviceId,
-		uniqueHttpHeaderIndex,
 		deviceId,
 		sizeof(deviceId),
 		exception);
@@ -261,13 +257,10 @@ void fiftyoneDegreesHashMatchForDeviceId(
 		sizeof(deviceId),
 		exception);
 	EXCEPTION_THROW
-	uniqueHttpHeaderIndex =
-		resultsUserAgents->items[0].b.uniqueHttpHeaderIndex;
 	printf("\nDesktop DeviceId: %s\n", deviceId);
 
 	ResultsHashFromDeviceId(
 		resultsDeviceId,
-		uniqueHttpHeaderIndex,
 		deviceId,
 		sizeof(deviceId),
 		exception);
@@ -295,19 +288,14 @@ void fiftyoneDegreesHashMatchForDeviceId(
 		sizeof(deviceId),
 		exception);
 	EXCEPTION_THROW
-	uniqueHttpHeaderIndex =
-		resultsUserAgents->items[0].b.uniqueHttpHeaderIndex;
 	printf("\nMedia hub DeviceId: %s\n", deviceId);
 
 	ResultsHashFromDeviceId(
 		resultsDeviceId,
-		uniqueHttpHeaderIndex,
 		deviceId,
 		sizeof(deviceId),
 		exception);
 	EXCEPTION_THROW
-	uniqueHttpHeaderIndex =
-		resultsUserAgents->items[0].b.uniqueHttpHeaderIndex;
 	printf("   IsMobile: %s\n", getPropertyValueAsString(
 		resultsDeviceId,
 		"IsMobile"));
