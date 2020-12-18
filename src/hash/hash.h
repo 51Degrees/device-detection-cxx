@@ -584,6 +584,9 @@ EXTERNAL void fiftyoneDegreesResultsHashFromUserAgent(
  * Process a single Device Id and populate the device offsets in the results
  * structure.
  * @param results preallocated results structure to populate
+ * @param uniqueHttpHeaderIndex the unique http header that the result should
+ * be categoried with. This can be obtained from the previous result or by
+ * the component key value pair.
  * @param deviceId string to process
  * @param deviceIdLength of the deviceId string
  * @param exception pointer to an exception data structure to be used if an
