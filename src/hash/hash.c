@@ -2909,7 +2909,9 @@ const char* fiftyoneDegreesResultsHashGetNoValueReasonMessage(
 		return "The property index provided is invalid, either the property "
 			"does not exist, or the data set has been initialized without it.";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_RESULTS:
-		return "The results are empty. This is probably because there was no evidence.";
+		return "The evidence required to determine this property was not "
+		    "supplied. The most common evidence passed to this engine is "
+		    "'header.user-agent'.";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_RESULT_FOR_PROPERTY:
 		return "None of the results contain a value for the requested property.";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_DIFFERENCE:
@@ -2919,8 +2921,9 @@ const char* fiftyoneDegreesResultsHashGetNoValueReasonMessage(
 		return "There were no values because no hash nodes were matched in "
 			"the evidence.";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE:
-		return "The results contained a null profile for the component which "
-			"the required property belongs to.";
+	    return "No matching profiles could be found for the supplied evidence. "
+	        "A 'best guess' can be returned by configuring more lenient "
+	        "matching rules. See https://51degrees.com/documentation/4.1/_device_detection__features__false_positive_control.html";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_UNKNOWN:
 	default:
 		return "The reason for missing values is unknown.";
