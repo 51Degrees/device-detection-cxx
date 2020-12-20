@@ -36,6 +36,146 @@ stages:
         ArtifactName: 'enterpriseFile'
         publishLocation: 'Container'
 
+
+- stage: Linux
+  dependsOn: [Data]
+  jobs:
+  - job: Build_And_Test
+
+    timeoutInMinutes: 240
+
+    pool:
+      name: Hosted Ubuntu 1604
+      
+    strategy:
+      matrix:
+        debug x86 multi threads:
+          BuildConfiguration: Debug
+          BuildPlatform: x86
+          BuildArguments: -D32bit=ON -DNoThreading=OFF
+        release x86 multi threads:
+          BuildConfiguration: Release 
+          BuildPlatform: x86
+          BuildArguments: -D32bit=ON -DNoThreading=OFF
+        debug x64 multi threads:
+          BuildConfiguration: Debug
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=OFF
+        release x64 multi threads:
+          BuildConfiguration: Release 
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=OFF
+        debug x86 single thread:
+          BuildConfiguration: Debug
+          BuildPlatform: x86
+          BuildArguments: -D32bit=ON -DNoThreading=ON
+        release x86 single thread:
+          BuildConfiguration: Release  
+          BuildPlatform: x86
+          BuildArguments: -D32bit=ON -DNoThreading=ON
+        debug x64 single thread:
+          BuildConfiguration: Debug
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=ON
+        release x64 single thread:
+          BuildConfiguration: Release  
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=ON
+
+    steps:
+
+    - checkout: self
+      submodules: recursive
+      lfs: true
+
+    - script: |
+        ulimit -c unlimited
+        echo "cat /proc/sys/kernel/core_pattern"
+        cat /proc/sys/kernel/core_pattern
+        echo "cat /proc/sys/kernel/core_uses_pid"
+        cat /proc/sys/kernel/core_uses_pid
+        echo "sudo systemctl enable apport.service"
+        sudo systemctl enable apport.service
+        echo "sysctl -w kernel.core_pattern=core.%p"
+        sudo sysctl -w kernel.core_pattern="core.%p"
+        cat /proc/sys/kernel/core_pattern
+        sudo apt-get -y install \
+          gcc-multilib \
+          g++-multilib        
+      displayName: 'Install Required Packages'
+      
+    - script: |
+        wget http://ftp.br.debian.org/debian/pool/main/d/dmalloc/libdmalloc-dev_5.5.2-6_i386.deb
+        sudo dpkg --add-architecture i386
+        sudo apt-get -y update
+        sudo dpkg -i libdmalloc-dev_5.5.2-6_i386.deb
+        sudo sudo apt-get -y install -f
+      displayName: 'Install Required 32bit Packages'
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
+      
+    - script: |
+        sudo apt-get -y install libdmalloc-dev
+      displayName: 'Install Required 64bit Packages'
+      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Enterprise Data File'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'enterpriseFile'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - script: |
+          mv $(System.ArtifactsDirectory)/enterpriseFile/51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)/device-detection-data/51Degrees-EnterpriseV4.1.hash
+      displayName: 'Move Data File'
+
+    - task: Bash@3
+      displayName: 'Create Build Directory'
+      inputs:
+        targetType: 'inline'
+        script: 'mkdir build'
+
+    - task: CMake@1
+      displayName: 'CMake Configure'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '.. -DCMAKE_BUILD_TYPE=$(BuildConfiguration) $(BuildArguments)'
+
+    - task: CMake@1
+      displayName: 'CMake Build'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '--build .'
+
+    - bash: 'ctest -E ".*TestOfflineProcessing.*" -T test --no-compress-output'
+      workingDirectory: build
+      failOnStderr: true
+      displayName: 'Run Tests'
+      
+    - task: CopyFiles@2
+      displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+      inputs:
+        SourceFolder: '$(build.sourcesdirectory)'
+        Contents: '**'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+        CleanTargetFolder: true
+      condition: failed()
+      
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'drop'
+      condition: failed()
+
+    - task: PublishTestResults@2
+      condition: true
+      inputs:
+        testResultsFormat: 'CTest'
+        testRunTitle: 'Linux CTest $(BuildConfiguration) $(BuildArguments)'
+        testResultsFiles: '**/Test.xml'
+
+
 - stage: MacOS
   dependsOn: [Data]
   jobs:
@@ -52,6 +192,18 @@ stages:
           BuildConfiguration: Debug
           BuildPlatform: x64
           BuildArguments: -DNoThreading=OFF
+        release x64 multi threads:
+          BuildConfiguration: Release 
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=OFF
+        debug x64 single thread:
+          BuildConfiguration: Debug
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=ON
+        release x64 single thread:
+          BuildConfiguration: Release  
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=ON
 
     steps:
 
