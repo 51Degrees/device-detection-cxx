@@ -37,6 +37,211 @@ stages:
         publishLocation: 'Container'
 
 
+- stage: Windows
+  dependsOn: [Data]
+  pool:
+    name: Hosted VS2017
+    demands:
+    - msbuild
+    - vstest
+
+  jobs:
+ 
+  - job: Build_VisualStudio  
+      
+    strategy:
+      maxParallel: 1
+      matrix:
+        debug x86 multi threads:
+          BuildConfiguration: Debug
+          BuildPlatform: x86
+          BuildDirectory: Win32/Debug
+        release x86 multi threads:
+          BuildConfiguration: Release 
+          BuildPlatform: x86
+          BuildDirectory: Win32/Release
+        debug x64 multi threads:
+          BuildConfiguration: Debug
+          BuildPlatform: x64
+          BuildDirectory: x64/Debug
+        release x64 multi threads:
+          BuildConfiguration: Release
+          BuildPlatform: x64 
+          BuildDirectory: x64/Release
+        ebug x86 single thread:
+          BuildConfiguration: Debug-Single
+          BuildPlatform: x86
+          BuildDirectory: Win32/Debug
+        release x86 single thread:
+          BuildConfiguration: Release-Single
+          BuildPlatform: x86
+          BuildDirectory: Win32/Release
+        debug x64 single thread:
+          BuildConfiguration: Debug-Single
+          BuildPlatform: x64
+          BuildDirectory: x64/Debug
+        release x64 single thread:
+          BuildConfiguration: Release-Single
+          BuildPlatform: x64 
+          BuildDirectory: x64/Release
+
+    timeoutInMinutes: 240
+
+    steps:
+
+    - checkout: self
+      submodules: recursive
+      lfs: true
+      persistCredentials: true
+
+    - powershell: |
+        git lfs install
+        ls
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs fetch
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs checkout
+        ls
+      workingDirectory: 'device-detection-data'
+      displayName: 'Fetch LFS Data Files'
+
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Enterprise Data File'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'enterpriseFile'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - script: |
+          mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+      displayName: 'Move Data File'
+
+    - task: NuGetCommand@2
+      inputs:
+        command: 'restore'
+        restoreSolution: 'VisualStudio/DeviceDetection.sln'
+        feedsToUse: 'select'
+        vstsFeed: 'd2431f86-c1e6-4d8b-8d27-311cf3614847'
+
+    - task: MSBuild@1
+      displayName: 'Build Visual Studio Solution'
+      inputs:
+        solution: 'VisualStudio/DeviceDetection.sln'
+        msbuildArchitecture: x64
+        platform: '$(BuildPlatform)'
+        configuration: '$(BuildConfiguration)'
+        clean: true
+
+    - bash: './FiftyOne.DeviceDetection.Hash.Tests.exe --gtest_filter="-*TestOfflineProcessing*" --gtest_catch_exceptions=1 --gtest_break_on_failure=0 --gtest_output=xml:testoutput.xml'
+      workingDirectory: VisualStudio/FiftyOne.DeviceDetection.Hash.Tests/$(BuildDirectory)
+      failOnStderr: true
+      displayName: 'Run Hash Tests'
+
+    - task: PublishTestResults@2
+      condition: true
+      inputs:
+        testResultsFormat: 'JUnit'
+        testRunTitle: 'Visual Studio $(BuildPlatform) $(BuildConfiguration)'
+        testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\$(BuildPlatform)\$(BuildConfiguration)\testoutput.xml'
+
+  - job: Build_And_Test_CMake
+
+    timeoutInMinutes: 240
+
+    strategy:
+      maxParallel: 1
+      matrix:
+        debug x86 multi threads:
+          BuildConfiguration: Debug
+          BuildPlatform: Win32
+          BuildArguments: -DNoThreading=OFF
+        release x86 multi threads:
+          BuildConfiguration: Release 
+          BuildPlatform: Win32
+          BuildArguments: -DNoThreading=OFF
+        debug x64 multi threads:
+          BuildConfiguration: Debug
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=OFF
+        release x64 multi threads:
+          BuildConfiguration: Release  
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=OFF
+        debug x86 single thread:
+          BuildConfiguration: Debug
+          BuildPlatform: Win32
+          BuildArguments: -DNoThreading=ON
+        release x86 single thread:
+          BuildConfiguration: Release 
+          BuildPlatform: Win32
+          BuildArguments: -DNoThreading=ON
+        debug x64 single thread:
+          BuildConfiguration: Debug
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=ON
+        release x64 single thread:
+          BuildConfiguration: Release  
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=ON
+
+    steps:
+
+    - checkout: self
+      submodules: recursive
+      lfs: true
+      persistCredentials: true
+
+    - powershell: |
+        git lfs install
+        ls
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs fetch
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs checkout
+        ls
+      workingDirectory: 'device-detection-data'
+      displayName: 'Fetch LFS Data Files'
+
+    - task: Bash@3
+      displayName: 'Create Build Directory'
+      inputs:
+        targetType: 'inline'
+        script: 'mkdir build'
+
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Enterprise Data File'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'enterpriseFile'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - script: |
+          mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+      displayName: 'Move Data File'
+
+    - task: CMake@1
+      displayName: 'CMake Configure'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '.. -A $(BuildPlatform) $(BuildArguments)'
+
+    - task: CMake@1
+      displayName: 'CMake Build'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '--build . --config $(BuildConfiguration)'
+
+    - bash: 'ctest -R ".*Hash.*" -E ".*TestOfflineProcessing.*" -T test --no-compress-output'
+      workingDirectory: build
+      failOnStderr: true
+      displayName: 'Run Tests'
+
+    - task: PublishTestResults@2
+      condition: true
+      inputs:
+        testResultsFormat: 'CTest'
+        testRunTitle: 'Windows CTest $(BuildPlatform) $(BuildConfiguration) $(BuildArguments)'
+        testResultsFiles: '**/Test.xml'
+
+
 - stage: Linux
   dependsOn: [Data]
   jobs:
