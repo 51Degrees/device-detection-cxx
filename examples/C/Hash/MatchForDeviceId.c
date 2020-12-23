@@ -107,19 +107,24 @@ For more information on how device detection works please see:
 https://51degrees.com/support/documentation/how-device-detection-works
 */
 
-#ifdef _DEBUG
-#ifdef _MSC_VER
+#include <stdio.h>
+
+// Windows 'crtdbg.h' needs to be included
+// before 'malloc.h'
+#if defined(_DEBUG) && defined(_MSC_VER)
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
-#else
-#include "dmalloc.h"
-#endif
 #endif
 
-#include <stdio.h>
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
+
+// 'dmalloc.h' needs to be included after
+// 'string.h'
+#if defined(_DEBUG) && !defined(_MSC_VER)
+#include "dmalloc.h"
+#endif
 
 static const char *dataDir = "device-detection-data";
 
@@ -157,7 +162,7 @@ void fiftyoneDegreesHashMatchForDeviceId(
 	const char *dataFilePath,
 	ConfigHash *config) {
 	EXCEPTION_CREATE;
-	const char deviceId[40] = "";
+	char deviceId[40] = "";
 	ResourceManager manager;
 
 	// Set the properties to be returned for each User-Agent.
@@ -209,6 +214,7 @@ void fiftyoneDegreesHashMatchForDeviceId(
 		mobileUserAgent,
 		strlen(mobileUserAgent),
 		exception);
+	EXCEPTION_THROW
 	printf("   IsMobile: %s\n", getPropertyValueAsString(
 		resultsUserAgents,
 		"IsMobile"));
@@ -219,12 +225,15 @@ void fiftyoneDegreesHashMatchForDeviceId(
 		(char*)deviceId,
 		sizeof(deviceId),
 		exception);
+	EXCEPTION_THROW
 	printf("\nMobile DeviceId: %s\n", deviceId);
+
 	ResultsHashFromDeviceId(
 		resultsDeviceId,
 		deviceId,
 		sizeof(deviceId),
 		exception);
+	EXCEPTION_THROW
 	printf("   IsMobile: %s\n", getPropertyValueAsString(
 		resultsDeviceId,
 		"IsMobile"));
@@ -236,6 +245,7 @@ void fiftyoneDegreesHashMatchForDeviceId(
 		desktopUserAgent,
 		strlen(desktopUserAgent),
 		exception);
+	EXCEPTION_THROW
 	printf("   IsMobile: %s\n", getPropertyValueAsString(
 		resultsUserAgents, 
 		"IsMobile"));
@@ -246,12 +256,15 @@ void fiftyoneDegreesHashMatchForDeviceId(
 		(char*)deviceId,
 		sizeof(deviceId),
 		exception);
+	EXCEPTION_THROW
 	printf("\nDesktop DeviceId: %s\n", deviceId);
+
 	ResultsHashFromDeviceId(
 		resultsDeviceId,
 		deviceId,
 		sizeof(deviceId),
 		exception);
+	EXCEPTION_THROW
 	printf("   IsMobile: %s\n", getPropertyValueAsString(
 		resultsDeviceId,
 		"IsMobile"));
@@ -263,6 +276,7 @@ void fiftyoneDegreesHashMatchForDeviceId(
 		mediaHubUserAgent,
 		strlen(mediaHubUserAgent),
 		exception);
+	EXCEPTION_THROW
 	printf("   IsMobile: %s\n", getPropertyValueAsString(
 		resultsUserAgents, 
 		"IsMobile"));
@@ -273,12 +287,15 @@ void fiftyoneDegreesHashMatchForDeviceId(
 		(char*)deviceId,
 		sizeof(deviceId),
 		exception);
+	EXCEPTION_THROW
 	printf("\nMedia hub DeviceId: %s\n", deviceId);
+
 	ResultsHashFromDeviceId(
 		resultsDeviceId,
 		deviceId,
 		sizeof(deviceId),
 		exception);
+	EXCEPTION_THROW
 	printf("   IsMobile: %s\n", getPropertyValueAsString(
 		resultsDeviceId,
 		"IsMobile"));

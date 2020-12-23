@@ -26,6 +26,15 @@
 #include "../../../src/hash/EngineHash.hpp"
 #include "../../../src/common-cxx/textfile.h"
 
+#ifdef _DEBUG
+#ifdef _MSC_VER
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#else
+#include "dmalloc.h"
+#endif
+#endif
+
 #define THREAD_COUNT 4
 
 static const char *dataDir = "device-detection-data";
