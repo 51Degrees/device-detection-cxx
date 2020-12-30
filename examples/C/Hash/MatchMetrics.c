@@ -115,19 +115,24 @@ fiftyoneDegreesResourceManagerFree(&manager);
 ```
 */
 
-#ifdef _DEBUG
-#ifdef _MSC_VER
+#include <stdio.h>
+
+// Windows 'crtdbg.h' needs to be included
+// before 'malloc.h'
+#if defined(_DEBUG) && defined(_MSC_VER)
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
-#else
-#include "dmalloc.h"
-#endif
 #endif
 
-#include <stdio.h>
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
+
+// 'dmalloc.h' needs to be included after
+// 'string.h'
+#if defined(_DEBUG) && !defined(_MSC_VER)
+#include "dmalloc.h"
+#endif
 
 static const char *dataDir = "device-detection-data";
 

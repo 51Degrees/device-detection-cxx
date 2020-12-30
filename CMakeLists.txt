@@ -10,6 +10,11 @@ project(51DegreesDeviceDetection VERSION 4.0.1 LANGUAGES CXX C)
 
 set(DD ${CMAKE_CURRENT_LIST_DIR}/src)
 set(HASH ${CMAKE_CURRENT_LIST_DIR}/src/hash)
+if (NoThreading)
+	set(DMALLOC_LIB dmalloc)
+else()
+	set(DMALLOC_LIB dmallocth)
+endif()
 
 # Device Detection libraries
 
@@ -41,6 +46,8 @@ add_library(fiftyone-hash-c ${HASHC_SRC} ${HASHC_H})
 target_link_libraries(fiftyone-hash-c fiftyone-device-detection-c)
 if (MSVC)
 	target_compile_options(fiftyone-hash-c PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
+else()
+	target_compile_options(fiftyone-hash-c PRIVATE ${COMPILE_OPTION_DEBUG})
 endif()
 
 FILE(GLOB HASHCPP_SRC ${HASH}/*.cpp)
@@ -49,6 +56,11 @@ add_library(fiftyone-hash-cxx ${HASHCPP_SRC} ${HASHCPP_H})
 target_link_libraries(fiftyone-hash-cxx
 	fiftyone-hash-c
 	fiftyone-device-detection-cxx)
+if (MSVC)
+	target_compile_options(fiftyone-hash-cxx PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
+else()
+	target_compile_options(fiftyone-hash-cxx PRIVATE ${COMPILE_OPTION_DEBUG})
+endif()
 
 set_target_properties(fiftyone-hash-c fiftyone-hash-cxx
 	PROPERTIES FOLDER "Device Detection/Hash") 
@@ -58,6 +70,11 @@ set_target_properties(fiftyone-hash-c fiftyone-hash-cxx
 file(WRITE null.cpp "")
 add_library(fiftyone-device-detection-complete SHARED null.cpp)
 target_link_libraries(fiftyone-device-detection-complete fiftyone-hash-cxx)
+if (MSVC)
+	target_compile_options(fiftyone-device-detection-complete PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
+else()
+	target_compile_options(fiftyone-device-detection-complete PRIVATE ${COMPILE_OPTION_DEBUG})
+endif()
 
 set_target_properties(fiftyone-device-detection-complete PROPERTIES PUBLIC_HEADER "${HASH}/hash.h")
 
@@ -85,17 +102,35 @@ foreach (api "Hash")
 					add_executable(${name} ${file}
 					${CMAKE_CURRENT_LIST_DIR}/examples/${upperlangext}/${api}/ExampleBase.cpp
 					${CMAKE_CURRENT_LIST_DIR}/examples/${upperlangext}/${api}/ExampleBase.hpp)
-					target_link_libraries(${name} fiftyone-${lowerapi}-cxx)
+					if (MSVC)
+						target_link_libraries(${name} fiftyone-${lowerapi}-cxx)
+					else()
+						if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+							target_include_directories(${name} PRIVATE "/usr/local/include")
+							target_link_directories(${name} PRIVATE "/usr/local/lib")
+						endif()
+						target_link_libraries(${name} fiftyone-${lowerapi}-cxx ${DMALLOC_LIB})
+					endif()
 				elseif("${langext}" STREQUAL "c")
 					MESSAGE("-- Found C example '${name}'")
 					add_executable(${name} ${file})
-					target_link_libraries(${name} fiftyone-${lowerapi}-c)
+					if (MSVC)
+						target_link_libraries(${name} fiftyone-${lowerapi}-c)
+					else()
+						if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+							target_include_directories(${name} PRIVATE "/usr/local/include")
+							target_link_directories(${name} PRIVATE "/usr/local/lib")
+						endif()
+						target_link_libraries(${name} fiftyone-${lowerapi}-c ${DMALLOC_LIB})
+					endif()
 				endif()
 				set_target_properties(${name}
 					PROPERTIES FOLDER
-					"Examples/Device Detection/${api}/${upperlangext}") 
+					"Examples/Device Detection/${api}/${upperlangext}")
 				if (MSVC)
 					target_compile_options(${name} PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
+				else()
+					target_compile_options(${name} PRIVATE ${COMPILE_OPTION_DEBUG})
 				endif()
 			endif()
 		endforeach()
@@ -119,17 +154,24 @@ add_library(fiftyone-device-detection-test-base
 	${COMMON_TEST}/EngineTests.cpp
 	${COMMON_TEST}/ExampleTests.cpp)
 target_link_libraries(fiftyone-device-detection-test-base gtest_main)
+if (NOT MSVC)
+	target_compile_options(fiftyone-device-detection-test-base PRIVATE ${COMPILE_OPTION_DEBUG})
+endif()
 
 set_target_properties(fiftyone-device-detection-test-base PROPERTIES FOLDER "Tests") 
 
 add_executable(HashTests ${HASH_TEST_SRC} ${HASH_TEST_H})
 target_link_libraries(HashTests
 	fiftyone-device-detection-test-base
-    fiftyone-hash-cxx)
+   		fiftyone-hash-cxx)
 gtest_discover_tests(HashTests)
 
 set_target_properties(HashTests PROPERTIES FOLDER "Tests")
 
+# Don't enable _DEBUG here for Linux, because that will trigger
+# dmalloc usage in Example tests which are not required for testing.
+# Non-example code which require _DEBUG is dealed separately when
+# building the specific libraries.
 if (MSVC)
 	target_compile_options(HashTests PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
 endif()
