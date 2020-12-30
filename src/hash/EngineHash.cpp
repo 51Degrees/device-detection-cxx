@@ -74,6 +74,7 @@ EngineHash::EngineHash(
 		(size_t)length,
 		exception);
 	if (status != SUCCESS) {
+		Free(dataCopy);
 		throw StatusCodeException(status);
 	}
 	EXCEPTION_THROW;

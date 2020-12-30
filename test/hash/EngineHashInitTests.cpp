@@ -46,15 +46,84 @@ public:
         Base::TearDown();
     }
 
+    /**
+     * Check that when initializing from a file which has the wrong version,
+     * the correct error is thrown, and memory is cleaned up.
+     */
+    void wrongDataVersionFile(ConfigHash* config) {
+        RequiredPropertiesConfig properties;
+        try {
+            EngineHash* engine = new EngineHash(badVersionFileName, config, &properties);
+            FAIL() << L"No exception was thrown";
+        }
+        catch (exception & e) {
+            const char* expected = fiftyoneDegreesStatusGetMessage(
+                FIFTYONE_DEGREES_STATUS_INCORRECT_VERSION,
+                NULL);
+            ASSERT_STREQ(
+                e.what(),
+                expected);
+            fiftyoneDegreesFree((void*)expected);
+
+        }
+    }
+    
+    /**
+     * Check that when initializing from a file which has the correct version
+     * but corrupted data, the correct error is thrown, and memory is cleaned up.
+     */
+    void badDataFile(ConfigHash* config) {
+        RequiredPropertiesConfig properties;
+        try {
+            EngineHash* engine = new EngineHash(badDataFileName, config, &properties);
+            FAIL() << L"No exception was thrown";
+        }
+        catch (exception & e) {
+            const char* expected = fiftyoneDegreesStatusGetMessage(
+                FIFTYONE_DEGREES_STATUS_CORRUPT_DATA,
+                NULL);
+            ASSERT_STREQ(
+                e.what(),
+                expected);
+            fiftyoneDegreesFree((void*)expected);
+        }
+    }
+
+    /**
+     * Check that when initializing from a file which is too small and does not
+     * contain enough data to fill the header, the correct error is thrown,
+     * and memory is cleaned up.
+     */
+    void smallDataFile(ConfigHash *config) {
+        RequiredPropertiesConfig properties;
+        try {
+            EngineHash* engine = new EngineHash(smallDataFileName, config, &properties);
+            FAIL() << L"No exception was thrown";
+        }
+        catch (exception & e) {
+            const char* expected = fiftyoneDegreesStatusGetMessage(
+                FIFTYONE_DEGREES_STATUS_CORRUPT_DATA,
+                NULL);
+            ASSERT_STREQ(
+                e.what(),
+                expected);
+            fiftyoneDegreesFree((void*)expected);
+
+        }
+    }
+
 private:
     void writeTestFiles() {
-        void* nullHeader =
-            calloc(1, sizeof(fiftyoneDegreesDataSetHashHeader));
+        void* garbledHeader =
+            malloc(sizeof(fiftyoneDegreesDataSetHashHeader));
+        for (int i = 0; i < sizeof(fiftyoneDegreesDataSetHashHeader); i++) {
+            ((byte*)garbledHeader)[i] = 12;
+        }
         
         ofstream badVersionFile(badVersionFileName, ios::out | ios::binary);
         if (badVersionFile.is_open()) {
             badVersionFile.write((char*)badVersion, sizeof(int32_t) * 4);
-            badVersionFile.write((char*)nullHeader, sizeof(fiftyoneDegreesDataSetHashHeader));
+            badVersionFile.write((char*)garbledHeader, sizeof(fiftyoneDegreesDataSetHashHeader));
             badVersionFile.close();
         }
         else {
@@ -64,7 +133,7 @@ private:
         ofstream badDataFile(badDataFileName, ios::out | ios::binary);
         if (badDataFile.is_open()) {
             badDataFile.write((char*)goodVersion, sizeof(int32_t) * 4);
-            badDataFile.write((char*)nullHeader, sizeof(fiftyoneDegreesDataSetHashHeader));
+            badDataFile.write((char*)garbledHeader, sizeof(fiftyoneDegreesDataSetHashHeader));
             badDataFile.close();
         }
         else {
@@ -73,13 +142,13 @@ private:
 
         ofstream smallDataFile(smallDataFileName, ios::out | ios::binary);
         if (smallDataFile.is_open()) {
-            smallDataFile.write((char*)nullHeader, sizeof(byte));
+            smallDataFile.write((char*)garbledHeader, sizeof(byte));
             smallDataFile.close();
         }
         else {
             cout << "Unable to open file";
         }
-        free(nullHeader);
+        free(garbledHeader);
     }
     void removeTestFiles() {
         if (remove(badVersionFileName) != 0) {
@@ -94,75 +163,41 @@ private:
     }
 };
 
-/**
- * Check that when initializing from a file which has the wrong version,
- * the correct error is thrown, and memory is cleaned up.
- */
-TEST_F(EngineHashInitTests, WrongDataVersion_File) {
-    ConfigHash config;
-    RequiredPropertiesConfig properties;
-    try {
-        EngineHash* engine = new EngineHash(badVersionFileName, &config, &properties);
-        FAIL() << L"No exception was thrown";
-    }
-    catch (exception &e) {
-        const char* expected = fiftyoneDegreesStatusGetMessage(
-            FIFTYONE_DEGREES_STATUS_INCORRECT_VERSION,
-            NULL);
-        ASSERT_STREQ(
-            e.what(),
-            expected);
-        fiftyoneDegreesFree((void*)expected);
-
-    }
+#define TEST_WRONG_VERSION_FILE(c) \
+TEST_F(EngineHashInitTests,WrongDataVersion_File_##c) { \
+    ConfigHash config; \
+    config.set##c##(); \
+    wrongDataVersionFile(&config); \
 }
 
-/**
- * Check that when initializing from a file which has the correct version
- * but corrupted data, the correct error is thrown, and memory is cleaned up.
- */
-TEST_F(EngineHashInitTests, BadData_File) {
-    ConfigHash config;
-    RequiredPropertiesConfig properties;
-    try {
-        EngineHash* engine = new EngineHash(badDataFileName, &config, &properties);
-        FAIL() << L"No exception was thrown";
-    }
-    catch (exception & e) {
-        const char* expected = fiftyoneDegreesStatusGetMessage(
-            FIFTYONE_DEGREES_STATUS_CORRUPT_DATA,
-            NULL);
-        ASSERT_STREQ(
-            e.what(),
-            expected);
-        fiftyoneDegreesFree((void*)expected);
+TEST_WRONG_VERSION_FILE(HighPerformance);
+TEST_WRONG_VERSION_FILE(LowMemory);
+TEST_WRONG_VERSION_FILE(Balanced);
+TEST_WRONG_VERSION_FILE(BalancedTemp);
 
-    }
+#define TEST_BAD_DATA_FILE(c) \
+TEST_F(EngineHashInitTests,BadData_File_##c) { \
+    ConfigHash config; \
+    config.set##c##(); \
+    badDataFile(&config); \
 }
 
-/**
- * Check that when initializing from a file which is too small and does not
- * contain enough data to fill the header, the correct error is thrown,
- * and memory is cleaned up.
- */
-TEST_F(EngineHashInitTests, SmallData_File) {
-    ConfigHash config;
-    RequiredPropertiesConfig properties;
-    try {
-        EngineHash* engine = new EngineHash(smallDataFileName, &config, &properties);
-        FAIL() << L"No exception was thrown";
-    }
-    catch (exception & e) {
-        const char* expected = fiftyoneDegreesStatusGetMessage(
-            FIFTYONE_DEGREES_STATUS_CORRUPT_DATA,
-            NULL);
-        ASSERT_STREQ(
-            e.what(),
-            expected);
-        fiftyoneDegreesFree((void*)expected);
+TEST_BAD_DATA_FILE(HighPerformance);
+TEST_BAD_DATA_FILE(LowMemory);
+TEST_BAD_DATA_FILE(Balanced);
+TEST_BAD_DATA_FILE(BalancedTemp);
 
-    }
+#define TEST_SMALL_DATA_FILE(c) \
+TEST_F(EngineHashInitTests,SmallData_File_##c) { \
+    ConfigHash config; \
+    config.set##c##(); \
+    smallDataFile(&config); \
 }
+
+TEST_SMALL_DATA_FILE(HighPerformance);
+TEST_SMALL_DATA_FILE(LowMemory);
+TEST_SMALL_DATA_FILE(Balanced);
+TEST_SMALL_DATA_FILE(BalancedTemp);
 
 /**
  * Check that when initializing from memory which has the wrong version,
@@ -259,7 +294,7 @@ TEST_F(EngineHashInitTests, SmallData_Memory) {
     try {
         EngineHash* engine = new EngineHash(
             mem,
-            (long)sizeof(fiftyoneDegreesDataSetHashHeader),
+            (long)sizeof(byte),
             &config,
             &properties);
         FAIL() << L"No exception was thrown";
@@ -272,6 +307,6 @@ TEST_F(EngineHashInitTests, SmallData_Memory) {
             e.what(),
             expected);
         fiftyoneDegreesFree((void*)expected);
-
     }
+    fiftyoneDegreesFree(mem);
 }
