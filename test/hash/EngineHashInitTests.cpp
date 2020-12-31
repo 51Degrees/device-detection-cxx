@@ -166,7 +166,7 @@ private:
 #define TEST_WRONG_VERSION_FILE(c) \
 TEST_F(EngineHashInitTests,WrongDataVersion_File_##c) { \
     ConfigHash config; \
-    config.set##c##(); \
+    config.set##c(); \
     wrongDataVersionFile(&config); \
 }
 
@@ -178,7 +178,7 @@ TEST_WRONG_VERSION_FILE(BalancedTemp);
 #define TEST_BAD_DATA_FILE(c) \
 TEST_F(EngineHashInitTests,BadData_File_##c) { \
     ConfigHash config; \
-    config.set##c##(); \
+    config.set##c(); \
     badDataFile(&config); \
 }
 
@@ -190,7 +190,7 @@ TEST_BAD_DATA_FILE(BalancedTemp);
 #define TEST_SMALL_DATA_FILE(c) \
 TEST_F(EngineHashInitTests,SmallData_File_##c) { \
     ConfigHash config; \
-    config.set##c##(); \
+    config.set##c(); \
     smallDataFile(&config); \
 }
 
