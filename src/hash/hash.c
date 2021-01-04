@@ -100,7 +100,7 @@ dataSet->t = CollectionCreateFromMemory( \
 reader, \
 dataSet->header.t); \
 if (dataSet->t == NULL) { \
-	return INVALID_COLLECTION_CONFIG; \
+	return CORRUPT_DATA; \
 }
 
 #define COLLECTION_CREATE_FILE(t,f) \
@@ -111,7 +111,7 @@ dataSet->t = CollectionCreateFromFile( \
 	dataSet->header.t, \
 	f); \
 if (dataSet->t == NULL) { \
-	return INVALID_COLLECTION_CONFIG; \
+	return CORRUPT_DATA; \
 }
 
 /**

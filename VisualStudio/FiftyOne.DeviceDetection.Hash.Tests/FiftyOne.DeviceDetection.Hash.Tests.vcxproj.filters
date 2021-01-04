@@ -61,6 +61,7 @@
     <ClCompile Include="..\..\test\hash\HashMemLeakReloadFromFileTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\hash\EngineHashInitTests.cpp">
     <ClCompile Include="..\..\test\hash\HashCTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
