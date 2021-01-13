@@ -1270,7 +1270,7 @@ static void initGetEvidenceProperty(
 	char* componentName,
 	char* relatedPropertyName,
 	Exception* exception) {
-	uint32_t index;
+	int index;
 	Component* component;
 	Property* property;
 	String* name;
