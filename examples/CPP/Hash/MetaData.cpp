@@ -125,7 +125,7 @@ namespace FiftyoneDegrees {
 						cout << property->getName() << " - " << property->getDescription() << "\n";
                         delete property;
 					}
-					delete properties;
+					delete localProperties;
 				}
 			};
 		}
