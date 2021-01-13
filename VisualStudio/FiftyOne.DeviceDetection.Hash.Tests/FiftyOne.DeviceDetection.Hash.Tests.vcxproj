@@ -49,6 +49,7 @@
     <IntDir>$(ProjectDir)Intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\examples\CPP\Hash\ExampleBase.hpp" />
     <ClInclude Include="..\..\src\common-cxx\tests\Base.hpp" />
     <ClInclude Include="..\..\src\common-cxx\tests\EngineTests.hpp" />
     <ClInclude Include="..\..\src\common-cxx\tests\ExampleTests.hpp" />
@@ -61,6 +62,7 @@
     <ClInclude Include="..\..\test\ExampleDeviceDetectionTests.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\examples\CPP\Hash\ExampleBase.cpp" />
     <ClCompile Include="..\..\src\common-cxx\tests\Base.cpp" />
     <ClCompile Include="..\..\src\common-cxx\tests\EngineTests.cpp" />
     <ClCompile Include="..\..\src\common-cxx\tests\ExampleTests.cpp" />
@@ -68,6 +70,12 @@
     <ClCompile Include="..\..\test\EngineDeviceDetectionTests.cpp" />
     <ClCompile Include="..\..\test\ExampleDeviceDetectionTests.cpp" />
     <ClCompile Include="..\..\test\hash\EngineHashInitTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleCPPHashGettingStartedTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleCPPHashMatchMetricsTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleCPPHashMetaDataTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleCPPHashReloadFromFileTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleCPPHashReloadFromMemoryTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleCPPHashStronglyTypedTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashFindProfilesTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashMatchForDeviceIdTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashOfflineProcessingTests.cpp" />

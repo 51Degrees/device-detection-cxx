@@ -22,6 +22,7 @@
  
  #include <string>
 #include <iostream>
+#include "../../../src/hash/hash.h"
 #include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
@@ -111,8 +112,8 @@ namespace FiftyoneDegrees {
 				/**
 				 * @copydoc ExampleBase::ExampleBase(string)
 				 */
-				GettingStarted(string dataFilePath)
-					: ExampleBase(dataFilePath) {
+				GettingStarted(string dataFilePath, ConfigHash *config)
+					: ExampleBase(dataFilePath, config) {
 				};
 
 				/**
@@ -166,6 +167,8 @@ namespace FiftyoneDegrees {
 	}
 }
 
+#ifndef TEST
+
 /**
  * Main entry point.
  */
@@ -195,7 +198,10 @@ int main(int argc, char* argv[]) {
 #endif
 #endif
 
-	GettingStarted *gettingStarted = new GettingStarted(dataFilePath);
+	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
+	ConfigHash* config = new ConfigHash(&configHash);
+
+	GettingStarted *gettingStarted = new GettingStarted(dataFilePath, config);
 	gettingStarted->run();
 	delete gettingStarted;
 
@@ -212,3 +218,5 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
+#endif

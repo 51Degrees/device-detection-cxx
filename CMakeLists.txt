@@ -160,7 +160,10 @@ endif()
 
 set_target_properties(fiftyone-device-detection-test-base PROPERTIES FOLDER "Tests") 
 
-add_executable(HashTests ${HASH_TEST_SRC} ${HASH_TEST_H})
+add_executable(HashTests 
+	${HASH_TEST_SRC} ${HASH_TEST_H}
+	${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.cpp
+	${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.hpp)
 target_link_libraries(HashTests
 	fiftyone-device-detection-test-base
    		fiftyone-hash-cxx)

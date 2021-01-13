@@ -23,6 +23,7 @@
  #include <string>
 #include <iostream>
 #include <thread>
+#include "../../../src/hash/hash.h"
 #include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
@@ -158,6 +159,8 @@ namespace FiftyoneDegrees {
 	}
 }
 
+#ifndef TEST
+
 /**
  * Main entry point.
  */
@@ -202,7 +205,8 @@ int main(int argc, char* argv[]) {
 	dmalloc_debug_setup("log-stats,log-non-free,check-fence,log=dmalloc.log");
 #endif
 #endif
-	ConfigHash *config = new ConfigHash();
+	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
+	ConfigHash* config = new ConfigHash(&configHash);
 	config->setConcurrency(THREAD_COUNT);
 	ReloadFromFile *reloadFromFile = new ReloadFromFile(
 		dataFilePath,
@@ -224,3 +228,5 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
+#endif

@@ -22,6 +22,7 @@
  
  #include <string>
 #include <iostream>
+#include "../../../src/hash/hash.h"
 #include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
@@ -111,8 +112,8 @@ namespace FiftyoneDegrees {
 				/**
 				 * @copydoc ExampleBase::ExampleBase(string)
 				 */
-				StronglyTyped(string dataFilePath)
-					: ExampleBase(dataFilePath)
+				StronglyTyped(string dataFilePath, ConfigHash *config)
+					: ExampleBase(dataFilePath, config)
 				{};
 
 				/**
@@ -176,6 +177,8 @@ namespace FiftyoneDegrees {
 	}
 }
 
+#ifndef TEST
+
 int main(int argc, char* argv[]) {
 	fiftyoneDegreesStatusCode status = FIFTYONE_DEGREES_STATUS_SUCCESS;
 	char dataFilePath[FIFTYONE_DEGREES_FILE_MAX_PATH];
@@ -201,8 +204,10 @@ int main(int argc, char* argv[]) {
 	dmalloc_debug_setup("log-stats,log-non-free,check-fence,log=dmalloc.log");
 #endif
 #endif
+	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
+	ConfigHash* config = new ConfigHash(&configHash);
 
-	StronglyTyped *stronglyTyped = new StronglyTyped(dataFilePath);
+	StronglyTyped *stronglyTyped = new StronglyTyped(dataFilePath, config);
 	stronglyTyped->run();
 	delete stronglyTyped;
 
@@ -219,3 +224,5 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
+#endif

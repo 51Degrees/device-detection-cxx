@@ -22,6 +22,7 @@
  
  #include <string>
 #include <iostream>
+#include "../../../src/hash/hash.h"
 #include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
@@ -140,8 +141,8 @@ namespace FiftyoneDegrees {
 				/**
 				 * @copydoc ExampleBase::ExampleBase(string)
 				 */
-				MatchMetrics(string dataFilePath)
-					: ExampleBase(dataFilePath)
+				MatchMetrics(string dataFilePath, ConfigHash *config)
+					: ExampleBase(dataFilePath, config)
 				{};
 
 				const char* getMethodString(int method) {
@@ -231,6 +232,8 @@ namespace FiftyoneDegrees {
 	}
 }
 
+#ifndef TEST
+
 int main(int argc, char* argv[]) {
 	fiftyoneDegreesStatusCode status = FIFTYONE_DEGREES_STATUS_SUCCESS;
 	char dataFilePath[FIFTYONE_DEGREES_FILE_MAX_PATH];
@@ -257,7 +260,10 @@ int main(int argc, char* argv[]) {
 #endif
 #endif
 
-	MatchMetrics *matchMetrics = new MatchMetrics(dataFilePath);
+	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
+	ConfigHash* config = new ConfigHash(&configHash);
+
+	MatchMetrics *matchMetrics = new MatchMetrics(dataFilePath, config);
 	matchMetrics->run();
 	delete matchMetrics;
 
@@ -274,3 +280,5 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
+#endif
