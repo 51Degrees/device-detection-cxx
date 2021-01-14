@@ -44,7 +44,7 @@ ExampleBase::ExampleBase(byte *data, long length, ConfigHash *config) {
 
 	// Set the properties to be returned for each User-Agent.
 	string propertiesString =
-		"ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName";
+		"ScreenPixelsWidth,IsMobile,BrowserName";
 	properties = new RequiredPropertiesConfig(propertiesString);
 
 	// Initialise the engine for device detection.
@@ -60,7 +60,7 @@ ExampleBase::ExampleBase(string dataFilePath, ConfigHash *config) {
 
 	// Set the properties to be returned for each User-Agent.
 	string propertiesString =
-		"ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName,Id";
+		"ScreenPixelsWidth,IsMobile,BrowserName";
 	properties = new RequiredPropertiesConfig(propertiesString);
 
 	// Initialise the engine for device detection.
@@ -100,13 +100,16 @@ unsigned long ExampleBase::generateHash(unsigned char *value) {
 unsigned long ExampleBase::getHashCode(ResultsHash *results) {
 	unsigned long hashCode = 0;
 	uint32_t requiredPropertyIndex;
-	string valueName;
+	Value<string> value;
 
 	for (requiredPropertyIndex = 0;
 		requiredPropertyIndex < (uint32_t)results->getAvailableProperties();
 		requiredPropertyIndex++) {
-		valueName = *results->getValueAsString(requiredPropertyIndex);
-		hashCode ^= generateHash((unsigned char*)(valueName.c_str()));
+		value = results->getValueAsString(requiredPropertyIndex);
+		if (value.hasValue()) {
+			hashCode ^= generateHash(
+				(unsigned char*)(value.getValue().c_str()));
+		}
 	}
 	return hashCode;
 }

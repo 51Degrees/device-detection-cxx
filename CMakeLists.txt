@@ -45,9 +45,9 @@ FILE(GLOB HASHC_H ${HASH}/*.h)
 add_library(fiftyone-hash-c ${HASHC_SRC} ${HASHC_H})
 target_link_libraries(fiftyone-hash-c fiftyone-device-detection-c)
 if (MSVC)
-	target_compile_options(fiftyone-hash-c PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
+	target_compile_options(fiftyone-hash-c PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/WX")
 else()
-	target_compile_options(fiftyone-hash-c PRIVATE ${COMPILE_OPTION_DEBUG})
+	target_compile_options(fiftyone-hash-c PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror")
 endif()
 
 FILE(GLOB HASHCPP_SRC ${HASH}/*.cpp)
@@ -57,9 +57,9 @@ target_link_libraries(fiftyone-hash-cxx
 	fiftyone-hash-c
 	fiftyone-device-detection-cxx)
 if (MSVC)
-	target_compile_options(fiftyone-hash-cxx PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
+	target_compile_options(fiftyone-hash-cxx PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/WX")
 else()
-	target_compile_options(fiftyone-hash-cxx PRIVATE ${COMPILE_OPTION_DEBUG})
+	target_compile_options(fiftyone-hash-cxx PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror")
 endif()
 
 set_target_properties(fiftyone-hash-c fiftyone-hash-cxx
@@ -71,9 +71,9 @@ file(WRITE null.cpp "")
 add_library(fiftyone-device-detection-complete SHARED null.cpp)
 target_link_libraries(fiftyone-device-detection-complete fiftyone-hash-cxx)
 if (MSVC)
-	target_compile_options(fiftyone-device-detection-complete PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
+	target_compile_options(fiftyone-device-detection-complete PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/WX")
 else()
-	target_compile_options(fiftyone-device-detection-complete PRIVATE ${COMPILE_OPTION_DEBUG})
+	target_compile_options(fiftyone-device-detection-complete PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror")
 endif()
 
 set_target_properties(fiftyone-device-detection-complete PROPERTIES PUBLIC_HEADER "${HASH}/hash.h")
@@ -128,9 +128,9 @@ foreach (api "Hash")
 					PROPERTIES FOLDER
 					"Examples/Device Detection/${api}/${upperlangext}")
 				if (MSVC)
-					target_compile_options(${name} PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
+					target_compile_options(${name} PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/WX")
 				else()
-					target_compile_options(${name} PRIVATE ${COMPILE_OPTION_DEBUG})
+					target_compile_options(${name} PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror")
 				endif()
 			endif()
 		endforeach()
@@ -160,7 +160,10 @@ endif()
 
 set_target_properties(fiftyone-device-detection-test-base PROPERTIES FOLDER "Tests") 
 
-add_executable(HashTests ${HASH_TEST_SRC} ${HASH_TEST_H})
+add_executable(HashTests 
+	${HASH_TEST_SRC} ${HASH_TEST_H}
+	${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.cpp
+	${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.hpp)
 target_link_libraries(HashTests
 	fiftyone-device-detection-test-base
    		fiftyone-hash-cxx)

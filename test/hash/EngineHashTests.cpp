@@ -652,7 +652,14 @@ public:
 		evidence["query.51D_ProfileIds"] = string("2147483646|2147483647");
 		ResultsHash *highResults =
 			((EngineHash*)getEngine())->process(&evidence);
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4566)
+#endif
 		evidence["query.51D_ProfileIds"] = string("!�*&:@~{}_+");
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 		ResultsHash *wrongResults =
 			((EngineHash*)getEngine())->process(&evidence);
 		EXPECT_EQ(emptyResults->getDeviceId(), goodResults->getDeviceId());

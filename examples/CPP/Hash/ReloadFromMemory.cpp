@@ -23,6 +23,7 @@
  #include <string>
 #include <iostream>
 #include <thread>
+#include "../../../src/hash/hash.h"
 #include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
@@ -164,6 +165,8 @@ namespace FiftyoneDegrees {
 	}
 }
 
+#ifndef TEST
+
 /**
  * Main entry point.
  */
@@ -241,3 +244,5 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
+#endif

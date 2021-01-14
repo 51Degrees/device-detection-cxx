@@ -1270,7 +1270,7 @@ static void initGetEvidenceProperty(
 	char* componentName,
 	char* relatedPropertyName,
 	Exception* exception) {
-	uint32_t index;
+	int index;
 	Component* component;
 	Property* property;
 	String* name;
@@ -2575,7 +2575,7 @@ static ResultHash* getResultFromResultsWithProperty(
 			for (h = 0; h < results->count; h++) {
 				if (results->items[h].b.uniqueHttpHeaderIndex >= 0 &&
 					results->items[h].b.uniqueHttpHeaderIndex <
-					dataSet->b.b.uniqueHeaders->count &&
+					(int)dataSet->b.b.uniqueHeaders->count &&
 					dataSet->b.b.uniqueHeaders->items[
 						results->items[h].b.uniqueHttpHeaderIndex]
 					.uniqueId == uniqueId) {
@@ -3026,11 +3026,12 @@ static int printProfileSep(
 	char* b,
 	size_t s,
 	const char* f) {
-	int charAdded = -1;
-	if ((charAdded = snprintf(*d, b - *d + s, f)) > 0) {
-	  *d += charAdded;
+	size_t copySize = MIN(b - *d + s, strlen(f));
+	if (copySize > 0) {
+		memcpy(*d, f, copySize);
+		*d += copySize;
 	}
-	return charAdded;
+	return (int)copySize;
 }
 
 /*

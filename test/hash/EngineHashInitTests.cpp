@@ -116,7 +116,7 @@ private:
     void writeTestFiles() {
         void* garbledHeader =
             malloc(sizeof(fiftyoneDegreesDataSetHashHeader));
-        for (int i = 0; i < sizeof(fiftyoneDegreesDataSetHashHeader); i++) {
+        for (size_t i = 0; i < sizeof(fiftyoneDegreesDataSetHashHeader); i++) {
             ((byte*)garbledHeader)[i] = 12;
         }
         

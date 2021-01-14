@@ -230,7 +230,7 @@ string DeviceDetection::Hash::ResultsHash::getTrace(uint32_t resultIndex) {
 	string trace;
 	char *traceStr;
 	int length;
-	if (resultIndex >= 0 && (uint32_t)resultIndex < results->count) {
+	if (resultIndex < results->count) {
 		if (results->items[resultIndex].trace != nullptr) {
 			length = GraphTraceGet(
 				nullptr,

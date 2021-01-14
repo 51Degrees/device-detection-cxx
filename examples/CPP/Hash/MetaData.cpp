@@ -22,6 +22,7 @@
  
  #include <string>
 #include <iostream>
+#include "../../../src/hash/hash.h"
 #include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
@@ -108,8 +109,8 @@ namespace FiftyoneDegrees {
 				/**
 				 * @copydoc ExampleBase::ExampleBase(string)
 				 */
-				MetaDataExample(string dataFilePath)
-					: ExampleBase(dataFilePath)
+				MetaDataExample(string dataFilePath, ConfigHash *config)
+					: ExampleBase(dataFilePath, config)
 				{};
 
 				/**
@@ -125,12 +126,14 @@ namespace FiftyoneDegrees {
 						cout << property->getName() << " - " << property->getDescription() << "\n";
                         delete property;
 					}
-					delete properties;
+					delete localProperties;
 				}
 			};
 		}
 	}
 }
+
+#ifndef TEST
 
 int main(int argc, char* argv[]) {
 	fiftyoneDegreesStatusCode status = FIFTYONE_DEGREES_STATUS_SUCCESS;
@@ -158,7 +161,10 @@ int main(int argc, char* argv[]) {
 #endif
 #endif
 
-	MetaDataExample *metaData = new MetaDataExample(dataFilePath);
+	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
+	ConfigHash* config = new ConfigHash(&configHash);
+
+	MetaDataExample *metaData = new MetaDataExample(dataFilePath, config);
 	metaData->run();
 	delete metaData;
 
@@ -175,3 +181,5 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
+
+#endif
