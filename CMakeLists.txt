@@ -176,9 +176,9 @@ set_target_properties(HashTests PROPERTIES FOLDER "Tests")
 # Non-example code which require _DEBUG is dealed separately when
 # building the specific libraries.
 if (MSVC)
-	target_compile_options(HashTests PRIVATE "/D_CRT_SECURE_NO_WARNINGS")
+	target_compile_options(HashTests PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/WX")
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
-	target_compile_options(HashTests PRIVATE "-Wall" "-Wno-unused-variable" "-Wno-unused-result" "-Wno-unused-but-set-variable")
+	target_compile_options(HashTests PRIVATE "-Wall" "-Werror" "-Wno-unused-variable" "-Wno-unused-result" "-Wno-unused-but-set-variable")
 endif()
