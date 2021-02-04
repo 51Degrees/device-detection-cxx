@@ -2210,6 +2210,21 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		// Reset the results data before iterating the evidence.
 		results->count = 0;
 
+		// Construct the evidence for pseudo header
+		if (dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+			evidence->pseudoEvidence = results->pseudoEvidence;
+
+			PseudoHeadersAddEvidence(
+				evidence,
+				dataSet->b.b.uniqueHeaders,
+				((ConfigHash*)dataSet->b.b.config)->b.maxMatchedUserAgentLength,
+				exception);
+			if (EXCEPTION_FAILED) {
+				evidence->pseudoEvidence = NULL;
+				return;
+			}
+		}
+
 		// Extract any property value overrides from the evidence.
 		OverridesExtractFromEvidence(
 			dataSet->b.b.overridable,
@@ -2249,6 +2264,10 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			}
 		}
 		if (EXCEPTION_FAILED) {
+			PseudoHeadersRemoveEvidence(
+				evidence->pseudoEvidence,
+				dataSet->config.b.maxMatchedUserAgentLength);
+			evidence->pseudoEvidence = NULL;
 			return;
 		}
 
@@ -2264,6 +2283,10 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			&state,
 			setResultFromEvidence);
 		if (EXCEPTION_FAILED) {
+			PseudoHeadersRemoveEvidence(
+				evidence->pseudoEvidence,
+				dataSet->config.b.maxMatchedUserAgentLength);
+			evidence->pseudoEvidence = NULL;
 			return;
 		}
 
@@ -2276,12 +2299,22 @@ void fiftyoneDegreesResultsHashFromEvidence(
 				&state,
 				setResultFromEvidence);
 			if (EXCEPTION_FAILED) {
+				PseudoHeadersRemoveEvidence(
+					evidence->pseudoEvidence,
+					dataSet->config.b.maxMatchedUserAgentLength);
+				evidence->pseudoEvidence = NULL;
 				return;
 			}
 		}
 
 		// Check for and process any profile Id overrides.
 		OverrideProfileIds(evidence, &state, overrideProfileId);
+
+		// Reset pseudo evidence
+		PseudoHeadersRemoveEvidence(
+			evidence->pseudoEvidence,
+			dataSet->config.b.maxMatchedUserAgentLength);
+		evidence->pseudoEvidence = NULL;
 	}
 }
 

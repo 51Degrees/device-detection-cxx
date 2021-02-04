@@ -247,3 +247,62 @@ TEST_F(HashCTests, ResultsHashCreation) {
 	ResultsHashFree(testResults2);
 	ResourceManagerFree(&manager);
 }
+
+// This test make sure that the detection will still when there is no
+// pseudo header count
+TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
+	PropertiesRequired properties = PropertiesDefault;
+	properties.string = commonProperties;
+
+	ConfigHash configHash = HashDefaultConfig;
+	ResourceManager manager;
+
+	ResultsHash* resultsUserAgents;
+
+	char isMobile[40] = "";
+
+	StatusCode status = SUCCESS;
+
+	EXCEPTION_CREATE;
+	// Init manager
+	status = HashInitManagerFromFile(
+		&manager,
+		&configHash,
+		&properties,
+		dataFilePath.c_str(),
+		exception);
+	EXCEPTION_THROW;
+
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+	uint32_t savePseudoHeaderCount =
+		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
+
+	// Set the pseudo header count to mock scenarios
+	// where data file does not support pseudo headers
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
+	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
+	EXPECT_TRUE(resultsUserAgents->pseudoEvidence == NULL);
+
+	// Obtain results from user agent
+	ResultsHashFromUserAgent(
+		resultsUserAgents,
+		mobileUserAgent,
+		strlen(mobileUserAgent),
+		exception);
+	EXCEPTION_THROW;
+	EXPECT_EQ(1, resultsUserAgents->count) << "Only one results should be "
+		<< "returned.\n";
+	EXPECT_EQ(0, strcmp(
+		"True",
+		getPropertyValueAsString(
+			resultsUserAgents,
+			"isMobile",
+			isMobile,
+			sizeof(isMobile)))) << "Property isMobile should be true.\n";
+
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
+	DataSetRelease((DataSetBase*)dataSet);
+	// Free allocated resource
+	ResultsHashFree(resultsUserAgents);
+	ResourceManagerFree(&manager);
+}
