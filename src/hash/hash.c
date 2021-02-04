@@ -2364,7 +2364,43 @@ void fiftyoneDegreesResultsHashFree(
 	}
 	ResultsDeviceDetectionFree(&results->b);
 	DataSetRelease((DataSetBase*)results->b.b.dataSet);
+	if (results->pseudoEvidence != NULL) {
+		Free((void *)results->pseudoEvidence->items[0].originalValue);
+		Free(results->pseudoEvidence);
+	}
 	Free(results);
+}
+
+
+static fiftyoneDegreesEvidenceKeyValuePairArray*
+createPseudoEvidenceKeyValueArray(
+	fiftyoneDegreesDataSetHash* dataSet) {
+	fiftyoneDegreesEvidenceKeyValuePairArray* pseudoEvidence = NULL;
+	if (dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+		FIFTYONE_DEGREES_ARRAY_CREATE(
+			fiftyoneDegreesEvidenceKeyValuePair,
+			pseudoEvidence,
+			dataSet->b.b.uniqueHeaders->pseudoHeadersCount);
+		if (pseudoEvidence != NULL) {
+			size_t maxUaLength = dataSet->config.b.maxMatchedUserAgentLength;
+			void* evidenceMem =
+				(void*)Malloc(
+					pseudoEvidence->count * maxUaLength);
+			if (evidenceMem != NULL) {
+				for (uint32_t i = 0; i < pseudoEvidence->capacity; i++) {
+					pseudoEvidence->items[i].field = NULL;
+					pseudoEvidence->items[i].originalValue =
+						(void*)((char*)evidenceMem + i * maxUaLength);
+					pseudoEvidence->items[i].parsedValue = NULL;
+				}
+			}
+			else {
+				Free(pseudoEvidence);
+				pseudoEvidence = NULL;
+			}
+		}
+	}
+	return pseudoEvidence;
 }
 
 fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
@@ -2408,10 +2444,18 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			}
 		}
 
-		// Reset the property and values list ready for first use sized for 
-		// a single value to be returned.
-		ListInit(&results->values, 1);
-		DataReset(&results->propertyItem.data);
+		results->pseudoEvidence = createPseudoEvidenceKeyValueArray(dataSet);
+		if (results->pseudoEvidence == NULL &&
+			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+			fiftyoneDegreesResultsHashFree(results);
+			results = NULL;
+		}
+		else {
+			// Reset the property and values list ready for first use sized for 
+			// a single value to be returned.
+			ListInit(&results->values, 1);
+			DataReset(&results->propertyItem.data);
+		}
 	}
 
 	return results;

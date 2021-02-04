@@ -351,7 +351,9 @@ typedef struct fiftyone_degrees_result_hash_t {
 	fiftyoneDegreesCollectionItem propertyItem; /**< Property for the current
 												request */ \
 	fiftyoneDegreesList values; /**< List of value items when results are
-								fetched */	
+								fetched */ \
+	fiftyoneDegreesEvidenceKeyValuePairArray* pseudoEvidence; /**< Array of
+															pseudo evidence */
 
 FIFTYONE_DEGREES_ARRAY_TYPE(
 	fiftyoneDegreesResultHash,

@@ -201,3 +201,49 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 	ResultsHashFree(resultsDeviceId);
 	ResourceManagerFree(&manager);
 }
+
+TEST_F(HashCTests, ResultsHashCreation) {
+	PropertiesRequired properties = PropertiesDefault;
+	properties.string = commonProperties;
+
+	ConfigHash configHash = HashDefaultConfig;
+	ResourceManager manager;
+
+	ResultsHash* testResults1, * testResults2;
+
+	StatusCode status = SUCCESS;
+
+	EXCEPTION_CREATE;
+	// Init manager
+	status = HashInitManagerFromFile(
+		&manager,
+		&configHash,
+		&properties,
+		dataFilePath.c_str(),
+		exception);
+	EXCEPTION_THROW;
+
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+	uint32_t savePseudoHeaderCount =
+		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
+
+	// Set the pseudo header count to mock scenarios
+	// where data file does not support pseudo headers
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
+	testResults1 = ResultsHashCreate(&manager, 1, 0);
+	EXPECT_TRUE(testResults1->pseudoEvidence == NULL);
+
+	// Set the pseudo header count to mock scenarios
+	// where pseudo headers are included in the data file
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 2;
+	testResults2 = ResultsHashCreate(&manager, 1, 0);
+	EXPECT_TRUE(testResults2->pseudoEvidence != NULL);
+	EXPECT_EQ(2, testResults2->pseudoEvidence->capacity);
+
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
+	DataSetRelease((DataSetBase *)dataSet);
+	// Free allocated resource
+	ResultsHashFree(testResults1);
+	ResultsHashFree(testResults2);
+	ResourceManagerFree(&manager);
+}
