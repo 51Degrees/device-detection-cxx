@@ -1424,9 +1424,6 @@ static StatusCode initPropertiesAndHeaders(
 		initGetHttpHeaderString,
 		initOverridesFilter,
 		initGetEvidenceProperties);
-	if (status != SUCCESS) {
-		return status;
-	}
 	return status;
 }
 
