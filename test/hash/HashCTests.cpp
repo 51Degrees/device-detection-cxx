@@ -283,12 +283,18 @@ TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
 	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
 	EXPECT_TRUE(resultsUserAgents->pseudoEvidence == NULL);
 
+	fiftyoneDegreesEvidenceKeyValuePairArray* evidence =
+		EvidenceCreate(1);
+	const char* evidenceField = "User-Agent";
+	const char* evidenceValue = mobileUserAgent;
+	EvidenceAddString(
+		evidence,
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+		evidenceField,
+		evidenceValue);
+
 	// Obtain results from user agent
-	ResultsHashFromUserAgent(
-		resultsUserAgents,
-		mobileUserAgent,
-		strlen(mobileUserAgent),
-		exception);
+	ResultsHashFromEvidence(resultsUserAgents, evidence, exception);
 	EXCEPTION_THROW;
 	EXPECT_EQ(1, resultsUserAgents->count) << "Only one results should be "
 		<< "returned.\n";
@@ -301,6 +307,7 @@ TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
 			sizeof(isMobile)))) << "Property isMobile should be true.\n";
 
 	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
+	EvidenceFree(evidence);
 	DataSetRelease((DataSetBase*)dataSet);
 	// Free allocated resource
 	ResultsHashFree(resultsUserAgents);
