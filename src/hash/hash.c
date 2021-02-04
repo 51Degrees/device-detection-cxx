@@ -967,7 +967,7 @@ static void setResultFromUserAgentComponentIndex(
 	detectionState *state,
 	uint32_t componentIndex,
 	Item* rootNodesItem,
-	uint32_t graphOffset) {
+	uint32_t httpHeaderUniqueId) {
 	const ComponentKeyValuePair* graphKey;
 	HashRootNodes* rootNodes;
 	uint32_t headerIndex;
@@ -981,7 +981,7 @@ static void setResultFromUserAgentComponentIndex(
 		complete == false;
 		headerIndex++) {
 		graphKey = &(&component->firstKeyValuePair)[headerIndex];
-		if (graphKey->key == graphOffset) {
+		if (graphKey->key == httpHeaderUniqueId) {
 			rootNodes = (HashRootNodes*)getRootNodes(
 				state->dataSet,
 				graphKey->value,
@@ -1012,7 +1012,7 @@ static void setResultFromUserAgent(
 	detectionState state;
 	uint32_t componentIndex;
 	Item rootNodesItem;
-	uint32_t graphOffset = dataSet->b.b.uniqueHeaders->items[
+	uint32_t uniqueId = dataSet->b.b.uniqueHeaders->items[
 		result->b.uniqueHttpHeaderIndex].uniqueId;
 	DataReset(&rootNodesItem.data);
 	detectionStateInit(&state, result, dataSet, exception);
@@ -1024,7 +1024,7 @@ static void setResultFromUserAgent(
 				&state, 
 				componentIndex, 
 				&rootNodesItem, 
-				graphOffset);
+				uniqueId);
 		}
 	}
 	state.result->iterations = state.iterations;
