@@ -600,7 +600,9 @@ EXTERNAL void fiftyoneDegreesResultsHashFromDeviceId(
 /**
  * Allocates a results structure containing a reference to the Hash data set
  * managed by the resource manager provided. The referenced data set will be
- * kept active until the results structure is freed.
+ * kept active until the results structure is freed. The number of results 
+ * allocated might be bigger to hold additional values returned from internal
+ * process. e.g. Client Hints support.
  * @param manager pointer to the resource manager which manages a Hash data
  * set
  * @param userAgentCapacity number of User-Agents to be able to handle

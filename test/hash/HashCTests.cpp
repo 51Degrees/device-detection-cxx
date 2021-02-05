@@ -202,6 +202,10 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 	ResourceManagerFree(&manager);
 }
 
+/*
+ * Check that the creation of ResultsHash create evidence array correctly
+ * with and without pseudo headers.
+ */
 TEST_F(HashCTests, ResultsHashCreation) {
 	PropertiesRequired properties = PropertiesDefault;
 	properties.string = commonProperties;
@@ -232,6 +236,7 @@ TEST_F(HashCTests, ResultsHashCreation) {
 	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
 	testResults1 = ResultsHashCreate(&manager, 1, 0);
 	EXPECT_TRUE(testResults1->pseudoEvidence == NULL);
+	EXPECT_EQ(1, testResults1->capacity);
 
 	// Set the pseudo header count to mock scenarios
 	// where pseudo headers are included in the data file
@@ -239,6 +244,7 @@ TEST_F(HashCTests, ResultsHashCreation) {
 	testResults2 = ResultsHashCreate(&manager, 1, 0);
 	EXPECT_TRUE(testResults2->pseudoEvidence != NULL);
 	EXPECT_EQ(2, testResults2->pseudoEvidence->capacity);
+	EXPECT_EQ(3, testResults2->capacity);
 
 	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
 	DataSetRelease((DataSetBase *)dataSet);
@@ -248,8 +254,10 @@ TEST_F(HashCTests, ResultsHashCreation) {
 	ResourceManagerFree(&manager);
 }
 
-// This test make sure that the detection will still when there is no
-// pseudo header count
+/*
+ * This test check that the detection will still work when there is no
+ * pseudo header count
+ */
 TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
 	PropertiesRequired properties = PropertiesDefault;
 	properties.string = commonProperties;

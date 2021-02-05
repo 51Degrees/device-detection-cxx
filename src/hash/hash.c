@@ -2439,16 +2439,19 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 	uint32_t overridesCapacity) {
 	uint32_t i;
 	ResultsHash *results;
-	DataSetHash *dataSet;
 
-	// Create a new instance of results.
-	FIFTYONE_DEGREES_ARRAY_CREATE(ResultHash, results, userAgentCapacity);
+	// Increment the inUse counter for the active data set so that we can
+	// track any results that are created.
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(manager);
+
+	// Create a new instance of results. Also take into account the
+	// results potentially added for pseudo evidence.
+	FIFTYONE_DEGREES_ARRAY_CREATE(
+		ResultHash,
+		results,
+		(userAgentCapacity + dataSet->b.b.uniqueHeaders->pseudoHeadersCount));
 
 	if (results != NULL) {
-
-		// Increment the inUse counter for the active data set so that we can
-		// track any results that are created.
-		dataSet = (DataSetHash*)DataSetGet(manager);
 
 		// Initialise the results.
 		ResultsDeviceDetectionInit(
@@ -2486,6 +2489,9 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			ListInit(&results->values, 1);
 			DataReset(&results->propertyItem.data);
 		}
+	}
+	else {
+		DataSetRelease((DataSetBase *)dataSet);
 	}
 
 	return results;
