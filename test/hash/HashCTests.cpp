@@ -196,7 +196,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
  * with and without pseudo headers.
  */
 TEST_F(HashCTests, ResultsHashCreation) {
-	ResultsHash* testResults1, * testResults2;
+	ResultsHash *testResults1, *testResults2, *testResults3;
 
 	StatusCode status = SUCCESS;
 
@@ -204,26 +204,38 @@ TEST_F(HashCTests, ResultsHashCreation) {
 	uint32_t savePseudoHeaderCount =
 		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
 
-	// Set the pseudo header count to mock scenarios
-	// where data file does not support pseudo headers
-	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
+	// Don't create addtional results and pseudo evidence
+	// if Client Hints are not enabled.
+	dataSet->b.b.isClientHintsEnabled = false;
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 2;
 	testResults1 = ResultsHashCreate(&manager, 1, 0);
 	EXPECT_TRUE(testResults1->pseudoEvidence == NULL);
 	EXPECT_EQ(1, testResults1->capacity);
 
-	// Set the pseudo header count to mock scenarios
-	// where pseudo headers are included in the data file
-	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 2;
+	// Don't create addtional results and pseudo evidence
+	// if pseudo headers are not present.
+	dataSet->b.b.isClientHintsEnabled = true;
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
 	testResults2 = ResultsHashCreate(&manager, 1, 0);
-	EXPECT_TRUE(testResults2->pseudoEvidence != NULL);
-	EXPECT_EQ(2, testResults2->pseudoEvidence->capacity);
-	EXPECT_EQ(3, testResults2->capacity);
+	EXPECT_TRUE(testResults2->pseudoEvidence == NULL);
+	EXPECT_EQ(1, testResults2->capacity);
+
+	// Create addtional results and pseudo evidence
+	// if Client Hints are enabled and pseudo headers
+	// are present.
+	dataSet->b.b.isClientHintsEnabled = true;
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 2;
+	testResults3 = ResultsHashCreate(&manager, 1, 0);
+	EXPECT_TRUE(testResults3->pseudoEvidence != NULL);
+	EXPECT_EQ(2, testResults3->pseudoEvidence->capacity);
+	EXPECT_EQ(3, testResults3->capacity);
 
 	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
 	DataSetRelease((DataSetBase *)dataSet);
 	// Free allocated resource
 	ResultsHashFree(testResults1);
 	ResultsHashFree(testResults2);
+	ResultsHashFree(testResults3);
 }
 
 /*
@@ -240,9 +252,11 @@ TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
 	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
 	uint32_t savePseudoHeaderCount =
 		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
+	bool saveIsClientHintsEnabled = dataSet->b.b.isClientHintsEnabled;
 
 	// Set the pseudo header count to mock scenarios
 	// where data file does not support pseudo headers
+	dataSet->b.b.isClientHintsEnabled = false;
 	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
 	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
 	EXPECT_TRUE(resultsUserAgents->pseudoEvidence == NULL);
@@ -271,6 +285,7 @@ TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
 			isMobile,
 			sizeof(isMobile)))) << "Property isMobile should be true.\n";
 
+	dataSet->b.b.isClientHintsEnabled = saveIsClientHintsEnabled;
 	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
 	EvidenceFree(evidence);
 	DataSetRelease((DataSetBase*)dataSet);

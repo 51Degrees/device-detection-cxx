@@ -2450,10 +2450,11 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 
 	// Create a new instance of results. Also take into account the
 	// results potentially added for pseudo evidence.
-	FIFTYONE_DEGREES_ARRAY_CREATE(
-		ResultHash,
-		results,
-		(userAgentCapacity + dataSet->b.b.uniqueHeaders->pseudoHeadersCount));
+	uint32_t capacity = userAgentCapacity;
+	if (dataSet->b.b.isClientHintsEnabled) {
+		capacity += dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
+	}
+	FIFTYONE_DEGREES_ARRAY_CREATE(ResultHash, results, capacity);
 
 	if (results != NULL) {
 
@@ -2481,18 +2482,22 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			}
 		}
 
-		results->pseudoEvidence = createPseudoEvidenceKeyValueArray(dataSet);
-		if (results->pseudoEvidence == NULL &&
-			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
-			fiftyoneDegreesResultsHashFree(results);
-			results = NULL;
+		// Initialise pseudo evidence
+		results->pseudoEvidence = NULL;
+		if (dataSet->b.b.isClientHintsEnabled) {
+			results->pseudoEvidence =
+				createPseudoEvidenceKeyValueArray(dataSet);
+			if (results->pseudoEvidence == NULL &&
+				dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+				fiftyoneDegreesResultsHashFree(results);
+				return NULL;
+			}
 		}
-		else {
-			// Reset the property and values list ready for first use sized for 
-			// a single value to be returned.
-			ListInit(&results->values, 1);
-			DataReset(&results->propertyItem.data);
-		}
+
+		// Reset the property and values list ready for first use sized for 
+		// a single value to be returned.
+		ListInit(&results->values, 1);
+		DataReset(&results->propertyItem.data);
 	}
 	else {
 		DataSetRelease((DataSetBase *)dataSet);
