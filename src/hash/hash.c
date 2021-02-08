@@ -2208,7 +2208,8 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		results->count = 0;
 
 		// Construct the evidence for pseudo header
-		if (dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+		if (dataSet->b.b.isClientHintsEnabled &&
+			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
 			evidence->pseudoEvidence = results->pseudoEvidence;
 
 			PseudoHeadersAddEvidence(
@@ -2307,11 +2308,14 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		// Check for and process any profile Id overrides.
 		OverrideProfileIds(evidence, &state, overrideProfileId);
 
-		// Reset pseudo evidence
-		PseudoHeadersRemoveEvidence(
-			evidence->pseudoEvidence,
-			dataSet->config.b.maxMatchedUserAgentLength);
-		evidence->pseudoEvidence = NULL;
+		if (dataSet->b.b.isClientHintsEnabled &&
+			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+			// Reset pseudo evidence
+			PseudoHeadersRemoveEvidence(
+				evidence->pseudoEvidence,
+				dataSet->config.b.maxMatchedUserAgentLength);
+			evidence->pseudoEvidence = NULL;
+		}
 	}
 }
 
