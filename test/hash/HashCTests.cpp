@@ -1,5 +1,5 @@
+#include "../../src/common-cxx/tests/pch.h"
 #include <string>
-#include "gtest/gtest.h"
 #include "../Constants.hpp"
 #include "../../src/common-cxx/tests/Base.hpp"
 #include "../../src/hash/fiftyone.h"
