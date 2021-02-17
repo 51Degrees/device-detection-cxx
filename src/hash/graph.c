@@ -297,11 +297,18 @@ int fiftyoneDegreesGraphTraceGet(
 				written++;
 			}
 
-			written += snprintf(
-				CURRENT(destination, written),
-				REMAINING(length, written),
-				node->matched ? "(%d) %x\n" : "(%d)\n",
-				node->index, node->hashCode);
+			written += node->matched ?
+				snprintf(
+					CURRENT(destination, written),
+					REMAINING(length, written),
+					"(%d) %x\n",
+					node->index,
+					node->hashCode) :
+				snprintf(
+					CURRENT(destination, written),
+					REMAINING(length, written),
+					"(%d)\n",
+					node->index);
 		}
 		node = node->next;
 	}

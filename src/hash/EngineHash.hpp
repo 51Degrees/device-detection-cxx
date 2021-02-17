@@ -209,6 +209,12 @@ namespace FiftyoneDegrees {
 				 */
 
 			protected:
+				/*
+				 * Using the super class init function here
+				 * so that it is not hidden by the overloaded
+				 * functions.
+				 */
+				using EngineDeviceDetection::init;
 				/**
 				 * @copydoc EngineDeviceDetection::init
 				 */
