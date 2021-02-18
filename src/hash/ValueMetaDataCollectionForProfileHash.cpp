@@ -88,7 +88,16 @@ bool ValueMetaDataCollectionForProfileHash::valueFilter(
 	EXCEPTION_THROW;
 	if (name != nullptr) {
 		if (strcmp(&name->value, result->valueName.c_str()) == 0) {
+#if defined(__linux__) && __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+			// This is valid when working with C data structure
+			// so suppress warning when compiled for C++
 			memcpy(&result->value, value, sizeof(Value));
+#if defined(__linux__) && __GNUC__ >= 8
+#pragma GCC diagnostic pop
+#endif
 			result->found = true;
 		}
 		COLLECTION_RELEASE(result->dataSet->strings, &nameItem);
