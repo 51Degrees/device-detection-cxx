@@ -700,6 +700,9 @@ public:
 	}
 	void reload() { 
 		reloadFile();
+#ifdef _MSC_VER
+		reloadFileWithLock();
+#endif
 	}
 	void metaDataReload() { 
 		verifyMetaDataReload(engine);

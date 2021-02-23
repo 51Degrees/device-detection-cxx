@@ -410,6 +410,46 @@ void EngineDeviceDetectionTests::reloadFile() {
 	delete results2;
 }
 
+#ifdef _MSC_VER
+/*
+ * Only run this test on Windows since Linux and MacOS mainly support
+ * advisory locking which does not prevent other process from accessing
+ * the file.
+ */
+void EngineDeviceDetectionTests::reloadFileWithLock() {
+	EngineDeviceDetection* engine = (EngineDeviceDetection*)getEngine();
+	ResultsDeviceDetection* results1 = engine->processDeviceDetection(
+		mobileUserAgent);
+
+	HFILE hFile;
+	OFSTRUCT lpReOpenBuff;
+	hFile = OpenFile(TEXT(fullName), // open One.txt
+		&lpReOpenBuff,    // normal file
+		OF_SHARE_EXCLUSIVE);
+	if (hFile != HFILE_ERROR) {
+		try {
+			engine->refreshData();
+			FAIL() << "No exception has been thrown.\n";
+		}
+		catch (StatusCodeException e) {
+			ASSERT_EQ(
+				FIFTYONE_DEGREES_STATUS_FILE_PERMISSION_DENIED, e.getCode()) <<
+				"Incorrect status code was returned.\n";
+		}
+		catch (exception e) {
+			FAIL() << "Incorrect exception was thrown.\n";
+		}
+		CloseHandle(*((HANDLE *)&hFile));
+	}
+
+	ResultsDeviceDetection* results2 = engine->processDeviceDetection(
+		mobileUserAgent);
+	EXPECT_EQ(results1->results->b.dataSet, results2->results->b.dataSet);
+	delete results1;
+	delete results2;
+}
+#endif
+
 void EngineDeviceDetectionTests::reloadMemory() {
 	EngineDeviceDetection *engine = (EngineDeviceDetection*)getEngine();
 	ResultsDeviceDetection *results1 = engine->processDeviceDetection(
