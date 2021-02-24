@@ -423,8 +423,8 @@ void EngineDeviceDetectionTests::reloadFileWithLock() {
 
 	HFILE hFile;
 	OFSTRUCT lpReOpenBuff;
-	hFile = OpenFile(TEXT(fullName), // open One.txt
-		&lpReOpenBuff,    // normal file
+	hFile = OpenFile(fullName,
+		&lpReOpenBuff,
 		OF_SHARE_EXCLUSIVE);
 	if (hFile != HFILE_ERROR) {
 		try {
