@@ -21,6 +21,7 @@
  * ********************************************************************* */
  
 #include "EngineDeviceDetectionTests.hpp"
+#include <fstream>
 #ifdef _MSC_FULL_VER
 #include <string.h>
 #else
@@ -69,6 +70,8 @@ void EngineDeviceDetectionTests::TearDown() {
 		data.length = 0;
 	}
 	EngineTests::TearDown();
+	// Reload test use this file, so clean it
+	remove(_reloadTestFile);
 }
 
 void EngineDeviceDetectionTests::userAgentRead(
@@ -423,14 +426,26 @@ void EngineDeviceDetectionTests::reloadFileWithLock() {
 
 	HFILE hFile;
 	OFSTRUCT lpReOpenBuff;
-	hFile = OpenFile(fullName,
+
+	// Create a file to reload from
+	string targetFile = string(_reloadTestFile);
+	ofstream dst (targetFile.c_str());
+	dst << "test data" << endl;
+
+	EXPECT_TRUE(dst.good()) <<
+		"Failed to create output file";
+
+	dst.close();
+
+	// Open exclusive the file
+	hFile = OpenFile(targetFile.c_str(),
 		&lpReOpenBuff,
 		OF_SHARE_EXCLUSIVE);
 	EXPECT_NE(HFILE_ERROR, hFile) <<
 		"Failed to open data file exclusively.\n";
 	
 	try {
-		engine->refreshData();
+		engine->refreshData(targetFile.c_str());
 		FAIL() << "No exception has been thrown.\n";
 	}
 	catch (StatusCodeException e) {
