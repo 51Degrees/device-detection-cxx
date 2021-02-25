@@ -426,21 +426,28 @@ void EngineDeviceDetectionTests::reloadFileWithLock() {
 	hFile = OpenFile(fullName,
 		&lpReOpenBuff,
 		OF_SHARE_EXCLUSIVE);
-	if (hFile != HFILE_ERROR) {
-		try {
-			engine->refreshData();
-			FAIL() << "No exception has been thrown.\n";
-		}
-		catch (StatusCodeException e) {
-			ASSERT_EQ(
-				FIFTYONE_DEGREES_STATUS_FILE_PERMISSION_DENIED, e.getCode()) <<
-				"Incorrect status code was returned.\n";
-		}
-		catch (exception e) {
-			FAIL() << "Incorrect exception was thrown.\n";
-		}
-		CloseHandle(*((HANDLE *)&hFile));
+	EXPECT_NE(HFILE_ERROR, hFile) <<
+		"Failed to open data file exclusively.\n";
+	
+	try {
+		engine->refreshData();
+		FAIL() << "No exception has been thrown.\n";
 	}
+	catch (StatusCodeException e) {
+		ASSERT_EQ(
+			FIFTYONE_DEGREES_STATUS_FILE_PERMISSION_DENIED, e.getCode()) <<
+			"Incorrect status code was returned.\n";
+	}
+	catch (exception e) {
+		FAIL() << "Incorrect exception was thrown.\n";
+	}
+// It is recommended to use CloseHandle to close the handle returned from
+// OpenFile so it is valid to suppress the warning generated due to casting
+// to pointer type here.
+#pragma warning (disable: 4312)
+	EXPECT_TRUE(CloseHandle(reinterpret_cast<HANDLE>(hFile))) <<
+		"Failed to close the data file which was opened exclusively.\n";
+#pragma warning (default: 4312)
 
 	ResultsDeviceDetection* results2 = engine->processDeviceDetection(
 		mobileUserAgent);
