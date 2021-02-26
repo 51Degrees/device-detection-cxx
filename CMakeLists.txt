@@ -182,5 +182,5 @@ if (MSVC)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
-	target_compile_options(HashTests PRIVATE "-Wall" "-Wno-unused-variable" "-Wno-unused-result" "-Wno-unused-but-set-variable")
+	target_compile_options(HashTests PRIVATE "-Wall" "-Werror" "-Wno-unused-variable" "-Wno-unused-result" "-Wno-unused-but-set-variable")
 endif()
