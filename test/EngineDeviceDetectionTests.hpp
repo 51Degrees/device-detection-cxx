@@ -130,6 +130,9 @@ public:
 	void multiThreadRandom(uint16_t concurrency);
 	void reloadMemory();
 	void reloadFile();
+#ifdef _MSC_VER
+	void reloadFileWithLock();
+#endif
 protected:
 	vector<string> userAgents;
 	void compareResults(ResultsDeviceDetection *a, ResultsDeviceDetection *b);
