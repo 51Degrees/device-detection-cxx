@@ -1079,6 +1079,7 @@ static void freeDataSet(void *dataSetPtr) {
 	ListFree(&dataSet->componentsList);
 	if (dataSet->componentsAvailable != NULL) {
 		Free(dataSet->componentsAvailable);
+		dataSet->componentsAvailable = NULL;
 	}
 	FIFTYONE_DEGREES_COLLECTION_FREE(dataSet->strings);
 	FIFTYONE_DEGREES_COLLECTION_FREE(dataSet->components);

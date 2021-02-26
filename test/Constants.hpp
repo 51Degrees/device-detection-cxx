@@ -35,4 +35,6 @@ const static char _userAgentsFileName[] = "20000 User Agents.csv";
 
 const static char* _fileTypes[] = { "Enterprise", "Lite" };
 
+const static char _reloadTestFile[] = "reload-test-file.dat";
+
 #endif
