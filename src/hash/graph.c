@@ -262,7 +262,7 @@ void fiftyoneDegreesGraphTraceAppend(
  * @return the remaining length of the buffer, available for writting
  */
 static size_t getRemainingBuffer(size_t length, int written) {
-	if (length == 0 || length <= written) {
+	if (length == 0 || length <= (size_t)written) {
 		return 0;
 	}
 	else {
