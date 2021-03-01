@@ -1090,6 +1090,7 @@ static void freeDataSet(void *dataSetPtr) {
 	ListFree(&dataSet->componentsList);
 	if (dataSet->componentsAvailable != NULL) {
 		Free(dataSet->componentsAvailable);
+		dataSet->componentsAvailable = NULL;
 	}
 	FIFTYONE_DEGREES_COLLECTION_FREE(dataSet->strings);
 	FIFTYONE_DEGREES_COLLECTION_FREE(dataSet->components);
@@ -1453,10 +1454,6 @@ static StatusCode readHeaderFromMemory(
 	// Move the current pointer to the next data structure.
 	return MemoryAdvance(reader, sizeof(DataSetHashHeader)) == true ?
 		SUCCESS : CORRUPT_DATA;
-}
-
-static uint32_t* getProfiles(byte *pointer) {
-	return (uint32_t*)pointer;
 }
 
 static StatusCode checkVersion(DataSetHash *dataSet) {
@@ -2166,27 +2163,6 @@ static bool setResultFromEvidence(
 	return EXCEPTION_OKAY;
 }
 
-static void replaceProfile(Item *existing, Item *replacement) {
-	COLLECTION_RELEASE(existing->collection, existing);
-	*existing = *replacement;
-}
-
-static void replaceProfileInResult(
-	ResultsHash *results,
-	ResultHash *result, 
-	Profile *profile,
-	Exception *exception) {
-	uint32_t profileOffset;
-	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
-	if (ProfileGetOffsetForProfileId(
-		dataSet->profileOffsets,
-		profile->profileId,
-		&profileOffset,
-		exception) != NULL) {
-		result->profileOffsets[profile->componentIndex] = profileOffset;
-	}
-}
-
 static void overrideProfileId(
 	void *state,
 	const uint32_t profileId) {
@@ -2678,34 +2654,6 @@ static ResultHash* getResultFromResultsWithProperty(
 	// null.
 	return dataSet->config.b.allowUnmatched && results->count > 0 ?
 		results->items : NULL;
-}
-
-static Item* getDefaultValuesFromProperty(
-	ResultsHash *results,
-	Property *property,
-	Exception *exception) {
-	Item profileItem;
-	Item *value = NULL;
-	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
-	Component *component = (Component*)dataSet->componentsList
-		.items[property->componentIndex].data.ptr;
-	DataReset(&profileItem.data);
-	if (dataSet->profiles->get(
-		dataSet->profiles,
-		component->defaultProfileOffset,
-		&profileItem,
-		exception) != NULL &&
-		EXCEPTION_OKAY) {
-		addValuesFromProfile(
-			dataSet,
-			results, 
-			(Profile*)profileItem.data.ptr, 
-			property,
-			exception);
-		COLLECTION_RELEASE(dataSet->profiles, &profileItem);
-		value = &results->values.items[0];
-	}
-	return value;
 }
 
 static Item* getValuesFromOverrides(

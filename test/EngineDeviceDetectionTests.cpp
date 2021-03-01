@@ -21,6 +21,7 @@
  * ********************************************************************* */
  
 #include "EngineDeviceDetectionTests.hpp"
+#include <fstream>
 #ifdef _MSC_FULL_VER
 #include <string.h>
 #else
@@ -69,6 +70,8 @@ void EngineDeviceDetectionTests::TearDown() {
 		data.length = 0;
 	}
 	EngineTests::TearDown();
+	// Reload test use this file, so clean it
+	remove(_reloadTestFile);
 }
 
 void EngineDeviceDetectionTests::userAgentRead(
@@ -409,6 +412,65 @@ void EngineDeviceDetectionTests::reloadFile() {
 	delete results1;
 	delete results2;
 }
+
+#ifdef _MSC_VER
+/*
+ * Only run this test on Windows since Linux and MacOS mainly support
+ * advisory locking which does not prevent other process from accessing
+ * the file.
+ */
+void EngineDeviceDetectionTests::reloadFileWithLock() {
+	EngineDeviceDetection* engine = (EngineDeviceDetection*)getEngine();
+	ResultsDeviceDetection* results1 = engine->processDeviceDetection(
+		mobileUserAgent);
+
+	HFILE hFile;
+	OFSTRUCT lpReOpenBuff;
+
+	// Create a file to reload from
+	string targetFile = string(_reloadTestFile);
+	ofstream dst (targetFile.c_str());
+	dst << "test data" << endl;
+
+	EXPECT_TRUE(dst.good()) <<
+		"Failed to create output file";
+
+	dst.close();
+
+	// Open exclusive the file
+	hFile = OpenFile(targetFile.c_str(),
+		&lpReOpenBuff,
+		OF_SHARE_EXCLUSIVE);
+	EXPECT_NE(HFILE_ERROR, hFile) <<
+		"Failed to open data file exclusively.\n";
+	
+	try {
+		engine->refreshData(targetFile.c_str());
+		FAIL() << "No exception has been thrown.\n";
+	}
+	catch (StatusCodeException e) {
+		ASSERT_EQ(
+			FIFTYONE_DEGREES_STATUS_FILE_PERMISSION_DENIED, e.getCode()) <<
+			"Incorrect status code was returned.\n";
+	}
+	catch (exception e) {
+		FAIL() << "Incorrect exception was thrown.\n";
+	}
+// It is recommended to use CloseHandle to close the handle returned from
+// OpenFile so it is valid to suppress the warning generated due to casting
+// to pointer type here.
+#pragma warning (disable: 4312)
+	EXPECT_TRUE(CloseHandle(reinterpret_cast<HANDLE>(hFile))) <<
+		"Failed to close the data file which was opened exclusively.\n";
+#pragma warning (default: 4312)
+
+	ResultsDeviceDetection* results2 = engine->processDeviceDetection(
+		mobileUserAgent);
+	EXPECT_EQ(results1->results->b.dataSet, results2->results->b.dataSet);
+	delete results1;
+	delete results2;
+}
+#endif
 
 void EngineDeviceDetectionTests::reloadMemory() {
 	EngineDeviceDetection *engine = (EngineDeviceDetection*)getEngine();

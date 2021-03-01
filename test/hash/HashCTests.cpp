@@ -1,5 +1,5 @@
+#include "../../src/common-cxx/tests/pch.h"
 #include <string>
-#include "gtest/gtest.h"
 #include "../Constants.hpp"
 #include "../../src/common-cxx/tests/Base.hpp"
 #include "../../src/hash/fiftyone.h"
@@ -30,6 +30,8 @@ public:
 	void SetUp() {
 		Base::SetUp();
 		properties.string = commonProperties;
+		configHash.traceRoute = true;
+		
 		EXCEPTION_CREATE;
 		// Init manager
 		HashInitManagerFromFile(
@@ -77,7 +79,6 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 	ResultsHash* resultsUserAgents;
 	ResultsHash* resultsDeviceId;
 
-	StatusCode status = SUCCESS;
 	char deviceId[40] = "";
 	char isMobile[40] = "";
 
@@ -142,7 +143,6 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 	ResultsHash* resultsUserAgents;
 	ResultsHash* resultsDeviceId;
 
-	StatusCode status = SUCCESS;
 	char deviceId[40] = "";
 	char isMobile[40] = "";
 
@@ -192,13 +192,71 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 }
 
 /*
+ * Test if the graph trace get API deal with buffer correctly. Check
+ * potentially written number of characters are returned even if the buffer
+ * does not have enough space.
+ */
+TEST_F(HashCTests, GraphTraceGetTests) {
+	ResultsHash* resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
+
+	EXCEPTION_CREATE;
+	// Obtain results from user agent
+	ResultsHashFromUserAgent(
+		resultsUserAgents,
+		mobileUserAgent,
+		strlen(mobileUserAgent),
+		exception);
+	EXCEPTION_THROW;
+
+	// Test if GraphTraceGet returns potentially written number
+	char buffer[1] = "";
+	// Test with 0
+	int potentiallyWritten = GraphTraceGet(
+		buffer,
+		0,
+		resultsUserAgents->items[0].trace,
+		mobileUserAgent);
+	EXPECT_TRUE(potentiallyWritten > 0) <<
+		"Potentially written number should have been returned.\n";
+
+	// Test with 1
+	potentiallyWritten = GraphTraceGet(
+		buffer,
+		1,
+		resultsUserAgents->items[0].trace,
+		mobileUserAgent);
+	EXPECT_TRUE(potentiallyWritten > 0) <<
+		"Potentially written number should have been returned.\n";
+
+	// Test if GraphTraceGet returns correct written number
+	// Add 1 for null character
+	int length = potentiallyWritten + 1;
+	char* fullBuffer = (char*)Malloc(length);
+	EXPECT_TRUE(fullBuffer != NULL) <<
+		"Failed to allocate memory for graph trace.\n";
+
+	memset(fullBuffer, 0, length);
+	int written = GraphTraceGet(
+		fullBuffer,
+		length,
+		resultsUserAgents->items[0].trace,
+		mobileUserAgent);
+	EXPECT_EQ(strlen(fullBuffer), written) <<
+		"Failed to write the full graph trace.\n";
+	EXPECT_EQ(potentiallyWritten, written) <<
+		"Failed to return corrent number of written characters.\n";
+
+	// Free resource
+	Free(fullBuffer);
+	ResultsHashFree(resultsUserAgents);
+}
+
+/*
  * Check that the creation of ResultsHash create evidence array correctly
  * with and without pseudo headers.
  */
 TEST_F(HashCTests, ResultsHashCreation) {
 	ResultsHash *testResults1, *testResults2, *testResults3;
-
-	StatusCode status = SUCCESS;
 
 	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
 	uint32_t savePseudoHeaderCount =
@@ -246,8 +304,6 @@ TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
 	ResultsHash* resultsUserAgents;
 
 	char isMobile[40] = "";
-
-	StatusCode status = SUCCESS;
 
 	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
 	uint32_t savePseudoHeaderCount =

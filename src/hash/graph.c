@@ -255,7 +255,21 @@ void fiftyoneDegreesGraphTraceAppend(
 	last->next = node;
 }
 
-#define REMAINING(l,w) l == 0 ? 0 : l - w
+/*
+ * Obtain the remaining length of the buffer available for writting
+ * @param length of the buffer
+ * @param written buffer that have or might have been used
+ * @return the remaining length of the buffer, available for writting
+ */
+static size_t getRemainingBuffer(size_t length, int written) {
+	if (length == 0 || length <= (size_t)written) {
+		return 0;
+	}
+	else {
+		return length - written;
+	}
+}
+
 #define CURRENT(s,w) s == NULL ? NULL : s + w
 
 int fiftyoneDegreesGraphTraceGet(
@@ -263,21 +277,28 @@ int fiftyoneDegreesGraphTraceGet(
 	size_t length,
 	fiftyoneDegreesGraphTraceNode* route,
 	const char *source) {
-	int written = 0;
+	int written = 0, tmpWritten = 0;
+	size_t remaining = 0;
 	uint32_t i;
 	GraphTraceNode *node = route;
 
 	while (node != NULL) {
 		if (node->rootName != NULL) {
-			written += snprintf(
+			tmpWritten = snprintf(
 				CURRENT(destination, written),
-				REMAINING(length, written),
+				getRemainingBuffer(length, written),
 				"--- Start of '%s'---\n",
 				node->rootName);
+			if (tmpWritten < 0) {
+				// Something has gone wrong
+				written = tmpWritten;
+				break;
+			}
+			written += tmpWritten;
 		}
 		else {
 			for (i = 0; i < node->lastIndex + node->length; i++) {
-				if (REMAINING(length, written) > 0) {
+				if (getRemainingBuffer(length, written) > 0) {
 					if (i < node->firstIndex) {
 						(destination + written)[0] = ' ';
 					}
@@ -297,11 +318,27 @@ int fiftyoneDegreesGraphTraceGet(
 				written++;
 			}
 
-			written += snprintf(
-				CURRENT(destination, written),
-				REMAINING(length, written),
-				node->matched ? "(%d) %x\n" : "(%d)\n",
-				node->index, node->hashCode);
+			remaining = getRemainingBuffer(length, written);
+			tmpWritten = node->matched ?
+				snprintf(
+					CURRENT(destination, written),
+					remaining,
+					"(%d) %x\n",
+					node->index,
+					node->hashCode) :
+				snprintf(
+					CURRENT(destination, written),
+					remaining,
+					"(%d)\n",
+					node->index);
+
+			if (tmpWritten < 0) {
+				// Something has gone wrong
+				// Set to negative value to indicate error
+				written = tmpWritten;
+				break;
+			}
+			written += tmpWritten;
 		}
 		node = node->next;
 	}
