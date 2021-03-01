@@ -290,6 +290,17 @@ FIFTYONE_DEGREES_CONFIG_USE_TEMP_FILE_DEFAULT
 #endif
 
 /**
+ * HASH DEVICE DETECTION EVIDENCE PREFIX ORDER OF PRECEDENCE
+ */
+
+#define FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE 2
+const EvidencePrefix 
+prefixOrderOfPrecedence[FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE] = {
+	FIFTYONE_DEGREES_EVIDENCE_QUERY,
+	FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING
+};
+
+/**
  * HASH DEVICE DETECTION METHODS
  */
 
@@ -2216,6 +2227,8 @@ void fiftyoneDegreesResultsHashFromEvidence(
 				evidence,
 				dataSet->b.b.uniqueHeaders,
 				((ConfigHash*)dataSet->b.b.config)->b.maxMatchedUserAgentLength,
+				prefixOrderOfPrecedence,
+				FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE,
 				exception);
 			if (EXCEPTION_FAILED) {
 				evidence->pseudoEvidence = NULL;
@@ -2269,31 +2282,19 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			return;
 		}
 
-		// Check the query prefixed evidence keys before the HTTP header
-		// evidence keys. Values that are provided via the query evidence
-		// prefix are used in preference to the header prefix. This supports
+		// Values provided are processed based on the Evidence prefix order
+		// of precedence. In the case of Hash, query prefixed evidence should
+		// be used in preference to the header prefix. This supports
 		// situations where a User-Agent that is provided by the calling
 		// application can be used in preference to the one associated with the
 		// calling device.
-		EvidenceIterate(
-			evidence,
-			FIFTYONE_DEGREES_EVIDENCE_QUERY,
-			&state,
-			setResultFromEvidence);
-		if (EXCEPTION_FAILED) {
-			PseudoHeadersRemoveEvidence(
-				evidence->pseudoEvidence,
-				dataSet->config.b.maxMatchedUserAgentLength);
-			evidence->pseudoEvidence = NULL;
-			return;
-		}
-
-		// If no results were obtained from the query evidence prefix then use
-		// the HTTP headers to populate the results.
-		if (results->count == 0) {
+		for (int i = 0;
+			i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE &&
+			results->count == 0;
+			i++) {
 			EvidenceIterate(
 				evidence,
-				FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+				prefixOrderOfPrecedence[i],
 				&state,
 				setResultFromEvidence);
 			if (EXCEPTION_FAILED) {
