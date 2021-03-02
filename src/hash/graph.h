@@ -311,7 +311,9 @@ EXTERNAL void fiftyoneDegreesGraphTraceAppend(
  * allocated, and returns the number of characters written to the destination.
  * If called with NULL as the destination, and 0 as length, nothing will be
  * written, but the number of characters which would have been written will
- * still be returned.
+ * still be returned. When the buffer is not big enough, buffer will be written
+ * up the limit and return the number of characters which would have been
+ * written.
  * @param destination pointer to the memory to write the trace string to
  * @param length the number of characters that can be written to the
  * destination memory
@@ -320,7 +322,8 @@ EXTERNAL void fiftyoneDegreesGraphTraceAppend(
  * @param source the source string. Usually a User-Agent to get the matched
  * characters from
  * @return the number of characters written, or the number of characters which
- * would have been written if length was long enough
+ * would have been written if length was long enough. Negative value if
+ * something has gone wrong.
  */
 EXTERNAL int fiftyoneDegreesGraphTraceGet(
     char *destination,

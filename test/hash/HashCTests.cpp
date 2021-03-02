@@ -1,5 +1,5 @@
+#include "../../src/common-cxx/tests/pch.h"
 #include <string>
-#include "gtest/gtest.h"
 #include "../Constants.hpp"
 #include "../../src/common-cxx/tests/Base.hpp"
 #include "../../src/hash/fiftyone.h"
@@ -199,5 +199,87 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 	// Free the results and resource
 	ResultsHashFree(resultsUserAgents);
 	ResultsHashFree(resultsDeviceId);
+	ResourceManagerFree(&manager);
+}
+
+/*
+ * Test if the graph trace get API deal with buffer correctly. Check
+ * potentially written number of characters are returned even if the buffer
+ * does not have enough space.
+ */
+TEST_F(HashCTests, GraphTraceGetTests) {
+	PropertiesRequired properties = PropertiesDefault;
+	properties.string = commonProperties;
+
+	ConfigHash configHash = HashDefaultConfig;
+	configHash.traceRoute = true;
+	ResourceManager manager;
+
+	ResultsHash* resultsUserAgents;
+
+	StatusCode status = SUCCESS;
+	char isMobile[40] = "";
+
+	EXCEPTION_CREATE;
+	// Init manager
+	status = HashInitManagerFromFile(
+		&manager,
+		&configHash,
+		&properties,
+		dataFilePath.c_str(),
+		exception);
+	EXCEPTION_THROW;
+
+	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
+
+	// Obtain results from user agent
+	ResultsHashFromUserAgent(
+		resultsUserAgents,
+		mobileUserAgent,
+		strlen(mobileUserAgent),
+		exception);
+	EXCEPTION_THROW;
+
+	// Test if GraphTraceGet returns potentially written number
+	char buffer[1] = "";
+	// Test with 0
+	int potentiallyWritten = GraphTraceGet(
+		buffer,
+		0,
+		resultsUserAgents->items[0].trace,
+		mobileUserAgent);
+	EXPECT_TRUE(potentiallyWritten > 0) <<
+		"Potentially written number should have been returned.\n";
+
+	// Test with 1
+	potentiallyWritten = GraphTraceGet(
+		buffer,
+		1,
+		resultsUserAgents->items[0].trace,
+		mobileUserAgent);
+	EXPECT_TRUE(potentiallyWritten > 0) <<
+		"Potentially written number should have been returned.\n";
+
+	// Test if GraphTraceGet returns correct written number
+	// Add 1 for null character
+	int length = potentiallyWritten + 1;
+	char* fullBuffer = (char*)Malloc(length);
+	EXPECT_TRUE(fullBuffer != NULL) <<
+		"Failed to allocate memory for graph trace.\n";
+
+	memset(fullBuffer, 0, length);
+	int written = GraphTraceGet(
+		fullBuffer,
+		length,
+		resultsUserAgents->items[0].trace,
+		mobileUserAgent);
+	EXPECT_EQ(strlen(fullBuffer), written) <<
+		"Failed to write the full graph trace.\n";
+	EXPECT_EQ(potentiallyWritten, written) <<
+		"Failed to return corrent number of written characters.\n";
+
+	// Free resource
+	Free(fullBuffer);
+	ResultsHashFree(resultsUserAgents);
 	ResourceManagerFree(&manager);
 }

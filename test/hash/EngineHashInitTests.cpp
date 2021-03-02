@@ -53,7 +53,8 @@ public:
     void wrongDataVersionFile(ConfigHash* config) {
         RequiredPropertiesConfig properties;
         try {
-            EngineHash* engine = new EngineHash(badVersionFileName, config, &properties);
+            EngineHash* testEngine = new EngineHash(badVersionFileName, config, &properties);
+            delete testEngine;
             FAIL() << L"No exception was thrown";
         }
         catch (exception & e) {
@@ -75,7 +76,8 @@ public:
     void badDataFile(ConfigHash* config) {
         RequiredPropertiesConfig properties;
         try {
-            EngineHash* engine = new EngineHash(badDataFileName, config, &properties);
+            EngineHash* testEngine = new EngineHash(badDataFileName, config, &properties);
+            delete testEngine;
             FAIL() << L"No exception was thrown";
         }
         catch (exception & e) {
@@ -97,7 +99,8 @@ public:
     void smallDataFile(ConfigHash *config) {
         RequiredPropertiesConfig properties;
         try {
-            EngineHash* engine = new EngineHash(smallDataFileName, config, &properties);
+            EngineHash* testEngine = new EngineHash(smallDataFileName, config, &properties);
+            delete testEngine;
             FAIL() << L"No exception was thrown";
         }
         catch (exception & e) {
@@ -217,11 +220,12 @@ TEST_F(EngineHashInitTests, WrongDataVersion_Memory) {
     }
 
     try {
-        EngineHash* engine = new EngineHash(
+        EngineHash* testEngine = new EngineHash(
             mem,
             (long)sizeof(fiftyoneDegreesDataSetHashHeader),
             &config,
             &properties);
+        delete testEngine;
         FAIL() << L"No exception was thrown";
     }
     catch (exception & e) {
@@ -254,11 +258,12 @@ TEST_F(EngineHashInitTests, BadData_Memory) {
     }
 
     try {
-        EngineHash* engine = new EngineHash(
+        EngineHash* testEngine = new EngineHash(
             mem,
             (long)sizeof(fiftyoneDegreesDataSetHashHeader),
             &config,
             &properties);
+        delete testEngine;
         FAIL() << L"No exception was thrown";
     }
     catch (exception & e) {
@@ -292,11 +297,12 @@ TEST_F(EngineHashInitTests, SmallData_Memory) {
     }
 
     try {
-        EngineHash* engine = new EngineHash(
+        EngineHash* testEngine = new EngineHash(
             mem,
             (long)sizeof(byte),
             &config,
             &properties);
+        delete testEngine;
         FAIL() << L"No exception was thrown";
     }
     catch (exception & e) {

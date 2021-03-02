@@ -141,7 +141,7 @@ stages:
       inputs:
         testResultsFormat: 'JUnit'
         testRunTitle: 'Visual Studio $(BuildPlatform) $(BuildConfiguration)'
-        testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\$(BuildPlatform)\$(BuildConfiguration)\testoutput.xml'
+        testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\$(BuildDirectory)\testoutput.xml'
 
   - job: Build_And_Test_CMake
 
