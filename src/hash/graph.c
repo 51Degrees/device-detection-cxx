@@ -215,10 +215,16 @@ fiftyoneDegreesGraphTraceNode* fiftyoneDegreesGraphTraceCreate(
 	if (fmt != NULL) {
 		va_list args;
 		va_start(args, fmt);
+		va_list args2;
+		va_copy(args2, args);
 
+		// state of args is undetermined after the following statement
+		// so end the args and use the args2 when perform the actual construction
 		length = vsnprintf(NULL, 0, fmt, args);
+		va_end(args);
 		root->rootName = (char*)Malloc((length + 1) * sizeof(char));
-		vsprintf(root->rootName, fmt, args);
+		vsprintf(root->rootName, fmt, args2);
+		va_end(args2);
 	}
 	else {
 		root->rootName = NULL;
