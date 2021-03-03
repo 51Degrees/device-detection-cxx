@@ -26,8 +26,31 @@ public:
 			dataFilePath = GetFilePath(_dataFolderName, _HashFileNames[i]);
 		}
 	}
+
+	void SetUp() {
+		Base::SetUp();
+		properties.string = commonProperties;
+		configHash.traceRoute = true;
+		
+		EXCEPTION_CREATE;
+		// Init manager
+		HashInitManagerFromFile(
+			&manager,
+			&configHash,
+			&properties,
+			dataFilePath.c_str(),
+			exception);
+		EXCEPTION_THROW;
+	}
+	void TearDown() {
+		ResourceManagerFree(&manager);
+		Base::TearDown();
+	}
 protected:
 	string dataFilePath;
+	PropertiesRequired properties = PropertiesDefault;
+	ConfigHash configHash = HashDefaultConfig;
+	ResourceManager manager;
 };
 
 static char* getPropertyValueAsString(
@@ -53,32 +76,16 @@ static char* getPropertyValueAsString(
  * correct result
  */
 TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
-	PropertiesRequired properties = PropertiesDefault;
-	properties.string = commonProperties;
-
-	ConfigHash configHash = HashDefaultConfig;
-	ResourceManager manager;
-
 	ResultsHash* resultsUserAgents;
 	ResultsHash* resultsDeviceId;
 
-	StatusCode status = SUCCESS;
 	char deviceId[40] = "";
 	char isMobile[40] = "";
-
-	EXCEPTION_CREATE;
-	// Init manager
-	status = HashInitManagerFromFile(
-		&manager,
-		&configHash,
-		&properties,
-		dataFilePath.c_str(),
-		exception);
-	EXCEPTION_THROW;
 
 	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
 	resultsDeviceId = ResultsHashCreate(&manager, 1, 0);
 
+	EXCEPTION_CREATE
 	// Obtain results from user agent
 	ResultsHashFromUserAgent(
 		resultsUserAgents,
@@ -126,7 +133,6 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 	// Free the results and resource
 	ResultsHashFree(resultsUserAgents);
 	ResultsHashFree(resultsDeviceId);
-	ResourceManagerFree(&manager);
 }
 
 /*
@@ -134,28 +140,11 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
  * deal with invalid uniqueHttpHeaderIndex for a single result.
  */
 TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
-	PropertiesRequired properties = PropertiesDefault;
-	properties.string = commonProperties;
-
-	ConfigHash configHash = HashDefaultConfig;
-	ResourceManager manager;
-
 	ResultsHash* resultsUserAgents;
 	ResultsHash* resultsDeviceId;
 
-	StatusCode status = SUCCESS;
 	char deviceId[40] = "";
 	char isMobile[40] = "";
-
-	EXCEPTION_CREATE;
-	// Init manager
-	status = HashInitManagerFromFile(
-		&manager,
-		&configHash,
-		&properties,
-		dataFilePath.c_str(),
-		exception);
-	EXCEPTION_THROW;
 
 	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
 	resultsDeviceId = ResultsHashCreate(&manager, 1, 0);
@@ -164,6 +153,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 	// with invalid uniqueHttpHeaderIndex
 	resultsDeviceId->items[0].b.uniqueHttpHeaderIndex = -2;
 	memset(isMobile, 0, sizeof(isMobile));
+	EXCEPTION_CREATE;
 	size_t charsAdded = ResultsHashGetValuesString(
 		resultsDeviceId,
 		"isMobile",
@@ -199,7 +189,6 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 	// Free the results and resource
 	ResultsHashFree(resultsUserAgents);
 	ResultsHashFree(resultsDeviceId);
-	ResourceManagerFree(&manager);
 }
 
 /*
@@ -208,30 +197,9 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
  * does not have enough space.
  */
 TEST_F(HashCTests, GraphTraceGetTests) {
-	PropertiesRequired properties = PropertiesDefault;
-	properties.string = commonProperties;
-
-	ConfigHash configHash = HashDefaultConfig;
-	configHash.traceRoute = true;
-	ResourceManager manager;
-
-	ResultsHash* resultsUserAgents;
-
-	StatusCode status = SUCCESS;
-	char isMobile[40] = "";
+	ResultsHash* resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
 
 	EXCEPTION_CREATE;
-	// Init manager
-	status = HashInitManagerFromFile(
-		&manager,
-		&configHash,
-		&properties,
-		dataFilePath.c_str(),
-		exception);
-	EXCEPTION_THROW;
-
-	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
-
 	// Obtain results from user agent
 	ResultsHashFromUserAgent(
 		resultsUserAgents,
@@ -281,5 +249,102 @@ TEST_F(HashCTests, GraphTraceGetTests) {
 	// Free resource
 	Free(fullBuffer);
 	ResultsHashFree(resultsUserAgents);
-	ResourceManagerFree(&manager);
+}
+
+/*
+ * Check that the creation of ResultsHash create evidence array correctly
+ * with and without pseudo headers.
+ */
+TEST_F(HashCTests, ResultsHashCreation) {
+	ResultsHash *testResults1, *testResults2, *testResults3;
+
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+	uint32_t savePseudoHeaderCount =
+		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
+
+	// Don't create addtional results and pseudo evidence
+	// if Client Hints are not enabled.
+	dataSet->b.b.isClientHintsEnabled = false;
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 2;
+	testResults1 = ResultsHashCreate(&manager, 1, 0);
+	EXPECT_TRUE(testResults1->pseudoEvidence == NULL);
+	EXPECT_EQ(1, testResults1->capacity);
+
+	// Don't create addtional results and pseudo evidence
+	// if pseudo headers are not present.
+	dataSet->b.b.isClientHintsEnabled = true;
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
+	testResults2 = ResultsHashCreate(&manager, 1, 0);
+	EXPECT_TRUE(testResults2->pseudoEvidence == NULL);
+	EXPECT_EQ(1, testResults2->capacity);
+
+	// Create addtional results and pseudo evidence
+	// if Client Hints are enabled and pseudo headers
+	// are present.
+	dataSet->b.b.isClientHintsEnabled = true;
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 2;
+	testResults3 = ResultsHashCreate(&manager, 1, 0);
+	EXPECT_TRUE(testResults3->pseudoEvidence != NULL);
+	EXPECT_EQ(2, testResults3->pseudoEvidence->capacity);
+	EXPECT_EQ(3, testResults3->capacity);
+
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
+	DataSetRelease((DataSetBase *)dataSet);
+	// Free allocated resource
+	ResultsHashFree(testResults1);
+	ResultsHashFree(testResults2);
+	ResultsHashFree(testResults3);
+}
+
+/*
+ * This test check that the detection will still work when there is no
+ * pseudo header count
+ */
+TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
+	ResultsHash* resultsUserAgents;
+
+	char isMobile[40] = "";
+
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+	uint32_t savePseudoHeaderCount =
+		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
+	bool saveIsClientHintsEnabled = dataSet->b.b.isClientHintsEnabled;
+
+	// Set the pseudo header count to mock scenarios
+	// where data file does not support pseudo headers
+	dataSet->b.b.isClientHintsEnabled = false;
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
+	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
+	EXPECT_TRUE(resultsUserAgents->pseudoEvidence == NULL);
+
+	fiftyoneDegreesEvidenceKeyValuePairArray* evidence =
+		EvidenceCreate(1);
+	const char* evidenceField = "User-Agent";
+	const char* evidenceValue = mobileUserAgent;
+	EvidenceAddString(
+		evidence,
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+		evidenceField,
+		evidenceValue);
+
+	// Obtain results from user agent
+	EXCEPTION_CREATE
+	ResultsHashFromEvidence(resultsUserAgents, evidence, exception);
+	EXCEPTION_THROW;
+	EXPECT_EQ(1, resultsUserAgents->count) << "Only one results should be "
+		<< "returned.\n";
+	EXPECT_EQ(0, strcmp(
+		"True",
+		getPropertyValueAsString(
+			resultsUserAgents,
+			"isMobile",
+			isMobile,
+			sizeof(isMobile)))) << "Property isMobile should be true.\n";
+
+	dataSet->b.b.isClientHintsEnabled = saveIsClientHintsEnabled;
+	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
+	EvidenceFree(evidence);
+	DataSetRelease((DataSetBase*)dataSet);
+	// Free allocated resource
+	ResultsHashFree(resultsUserAgents);
 }

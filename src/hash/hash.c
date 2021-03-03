@@ -290,6 +290,17 @@ FIFTYONE_DEGREES_CONFIG_USE_TEMP_FILE_DEFAULT
 #endif
 
 /**
+ * HASH DEVICE DETECTION EVIDENCE PREFIX ORDER OF PRECEDENCE
+ */
+
+#define FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE 2
+const EvidencePrefix 
+prefixOrderOfPrecedence[FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE] = {
+	FIFTYONE_DEGREES_EVIDENCE_QUERY,
+	FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING
+};
+
+/**
  * HASH DEVICE DETECTION METHODS
  */
 
@@ -967,7 +978,7 @@ static void setResultFromUserAgentComponentIndex(
 	detectionState *state,
 	uint32_t componentIndex,
 	Item* rootNodesItem,
-	uint32_t graphOffset) {
+	uint32_t httpHeaderUniqueId) {
 	const ComponentKeyValuePair* graphKey;
 	HashRootNodes* rootNodes;
 	uint32_t headerIndex;
@@ -981,7 +992,7 @@ static void setResultFromUserAgentComponentIndex(
 		complete == false;
 		headerIndex++) {
 		graphKey = &(&component->firstKeyValuePair)[headerIndex];
-		if (graphKey->key == graphOffset) {
+		if (graphKey->key == httpHeaderUniqueId) {
 			rootNodes = (HashRootNodes*)getRootNodes(
 				state->dataSet,
 				graphKey->value,
@@ -1012,7 +1023,7 @@ static void setResultFromUserAgent(
 	detectionState state;
 	uint32_t componentIndex;
 	Item rootNodesItem;
-	uint32_t graphOffset = dataSet->b.b.uniqueHeaders->items[
+	uint32_t uniqueId = dataSet->b.b.uniqueHeaders->items[
 		result->b.uniqueHttpHeaderIndex].uniqueId;
 	DataReset(&rootNodesItem.data);
 	detectionStateInit(&state, result, dataSet, exception);
@@ -1024,7 +1035,7 @@ static void setResultFromUserAgent(
 				&state, 
 				componentIndex, 
 				&rootNodesItem, 
-				graphOffset);
+				uniqueId);
 		}
 	}
 	state.result->iterations = state.iterations;
@@ -1425,9 +1436,6 @@ static StatusCode initPropertiesAndHeaders(
 		initGetHttpHeaderString,
 		initOverridesFilter,
 		initGetEvidenceProperties);
-	if (status != SUCCESS) {
-		return status;
-	}
 	return status;
 }
 
@@ -2186,6 +2194,24 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		// Reset the results data before iterating the evidence.
 		results->count = 0;
 
+		// Construct the evidence for pseudo header
+		if (dataSet->b.b.isClientHintsEnabled &&
+			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+			evidence->pseudoEvidence = results->pseudoEvidence;
+
+			PseudoHeadersAddEvidence(
+				evidence,
+				dataSet->b.b.uniqueHeaders,
+				((ConfigHash*)dataSet->b.b.config)->b.maxMatchedUserAgentLength,
+				prefixOrderOfPrecedence,
+				FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE,
+				exception);
+			if (EXCEPTION_FAILED) {
+				evidence->pseudoEvidence = NULL;
+				return;
+			}
+		}
+
 		// Extract any property value overrides from the evidence.
 		OverridesExtractFromEvidence(
 			dataSet->b.b.overridable,
@@ -2225,39 +2251,48 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			}
 		}
 		if (EXCEPTION_FAILED) {
+			PseudoHeadersRemoveEvidence(
+				evidence->pseudoEvidence,
+				dataSet->config.b.maxMatchedUserAgentLength);
+			evidence->pseudoEvidence = NULL;
 			return;
 		}
 
-		// Check the query prefixed evidence keys before the HTTP header
-		// evidence keys. Values that are provided via the query evidence
-		// prefix are used in preference to the header prefix. This supports
+		// Values provided are processed based on the Evidence prefix order
+		// of precedence. In the case of Hash, query prefixed evidence should
+		// be used in preference to the header prefix. This supports
 		// situations where a User-Agent that is provided by the calling
 		// application can be used in preference to the one associated with the
 		// calling device.
-		EvidenceIterate(
-			evidence,
-			FIFTYONE_DEGREES_EVIDENCE_QUERY,
-			&state,
-			setResultFromEvidence);
-		if (EXCEPTION_FAILED) {
-			return;
-		}
-
-		// If no results were obtained from the query evidence prefix then use
-		// the HTTP headers to populate the results.
-		if (results->count == 0) {
+		for (int i = 0;
+			i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE &&
+			results->count == 0;
+			i++) {
 			EvidenceIterate(
 				evidence,
-				FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+				prefixOrderOfPrecedence[i],
 				&state,
 				setResultFromEvidence);
 			if (EXCEPTION_FAILED) {
+				PseudoHeadersRemoveEvidence(
+					evidence->pseudoEvidence,
+					dataSet->config.b.maxMatchedUserAgentLength);
+				evidence->pseudoEvidence = NULL;
 				return;
 			}
 		}
 
 		// Check for and process any profile Id overrides.
 		OverrideProfileIds(evidence, &state, overrideProfileId);
+
+		if (dataSet->b.b.isClientHintsEnabled &&
+			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+			// Reset pseudo evidence
+			PseudoHeadersRemoveEvidence(
+				evidence->pseudoEvidence,
+				dataSet->config.b.maxMatchedUserAgentLength);
+			evidence->pseudoEvidence = NULL;
+		}
 	}
 }
 
@@ -2340,7 +2375,43 @@ void fiftyoneDegreesResultsHashFree(
 	}
 	ResultsDeviceDetectionFree(&results->b);
 	DataSetRelease((DataSetBase*)results->b.b.dataSet);
+	if (results->pseudoEvidence != NULL) {
+		Free((void *)results->pseudoEvidence->items[0].originalValue);
+		Free(results->pseudoEvidence);
+	}
 	Free(results);
+}
+
+
+static fiftyoneDegreesEvidenceKeyValuePairArray*
+createPseudoEvidenceKeyValueArray(
+	fiftyoneDegreesDataSetHash* dataSet) {
+	fiftyoneDegreesEvidenceKeyValuePairArray* pseudoEvidence = NULL;
+	if (dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+		FIFTYONE_DEGREES_ARRAY_CREATE(
+			fiftyoneDegreesEvidenceKeyValuePair,
+			pseudoEvidence,
+			dataSet->b.b.uniqueHeaders->pseudoHeadersCount);
+		if (pseudoEvidence != NULL) {
+			size_t maxUaLength = dataSet->config.b.maxMatchedUserAgentLength;
+			void* evidenceMem =
+				(void*)Malloc(
+					pseudoEvidence->count * maxUaLength);
+			if (evidenceMem != NULL) {
+				for (uint32_t i = 0; i < pseudoEvidence->capacity; i++) {
+					pseudoEvidence->items[i].field = NULL;
+					pseudoEvidence->items[i].originalValue =
+						(void*)((char*)evidenceMem + i * maxUaLength);
+					pseudoEvidence->items[i].parsedValue = NULL;
+				}
+			}
+			else {
+				Free(pseudoEvidence);
+				pseudoEvidence = NULL;
+			}
+		}
+	}
+	return pseudoEvidence;
 }
 
 fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
@@ -2349,16 +2420,20 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 	uint32_t overridesCapacity) {
 	uint32_t i;
 	ResultsHash *results;
-	DataSetHash *dataSet;
 
-	// Create a new instance of results.
-	FIFTYONE_DEGREES_ARRAY_CREATE(ResultHash, results, userAgentCapacity);
+	// Increment the inUse counter for the active data set so that we can
+	// track any results that are created.
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(manager);
+
+	// Create a new instance of results. Also take into account the
+	// results potentially added for pseudo evidence.
+	uint32_t capacity = userAgentCapacity;
+	if (dataSet->b.b.isClientHintsEnabled) {
+		capacity += dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
+	}
+	FIFTYONE_DEGREES_ARRAY_CREATE(ResultHash, results, capacity);
 
 	if (results != NULL) {
-
-		// Increment the inUse counter for the active data set so that we can
-		// track any results that are created.
-		dataSet = (DataSetHash*)DataSetGet(manager);
 
 		// Initialise the results.
 		ResultsDeviceDetectionInit(
@@ -2384,10 +2459,25 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 			}
 		}
 
+		// Initialise pseudo evidence
+		results->pseudoEvidence = NULL;
+		if (dataSet->b.b.isClientHintsEnabled) {
+			results->pseudoEvidence =
+				createPseudoEvidenceKeyValueArray(dataSet);
+			if (results->pseudoEvidence == NULL &&
+				dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+				fiftyoneDegreesResultsHashFree(results);
+				return NULL;
+			}
+		}
+
 		// Reset the property and values list ready for first use sized for 
 		// a single value to be returned.
 		ListInit(&results->values, 1);
 		DataReset(&results->propertyItem.data);
+	}
+	else {
+		DataSetRelease((DataSetBase *)dataSet);
 	}
 
 	return results;
