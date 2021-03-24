@@ -2692,7 +2692,7 @@ size_t fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex(
 	fiftyoneDegreesException *exception) {
 	String *string;
 	uint32_t i = 0;
-	size_t charactersAdded = 0, stringLen, seperatorLen = strlen(separator);
+	size_t charactersAdded = 0, stringLen, separatorLen = strlen(separator);
 
 	// Set the results structure to the value items for the property.
 	if (ResultsHashGetValues(
@@ -2702,7 +2702,12 @@ size_t fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex(
 
 		// Loop through the values adding them to the string buffer.
 		while (i < results->values.count && EXCEPTION_OKAY) {
-
+			if (i != 0) {
+				if (charactersAdded + separatorLen < bufferLength) {
+					memcpy(buffer + charactersAdded, separator, separatorLen);
+				}
+				charactersAdded += separatorLen;
+			}
 			// Get the string for the value index.
 			string = (String*)results->values.items[i++].data.ptr;
 
@@ -2718,15 +2723,11 @@ size_t fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex(
 				}
 				charactersAdded += stringLen;
 			}
-			if (charactersAdded + seperatorLen < bufferLength) {
-				memcpy(buffer + charactersAdded, separator, seperatorLen);
-			}
-			charactersAdded += seperatorLen;
 		}
 
 		// Terminate the string buffer if characters were added.
-		if (charactersAdded < bufferLength) {
-			buffer[charactersAdded - 1] = '\0';
+		if (charactersAdded < bufferLength - 1) {
+			buffer[charactersAdded]  = '\0';
 		}
 	}
 	return charactersAdded;
