@@ -2956,7 +2956,7 @@ const char* fiftyoneDegreesResultsHashGetNoValueReasonMessage(
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE:
 	    return "No matching profiles could be found for the supplied evidence. "
 	        "A 'best guess' can be returned by configuring more lenient "
-	        "matching rules. See https://51degrees.com/documentation/4.1/_device_detection__features__false_positive_control.html";
+	        "matching rules. See https://51degrees.com/documentation/_device_detection__features__false_positive_control.html";
 	case FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_UNKNOWN:
 	default:
 		return "The reason for missing values is unknown.";

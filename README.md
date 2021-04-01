@@ -2,7 +2,7 @@
 
 ![51Degrees](https://51degrees.com/DesktopModules/FiftyOne/Distributor/Logo.ashx?utm_source=github&utm_medium=repository&utm_content=home&utm_campaign=c-open-source "Data rewards the curious") **Device Detection**
 
-[C Documentation](https://docs.51degrees.com/device-detection-cxx/4.0/modules.html) and the [C++ Documentation](https://docs.51degrees.com/device-detection-cxx/4.0/namespaces.html).
+[C Documentation](https://51degrees.com/device-detection-cxx/modules.html) and the [C++ Documentation](https://51degrees.com/device-detection-cxx/namespaces.html).
 
 The 51Degrees device detection API is built on the 51Degrees [common API](https://github.com/51Degrees/common-cxx).
 
