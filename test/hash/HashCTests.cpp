@@ -348,3 +348,28 @@ TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
 	// Free allocated resource
 	ResultsHashFree(resultsUserAgents);
 }
+
+/*
+ * This test check that the ResultsHashGetValuesString will only add separator
+ * if there is next value.
+ */
+TEST_F(HashCTests, ResultsHashGetValuesStringNoTrailingSeparator) {
+	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+
+	EXCEPTION_CREATE;
+	// Obtain results from user agent
+	ResultsHashFromUserAgent(
+		results,
+		mobileUserAgent,
+		strlen(mobileUserAgent),
+		exception);
+	EXCEPTION_THROW;
+
+	char buffer[100] = "";
+	ResultsHashGetValuesString(
+		results, "IsMobile", buffer, 100, ",", exception);
+	ResultsHashFree(results);
+
+	EXPECT_STREQ("True", buffer) <<
+		"Buffer should only contain a string without separator.\n";
+}

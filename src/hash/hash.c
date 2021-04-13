@@ -2710,6 +2710,8 @@ size_t fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex(
 			// of characters added.
 			if (string != NULL) {
 				stringLen = strlen(&string->value);
+				// Only add to buffer if there is enough space, including
+				// space for a null terminator.
 				if (charactersAdded + stringLen < bufferLength) {
 					memcpy(
 						buffer + charactersAdded,
