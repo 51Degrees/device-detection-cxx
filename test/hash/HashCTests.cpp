@@ -373,3 +373,19 @@ TEST_F(HashCTests, ResultsHashGetValuesStringNoTrailingSeparator) {
 	EXPECT_STREQ("True", buffer) <<
 		"Buffer should only contain a string without separator.\n";
 }
+
+/*
+ * This test check that the HashSizeManagerFromFile will set the exception
+ * status correctly if an error occurred during the sizing.
+ */
+TEST_F(HashCTests, HashSizeManagerFromFileException) {
+	EXCEPTION_CREATE;
+	fiftyoneDegreesHashSizeManagerFromFile(
+		&this->configHash,
+		&this->properties,
+		"donotexist",
+		exception);
+	EXPECT_EQ(FIFTYONE_DEGREES_STATUS_FILE_NOT_FOUND, exception->status) <<
+		"Exception status should be set to " <<
+		FIFTYONE_DEGREES_STATUS_FILE_NOT_FOUND << ".\n";
+}
