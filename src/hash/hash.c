@@ -1869,9 +1869,7 @@ size_t fiftyoneDegreesHashSizeManagerFromFile(
 	fiftyoneDegreesException *exception) {
 	size_t allocated;
 	ResourceManager manager;
-#ifdef _DEBUG 
 	StatusCode status;
-#endif
 
 	// Set the memory allocation and free methods for tracking.
 	MemoryTrackingReset();
@@ -1882,23 +1880,20 @@ size_t fiftyoneDegreesHashSizeManagerFromFile(
 
 	// Initialise the manager with the tracking methods in use to determine
 	// the amount of memory that is allocated.
-#ifdef _DEBUG 
-	status =
-#endif
-	HashInitManagerFromFile(
+	status = HashInitManagerFromFile(
 		&manager,
 		config,
 		properties,
 		fileName,
 		exception);
-#ifdef _DEBUG
-	assert(status == SUCCESS);
-#endif
-	assert(EXCEPTION_OKAY);
-
-	// Free the manager and get the total maximum amount of allocated memory
+ 	if (status == SUCCESS && EXCEPTION_OKAY) {
+		ResourceManagerFree(&manager);
+	}
+	else if (status != SUCCESS && EXCEPTION_OKAY) {
+		exception->status = status;
+	}
+	// Get the total maximum amount of allocated memory
 	// needed for the manager and associated resources.
-	ResourceManagerFree(&manager);
 	allocated = MemoryTrackingGetMax();
 
 	// Check that all the memory has been freed.
