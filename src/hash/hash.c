@@ -1869,9 +1869,7 @@ size_t fiftyoneDegreesHashSizeManagerFromFile(
 	fiftyoneDegreesException *exception) {
 	size_t allocated;
 	ResourceManager manager;
-#ifdef _DEBUG 
 	StatusCode status;
-#endif
 
 	// Set the memory allocation and free methods for tracking.
 	MemoryTrackingReset();
@@ -1882,23 +1880,20 @@ size_t fiftyoneDegreesHashSizeManagerFromFile(
 
 	// Initialise the manager with the tracking methods in use to determine
 	// the amount of memory that is allocated.
-#ifdef _DEBUG 
-	status =
-#endif
-	HashInitManagerFromFile(
+	status = HashInitManagerFromFile(
 		&manager,
 		config,
 		properties,
 		fileName,
 		exception);
-#ifdef _DEBUG
-	assert(status == SUCCESS);
-#endif
-	assert(EXCEPTION_OKAY);
-
-	// Free the manager and get the total maximum amount of allocated memory
+ 	if (status == SUCCESS && EXCEPTION_OKAY) {
+		ResourceManagerFree(&manager);
+	}
+	else if (status != SUCCESS && EXCEPTION_OKAY) {
+		exception->status = status;
+	}
+	// Get the total maximum amount of allocated memory
 	// needed for the manager and associated resources.
-	ResourceManagerFree(&manager);
 	allocated = MemoryTrackingGetMax();
 
 	// Check that all the memory has been freed.
@@ -2692,7 +2687,7 @@ size_t fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex(
 	fiftyoneDegreesException *exception) {
 	String *string;
 	uint32_t i = 0;
-	size_t charactersAdded = 0, stringLen, seperatorLen = strlen(separator);
+	size_t charactersAdded = 0, stringLen, separatorLen = strlen(separator);
 
 	// Set the results structure to the value items for the property.
 	if (ResultsHashGetValues(
@@ -2702,7 +2697,12 @@ size_t fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex(
 
 		// Loop through the values adding them to the string buffer.
 		while (i < results->values.count && EXCEPTION_OKAY) {
-
+			if (i != 0) {
+				if (charactersAdded + separatorLen < bufferLength) {
+					memcpy(buffer + charactersAdded, separator, separatorLen);
+				}
+				charactersAdded += separatorLen;
+			}
 			// Get the string for the value index.
 			string = (String*)results->values.items[i++].data.ptr;
 
@@ -2710,6 +2710,8 @@ size_t fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex(
 			// of characters added.
 			if (string != NULL) {
 				stringLen = strlen(&string->value);
+				// Only add to buffer if there is enough space, including
+				// space for a null terminator.
 				if (charactersAdded + stringLen < bufferLength) {
 					memcpy(
 						buffer + charactersAdded,
@@ -2718,15 +2720,11 @@ size_t fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex(
 				}
 				charactersAdded += stringLen;
 			}
-			if (charactersAdded + seperatorLen < bufferLength) {
-				memcpy(buffer + charactersAdded, separator, seperatorLen);
-			}
-			charactersAdded += seperatorLen;
 		}
 
 		// Terminate the string buffer if characters were added.
-		if (charactersAdded < bufferLength) {
-			buffer[charactersAdded - 1] = '\0';
+		if (charactersAdded < bufferLength - 1) {
+			buffer[charactersAdded]  = '\0';
 		}
 	}
 	return charactersAdded;
