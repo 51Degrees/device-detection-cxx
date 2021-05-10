@@ -2284,7 +2284,7 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
 			// Reset pseudo evidence
 			PseudoHeadersRemoveEvidence(
-				evidence->pseudoEvidence,
+				evidence,
 				dataSet->config.b.maxMatchedUserAgentLength);
 			evidence->pseudoEvidence = NULL;
 		}
@@ -2391,7 +2391,7 @@ createPseudoEvidenceKeyValueArray(
 			size_t maxUaLength = dataSet->config.b.maxMatchedUserAgentLength;
 			void* evidenceMem =
 				(void*)Malloc(
-					pseudoEvidence->count * maxUaLength);
+					pseudoEvidence->capacity * maxUaLength);
 			if (evidenceMem != NULL) {
 				for (uint32_t i = 0; i < pseudoEvidence->capacity; i++) {
 					pseudoEvidence->items[i].field = NULL;
