@@ -2640,7 +2640,12 @@ static ResultHash* getResultFromResultsWithProperty(
 					dataSet->b.b.uniqueHeaders->items[
 						results->items[h].b.uniqueHttpHeaderIndex]
 					.uniqueId == uniqueId) {
-					return &results->items[h];
+					// Only return the result if the profile is not null.
+					if (results->items[h].profileOffsets[
+						property->componentIndex] != NULL_PROFILE_OFFSET) {
+						return &results->items[h];
+					}
+					break;
 				}
 			}
 		}
@@ -3247,11 +3252,12 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 				componentIndex].data.ptr;
 			// Reset the found flag.
 			bool found = false;
+			bool foundButNull = false;
 			// Loop over all headers that should be considered for this
 			// component until one is found in the results.
 			for (componentHeaderIndex = 0;
 				componentHeaderIndex < component->keyValuesCount  &&
-				found == false;
+				(found == false || foundButNull == true);
 				componentHeaderIndex++) {
 				header = HeadersGetHeaderFromUniqueId(
 					dataSet->b.b.uniqueHeaders,
@@ -3264,10 +3270,8 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 					result = &(results->items)[resultIndex];
 					if (result->b.uniqueHttpHeaderIndex ==
 						header - dataSet->b.b.uniqueHeaders->items) {
-						// We found the header, so write it and move on to the
-						// next component.
-						found = true;
-						if (componentIndex != 0) {
+						if (componentIndex != 0 &&
+							foundButNull == false) {
 							if (printProfileSep(
 								&destination,
 								buffer,
@@ -3276,14 +3280,19 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 								break;
 							}
 						}
+						// We found the header, so write it and move on to the
+						// next component.
+						found = true;
 						if (result->profileOffsets[componentIndex] ==
 							NULL_PROFILE_OFFSET) {
-							if (printNullProfileId(
+							if (foundButNull ||
+								printNullProfileId(
 								&destination,
 								buffer,
 								size) <= 0) {
 								break;
 							}
+							foundButNull = true;
 						}
 						else {
 							profile = dataSet->profiles->get(
@@ -3292,25 +3301,32 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 								&profileItem,
 								exception);
 							if (profile == NULL) {
-								if (printNullProfileId(
+								if (foundButNull ||
+									printNullProfileId(
 									&destination,
 									buffer,
 									size
 								) <= 0) {
 									break;
 								}
+								foundButNull = true;
 							}
 							else if (ISUNMATCHED(dataSet, result)) {
-								if (printNullProfileId(
+								if (foundButNull ||
+									printNullProfileId(
 									&destination,
 									buffer,
 									size
 								) <= 0) {
 									break;
 								}
+								foundButNull = true;
 								COLLECTION_RELEASE(dataSet->profiles, &profileItem);
 							}
 							else {
+								if (foundButNull == true) {
+									destination = destination - 1;
+								}
 								if (printProfileId(
 									&destination,
 									buffer,
@@ -3319,6 +3335,7 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 									profile->profileId) <= 0) {
 									break;
 								}
+								foundButNull = false;
 								COLLECTION_RELEASE(dataSet->profiles, &profileItem);
 							}
 						}

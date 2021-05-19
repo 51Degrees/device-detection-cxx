@@ -46,6 +46,8 @@ public:
 		this->config = config;
 		// Unset allow unmatched nodes as the tests for this will explicitly set it.
 		this->config->setAllowUnmatched(true);
+		// Don't use prefixed header names for simplicity.
+		this->config->setUseUpperPrefixHeaders(false);
 		engine = nullptr;
 	}
 	~EngineHashTests() {
@@ -195,6 +197,7 @@ public:
 		verifyNoMatchedNodes();
 		verifyPerformanceGraph();
 		verifyPredictiveGraph();
+		verifyMatchForLowerPrecidence();
 	}
 	bool setResultsMatchedNodes(
 		ResultsHash *results,
@@ -669,6 +672,118 @@ public:
 		delete emptyResults;
 		delete highResults;
 		delete wrongResults;
+	}
+
+	vector<string> splitDeviceId(string deviceId) {
+		vector<string> profileIds;
+		size_t nextSplit;
+		string profileId;
+		do {
+			nextSplit = deviceId.find("-");
+			profileId = deviceId.substr(0, nextSplit);
+			profileIds.push_back(profileId);
+			deviceId = deviceId.substr(nextSplit + 1);
+		} while ((int)deviceId.find("-") > 0);
+		// Add the final profileId.
+		profileIds.push_back(deviceId);
+		return profileIds;
+	}
+
+	vector<int> getAvailableComponentsForHeader(const char *headerName) {
+		size_t componentIndex, keyIndex;
+		fiftyoneDegreesCollectionItem item;
+		vector<int> indexes;
+		fiftyoneDegreesComponent *component;
+		fiftyoneDegreesDataSetHash *dataSet =
+			fiftyoneDegreesDataSetHashGet(engine->manager.get());
+		fiftyoneDegreesDataReset(&item.data);
+		FIFTYONE_DEGREES_EXCEPTION_CREATE;
+		for (componentIndex = 0;
+			componentIndex < dataSet->componentsList.count;
+			componentIndex++) {
+			if (dataSet->componentsAvailable[componentIndex] == true) {
+				component = (fiftyoneDegreesComponent*)
+					dataSet->componentsList.items[componentIndex].data.ptr;
+				for (keyIndex = 0; keyIndex < component->keyValuesCount; keyIndex++) {
+					fiftyoneDegreesString* keyName = fiftyoneDegreesStringGet(
+						dataSet->strings,
+						(&component->firstKeyValuePair)[keyIndex].key,
+						&item,
+						exception);
+
+					if (fiftyoneDegreesStringCompare(
+						headerName,
+						&keyName->value) == 0) {
+						if (find(indexes.begin(), indexes.end(), (int)componentIndex) ==
+							indexes.end()) {
+							indexes.push_back((int)componentIndex);
+						}
+					}
+					FIFTYONE_DEGREES_COLLECTION_RELEASE(item.collection, &item);
+				}
+			}
+		}
+
+		fiftyoneDegreesDataSetHashRelease(dataSet);
+
+		return indexes;
+	}
+
+	void verifyMatchForLowerPrecidence() {
+		EvidenceDeviceDetection evidence;
+		bool originalAllowUnmatched = setAllowUnmatched(engine, false);
+
+		// todo check that header is higher precedence than ua.
+		const char *xDeviceName = "header.x-device-user-agent",
+			*uaName = "header.user-agent";
+		int xDeviceIndex, uaIndex;
+		vector<string> *keys = engine->getKeys();
+		for (size_t i = 0; i < keys->size(); i++) {
+			string key = keys->operator[](i);
+			if (fiftyoneDegreesStringCompare(key.c_str(), xDeviceName) == 0) {
+				xDeviceIndex = (int)i;
+			}
+			if (fiftyoneDegreesStringCompare(key.c_str(), uaName) == 0) {
+				uaIndex = (int)i;
+			}
+		}
+
+		EXPECT_GT(uaIndex, xDeviceIndex) <<
+			L"The '" << xDeviceName << L"' evidence key does not have a " <<
+			L"higher precedence than '" << uaName << L"' so the test is not " <<
+			L"useful. Update the test to use a different key.";
+		vector<int> xDeviceComponents = getAvailableComponentsForHeader(
+			xDeviceName + strlen("header."));
+		EXPECT_GT((int)xDeviceComponents.size(), 0) <<
+			L"The '" << xDeviceName << L"' evidence key does not have any " <<
+			L"components associated with it, so is not useful for this test.";
+
+		evidence[xDeviceName] = "";
+		ResultsHash* results =
+			((EngineHash*)getEngine())->process(&evidence);
+		EXPECT_FALSE(results->getValueAsString("IsMobile").hasValue());
+		EXPECT_STREQ(results->getDeviceId().c_str(), "0-0-0-0");
+
+		delete results;
+		evidence[uaName] = mobileUserAgent;
+		results =
+			((EngineHash*)getEngine())->process(&evidence);
+		EXPECT_TRUE(results->getValueAsString("IsMobile").hasValue()) <<
+			L"There was no value for a hardware property. The lower precedence " <<
+			L"evidence should have been used instead.";
+		EXPECT_STREQ(results->getValueAsString("IsMobile").getValue().c_str(), "True") <<
+			L"The value for a hardware propertywa incorrect. The lower precedence " <<
+			L"evidence should have been used instead.";
+		vector<string> profileIds = splitDeviceId(results->getDeviceId());
+		for (size_t i = 0; i < xDeviceComponents.size(); i++) {
+			EXPECT_STRNE(profileIds[xDeviceComponents[i]].c_str(), "0") <<
+				L"There was no profile for component '" << xDeviceComponents[i] <<
+				L"'. The lower precedence evidence should have been used instead.";
+		}
+		setAllowUnmatched(engine, originalAllowUnmatched);
+
+		delete results;
+
 	}
 	EngineHash *engine;
 	ConfigHash *config;

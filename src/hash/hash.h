@@ -50,7 +50,10 @@
 #include <ctype.h>
 #include <assert.h>
 #ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 5105)
 #include <windows.h>
+#pragma warning(pop)
 #endif
 #include "../common-cxx/data.h"
 #include "../common-cxx/exceptions.h"
