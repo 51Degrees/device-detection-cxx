@@ -1344,7 +1344,8 @@ static void initGetEvidencePropertyRelated(
 	DataReset(&propertyItem.data);
 	DataReset(&nameItem.data);
 	int propertiesCount = CollectionGetCount(dataSet->properties);
-	for (int propertyIndex = 0; 
+	int propertyIndex;
+	for (propertyIndex = 0;
 		propertyIndex < propertiesCount && EXCEPTION_OKAY; 
 		propertyIndex++) {
 		property = PropertyGet(
@@ -2259,7 +2260,8 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		// situations where a User-Agent that is provided by the calling
 		// application can be used in preference to the one associated with the
 		// calling device.
-		for (int i = 0;
+		int i;
+		for (i = 0;
 			i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE &&
 			results->count == 0;
 			i++) {
@@ -2393,7 +2395,8 @@ createPseudoEvidenceKeyValueArray(
 				(void*)Malloc(
 					pseudoEvidence->capacity * maxUaLength);
 			if (evidenceMem != NULL) {
-				for (uint32_t i = 0; i < pseudoEvidence->capacity; i++) {
+				uint32_t i;
+				for (i = 0; i < pseudoEvidence->capacity; i++) {
 					pseudoEvidence->items[i].field = NULL;
 					pseudoEvidence->items[i].originalValue =
 						(void*)((char*)evidenceMem + i * maxUaLength);
