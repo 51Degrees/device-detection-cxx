@@ -1,0 +1,67 @@
+trigger: 
+  - master
+  - develop
+  - release/*
+
+# Don't trigger for a pull request
+pr: none
+
+# Schedule to run overnight
+schedules:
+- cron: "0 20 * * *"
+  displayName: Daily overnight build
+  branches:
+    include:
+    - develop
+
+# Include shared variables
+variables:
+- template: shared-variables.yml
+
+stages:
+# Run full set of tests before creating any tag.
+- template: shared-build-and-test-stages.yml
+  parameters:
+    windowsImage: $(windowsImage)
+    linuxImage: $(linuxImage)
+    macImage: $(macImage)
+    vsTestsToRun: $(vsFullTestsToRun)
+    cmakeTestsToRun: $(cmakeFullTestsToRun)
+
+- stage: Tagging
+  dependsOn: [Windows,Linux,MacOS]
+
+  jobs:
+  - job: Tagging
+    displayName: Create a tag
+
+    variables: 
+      # Access token for the git repository. Used by the git tag task.
+      - name: system_accesstoken
+        value: $(System.AccessToken)
+    
+    pool:
+      vmImage: $(linuxImage)
+
+    steps:
+    # The lines below are needed to allow the pipeline access to the
+    # OAuth access token that controls write access to the git repository. 
+    # (Required for GitTag task)
+    - checkout: self
+      persistCredentials: true
+  
+    - task: gittools.gitversion.gitversion-task.GitVersion@5
+      displayName: 'Determine Version Number'
+      # Give this task a name so we can use the variables it sets later. 
+      name: GitVersion
+      inputs:
+        preferBundledVersion: false
+
+    # Add a tag to the git repository with the version number.
+    # This will be used by packagist to determine the package version number.
+    - task: ATP.ATP-GitTag.GitTag.GitTag@5
+      displayName: 'Tag Repo With Version Number'
+      inputs:
+        tagUser: 'Azure DevOps'
+        tagEmail: 'CIUser@51Degrees.com'
+

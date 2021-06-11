@@ -1,0 +1,26 @@
+# This is a development pipeline which run a set of confidence tests.
+# Just to make sure core functions do not break.
+trigger: none
+
+# Triggered by any PRs not to one of the main branches.
+pr:
+  branches:
+    exclude:
+    - master
+    - develop
+    - release/*
+    - hotfix/*
+
+# Include shared variables
+variables:
+- template: shared-variables.yml
+
+stages:
+# We only run smoke tests so developers can get a quick feedback.
+- template: shared-build-and-test-stages.yml
+  parameters:
+    windowsImage: $(windowsImage)
+    linuxImage: $(linuxImage)
+    macImage: $(macImage)
+    vsTestsToRun: $(vsSmokeTestsToRun)
+    cmakeTestsToRun: $(cmakeSmokeTestsToRun)

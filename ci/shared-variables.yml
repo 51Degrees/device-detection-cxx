@@ -1,0 +1,19 @@
+variables:
+- name: windowsImage
+  value: 'vs2017-win2016'
+- name: linuxImage
+  value: 'ubuntu-18.04'
+- name: macImage
+  value: 'macOS-10.14'
+# Full tests run.
+- name: vsFullTestsToRun
+  value: '-*TestOfflineProcessing*'
+# Only run InMemory profile in Smoke testing.
+- name: vsSmokeTestsToRun
+  value: '*InMemory*-*TestOfflineProcessing*'
+# Full tests run.
+- name: cmakeFullTestsToRun
+  value: '-E ".*TestOfflineProcessing.*"'
+# Only run InMemory profile in Smoke Testing.
+- name: cmakeSmokeTestsToRun
+  value: '-R ".*InMemory.*" -E ".*TestOfflineProcessing.*"'
