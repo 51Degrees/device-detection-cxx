@@ -72,11 +72,11 @@ namespace FiftyoneDegrees {
 				  */
 				~PropertyMetaDataCollectionForComponentHash();
 
-				PropertyMetaData* getByIndex(uint32_t index);
+				PropertyMetaData* getByIndex(uint32_t index) const;
 
-				PropertyMetaData* getByKey(string name);
+				PropertyMetaData* getByKey(string name) const;
 
-				uint32_t getSize();
+				uint32_t getSize() const;
 
 				/**
 				 * @}

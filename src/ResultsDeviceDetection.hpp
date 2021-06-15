@@ -100,7 +100,7 @@ namespace FiftyoneDegrees {
 			 * constructed.
 			 * @return profile ids separated with a '-' character
 			 */
-			virtual string getDeviceId() = 0;
+			virtual string getDeviceId() const = 0;
 
 			/**
 			 * Returns the number of different User-Agents that were used in
@@ -108,7 +108,7 @@ namespace FiftyoneDegrees {
 			 * @return the number of User-Agents available to query with
 			 * #getUserAgent
 			 */
-			virtual int getUserAgents() = 0;
+			virtual int getUserAgents() const = 0;
 
 			/**
 			 * Returns relevant parts of the User-Agent which most closely
@@ -117,7 +117,7 @@ namespace FiftyoneDegrees {
 			 * true in the configuration.
 			 * @return string set to the HTTP header value matched
 			 */
-			virtual string getUserAgent(int resultIndex) = 0;
+			virtual string getUserAgent(int resultIndex) const = 0;
 
 			/**
 			 * @}

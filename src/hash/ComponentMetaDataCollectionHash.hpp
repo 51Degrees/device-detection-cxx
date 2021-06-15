@@ -65,11 +65,11 @@ namespace FiftyoneDegrees {
 				 * @{
 				 */
 
-				ComponentMetaData* getByIndex(uint32_t index);
+				ComponentMetaData* getByIndex(uint32_t index) const;
 
-				ComponentMetaData* getByKey(byte componentId);
+				ComponentMetaData* getByKey(byte componentId) const;
 
-				uint32_t getSize();
+				uint32_t getSize() const;
 
 				/**
 				 * @}

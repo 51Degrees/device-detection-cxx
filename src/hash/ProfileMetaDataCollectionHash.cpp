@@ -41,7 +41,7 @@ ProfileMetaDataCollectionHash::~ProfileMetaDataCollectionHash() {
 	DataSetHashRelease(dataSet);
 }
 
-ProfileMetaData* ProfileMetaDataCollectionHash::getByIndex(uint32_t index) {
+ProfileMetaData* ProfileMetaDataCollectionHash::getByIndex(uint32_t index) const {
 	EXCEPTION_CREATE;
 	Item item;
 	ProfileMetaData *result = nullptr;
@@ -61,7 +61,7 @@ ProfileMetaData* ProfileMetaDataCollectionHash::getByIndex(uint32_t index) {
 	return result;
 }
 
-ProfileMetaData* ProfileMetaDataCollectionHash::getByKey(uint32_t key) {
+ProfileMetaData* ProfileMetaDataCollectionHash::getByKey(uint32_t key) const {
 	EXCEPTION_CREATE;
 	Item item;
 	ProfileMetaData *result = nullptr;
@@ -81,6 +81,6 @@ ProfileMetaData* ProfileMetaDataCollectionHash::getByKey(uint32_t key) {
 	return result;
 }
 
-uint32_t ProfileMetaDataCollectionHash::getSize() {
+uint32_t ProfileMetaDataCollectionHash::getSize() const {
 	return CollectionGetCount(profileOffsets);
 }

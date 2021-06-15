@@ -50,7 +50,7 @@ ValueMetaDataCollectionForProfileHash::~ValueMetaDataCollectionForProfileHash() 
 	COLLECTION_RELEASE(dataSet->profiles, &profileItem);
 }
 
-ValueMetaData* ValueMetaDataCollectionForProfileHash::getByIndex(uint32_t index) {
+ValueMetaData* ValueMetaDataCollectionForProfileHash::getByIndex(uint32_t index) const {
 	EXCEPTION_CREATE;
 	ValueMetaData *result = nullptr;
 	Value *value;
@@ -107,7 +107,7 @@ bool ValueMetaDataCollectionForProfileHash::valueFilter(
 }
 
 ValueMetaData* ValueMetaDataCollectionForProfileHash::getByKey(
-	ValueMetaDataKey key) {
+	ValueMetaDataKey key) const {
 	EXCEPTION_CREATE;
 	Item propertyItem;
 	Property *property;
@@ -140,10 +140,10 @@ ValueMetaData* ValueMetaDataCollectionForProfileHash::getByKey(
 	return result;
 }
 
-uint32_t ValueMetaDataCollectionForProfileHash::getSize() {
+uint32_t ValueMetaDataCollectionForProfileHash::getSize() const {
 	return getProfile()->valueCount;
 }
 
-fiftyoneDegreesProfile* ValueMetaDataCollectionForProfileHash::getProfile() {
+fiftyoneDegreesProfile* ValueMetaDataCollectionForProfileHash::getProfile() const {
 	return (Profile*)profileItem.data.ptr;
 }

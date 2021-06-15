@@ -67,14 +67,14 @@ PropertyMetaDataCollectionForComponentHash::
 }
 
 PropertyMetaData* PropertyMetaDataCollectionForComponentHash::getByIndex(
-	uint32_t index) {
+	uint32_t index) const {
 	return new PropertyMetaData(*properties.at(index));
 }
 
 PropertyMetaData* PropertyMetaDataCollectionForComponentHash::getByKey(
-	string name) {
+	string name) const {
 	PropertyMetaData *result = nullptr;
-	for (vector<shared_ptr<PropertyMetaData>>::iterator i = properties.begin();
+	for (vector<shared_ptr<PropertyMetaData>>::const_iterator i = properties.begin();
 		i != properties.end();
 		i++) {
 		if (name == (*i)->getName()) {
@@ -85,6 +85,6 @@ PropertyMetaData* PropertyMetaDataCollectionForComponentHash::getByKey(
 	return result;
 }
 
-uint32_t PropertyMetaDataCollectionForComponentHash::getSize() {
+uint32_t PropertyMetaDataCollectionForComponentHash::getSize() const {
 	return (uint32_t)properties.size();
 }

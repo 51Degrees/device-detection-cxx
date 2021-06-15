@@ -737,7 +737,7 @@ public:
 		const char *xDeviceName = "header.x-device-user-agent",
 			*uaName = "header.user-agent";
 		int xDeviceIndex, uaIndex;
-		vector<string> *keys = engine->getKeys();
+		const vector<string> *keys = engine->getKeys();
 		for (size_t i = 0; i < keys->size(); i++) {
 			string key = keys->operator[](i);
 			if (fiftyoneDegreesStringCompare(key.c_str(), xDeviceName) == 0) {

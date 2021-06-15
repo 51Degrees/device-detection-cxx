@@ -117,7 +117,7 @@ namespace FiftyoneDegrees {
 			 * @copydoc Common::EngineBase::processBase
 			 */
 			virtual ResultsDeviceDetection* processDeviceDetection(
-				EvidenceDeviceDetection *evidence) = 0;
+				EvidenceDeviceDetection *evidence) const = 0;
 
 			/**
 			 * Processes the User-Agent provided and returns the result.
@@ -127,7 +127,7 @@ namespace FiftyoneDegrees {
 			 * properties
 			 */
 			virtual ResultsDeviceDetection* processDeviceDetection(
-				const char *userAgent) = 0;
+				const char *userAgent) const = 0;
 
 			/**
 			 * Processes the User-Agent provided and returns the result.
@@ -137,7 +137,7 @@ namespace FiftyoneDegrees {
 			 * properties
 			 */
 			virtual ResultsDeviceDetection* processDeviceDetection(
-				string &userAgent);
+				string &userAgent) const;
 
 			/**
 			 * @}

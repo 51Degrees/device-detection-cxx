@@ -326,7 +326,7 @@ void EngineDeviceDetectionTests::randomWithUserAgent(int count) {
 }
 
 string EngineDeviceDetectionTests::getRandomKeyWithMatchingPrefix(
-	vector<string> *keys,
+	const vector<string> *keys,
 	string prefix) {
 	string key;
 	do {
@@ -339,7 +339,7 @@ string EngineDeviceDetectionTests::getRandomKeyWithMatchingPrefix(
 void EngineDeviceDetectionTests::randomWithEvidence(int count) {
 	string userAgentKey = "header.user-agent";
 	EngineDeviceDetection *engine = (EngineDeviceDetection*)getEngine();
-	vector<string> *keys = engine->getKeys();
+	const vector<string> *keys = engine->getKeys();
 	for (int i = 0; i < count; i++) {
 		EvidenceDeviceDetection evidence;
 		evidence[userAgentKey] = userAgents[rand() % userAgents.size()];
