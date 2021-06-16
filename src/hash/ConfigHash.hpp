@@ -264,7 +264,7 @@ namespace FiftyoneDegrees {
 				 * concurrencies.
 				 * @return a 16 bit integer with the minimum concurrency value.
 				 */
-				uint16_t getConcurrency();
+				uint16_t getConcurrency() const;
 
 				/**
 				 * Gets whether the route through each graph should be traced
