@@ -140,7 +140,7 @@ protected:
 	fiftyoneDegreesMemoryReader data = { nullptr, nullptr, 0L };
 private:
 	string getRandomKeyWithMatchingPrefix(
-		vector<string> *keys,
+		const vector<string> *keys,
 		string prefix);
 	static void userAgentRead(const char *userAgent, void *state);
 	void verifyPropertyValue(

@@ -41,7 +41,7 @@ PropertyMetaDataCollectionHash::~PropertyMetaDataCollectionHash() {
 }
 
 PropertyMetaData* PropertyMetaDataCollectionHash::getByIndex(
-	uint32_t index) {
+	uint32_t index) const {
 	EXCEPTION_CREATE;
 	Item item;
 	Property *property;
@@ -60,7 +60,7 @@ PropertyMetaData* PropertyMetaDataCollectionHash::getByIndex(
 	return result;
 }
 
-PropertyMetaData* PropertyMetaDataCollectionHash::getByKey(string name) {
+PropertyMetaData* PropertyMetaDataCollectionHash::getByKey(string name) const {
 	EXCEPTION_CREATE;
 	Item item;
 	Property *property;
@@ -80,6 +80,6 @@ PropertyMetaData* PropertyMetaDataCollectionHash::getByKey(string name) {
 	return result;
 }
 
-uint32_t PropertyMetaDataCollectionHash::getSize() {
+uint32_t PropertyMetaDataCollectionHash::getSize() const {
 	return CollectionGetCount(properties);
 }

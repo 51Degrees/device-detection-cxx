@@ -65,7 +65,7 @@ namespace FiftyoneDegrees {
 				 * @{
 				 */
 
-				ValueMetaData* getByKey(ValueMetaDataKey key);
+				ValueMetaData* getByKey(ValueMetaDataKey key) const;
 
 				/**
 				 * @}

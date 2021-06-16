@@ -127,7 +127,7 @@ DeviceDetection::Hash::ResultsHash::getNoValueReasonInternal(
 }
 
 string DeviceDetection::Hash::ResultsHash::getDeviceId(
-	uint32_t resultIndex) {
+	uint32_t resultIndex) const {
 	EXCEPTION_CREATE;
 	char deviceId[50] = "";
 	if (resultIndex < results->count) {
@@ -142,7 +142,7 @@ string DeviceDetection::Hash::ResultsHash::getDeviceId(
 	return string(deviceId);
 }
 
-string DeviceDetection::Hash::ResultsHash::getDeviceId() {
+string DeviceDetection::Hash::ResultsHash::getDeviceId() const {
 	EXCEPTION_CREATE;
 	char deviceId[50] = "";
 	HashGetDeviceIdFromResults(
@@ -154,7 +154,7 @@ string DeviceDetection::Hash::ResultsHash::getDeviceId() {
 	return string(deviceId);
 }
 
-int DeviceDetection::Hash::ResultsHash::getIterations() {
+int DeviceDetection::Hash::ResultsHash::getIterations() const {
 	uint32_t i;
 	int iterations = 0;
 	if (results != NULL) {
@@ -165,7 +165,7 @@ int DeviceDetection::Hash::ResultsHash::getIterations() {
 	return iterations;
 }
 
-int DeviceDetection::Hash::ResultsHash::getMatchedNodes() {
+int DeviceDetection::Hash::ResultsHash::getMatchedNodes() const {
 	uint32_t i;
 	int matchedNodes = 0;
 	if (results != NULL) {
@@ -176,11 +176,11 @@ int DeviceDetection::Hash::ResultsHash::getMatchedNodes() {
 	return matchedNodes;
 }
 
-int DeviceDetection::Hash::ResultsHash::getDrift(uint32_t resultIndex) {
+int DeviceDetection::Hash::ResultsHash::getDrift(uint32_t resultIndex) const {
 	return results->items[resultIndex].drift;
 }
 
-int DeviceDetection::Hash::ResultsHash::getDrift() {
+int DeviceDetection::Hash::ResultsHash::getDrift() const {
 	uint32_t i;
 	int drift = 0;
 	if (results != NULL) {
@@ -192,11 +192,11 @@ int DeviceDetection::Hash::ResultsHash::getDrift() {
 }
 
 int DeviceDetection::Hash::ResultsHash::getDifference(
-	uint32_t resultIndex) {
+	uint32_t resultIndex) const {
 	return results->items[resultIndex].difference;
 }
 
-int DeviceDetection::Hash::ResultsHash::getDifference() {
+int DeviceDetection::Hash::ResultsHash::getDifference() const {
 	uint32_t i;
 	int difference = 0;
 	for (i = 0; i < results->count; i++) {
@@ -205,14 +205,14 @@ int DeviceDetection::Hash::ResultsHash::getDifference() {
 	return difference;
 }
 
-int DeviceDetection::Hash::ResultsHash::getMethod(uint32_t resultIndex) {
+int DeviceDetection::Hash::ResultsHash::getMethod(uint32_t resultIndex) const {
 	if (resultIndex < results->count) {
 		return results->items[resultIndex].method;
 	}
 	return 0;
 }
 
-int DeviceDetection::Hash::ResultsHash::getMethod() {
+int DeviceDetection::Hash::ResultsHash::getMethod() const {
 	uint32_t i;
 	int method = getMethod(0),
 		nextMethod;
@@ -226,7 +226,7 @@ int DeviceDetection::Hash::ResultsHash::getMethod() {
 	return method;
 }
 
-string DeviceDetection::Hash::ResultsHash::getTrace(uint32_t resultIndex) {
+string DeviceDetection::Hash::ResultsHash::getTrace(uint32_t resultIndex) const {
 	string trace;
 	char *traceStr;
 	int length;
@@ -250,7 +250,7 @@ string DeviceDetection::Hash::ResultsHash::getTrace(uint32_t resultIndex) {
 	return trace;
 }
 
-string DeviceDetection::Hash::ResultsHash::getTrace() {
+string DeviceDetection::Hash::ResultsHash::getTrace() const {
 	uint32_t i;
 	stringstream trace;
 	for (i = 0; i < results->count; i++) {
@@ -260,12 +260,12 @@ string DeviceDetection::Hash::ResultsHash::getTrace() {
 }
 
 
-int DeviceDetection::Hash::ResultsHash::getUserAgents() {
+int DeviceDetection::Hash::ResultsHash::getUserAgents() const {
 	return results->count;
 }
 
 string DeviceDetection::Hash::ResultsHash::getUserAgent(
-	int resultIndex) {
+	int resultIndex) const {
 	string userAgent;
 	if (resultIndex >= 0 && (uint32_t)resultIndex < results->count) {
 		if (results->items[resultIndex].b.matchedUserAgent != NULL) {

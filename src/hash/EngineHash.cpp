@@ -105,7 +105,7 @@ void EngineHash::init(
 	keys.push_back("cookie.51D_ProfileIds");
 }
 
-void* EngineHash::copyData(void *data, size_t length) {
+void* EngineHash::copyData(void *data, size_t length) const {
 	void *dataCopy = (void*)Malloc(length);
 	if (dataCopy == nullptr) {
 		throw StatusCodeException(INSUFFICIENT_MEMORY);
@@ -117,7 +117,7 @@ void* EngineHash::copyData(void *data, size_t length) {
 /**
  * @return the name of the data set used contained in the source file.
  */
-string EngineHash::getProduct() {
+string EngineHash::getProduct() const {
 	stringstream stream;
 	DataSetHash *dataSet = DataSetHashGet(manager.get());
 	appendString(stream, dataSet->strings, dataSet->header.nameOffset);
@@ -129,14 +129,14 @@ string EngineHash::getProduct() {
  * Returns the string that represents the type of data file when requesting an
  * updated file.
  */
-string EngineHash::getType() {
+string EngineHash::getType() const {
 	return string("HashV41");
 }
 
 /**
  * @return the date that 51Degrees published the data file.
  */
-Date EngineHash::getPublishedTime() {
+Date EngineHash::getPublishedTime() const {
 	DataSetHash*dataSet = DataSetHashGet(manager.get());
 	Date date = Date(&dataSet->header.published);
 	DataSetHashRelease(dataSet);
@@ -146,21 +146,21 @@ Date EngineHash::getPublishedTime() {
 /**
  * @return the date that 51Degrees will publish an updated data file.
  */
-Date EngineHash::getUpdateAvailableTime() {
+Date EngineHash::getUpdateAvailableTime() const {
 	DataSetHash *dataSet = DataSetHashGet(manager.get());
 	Date date = Date(&dataSet->header.nextUpdate);
 	DataSetHashRelease(dataSet);
 	return date;
 }
 
-string EngineHash::getDataFilePath() {
+string EngineHash::getDataFilePath() const {
 	DataSetHash *dataSet = DataSetHashGet(manager.get());
 	string path = string(dataSet->b.b.masterFileName);
 	DataSetHashRelease(dataSet);
 	return path;
 }
 
-string EngineHash::getDataFileTempPath() {
+string EngineHash::getDataFileTempPath() const {
 	string path;
 	DataSetHash *dataSet = DataSetHashGet(manager.get());
 	if (strcmp(
@@ -175,7 +175,7 @@ string EngineHash::getDataFileTempPath() {
 	return path;
 }
 
-void EngineHash::refreshData() {
+void EngineHash::refreshData() const {
 	EXCEPTION_CREATE;
 	StatusCode status = HashReloadManagerFromOriginalFile(
 		manager.get(),
@@ -186,7 +186,7 @@ void EngineHash::refreshData() {
 	EXCEPTION_THROW;
 }
 
-void EngineHash::refreshData(const char *fileName) {
+void EngineHash::refreshData(const char *fileName) const {
 	EXCEPTION_CREATE;
 	StatusCode status = HashReloadManagerFromFile(
 		manager.get(),
@@ -198,7 +198,7 @@ void EngineHash::refreshData(const char *fileName) {
 	EXCEPTION_THROW;
 }
 
-void EngineHash::refreshData(void *data, long length) {
+void EngineHash::refreshData(void *data, long length) const {
 	EXCEPTION_CREATE;
 	void *dataCopy = copyData(data, length);
 	StatusCode status = HashReloadManagerFromMemory(
@@ -214,12 +214,12 @@ void EngineHash::refreshData(void *data, long length) {
 
 void EngineHash::refreshData(
 	unsigned char data[], 
-	long length) {
+	long length) const {
 	refreshData((void*)data, length);
 }
 
 DeviceDetection::Hash::ResultsHash* EngineHash::process(
-	DeviceDetection::EvidenceDeviceDetection *evidence) {
+	DeviceDetection::EvidenceDeviceDetection *evidence) const {
 	EXCEPTION_CREATE;
 	uint32_t size = evidence == nullptr ? 0 : (uint32_t)evidence->size();
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
@@ -236,7 +236,7 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 }
 
 DeviceDetection::Hash::ResultsHash* EngineHash::process(
-	const char *userAgent) {
+	const char *userAgent) const {
 	EXCEPTION_CREATE;
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
@@ -252,7 +252,7 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 }
 
 Common::ResultsBase* EngineHash::processBase(
-	Common::EvidenceBase *evidence) {
+	Common::EvidenceBase *evidence) const {
 	EXCEPTION_CREATE;
 	uint32_t size = evidence == nullptr ? 0 : (uint32_t)evidence->size();
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
@@ -268,12 +268,12 @@ Common::ResultsBase* EngineHash::processBase(
 }
 
 DeviceDetection::ResultsDeviceDetection* EngineHash::processDeviceDetection(
-	DeviceDetection::EvidenceDeviceDetection *evidence) {
+	DeviceDetection::EvidenceDeviceDetection *evidence) const {
 	return process(evidence);
 }
 
 DeviceDetection::ResultsDeviceDetection* EngineHash::processDeviceDetection(
-	const char *userAgent) {
+	const char *userAgent) const {
 	return process(userAgent);
 }
 

@@ -1,10 +1,9 @@
-name: Build and Test Device Detection C++
-
-pr:
-- master
-- develop
-
-trigger: none
+parameters:
+- name: windowsImage
+- name: linuxImage
+- name: macImage
+- name: cmakeTestsToRun
+- name: vsTestsToRun
 
 stages:
 
@@ -12,7 +11,7 @@ stages:
   jobs:
   - job: Get_Enterprise_DataFile
     pool:
-      name: Hosted Ubuntu 1604
+      vmImage: ${{ parameters.linuxImage }}
 
     steps:
     
@@ -40,7 +39,7 @@ stages:
 - stage: Windows
   dependsOn: [Data]
   pool:
-    name: Hosted VS2017
+    vmImage: ${{ parameters.windowsImage }}
     demands:
     - msbuild
     - vstest
@@ -102,6 +101,7 @@ stages:
         ls
       workingDirectory: 'device-detection-data'
       displayName: 'Fetch LFS Data Files'
+      failOnStderr: true
 
     - task: DownloadBuildArtifacts@0
       displayName: 'Download Enterprise Data File'
@@ -114,6 +114,7 @@ stages:
     - script: |
           mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
+      failOnStderr: true
 
     - task: NuGetCommand@2
       inputs:
@@ -131,7 +132,7 @@ stages:
         configuration: '$(BuildConfiguration)'
         clean: true
 
-    - bash: './FiftyOne.DeviceDetection.Hash.Tests.exe --gtest_filter="-*TestOfflineProcessing*" --gtest_catch_exceptions=1 --gtest_break_on_failure=0 --gtest_output=xml:testoutput.xml'
+    - bash: './FiftyOne.DeviceDetection.Hash.Tests.exe --gtest_filter="${{ parameters.vsTestsToRun }}" --gtest_catch_exceptions=1 --gtest_break_on_failure=0 --gtest_output=xml:testoutput.xml'
       workingDirectory: VisualStudio/FiftyOne.DeviceDetection.Hash.Tests/$(BuildDirectory)
       failOnStderr: true
       displayName: 'Run Hash Tests'
@@ -198,6 +199,7 @@ stages:
         ls
       workingDirectory: 'device-detection-data'
       displayName: 'Fetch LFS Data Files'
+      failOnStderr: true
 
     - task: Bash@3
       displayName: 'Create Build Directory'
@@ -216,6 +218,7 @@ stages:
     - script: |
           mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
+      failOnStderr: true
 
     - task: CMake@1
       displayName: 'CMake Configure'
@@ -229,7 +232,7 @@ stages:
         workingDirectory: build
         cmakeArgs: '--build . --config $(BuildConfiguration)'
 
-    - bash: 'ctest -R ".*Hash.*" -E ".*TestOfflineProcessing.*" -T test --no-compress-output'
+    - bash: 'ctest ${{ parameters.cmakeTestsToRun }} -T test --no-compress-output'
       workingDirectory: build
       failOnStderr: true
       displayName: 'Run Tests'
@@ -250,7 +253,7 @@ stages:
     timeoutInMinutes: 240
 
     pool:
-      name: Hosted Ubuntu 1604
+      vmImage: ${{ parameters.linuxImage }}
       
     strategy:
       matrix:
@@ -304,6 +307,10 @@ stages:
         echo "sysctl -w kernel.core_pattern=core.%p"
         sudo sysctl -w kernel.core_pattern="core.%p"
         cat /proc/sys/kernel/core_pattern
+        # Update package repositories
+        sudo apt-get -y update
+        
+        # Install required packages
         sudo apt-get -y install \
           gcc-multilib \
           g++-multilib        
@@ -322,6 +329,7 @@ stages:
         sudo apt-get -y install libdmalloc-dev
       displayName: 'Install Required 64bit Packages'
       condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
+      failOnStderr: true
 
     - task: DownloadBuildArtifacts@0
       displayName: 'Download Enterprise Data File'
@@ -334,6 +342,7 @@ stages:
     - script: |
           mv $(System.ArtifactsDirectory)/enterpriseFile/51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)/device-detection-data/51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
+      failOnStderr: true
 
     - task: Bash@3
       displayName: 'Create Build Directory'
@@ -353,7 +362,7 @@ stages:
         workingDirectory: build
         cmakeArgs: '--build .'
 
-    - bash: 'ctest -E ".*TestOfflineProcessing.*" -T test --no-compress-output'
+    - bash: 'ctest ${{ parameters.cmakeTestsToRun }} -T test --no-compress-output'
       workingDirectory: build
       failOnStderr: true
       displayName: 'Run Tests'
@@ -389,7 +398,7 @@ stages:
     timeoutInMinutes: 240
 
     pool:
-      vmImage: macOS-10.14
+      vmImage: ${{ parameters.macImage }}
       
     strategy:
       matrix:
@@ -420,6 +429,7 @@ stages:
         brew search dmalloc
         brew install dmalloc
       displayName: 'Install Required Packages'
+      failOnStderr: true
 
     - task: DownloadBuildArtifacts@0
       displayName: 'Download Enterprise Data File'
@@ -432,6 +442,7 @@ stages:
     - script: |
           mv $(System.ArtifactsDirectory)/enterpriseFile/51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)/device-detection-data/51Degrees-EnterpriseV4.1.hash
       displayName: 'Move Data File'
+      failOnStderr: true
 
     - task: Bash@3
       displayName: 'Create Build Directory'
@@ -451,7 +462,7 @@ stages:
         workingDirectory: build
         cmakeArgs: '--build .'
 
-    - bash: 'ctest -E ".*TestOfflineProcessing.*" -T test --no-compress-output'
+    - bash: 'ctest ${{ parameters.cmakeTestsToRun }} -T test --no-compress-output'
       workingDirectory: build
       failOnStderr: true
       displayName: 'Run Tests'

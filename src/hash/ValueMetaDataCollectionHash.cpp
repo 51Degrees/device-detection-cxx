@@ -33,7 +33,7 @@ ValueMetaDataCollectionHash::ValueMetaDataCollectionHash(
 
 ValueMetaDataCollectionHash::~ValueMetaDataCollectionHash() {}
 
-ValueMetaData* ValueMetaDataCollectionHash::getByIndex(uint32_t index) {
+ValueMetaData* ValueMetaDataCollectionHash::getByIndex(uint32_t index) const {
 	EXCEPTION_CREATE;
 	Item item;
 	Value *value;
@@ -48,10 +48,10 @@ ValueMetaData* ValueMetaDataCollectionHash::getByIndex(uint32_t index) {
 	return result;
 }
 
-ValueMetaData* ValueMetaDataCollectionHash::getByKey(ValueMetaDataKey key) {
+ValueMetaData* ValueMetaDataCollectionHash::getByKey(ValueMetaDataKey key) const {
 	return ValueMetaDataCollectionBaseHash::getByKey(key);
 }
 
-uint32_t ValueMetaDataCollectionHash::getSize() {
+uint32_t ValueMetaDataCollectionHash::getSize() const {
 	return CollectionGetCount(dataSet->values);
 }

@@ -97,7 +97,7 @@ namespace FiftyoneDegrees {
 				 * results
 				 * @return device id string
 				 */
-				string getDeviceId(uint32_t resultIndex);
+				string getDeviceId(uint32_t resultIndex) const;
 
 				/**
 				 * Get the number of iterations carried out in order to find a
@@ -105,7 +105,7 @@ namespace FiftyoneDegrees {
 				 * been visited.
 				 * @return number of iterations
 				 */
-				int getIterations();
+				int getIterations() const;
 
 				/**
 				 * Returns the maximum drift for a matched substring from the
@@ -114,7 +114,7 @@ namespace FiftyoneDegrees {
 				 * considered.
 				 * @return int maximum drift
 				 */
-				int getDrift();
+				int getDrift() const;
 
 				/**
 				 * Returns the drift for a matched substring from the character
@@ -124,14 +124,14 @@ namespace FiftyoneDegrees {
 				 * results
 				 * @return individual drift
 				 */
-				int getDrift(uint32_t resultIndex);
+				int getDrift(uint32_t resultIndex) const;
 
 				/**
 				 * Returns the number of hash nodes matched within the
 				 * evidence.
 				 * @return
 				 */
-				int getMatchedNodes();
+				int getMatchedNodes() const;
 
 				/**
 				 * Returns the total difference between the results returned
@@ -140,7 +140,7 @@ namespace FiftyoneDegrees {
 				 * the total difference.
 				 * @return total difference
 				 */
-				int getDifference();
+				int getDifference() const;
 
 				/**
 				 * Returns the difference between the result returned and the
@@ -149,14 +149,14 @@ namespace FiftyoneDegrees {
 				 * results
 				 * @return individual difference
 				 */
-				int getDifference(uint32_t resultIndex);
+				int getDifference(uint32_t resultIndex) const;
 
 				/**
 				 * Returns the method used to determine the match result. See
 				 * #fiftyoneDegreesHashMatchMethod
 				 * @return highest method used
 				 */
-				int getMethod();
+				int getMethod() const;
 
 				/**
 				 * Returns the method used to determine the match result. See
@@ -165,14 +165,14 @@ namespace FiftyoneDegrees {
 				 * results
 				 * @return individual method used
 				 */
-				int getMethod(uint32_t resultIndex);
+				int getMethod(uint32_t resultIndex) const;
 
 				/**
 				 * Get the trace route in a readable format showing the hash
 				 * nodes which were visited during processing.
 				 * @return trace route string
 				 */
-				string getTrace();
+				string getTrace() const;
 
 				/**
 				 * Get the trace route in a readable format for the result
@@ -181,7 +181,7 @@ namespace FiftyoneDegrees {
 				 * @param resultIndex index to get the trace route for
 				 * @return trace route string
 				 */
-				string getTrace(uint32_t resultIndex);
+				string getTrace(uint32_t resultIndex) const;
 
 				/**
 				 * @}
@@ -189,11 +189,11 @@ namespace FiftyoneDegrees {
 				 * @{
 				 */
 
-				string getDeviceId();
+				string getDeviceId() const;
 
-				int getUserAgents();
+				int getUserAgents() const;
 
-				string getUserAgent(int resultIndex);
+				string getUserAgent(int resultIndex) const;
 
 				/**
 				 * @}

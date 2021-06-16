@@ -39,6 +39,6 @@ void EngineDeviceDetection::init(
 
 ResultsDeviceDetection*
 EngineDeviceDetection::processDeviceDetection(
-	string &userAgent) {
+	string &userAgent) const {
 	return processDeviceDetection(userAgent.c_str());
 }

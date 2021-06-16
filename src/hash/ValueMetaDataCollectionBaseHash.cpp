@@ -40,7 +40,7 @@ ValueMetaDataCollectionBaseHash::~ValueMetaDataCollectionBaseHash() {
 }
 
 ValueMetaData* ValueMetaDataCollectionBaseHash::getByKey(
-	ValueMetaDataKey key) {
+	ValueMetaDataKey key) const {
 	EXCEPTION_CREATE;
 	Item propertyItem, valueItem;
 	Value *value;

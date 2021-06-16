@@ -70,11 +70,11 @@ namespace FiftyoneDegrees {
 				 * @{
 				 */
 
-				ValueMetaData* getByIndex(uint32_t index);
+				ValueMetaData* getByIndex(uint32_t index) const;
 
-				ValueMetaData* getByKey(ValueMetaDataKey key);
+				ValueMetaData* getByKey(ValueMetaDataKey key) const;
 
-				uint32_t getSize();
+				uint32_t getSize() const;
 
 				/**
 				 * @}
@@ -84,7 +84,7 @@ namespace FiftyoneDegrees {
 				 * Get the underlying profile which the values all relate to.
 				 * @return pointer to the profile
 				 */
-				fiftyoneDegreesProfile* getProfile();
+				fiftyoneDegreesProfile* getProfile() const;
 
 				/** The underlying profile collection item */
 				fiftyoneDegreesCollectionItem profileItem;

@@ -1,0 +1,23 @@
+# This pipeline is used for regression testing to run the full set of tests.
+trigger: none
+
+# Triggered by PRs to any of the main branches
+pr:
+  - master
+  - develop
+  - release/*
+  - hotfix/*
+
+# Include shared variables
+variables:
+- template: shared-variables.yml
+
+stages:
+# Use full set of tests.
+- template: shared-build-and-test-stages.yml
+  parameters:
+    windowsImage: $(windowsImage)
+    linuxImage: $(linuxImage)
+    macImage: $(macImage)
+    vsTestsToRun: $(vsFullTestsToRun)
+    cmakeTestsToRun: $(cmakeFullTestsToRun)

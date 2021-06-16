@@ -157,12 +157,12 @@ namespace FiftyoneDegrees {
 				/**
 				 * @copydoc EngineDeviceDetection::processDeviceDetection(EvidenceDeviceDetection*)
 				 */
-				ResultsHash* process(EvidenceDeviceDetection *evidence);
+				ResultsHash* process(EvidenceDeviceDetection *evidence) const;
 
 				/**
 				 * @copydoc EngineDeviceDetection::processDeviceDetection(const char*)
 				 */
-				ResultsHash* process(const char *userAgent);
+				ResultsHash* process(const char *userAgent) const;
 
 				/**
 				 * @}
@@ -170,27 +170,27 @@ namespace FiftyoneDegrees {
 				 * @{
 				 */
 
-				void refreshData();
+				void refreshData() const;
 
-				void refreshData(const char *fileName);
+				void refreshData(const char *fileName) const;
 
-				void refreshData(void *data, long length);
+				void refreshData(void *data, long length) const;
 
-				void refreshData(unsigned char data[], long length);
+				void refreshData(unsigned char data[], long length) const;
 
-				ResultsBase* processBase(EvidenceBase *evidence);
+				ResultsBase* processBase(EvidenceBase *evidence) const;
 
-				Date getPublishedTime();
+				Date getPublishedTime() const;
 
-				Date getUpdateAvailableTime();
+				Date getUpdateAvailableTime() const;
 
-				string getDataFilePath();
+				string getDataFilePath() const;
 
-				string getDataFileTempPath();
+				string getDataFileTempPath() const;
 
-				string getProduct();
+				string getProduct() const;
 
-				string getType();
+				string getType() const;
 
 				/**
 				 * @}
@@ -199,10 +199,10 @@ namespace FiftyoneDegrees {
 				 */
 
 				ResultsDeviceDetection* processDeviceDetection(
-					EvidenceDeviceDetection *evidence);
+					EvidenceDeviceDetection *evidence) const;
 
 				ResultsDeviceDetection* processDeviceDetection(
-					const char *userAgent);
+					const char *userAgent) const;
 
 				/**
 				 * @}
@@ -225,7 +225,7 @@ namespace FiftyoneDegrees {
 
 				void init();
 
-				void* copyData(void *data, size_t length);
+				void* copyData(void *data, size_t length) const;
 			};
 		}
 	}

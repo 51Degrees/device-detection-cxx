@@ -33,29 +33,29 @@ MetaDataHash::MetaDataHash(
 MetaDataHash::~MetaDataHash() {
 }
 
-Collection<byte, ComponentMetaData>* MetaDataHash::getComponents()
+Collection<byte, ComponentMetaData>* MetaDataHash::getComponents() const
 {
 	return new ComponentMetaDataCollectionHash(manager.get());
 }
 
-Collection<string, PropertyMetaData>* MetaDataHash::getProperties()
+Collection<string, PropertyMetaData>* MetaDataHash::getProperties() const
 {
 	return new PropertyMetaDataCollectionHash(manager.get());
 }
 
-Collection<ValueMetaDataKey, ValueMetaData>* MetaDataHash::getValues()
+Collection<ValueMetaDataKey, ValueMetaData>* MetaDataHash::getValues() const
 {
 	return new ValueMetaDataCollectionHash(manager.get());
 }
 
-Collection<uint32_t, ProfileMetaData>* MetaDataHash::getProfiles()
+Collection<uint32_t, ProfileMetaData>* MetaDataHash::getProfiles() const
 {
 	return new ProfileMetaDataCollectionHash(manager.get());
 }
 
 Collection<ValueMetaDataKey, ValueMetaData>*
 MetaDataHash::getValuesForProperty(
-	PropertyMetaData *property) {
+	PropertyMetaData *property) const {
 	return new ValueMetaDataCollectionForPropertyHash(
 		manager.get(),
 		property);
@@ -63,14 +63,14 @@ MetaDataHash::getValuesForProperty(
 
 Collection<ValueMetaDataKey, ValueMetaData>*
 MetaDataHash::getValuesForProfile(
-	ProfileMetaData *profile) {
+	ProfileMetaData *profile) const {
 	return new ValueMetaDataCollectionForProfileHash(
 		manager.get(),
 		profile);
 }
 
 ComponentMetaData* MetaDataHash::getComponentForProfile(
-	ProfileMetaData *profile) {
+	ProfileMetaData *profile) const {
 	ComponentMetaData *result = nullptr;
 	Collection<byte, ComponentMetaData> *components = getComponents();
 	if (components != nullptr) {
@@ -81,7 +81,7 @@ ComponentMetaData* MetaDataHash::getComponentForProfile(
 }
 
 ComponentMetaData* MetaDataHash::getComponentForProperty(
-	PropertyMetaData *property) {
+	PropertyMetaData *property) const {
 	ComponentMetaData *result = nullptr;
 	Collection<byte, ComponentMetaData> *components = getComponents();
 	if (components != nullptr) {
@@ -92,7 +92,7 @@ ComponentMetaData* MetaDataHash::getComponentForProperty(
 }
 
 ProfileMetaData* MetaDataHash::getDefaultProfileForComponent(
-	ComponentMetaData *component) {
+	ComponentMetaData *component) const {
 	ProfileMetaData *result = nullptr;
 	Collection<uint32_t, ProfileMetaData> *profiles = getProfiles();
 	if (profiles != nullptr) {
@@ -103,7 +103,7 @@ ProfileMetaData* MetaDataHash::getDefaultProfileForComponent(
 }
 
 ValueMetaData* MetaDataHash::getDefaultValueForProperty(
-	PropertyMetaData *property) {
+	PropertyMetaData *property) const {
 	ValueMetaData *result = nullptr;
 	Collection<ValueMetaDataKey, ValueMetaData> *values = getValues();
 	if (values != nullptr) {
@@ -117,7 +117,7 @@ ValueMetaData* MetaDataHash::getDefaultValueForProperty(
 
 Collection<string, PropertyMetaData>*
 MetaDataHash::getPropertiesForComponent(
-	ComponentMetaData *component) {
+	ComponentMetaData *component) const {
 	return new PropertyMetaDataCollectionForComponentHash(
 		manager.get(),
 		component);
@@ -125,14 +125,14 @@ MetaDataHash::getPropertiesForComponent(
 
 Collection<string, PropertyMetaData>*
 MetaDataHash::getEvidencePropertiesForProperty(
-	PropertyMetaData *property) {
+	PropertyMetaData *property) const {
 	return new PropertyMetaDataCollectionForPropertyHash(
 		manager.get(),
 		property);
 }
 
 PropertyMetaData* MetaDataHash::getPropertyForValue(
-	ValueMetaData *value) {
+	ValueMetaData *value) const {
 	PropertyMetaData *result = nullptr;
 	Collection<string, PropertyMetaData> *properties = getProperties();
 	if (properties != nullptr) {

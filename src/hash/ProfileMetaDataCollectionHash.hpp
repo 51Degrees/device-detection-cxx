@@ -65,11 +65,11 @@ namespace FiftyoneDegrees {
 				 */
 				~ProfileMetaDataCollectionHash();
 
-				ProfileMetaData* getByIndex(uint32_t index);
+				ProfileMetaData* getByIndex(uint32_t index) const;
 
-				ProfileMetaData* getByKey(uint32_t profileId);
+				ProfileMetaData* getByKey(uint32_t profileId) const;
 
-				uint32_t getSize();
+				uint32_t getSize() const;
 
 				/**
 				 * @}

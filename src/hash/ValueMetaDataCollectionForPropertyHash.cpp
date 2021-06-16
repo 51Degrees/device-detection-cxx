@@ -45,7 +45,7 @@ ValueMetaDataCollectionForPropertyHash::~ValueMetaDataCollectionForPropertyHash(
 }
 
 ValueMetaData* ValueMetaDataCollectionForPropertyHash::getByIndex(
-	uint32_t index) {
+	uint32_t index) const {
 	EXCEPTION_CREATE;
 	Item item;
 	Value *value;
@@ -65,7 +65,7 @@ ValueMetaData* ValueMetaDataCollectionForPropertyHash::getByIndex(
 }
 
 ValueMetaData* ValueMetaDataCollectionForPropertyHash::getByKey(
-	ValueMetaDataKey key) {
+	ValueMetaDataKey key) const {
 	EXCEPTION_CREATE;
 	Item item;
 	ValueMetaData *result = nullptr;
@@ -89,12 +89,12 @@ ValueMetaData* ValueMetaDataCollectionForPropertyHash::getByKey(
 	return result;
 }
 
-uint32_t ValueMetaDataCollectionForPropertyHash::getSize() {
+uint32_t ValueMetaDataCollectionForPropertyHash::getSize() const {
 	return (int)getProperty()->firstValueIndex == -1 ?
 		0 :
 		getProperty()->lastValueIndex - getProperty()->firstValueIndex + 1;
 }
 
-fiftyoneDegreesProperty* ValueMetaDataCollectionForPropertyHash::getProperty() {
+fiftyoneDegreesProperty* ValueMetaDataCollectionForPropertyHash::getProperty() const {
 	return (Property*)propertyItem.data.ptr;
 }

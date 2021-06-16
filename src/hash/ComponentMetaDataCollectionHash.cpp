@@ -40,7 +40,7 @@ ComponentMetaDataCollectionHash::~ComponentMetaDataCollectionHash() {
 }
 
 ComponentMetaData* ComponentMetaDataCollectionHash::getByIndex(
-	uint32_t index) {
+	uint32_t index) const {
 	ComponentMetaData *component = nullptr;
 	if (index < components->count) {
 		component = ComponentMetaDataBuilderHash::build(
@@ -51,7 +51,7 @@ ComponentMetaData* ComponentMetaDataCollectionHash::getByIndex(
 }
 
 ComponentMetaData* ComponentMetaDataCollectionHash::getByKey(
-	byte componentId) {
+	byte componentId) const {
 	ComponentMetaData *result = nullptr;
 	Component *component;
 	uint32_t i;
@@ -64,6 +64,6 @@ ComponentMetaData* ComponentMetaDataCollectionHash::getByKey(
 	return result;
 }
 
-uint32_t ComponentMetaDataCollectionHash::getSize() {
+uint32_t ComponentMetaDataCollectionHash::getSize() const {
 	return components->count;
 }
