@@ -8,6 +8,14 @@ pr:
   - release/*
   - hotfix/*
 
+# Schedule to run overnight
+schedules:
+- cron: "0 20 * * *"
+  displayName: Daily overnight build
+  branches:
+    include:
+    - develop
+
 # Include shared variables
 variables:
 - template: shared-variables.yml
