@@ -12,6 +12,12 @@ pr:
 variables:
 - template: shared-variables.yml
 
+resources:
+  repositories:
+  - repository: ciTemplates # Id of the repository used to reference to in this script
+    type: git
+    name: common-ci # Name of the actual repository
+
 stages:
 # Use full set of tests.
 - template: shared-build-and-test-stages.yml
@@ -21,3 +27,7 @@ stages:
     macImage: $(macImage)
     vsTestsToRun: $(vsFullTestsToRun)
     cmakeTestsToRun: $(cmakeFullTestsToRun)
+    
+# Try to complete the corresponding pull request if
+# this is triggered by one.    
+- template: shared-auto-complete-pr-stage.yml@ciTemplates
