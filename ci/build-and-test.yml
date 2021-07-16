@@ -19,6 +19,7 @@ schedules:
 # Include shared variables
 variables:
 - template: shared-variables.yml
+- group: CIAutomation # Required to access CI variables
 
 resources:
   repositories:
@@ -35,6 +36,7 @@ stages:
     macImage: $(macImage)
     vsTestsToRun: $(vsFullTestsToRun)
     cmakeTestsToRun: $(cmakeFullTestsToRun)
+    runTests: variables['RunTests']
     
 # Try to complete the corresponding pull request if
 # this is triggered by one.    

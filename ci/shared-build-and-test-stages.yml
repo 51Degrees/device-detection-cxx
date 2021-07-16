@@ -4,12 +4,17 @@ parameters:
 - name: macImage
 - name: cmakeTestsToRun
 - name: vsTestsToRun
+- name: runTests
+  type: string
+  default: 'On'
 
 stages:
 
 - stage: Data
   jobs:
   - job: Get_Enterprise_DataFile
+    condition: eq(${{ parameters.runTests }}, 'On')
+
     pool:
       vmImage: ${{ parameters.linuxImage }}
 
@@ -47,7 +52,8 @@ stages:
   jobs:
  
   - job: Build_VisualStudio  
-      
+    condition: eq(${{ parameters.runTests }}, 'On')
+
     strategy:
       maxParallel: 1
       matrix:
@@ -145,6 +151,7 @@ stages:
         testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\$(BuildDirectory)\testoutput.xml'
 
   - job: Build_And_Test_CMake
+    condition: eq(${{ parameters.runTests }}, 'On')
 
     timeoutInMinutes: 240
 
@@ -249,6 +256,7 @@ stages:
   dependsOn: [Data]
   jobs:
   - job: Build_And_Test
+    condition: eq(${{ parameters.runTests }}, 'On')
 
     timeoutInMinutes: 240
 
@@ -394,6 +402,7 @@ stages:
   dependsOn: [Data]
   jobs:
   - job: Build_And_Test
+    condition: eq(${{ parameters.runTests }}, 'On')
 
     timeoutInMinutes: 240
 
