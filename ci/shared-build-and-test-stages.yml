@@ -13,7 +13,7 @@ stages:
 - stage: Data
   jobs:
   - job: Get_Enterprise_DataFile
-    condition: eq(${{ parameters.runTests }}, 'On')
+    condition: ne(${{ parameters.runTests }}, 'Off')
 
     pool:
       vmImage: ${{ parameters.linuxImage }}
@@ -52,7 +52,7 @@ stages:
   jobs:
  
   - job: Build_VisualStudio  
-    condition: eq(${{ parameters.runTests }}, 'On')
+    condition: ne(${{ parameters.runTests }}, 'Off')
 
     strategy:
       maxParallel: 1
@@ -151,7 +151,7 @@ stages:
         testResultsFiles: 'VisualStudio\FiftyOne.DeviceDetection.Hash.Tests\$(BuildDirectory)\testoutput.xml'
 
   - job: Build_And_Test_CMake
-    condition: eq(${{ parameters.runTests }}, 'On')
+    condition: ne(${{ parameters.runTests }}, 'Off')
 
     timeoutInMinutes: 240
 
@@ -256,7 +256,7 @@ stages:
   dependsOn: [Data]
   jobs:
   - job: Build_And_Test
-    condition: eq(${{ parameters.runTests }}, 'On')
+    condition: ne(${{ parameters.runTests }}, 'Off')
 
     timeoutInMinutes: 240
 
@@ -402,7 +402,7 @@ stages:
   dependsOn: [Data]
   jobs:
   - job: Build_And_Test
-    condition: eq(${{ parameters.runTests }}, 'On')
+    condition: ne(${{ parameters.runTests }}, 'Off')
 
     timeoutInMinutes: 240
 
