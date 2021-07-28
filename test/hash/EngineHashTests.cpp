@@ -389,7 +389,7 @@ public:
 		try {
 			goodResults = ((EngineHash*)getEngine())->process(&evidence);
 		}
-		catch (exception e){
+		catch (exception &e){
 			FAIL() << L"Processing should not throw an exception if it is "
 				<< L"only using the graph it is supposed to. Exception was: "
 				<< e.what();
@@ -399,7 +399,7 @@ public:
 		try {
 			badResults = ((EngineHash*)getEngine())->process(&evidence);
 		}
-		catch (exception e) {
+		catch (exception &e) {
 			FAIL() << L"Processing should not throw an exception if it is "
 				<< L"only using the graph it is supposed to. Exception was: "
 				<< e.what();
@@ -448,7 +448,7 @@ public:
 		try {
 			goodResults = ((EngineHash*)getEngine())->process(&evidence);
 		}
-		catch (exception e) {
+		catch (exception &e) {
 			FAIL() << L"Processing should not throw an exception if it is "
 				<< L"only using the graph it is supposed to. Exception was: "
 				<< e.what();
@@ -458,7 +458,7 @@ public:
 		try {
 			badResults = ((EngineHash*)getEngine())->process(&evidence);
 		}
-		catch (exception e) {
+		catch (exception &e) {
 			FAIL() << L"Processing should not throw an exception if it is "
 				<< L"only using the graph it is supposed to. Exception was: "
 				<< e.what();
