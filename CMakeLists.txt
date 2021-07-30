@@ -81,7 +81,10 @@ set_target_properties(fiftyone-device-detection-complete PROPERTIES PUBLIC_HEADE
 install(TARGETS fiftyone-device-detection-complete DESTINATION fiftyone-device-detection-complete
 	RUNTIME DESTINATION lib
 	ARCHIVE DESTINATION lib/static
-	PUBLIC_HEADER DESTINATION include)
+	PUBLIC_HEADER DESTINATION include
+	# Set this to optional, otherwise it will interfere with builds which
+	# include this CMake file.
+	OPTIONAL)
 
 # Examples
 
