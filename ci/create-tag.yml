@@ -6,14 +6,6 @@ trigger:
 # Don't trigger for a pull request
 pr: none
 
-# Schedule to run overnight
-schedules:
-- cron: "0 20 * * *"
-  displayName: Daily overnight build
-  branches:
-    include:
-    - develop
-
 # Include shared variables
 variables:
 - template: shared-variables.yml
@@ -25,17 +17,8 @@ resources:
       name: common-ci # Name of the actual repository
 
 stages:
-# Run full set of tests before creating any tag.
-- template: shared-build-and-test-stages.yml
-  parameters:
-    windowsImage: $(windowsImage)
-    linuxImage: $(linuxImage)
-    macImage: $(macImage)
-    vsTestsToRun: $(vsFullTestsToRun)
-    cmakeTestsToRun: $(cmakeFullTestsToRun)
 
 - stage: Tagging
-  dependsOn: [Windows,Linux,MacOS]
 
   jobs:
   - template: shared-create-tag-job.yml@ciTemplates

@@ -122,7 +122,7 @@ namespace FiftyoneDegrees {
 								engine->refreshData();
 								numberOfReloads++;
 							}
-							catch (StatusCodeException e) {
+							catch (StatusCodeException&) {
 								numberOfReloadFails++;
 							}
 #ifdef _MSC_VER
@@ -140,7 +140,7 @@ namespace FiftyoneDegrees {
 							engine->refreshData();
 							numberOfReloads++;
 						}
-						catch (StatusCodeException e) {
+						catch (StatusCodeException&) {
 							numberOfReloadFails++;
 						}
 						state.processUserAgentsSingle();
