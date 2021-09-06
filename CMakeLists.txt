@@ -170,18 +170,21 @@ add_executable(HashTests
 	${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.hpp)
 target_link_libraries(HashTests
 	fiftyone-device-detection-test-base
-   		fiftyone-hash-cxx)
+	fiftyone-hash-cxx)
+
+if (NOT MSVC)
+	target_link_libraries(HashTests ${DMALLOC_LIB})
+endif()
+
 gtest_discover_tests(HashTests)
 
 set_target_properties(HashTests PROPERTIES FOLDER "Tests")
 
-# Don't enable _DEBUG here for Linux, because that will trigger
-# dmalloc usage in Example tests which are not required for testing.
-# Non-example code which require _DEBUG is dealed separately when
-# building the specific libraries.
 if (MSVC)
 	target_compile_options(HashTests PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/W4" "/WX")
 	target_link_options(HashTests PRIVATE "/WX")
+else ()
+	target_compile_options(HashTests PRIVATE ${COMPILE_OPTION_DEBUG})
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
