@@ -95,22 +95,12 @@ offline data processing. It also demonstrates that you can reuse the retrieved
 results for multiple uses and only then release it.
 */
 
-// Windows 'crtdbg.h' needs to be included
-// before 'malloc.h'
-#if defined(_DEBUG) && defined(_MSC_VER)
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
-
+// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
+// which requires to be included before 'malloc.h'.
+#include "ExampleBase.h"
 #include "../../../src/hash/hash.h"
 #include "../../../src/common-cxx/textfile.h"
 #include "../../../src/hash/fiftyone.h"
-
-// 'dmalloc.h' needs to be included after
-// 'string.h'
-#if defined(_DEBUG) && !defined(_MSC_VER)
-#include "dmalloc.h"
-#endif
 
 static const char *dataDir = "device-detection-data";
 
@@ -325,6 +315,19 @@ void fiftyoneDegreesOfflineProcessingRun(
 	}
 }
 
+/**
+ * Implementation of function fiftyoneDegreesExampleRunPtr.
+ */
+void fiftyoneDegreesExampleCOfflineProcessingRun(ExampleParameters *params) {
+	// Call the actual function.
+	fiftyoneDegreesOfflineProcessingRun(
+		params->dataFilePath,
+		params->userAgentsFilePath,
+		params->outputFilePath,
+		params->propertiesString,
+		*params->config);
+}
+
 #ifndef TEST
 
 /**
@@ -380,31 +383,18 @@ int main(int argc, char* argv[]) {
 		strcpy(&outputFilePath[i], ".processed.csv");
 	}
 
-#ifdef _DEBUG
-#ifndef _MSC_VER
-	dmalloc_debug_setup("log-stats,log-non-free,check-fence,log=dmalloc.log");
-#else
-	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-#endif
-#endif
-
-	// Start the offline processing.
-	fiftyoneDegreesOfflineProcessingRun(
-		dataFilePath,
-		userAgentFilePath,
-		outputFilePath,
-		argc > 4 ? argv[4] : "IsMobile,BrowserName,DeviceType,PriceBand,"
-							 "ReleaseMonth,ReleaseYear",
-		CONFIG);
-
-#ifdef _DEBUG
-#ifdef _MSC_VER
-	_CrtDumpMemoryLeaks();
-#else
-	printf("Log file is %s\r\n", dmalloc_logpath);
-#endif
-#endif
+	ConfigHash config = CONFIG;
+	ExampleParameters params;
+	params.dataFilePath = dataFilePath;
+	params.userAgentsFilePath = userAgentFilePath;
+	params.outputFilePath = outputFilePath;
+	params.propertiesString = argc > 4 ? argv[4] : "IsMobile,BrowserName,DeviceType,PriceBand,"
+							 "ReleaseMonth,ReleaseYear";
+	params.config = &config;
+	// Run the example
+	fiftyoneDegreesExampleMemCheck(
+		&params,
+		fiftyoneDegreesExampleCOfflineProcessingRun);
 
 	// Wait for a character to be pressed.
 	fgetc(stdin);

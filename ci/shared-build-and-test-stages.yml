@@ -323,21 +323,6 @@ stages:
           gcc-multilib \
           g++-multilib        
       displayName: 'Install Required Packages'
-      
-    - script: |
-        wget http://ftp.br.debian.org/debian/pool/main/d/dmalloc/libdmalloc-dev_5.5.2-6_i386.deb
-        sudo dpkg --add-architecture i386
-        sudo apt-get -y update
-        sudo dpkg -i libdmalloc-dev_5.5.2-6_i386.deb
-        sudo sudo apt-get -y install -f
-      displayName: 'Install Required 32bit Packages'
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x86'))
-      
-    - script: |
-        sudo apt-get -y install libdmalloc-dev
-      displayName: 'Install Required 64bit Packages'
-      condition: and(succeeded(), eq(variables['BuildPlatform'], 'x64'))
-      failOnStderr: true
 
     - task: DownloadBuildArtifacts@0
       displayName: 'Download Enterprise Data File'
@@ -433,12 +418,6 @@ stages:
     - checkout: self
       submodules: recursive
       lfs: true
-      
-    - script: |
-        brew search dmalloc
-        brew install dmalloc
-      displayName: 'Install Required Packages'
-      failOnStderr: true
 
     - task: DownloadBuildArtifacts@0
       displayName: 'Download Enterprise Data File'

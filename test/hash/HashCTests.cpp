@@ -29,6 +29,20 @@ public:
 
 	void SetUp() {
 		Base::SetUp();
+		internalSetUp();
+	}
+	void TearDown() {
+		internalTearDown();
+		Base::TearDown();
+	}
+protected:
+	/*
+	* Actual SetUp for this test.
+	* All SetUp tasks should be done here. This is to allow test that do not
+	* require common resource to be able to control these resource via call
+	* to internalSetUp and internalTearDown.
+	*/
+	void internalSetUp() {
 		properties.string = commonProperties;
 		configHash.traceRoute = true;
 		
@@ -42,11 +56,17 @@ public:
 			exception);
 		EXCEPTION_THROW;
 	}
-	void TearDown() {
+	
+	/*
+	* Actual TearDown for this test.
+	* All teardown tasks should be donw here. This is to allow test that do not
+	* require common resource to be able to control these resource via call
+	* to internalSetUp and internalTearDown.
+	*/
+	void internalTearDown() {
 		ResourceManagerFree(&manager);
-		Base::TearDown();
 	}
-protected:
+
 	string dataFilePath;
 	PropertiesRequired properties = PropertiesDefault;
 	ConfigHash configHash = HashDefaultConfig;
@@ -379,6 +399,13 @@ TEST_F(HashCTests, ResultsHashGetValuesStringNoTrailingSeparator) {
  * status correctly if an error occurred during the sizing.
  */
 TEST_F(HashCTests, HashSizeManagerFromFileException) {
+	// fiftyoneDegreesHashSizeManagerFromFile use memory tracking to size the
+	// memory space that will be allocated. This would cause the memory
+	// check for this test to fail due to tracked memory allocated in SetUp
+	// being lost due to a Reset in HashSizeManagerFromFile happens before those
+	// memory is freed. Thus, free them here.
+	internalTearDown();
+
 	EXCEPTION_CREATE;
 	fiftyoneDegreesHashSizeManagerFromFile(
 		&this->configHash,
@@ -388,4 +415,8 @@ TEST_F(HashCTests, HashSizeManagerFromFileException) {
 	EXPECT_EQ(FIFTYONE_DEGREES_STATUS_FILE_NOT_FOUND, exception->status) <<
 		"Exception status should be set to " <<
 		FIFTYONE_DEGREES_STATUS_FILE_NOT_FOUND << ".\n";
+	
+	// SetUp the test at this point so the test will perform memory free as
+	// normal and memory check will not fail for this test.
+	internalSetUp();
 }

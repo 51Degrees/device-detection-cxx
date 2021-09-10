@@ -10,11 +10,6 @@ project(51DegreesDeviceDetection VERSION 4.0.1 LANGUAGES CXX C)
 
 set(DD ${CMAKE_CURRENT_LIST_DIR}/src)
 set(HASH ${CMAKE_CURRENT_LIST_DIR}/src/hash)
-if (NoThreading)
-	set(DMALLOC_LIB dmalloc)
-else()
-	set(DMALLOC_LIB dmallocth)
-endif()
 
 # Device Detection libraries
 
@@ -103,6 +98,8 @@ foreach (api "Hash")
 				if("${langext}" STREQUAL "cpp")
 					MESSAGE("-- Found C++ example '${name}'")
 					add_executable(${name} ${file}
+					${CMAKE_CURRENT_LIST_DIR}/examples/C/${api}/ExampleBase.c
+					${CMAKE_CURRENT_LIST_DIR}/examples/C/${api}/ExampleBase.h
 					${CMAKE_CURRENT_LIST_DIR}/examples/${upperlangext}/${api}/ExampleBase.cpp
 					${CMAKE_CURRENT_LIST_DIR}/examples/${upperlangext}/${api}/ExampleBase.hpp)
 					if (MSVC)
@@ -112,11 +109,13 @@ foreach (api "Hash")
 							target_include_directories(${name} PRIVATE "/usr/local/include")
 							target_link_directories(${name} PRIVATE "/usr/local/lib")
 						endif()
-						target_link_libraries(${name} fiftyone-${lowerapi}-cxx ${DMALLOC_LIB})
+						target_link_libraries(${name} fiftyone-${lowerapi}-cxx)
 					endif()
 				elseif("${langext}" STREQUAL "c")
 					MESSAGE("-- Found C example '${name}'")
-					add_executable(${name} ${file})
+					add_executable(${name} ${file}
+					${CMAKE_CURRENT_LIST_DIR}/examples/${upperlangext}/${api}/ExampleBase.c
+					${CMAKE_CURRENT_LIST_DIR}/examples/${upperlangext}/${api}/ExampleBase.h)
 					if (MSVC)
 						target_link_libraries(${name} fiftyone-${lowerapi}-c)
 					else()
@@ -124,7 +123,7 @@ foreach (api "Hash")
 							target_include_directories(${name} PRIVATE "/usr/local/include")
 							target_link_directories(${name} PRIVATE "/usr/local/lib")
 						endif()
-						target_link_libraries(${name} fiftyone-${lowerapi}-c ${DMALLOC_LIB})
+						target_link_libraries(${name} fiftyone-${lowerapi}-c)
 					endif()
 				endif()
 				set_target_properties(${name}
@@ -171,10 +170,6 @@ add_executable(HashTests
 target_link_libraries(HashTests
 	fiftyone-device-detection-test-base
 	fiftyone-hash-cxx)
-
-if (NOT MSVC)
-	target_link_libraries(HashTests ${DMALLOC_LIB})
-endif()
 
 gtest_discover_tests(HashTests)
 

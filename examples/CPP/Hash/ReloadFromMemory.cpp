@@ -20,10 +20,12 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
  
- #include <string>
+#include <string>
 #include <iostream>
 #include <thread>
-#include "../../../src/hash/hash.h"
+// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
+// which requires to be included before 'malloc.h'.
+#include "../../C/Hash/ExampleBase.h"
 #include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
@@ -165,6 +167,34 @@ namespace FiftyoneDegrees {
 	}
 }
 
+/**
+ * Implementation of function fiftyoneDegreesExampleRunPtr.
+ * Need to wrapped with 'extern "C"' as this will be called in C.
+ */
+extern "C" void fiftyoneDegreesExampleCPPReloadFromMemoryRun(ExampleParameters *params) {
+	// Call the actual function.
+	ConfigHash *cppConfig = new ConfigHash();
+	cppConfig->setConcurrency(THREAD_COUNT);
+	// Read the data file into memory for the initialise and reload operations.
+	fiftyoneDegreesMemoryReader reader;
+	fiftyoneDegreesStatusCode status = fiftyoneDegreesFileReadToByteArray(
+		params->dataFilePath, &reader);
+	if (status != FIFTYONE_DEGREES_STATUS_SUCCESS) {
+		ExampleBase::reportStatus(status, params->dataFilePath);
+		exit(1);
+	}
+
+	ReloadFromMemory *reloadFromMemory = new ReloadFromMemory(
+		reader.startByte,
+		reader.length,
+		params->userAgentsFilePath,
+		cppConfig);
+	reloadFromMemory->run();
+	delete reloadFromMemory;
+	// Free the memory for the test.
+	fiftyoneDegreesFree(reader.startByte);
+}
+
 #ifndef TEST
 
 /**
@@ -206,38 +236,13 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-#ifdef _DEBUG
-#ifndef _MSC_VER
-	dmalloc_debug_setup("log-stats,log-non-free,check-fence,log=dmalloc.log");
-#endif
-#endif
-	ConfigHash *config = new ConfigHash();
-	config->setConcurrency(THREAD_COUNT);
-	// Read the data file into memory for the initialise and reload operations.
-	fiftyoneDegreesMemoryReader reader;
-	status = fiftyoneDegreesFileReadToByteArray(dataFilePath, &reader);
-	if (status != FIFTYONE_DEGREES_STATUS_SUCCESS) {
-		ExampleBase::reportStatus(status, dataFilePath);
-		return 1;
-	}
-
-	ReloadFromMemory *reloadFromMemory = new ReloadFromMemory(
-		reader.startByte,
-		reader.length,
-		userAgentFilePath,
-		config);
-	reloadFromMemory->run();
-	delete reloadFromMemory;
-	// Free the memory for the test.
-	fiftyoneDegreesFree(reader.startByte);
-
-#ifdef _DEBUG
-#ifdef _MSC_VER
-	_CrtDumpMemoryLeaks();
-#else
-	printf("Log file is %s\r\n", dmalloc_logpath);
-#endif
-#endif
+	ExampleParameters params;
+	params.dataFilePath = dataFilePath;
+	params.userAgentsFilePath = userAgentFilePath;
+	// run the example
+	fiftyoneDegreesExampleMemCheck(
+		&params,
+		fiftyoneDegreesExampleCPPReloadFromMemoryRun);
 
 	// Wait for a character to be pressed.
 	fgetc(stdin);

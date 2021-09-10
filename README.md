@@ -61,7 +61,6 @@ If you have Visual Studio Code, you'll still need to install the build tools fro
 You will need:
 - [CMake 3.10](https://cmake.org/) or greater installed to build the project. 
 - A C++ compiler which supports C++11. The compiler will and other build tools will be selected by CMake automatically based on your environment.
-- dmalloc and dmallocth libraries installed when compiling the examples in Debug mode.
 
 
 # Installing

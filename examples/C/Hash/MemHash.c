@@ -24,22 +24,16 @@
 #include <string.h>
 #include <time.h>
 
- // Windows 'crtdbg.h' needs to be included
- // before 'malloc.h'
-#if defined(_DEBUG) && defined(_MSC_VER)
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
+// Enable memory tracking for this example.
+#define FORCE_MEMORY_TRACKING
+// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
+// which requires to be included before 'malloc.h'.
+#include "ExampleBase.h"
+#undef FORCE_MEMORY_TRACKING
 
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
 #include "../.././../src/common-cxx/textfile.h"
-
-// 'dmalloc.h' needs to be included after
-// 'string.h'
-#if defined(_DEBUG) && !defined(_MSC_VER)
-#include "dmalloc.h"
-#endif
 
 // Number of marks to make when showing progress.
 #define PROGRESS_MARKS 40
@@ -381,6 +375,17 @@ void fiftyoneDegreesMemHashRun(
 	MemoryTrackingReset();
 }
 
+/**
+ * Implementation of function fiftyoneDegreesExampleRunPtr.
+ */
+void fiftyoneDegreesExampleCMemHashRun(ExampleParameters *params) {
+	// Call the actual function.
+	fiftyoneDegreesMemHashRun(
+		params->dataFilePath,
+		params->userAgentsFilePath, 
+		*params->config);
+}
+
 #ifndef TEST
 
 /**
@@ -390,17 +395,6 @@ void fiftyoneDegreesMemHashRun(
  * @arg2 User-Agent file path
  */
 int main(int argc, char* argv[]) {
-
-	// Memory leak detection code.
-	#ifdef _DEBUG
-	#ifndef _MSC_VER
-		dmalloc_debug_setup("log-stats,log-non-free,check-fence,log=dmalloc.log");
-	#else
-		_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-		_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-	#endif
-	#endif
-
 	printf("\n");
 	printf("\t#############################################################\n");
 	printf("\t#                                                           #\n");
@@ -460,19 +454,15 @@ int main(int argc, char* argv[]) {
 	printf("\nPress enter to start memory test.\n");
 	fgetc(stdin);
 
-	// Run the performance test.
-	fiftyoneDegreesMemHashRun(
-		dataFilePath,
-		userAgentFilePath,
-		CONFIG);
-
-	#ifdef _DEBUG
-	#ifdef _MSC_VER
-		_CrtDumpMemoryLeaks();
-	#else
-		printf("Log file is %s\r\n", dmalloc_logpath);
-	#endif
-	#endif
+	ConfigHash config = CONFIG;
+	ExampleParameters params;
+	params.dataFilePath = dataFilePath;
+	params.userAgentsFilePath = userAgentFilePath;
+	params.config = &config;
+	// Run the example
+	fiftyoneDegreesExampleMemCheck(
+		&params,
+		fiftyoneDegreesExampleCMemHashRun);
 
 	// Wait for a character to be pressed.
 	fgetc(stdin);

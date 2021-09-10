@@ -20,9 +20,11 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
  
- #include <string>
+#include <string>
 #include <iostream>
-#include "../../../src/hash/hash.h"
+// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
+// which requires to be included before 'malloc.h'.
+#include "../../C/Hash/ExampleBase.h"
 #include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
@@ -232,6 +234,21 @@ namespace FiftyoneDegrees {
 	}
 }
 
+/**
+ * Implementation of function fiftyoneDegreesExampleRunPtr.
+ * Need to wrapped with 'extern "C"' as this will be called in C.
+ */
+extern "C" void fiftyoneDegreesExampleCPPMatchMetricsRun(ExampleParameters *params) {
+	// Call the actual function.
+	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
+	ConfigHash* cppConfig = new ConfigHash(&configHash);
+
+	MatchMetrics *matchMetrics = new MatchMetrics(
+		params->dataFilePath, cppConfig);
+	matchMetrics->run();
+	delete matchMetrics;
+}
+
 #ifndef TEST
 
 int main(int argc, char* argv[]) {
@@ -253,27 +270,12 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-
-#ifdef _DEBUG
-#ifndef _MSC_VER
-	dmalloc_debug_setup("log-stats,log-non-free,check-fence,log=dmalloc.log");
-#endif
-#endif
-
-	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
-	ConfigHash* config = new ConfigHash(&configHash);
-
-	MatchMetrics *matchMetrics = new MatchMetrics(dataFilePath, config);
-	matchMetrics->run();
-	delete matchMetrics;
-
-#ifdef _DEBUG
-#ifdef _MSC_VER
-	_CrtDumpMemoryLeaks();
-#else
-	printf("Log file is %s\r\n", dmalloc_logpath);
-#endif
-#endif
+	ExampleParameters params;
+	params.dataFilePath = dataFilePath;
+	// run the example
+	fiftyoneDegreesExampleMemCheck(
+		&params,
+		fiftyoneDegreesExampleCPPMatchMetricsRun);
 
 	// Wait for a character to be pressed.
 	fgetc(stdin);

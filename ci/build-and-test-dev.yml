@@ -14,6 +14,7 @@ pr:
 # Include shared variables
 variables:
 - template: shared-variables.yml
+- group: CIAutomation # Required to access CI variables
 
 stages:
 # We only run smoke tests so developers can get a quick feedback.
@@ -24,3 +25,4 @@ stages:
     macImage: $(macImage)
     vsTestsToRun: $(vsSmokeTestsToRun)
     cmakeTestsToRun: $(cmakeSmokeTestsToRun)
+    runTests: variables['RunTests']

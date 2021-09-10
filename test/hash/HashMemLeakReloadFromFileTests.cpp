@@ -29,23 +29,10 @@
 #include <unistd.h>
 #endif
 
- // Windows 'crtdbg.h' needs to be included
- // before 'malloc.h'
-#if defined(_DEBUG) && defined(_MSC_VER)
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
-
 #include "../../src/common-cxx/textfile.h"
 #include "../../src/hash/hash.h"
 #include "../../src/hash/fiftyone.h"
 #include "ExampleHashTests.hpp"
-
-// 'dmalloc.h' needs to be included after
-// 'string.h'
-#if defined(_DEBUG) && !defined(_MSC_VER)
-#include "dmalloc.h"
-#endif
 
 #define THREAD_COUNT 4
 
@@ -301,28 +288,12 @@ void hashMemReloadRun(
 class HashMemLeakTestReloadFrom##t : public ExampleHashTest {	\
 public:	\
 	void run(fiftyoneDegreesConfigHash config) {	\
-		MemoryTrackingReset();	\
-		Malloc = MemoryTrackingMalloc;	\
-		MallocAligned = MemoryTrackingMallocAligned;	\
-		Free = MemoryTrackingFree;	\
-		FreeAligned = MemoryTrackingFreeAligned;	\
-\
 		hashMemReloadRun(	\
 			dataFilePath.c_str(),	\
 			userAgentFilePath.c_str(),	\
 			requiredProperties,	\
 			config,	\
 			f);	\
-\
-		EXPECT_EQ(0, MemoryTrackingGetAllocated()) <<	\
-			"There is memory leak. All allocated memory should "	\
-			"be freed at the end of this test.";	\
-\
-		Malloc = MemoryStandardMalloc;	\
-		MallocAligned = MemoryStandardMallocAligned;	\
-		Free = MemoryStandardFree;	\
-		FreeAligned = MemoryStandardFreeAligned;	\
-		MemoryTrackingReset();	\
 	}	\
 };
 
