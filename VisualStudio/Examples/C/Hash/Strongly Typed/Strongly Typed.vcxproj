@@ -35,12 +35,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\FiftyOne.DeviceDetection.Hash.C\FiftyOne.DeviceDetection.Hash.C.vcxproj">
-      <Project>{1d1fb480-9e69-4c1d-a120-1601b00b2457}</Project>
-    </ProjectReference>
+    <ClCompile Include="..\..\..\..\..\examples\C\Hash\StronglyTyped.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\examples\C\Hash\StronglyTyped.c" />
+    <ProjectReference Include="..\ExampleBase\ExampleBase.vcxproj">
+      <Project>{66f0aa5b-6e82-40d4-8165-c2328561cab0}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0B2D19CA-0547-4EA7-89CB-E6C79A06647F}</ProjectGuid>

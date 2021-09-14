@@ -20,23 +20,14 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
- // Windows 'crtdbg.h' needs to be included
- // before 'malloc.h'
-#if defined(_DEBUG) && defined(_MSC_VER)
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
+// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
+// which requires to be included before 'malloc.h'.
+#include "ExampleBase.h"
 
 #include <time.h>
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
 #include "../.././../src/common-cxx/textfile.h"
-
-// 'dmalloc.h' needs to be included after
-// 'string.h'
-#if defined(_DEBUG) && !defined(_MSC_VER)
-#include "dmalloc.h"
-#endif
 
 #ifdef _DEBUG
 #define PASSES 1
@@ -444,6 +435,17 @@ void fiftyoneDegreesPerfHashRun(
 	}
 }
 
+/**
+ * Implementation of function fiftyoneDegreesExampleRunPtr.
+ */
+void fiftyoneDegreesExampleCPerfHashRun(ExampleParameters *params) {
+	// Call the actual function.
+	fiftyoneDegreesPerfHashRun(
+		params->dataFilePath,
+		params->userAgentsFilePath,
+		*params->config);
+}
+
 #ifndef TEST
 
 /**
@@ -453,17 +455,6 @@ void fiftyoneDegreesPerfHashRun(
  * @arg2 User-Agent file path
  */
 int main(int argc, char* argv[]) {
-
-	// Memory leak detection code.
-#ifdef _DEBUG
-#ifndef _MSC_VER
-	dmalloc_debug_setup("log-stats,log-non-free,check-fence,log=dmalloc.log");
-#else
-	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-#endif
-#endif
-
 	printf("\n");
 	printf("\t#############################################################\n");
 	printf("\t#                                                           #\n");
@@ -527,15 +518,15 @@ int main(int argc, char* argv[]) {
 	fiftyoneDegreesConfigHash config = CONFIG;
 	config.usePerformanceGraph = true;
 	config.usePredictiveGraph = false;
-	fiftyoneDegreesPerfHashRun(dataFilePath, userAgentFilePath, config);
-
-#ifdef _DEBUG
-#ifdef _MSC_VER
-	_CrtDumpMemoryLeaks();
-#else
-	printf("Log file is %s\r\n", dmalloc_logpath);
-#endif
-#endif
+	
+	ExampleParameters params;
+	params.dataFilePath = dataFilePath;
+	params.userAgentsFilePath = userAgentFilePath;
+	params.config = &config;
+	// Run the example
+	fiftyoneDegreesExampleMemCheck(
+		&params,
+		fiftyoneDegreesExampleCPerfHashRun);
 
 	// Wait for a character to be pressed.
 	fgetc(stdin);

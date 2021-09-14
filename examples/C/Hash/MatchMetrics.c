@@ -117,22 +117,11 @@ fiftyoneDegreesResourceManagerFree(&manager);
 
 #include <stdio.h>
 
-// Windows 'crtdbg.h' needs to be included
-// before 'malloc.h'
-#if defined(_DEBUG) && defined(_MSC_VER)
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#endif
-
+// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
+// which requires to be included before 'malloc.h'.
+#include "ExampleBase.h"
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
-
-// 'dmalloc.h' needs to be included after
-// 'string.h'
-#if defined(_DEBUG) && !defined(_MSC_VER)
-#include "dmalloc.h"
-#endif
 
 static const char *dataDir = "device-detection-data";
 
@@ -283,6 +272,16 @@ void fiftyoneDegreesHashMatchMetrics(
 	ResourceManagerFree(&manager);
 }
 
+/**
+ * Implementation of function fiftyoneDegreesExampleRunPtr.
+ */
+void fiftyoneDegreesExampleCMatchMetricsRun(ExampleParameters *params) {
+	// Call the actual function.
+	fiftyoneDegreesHashMatchMetrics(
+		params->dataFilePath,
+		params->config);
+}
+
 #ifndef TEST
 
 int main(int argc, char* argv[]) {
@@ -308,26 +307,13 @@ int main(int argc, char* argv[]) {
 		config = HashInMemoryConfig;
 	}
 
-#ifdef _DEBUG
-#ifndef _MSC_VER
-	dmalloc_debug_setup("log-stats,log-non-free,check-fence,log=dmalloc.log");
-#else
-	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-#endif
-#endif
-
-	fiftyoneDegreesHashMatchMetrics(
-		dataFilePath,
-		&config);
-
-#ifdef _DEBUG
-#ifdef _MSC_VER
-	_CrtDumpMemoryLeaks();
-#else
-	printf("Log file is %s\r\n", dmalloc_logpath);
-#endif
-#endif
+	ExampleParameters params;
+	params.dataFilePath = dataFilePath;
+	params.config = &config;
+	// Run the example
+	fiftyoneDegreesExampleMemCheck(
+		&params,
+		fiftyoneDegreesExampleCMatchMetricsRun);
 
 	// Wait for a character to be pressed.
 	fgetc(stdin);

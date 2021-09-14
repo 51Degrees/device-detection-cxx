@@ -85,22 +85,13 @@ https://51degrees.com/Support/Documentation/APIs/C-V32/Benchmarks
 #include <unistd.h>
 #endif
 
-// Windows 'crtdbg.h' needs to be included
-// before 'malloc.h'
-#if defined(_DEBUG) && defined(_MSC_VER)
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
+// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
+// which requires to be included before 'malloc.h'.
+#include "ExampleBase.h"
 
 #include "../../../src/common-cxx/textfile.h"
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
-
-// 'dmalloc.h' needs to be included after
-// 'string.h'
-#if defined(_DEBUG) && !defined(_MSC_VER)
-#include "dmalloc.h"
-#endif
 
 #define THREAD_COUNT 4
 
@@ -386,20 +377,21 @@ void fiftyoneDegreesHashReloadFromFileRun(
 	}
 }
 
+/**
+ * Implementation of function fiftyoneDegreesExampleRunPtr.
+ */
+void fiftyoneDegreesExampleCReloadFromFileRun(ExampleParameters *params) {
+	// Call the actual function.
+	fiftyoneDegreesHashReloadFromFileRun(
+		params->dataFilePath,
+		params->userAgentsFilePath,
+		params->propertiesString,
+		*params->config);
+}
+
 #ifndef TEST
 
 int main(int argc, char* argv[]) {
-
-	// Memory leak detection code.
-#ifdef _DEBUG
-#ifndef _MSC_VER
-	dmalloc_debug_setup("log-stats,log-non-free,check-fence,log=dmalloc.log");
-#else
-	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-#endif
-#endif
-
 	StatusCode status = SUCCESS;
 	char dataFilePath[FILE_MAX_PATH];
 	char userAgentFilePath[FILE_MAX_PATH];
@@ -434,20 +426,17 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	// Run the performance test.
-	fiftyoneDegreesHashReloadFromFileRun(
-		dataFilePath,
-		userAgentFilePath,
-		argc > 3 ? argv[3] : "IsMobile,BrowserName,DeviceType",
-		CONFIG);
-
-#ifdef _DEBUG
-#ifdef _MSC_VER
-	_CrtDumpMemoryLeaks();
-#else
-	printf("Log file is %s\r\n", dmalloc_logpath);
-#endif
-#endif
+	ConfigHash config = CONFIG;
+	ExampleParameters params;
+	params.dataFilePath = dataFilePath;
+	params.userAgentsFilePath = userAgentFilePath;
+	params.propertiesString =
+		argc > 3 ? argv[3] : "IsMobile,BrowserName,DeviceType";
+	params.config = &config;
+	// Run the example
+	fiftyoneDegreesExampleMemCheck(
+		&params,
+		fiftyoneDegreesExampleCReloadFromFileRun);
 
 	// Wait for a character to be pressed.
 	fgetc(stdin);
