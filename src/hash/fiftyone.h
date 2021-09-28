@@ -52,9 +52,12 @@ MAP_TYPE(ConfigHash)
 MAP_TYPE(DataSetHashHeader)
 MAP_TYPE(ResultHashArray)
 MAP_TYPE(HashRootNodes)
+MAP_TYPE(HashMatchMethod)
 
 #define ResultsHashGetValues fiftyoneDegreesResultsHashGetValues /**< Synonym for #fiftyoneDegreesResultsHashGetValues function. */
 #define ResultsHashGetHasValues fiftyoneDegreesResultsHashGetHasValues /**< Synonym for #fiftyoneDegreesResultsHashGetHasValues function. */
+#define ResultsHashGetNoValueReason fiftyoneDegreesResultsHashGetNoValueReason /**< Synonym for #fiftyoneDegreesResultsHashGetNoValueReason function. */
+#define ResultsHashGetNoValueReasonMessage fiftyoneDegreesResultsHashGetNoValueReasonMessage /**< Synonym for #fiftyoneDegreesResultsHashGetNoValueReasonMessage function. */
 #define ResultsHashGetValuesString fiftyoneDegreesResultsHashGetValuesString /**< Synonym for #fiftyoneDegreesResultsHashGetValuesString function. */
 #define ResultsHashGetValuesStringByRequiredPropertyIndex fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex /**< Synonym for #fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex function. */
 #define HashGetDeviceIdFromResult fiftyoneDegreesHashGetDeviceIdFromResult /**< Synonym for #fiftyoneDegreesHashGetDeviceIdFromResult function. */
@@ -66,6 +69,8 @@ MAP_TYPE(HashRootNodes)
 #define ResultsHashFromEvidence fiftyoneDegreesResultsHashFromEvidence /**< Synonym for #fiftyoneDegreesResultsHashFromEvidence function. */
 #define DataSetHashGet fiftyoneDegreesDataSetHashGet /**< Synonym for #fiftyoneDegreesDataSetHashGet function. */
 #define DataSetHashRelease fiftyoneDegreesDataSetHashRelease /**< Synonym for #fiftyoneDegreesDataSetHashRelease function. */
+#define HashSizeManagerFromFile fiftyoneDegreesHashSizeManagerFromFile /**< Synonym for #fiftyoneDegreesHashSizeManagerFromFile function. */
+#define HashSizeManagerFromMemory fiftyoneDegreesHashSizeManagerFromMemory /**< Synonym for #fiftyoneDegreesHashSizeManagerFromMemory function. */
 #define HashInitManagerFromFile fiftyoneDegreesHashInitManagerFromFile /**< Synonym for #fiftyoneDegreesHashInitManagerFromFile function. */
 #define HashInitManagerFromMemory fiftyoneDegreesHashInitManagerFromMemory /**< Synonym for #fiftyoneDegreesHashInitManagerFromMemory function. */
 #define HashReloadManagerFromOriginalFile fiftyoneDegreesHashReloadManagerFromOriginalFile /**< Synonym for #fiftyoneDegreesHashReloadManagerFromOriginalFile function. */
