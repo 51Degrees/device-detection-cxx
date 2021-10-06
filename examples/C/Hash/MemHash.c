@@ -318,6 +318,10 @@ void fiftyoneDegreesMemHashRun(
 	const char *userAgentFilePath,
 	fiftyoneDegreesConfigHash config) {
 
+// For non-Windows, in Debug mode, these tracking malloc are always enable for
+// standalone examples or tests. Thus, only include when not on non-Windows,
+// and Debug mode.
+#if defined(_MSC_VER) || !(defined(_MSC_VER) || defined(_DEBUG))
 	// Ensure the tracking malloc and free methods are used and the counters
 	// reset.
 	MemoryTrackingReset();
@@ -325,6 +329,7 @@ void fiftyoneDegreesMemHashRun(
 	MallocAligned = MemoryTrackingMallocAligned;
 	Free = MemoryTrackingFree;
 	FreeAligned = MemoryTrackingFreeAligned;
+#endif
 	
 	// Set concurrency to ensure sufficient shared resources available.
 	config.nodes.concurrency =
@@ -366,6 +371,10 @@ void fiftyoneDegreesMemHashRun(
 		ResourceManagerFree(&manager);
 	}
 
+// For non-Windows, in Debug mode, these tracking malloc are always enable for
+// standalone examples or tests. Thus, only include when not on non-Windows,
+// and Debug mode.
+#if defined(_MSC_VER) || !(defined(_MSC_VER) || defined(_DEBUG))
 	// Ensure the standard malloc and free methods are reinstated now the
 	// tracking has finished.
 	Malloc = MemoryStandardMalloc;
@@ -373,6 +382,7 @@ void fiftyoneDegreesMemHashRun(
 	Free = MemoryStandardFree;
 	FreeAligned = MemoryStandardFreeAligned;
 	MemoryTrackingReset();
+#endif
 }
 
 /**
