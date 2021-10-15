@@ -3090,7 +3090,7 @@ static int printProfileId(
 	const char* f,
 	uint32_t v) {
 	int charAdded = -1;
-	if ((charAdded = snprintf(*d, b - *d + s, f, v)) > 0) {
+	if ((charAdded = Snprintf(*d, b - *d + s, f, v)) > 0) {
 		*d += charAdded;
 	}
 	return charAdded;
@@ -3107,7 +3107,7 @@ static int printNullProfileId(
 	char* b,
 	size_t s) {
 	int charAdded = -1;
-	if ((charAdded = snprintf(*d, b - *d + s, "%i", 0)) > 0) {
+	if ((charAdded = Snprintf(*d, b - *d + s, "%i", 0)) > 0) {
 		*d += charAdded;
 	}
 	return charAdded;
