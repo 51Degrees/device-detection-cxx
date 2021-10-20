@@ -290,7 +290,7 @@ int fiftyoneDegreesGraphTraceGet(
 
 	while (node != NULL) {
 		if (node->rootName != NULL) {
-			tmpWritten = snprintf(
+			tmpWritten = Snprintf(
 				CURRENT(destination, written),
 				getRemainingBuffer(length, written),
 				"--- Start of '%s'---\n",
@@ -326,13 +326,13 @@ int fiftyoneDegreesGraphTraceGet(
 
 			remaining = getRemainingBuffer(length, written);
 			tmpWritten = node->matched ?
-				snprintf(
+				Snprintf(
 					CURRENT(destination, written),
 					remaining,
 					"(%d) %x\n",
 					node->index,
 					node->hashCode) :
-				snprintf(
+				Snprintf(
 					CURRENT(destination, written),
 					remaining,
 					"(%d)\n",

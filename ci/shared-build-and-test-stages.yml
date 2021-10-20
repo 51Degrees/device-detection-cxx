@@ -474,5 +474,110 @@ stages:
       condition: true
       inputs:
         testResultsFormat: 'CTest'
-        testRunTitle: 'Mac CTest $(BuildConfiguration) $(BuildArguments)'
+        testRunTitle: 'Linux CTest $(BuildConfiguration) $(BuildArguments)'
+        testResultsFiles: '**/Test.xml'
+
+
+- stage: MinGW
+  dependsOn: [Data]
+  jobs:
+  - job: Build_And_Test
+    condition: ne(${{ parameters.runTests }}, 'Off')
+
+    timeoutInMinutes: 240
+
+    pool:
+      vmImage: ${{ parameters.windowsImage }}
+      
+    strategy:
+      matrix:
+        debug x64 multi threads:
+          BuildConfiguration: Debug
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=OFF
+        release x64 multi threads:
+          BuildConfiguration: Release 
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=OFF
+        debug x64 single thread:
+          BuildConfiguration: Debug
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=ON
+        release x64 single thread:
+          BuildConfiguration: Release  
+          BuildPlatform: x64
+          BuildArguments: -DNoThreading=ON
+
+    steps:
+
+    - checkout: self
+      submodules: recursive
+      lfs: true
+
+    - powershell: |
+        git lfs install
+        ls
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs fetch
+        git -c http.https://51degrees.visualstudio.com.extraheader="AUTHORIZATION: bearer $(System.AccessToken)" lfs checkout
+        ls
+      workingDirectory: 'device-detection-data'
+      displayName: 'Fetch LFS Data Files'
+      failOnStderr: true
+
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Enterprise Data File'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'enterpriseFile'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - script: |
+          mv $(System.ArtifactsDirectory)\enterpriseFile\51Degrees-EnterpriseV4.1.hash  $(Build.SourcesDirectory)\device-detection-data\51Degrees-EnterpriseV4.1.hash
+      displayName: 'Move Data File'
+      failOnStderr: true
+
+    - task: Bash@3
+      displayName: 'Create Build Directory'
+      inputs:
+        targetType: 'inline'
+        script: 'mkdir build'
+
+    - task: CMake@1
+      displayName: 'CMake Configure'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '.. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=$(BuildConfiguration) $(BuildArguments)'
+
+    - task: CMake@1
+      displayName: 'CMake Build'
+      inputs:
+        workingDirectory: build
+        cmakeArgs: '--build .'
+
+    - bash: 'ctest ${{ parameters.cmakeTestsToRun }} -T test --no-compress-output'
+      workingDirectory: build
+      failOnStderr: true
+      displayName: 'Run Tests'
+      
+    - task: CopyFiles@2
+      displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+      inputs:
+        SourceFolder: '$(build.sourcesdirectory)'
+        Contents: '**'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+        CleanTargetFolder: true
+      condition: failed()
+      
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'drop'
+      condition: failed()
+
+    - task: PublishTestResults@2
+      condition: true
+      inputs:
+        testResultsFormat: 'CTest'
+        testRunTitle: 'MinGW CTest $(BuildConfiguration) $(BuildArguments)'
         testResultsFiles: '**/Test.xml'
