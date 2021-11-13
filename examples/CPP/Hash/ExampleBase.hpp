@@ -90,6 +90,12 @@ namespace FiftyoneDegrees {
 				/** Example desktop User-Agent string */
 				static const char* desktopUserAgent;
 
+				/** Example UACH Platform value */
+				static const char* uachPlatform;
+
+				/** Example UACH Platform Version value */
+				static const char* uachPlatformVersion;
+
 				/** Example media hub User-Agent string */
 				static const char* mediaHubUserAgent;
 

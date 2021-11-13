@@ -36,7 +36,8 @@ using namespace FiftyoneDegrees::Examples::Hash;
 
 /**
 @example Hash/GettingStarted.cpp
-Getting started example of using 51Degrees device detection.
+Getting started example of using 51Degrees device detection with User-Agent
+HTTP header values and User Agent Client Hint (UACH) header values.
 
 The example shows how to:
 
@@ -46,7 +47,9 @@ initialised with, and the configuration.
 using namespace FiftyoneDegrees;
 
 string fileName = "51Degrees-V4.1.hash";
-string propertiesString = "ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName";
+string propertiesString = 	
+	"ScreenPixelsWidth,IsMobile,BrowserName,PlatformName,PlatformVersion,"
+	"SetHeaderPlatformAccept-CH";
 Common::RequiredPropertiesConfig *properties =
 	new Common::RequiredPropertiesConfig(&propertiesString);
 DeviceDetection::Hash::ConfigHash *config =
@@ -65,7 +68,7 @@ DeviceDetection::Hash::EngineHash *engine =
 	properties);
 ```
 
-3. Create a evidence instance and add a single HTTP User-Agent string to be
+3a. Create a evidence instance and add a single HTTP User-Agent string to be
 processed.
 ```
 using namespace FiftyoneDegrees;
@@ -73,6 +76,18 @@ using namespace FiftyoneDegrees;
 DeviceDetection::EvidenceDeviceDetection *evidence =
 	new DeviceDetection::EvidenceDeviceDetection();
 evidence->operator[]("header.user-agent") = userAgent;
+```
+
+3b. Where UACH headers are being used add evidence for the Sec-CH-UA-Platform 
+and Sec-CH-UA-Platform-Version HTTP header values.
+
+```
+using namespace FiftyoneDegrees;
+
+DeviceDetection::EvidenceDeviceDetection *evidence =
+	new DeviceDetection::EvidenceDeviceDetection();
+evidence->operator[]("header.Sec-CH-UA-Platform") = uachPlatform;
+evidence->operator[]("header.Sec-CH-UA-Platform-Version")= uachPlatformVersion;
 ```
 
 4. Process the evidence using the engine to retrieve the values associated
@@ -83,12 +98,22 @@ using namespace FiftyoneDegrees;
 DeviceDetection::Hash::ResultsHash *results = engine->process(evidence);
 ```
 
-5. Extract the value of a property as a string from the results.
+5a. Extract the value of the IsMobile property as a string from the results.
 ```
 Value<string> value = results->getValueAsString("IsMobile");
 if (value.hasValue()) {
     string value = *value;
 }
+```
+
+5b. If using UACH example then get the platform name and version. 
+```
+Value<string> value = results->getValueAsString("PlatformName");
+if (value.hasValue()) {
+	string value = *value;
+Value<string> value = results->getValueAsString("PlatformVersion");
+if (value.hasValue()) {
+	string value = *value;
 ```
 
 6. Release the memory used by the results and the evidence.
@@ -161,6 +186,26 @@ namespace FiftyoneDegrees {
 						(*results->getValueAsString("IsMobile")).c_str() << "\n";
 					delete results;
 
+					// Carries out a match for a platform based on UACH headers.
+					cout << "\nUACH Sec-CH-UA-Platform: " <<
+						uachPlatform << "\n";
+					cout << "UACH Sec-CH-UA-Platform-Version: " <<
+						uachPlatformVersion << "\n";
+					evidence->operator[]("header.Sec-CH-UA-Platform")
+						= uachPlatform;
+					evidence->operator[]("header.Sec-CH-UA-Platform-Version")
+						= uachPlatformVersion;
+					results = engine->process(evidence);
+					cout << "   PlatformName: " <<
+						(*results->getValueAsString("PlatformName")).c_str() 
+						<< "\n";
+					cout << "   PlatformVersion: " <<
+						(*results->getValueAsString("PlatformVersion")).c_str()
+						<< "\n";
+					cout << "   IsMobile: " <<
+						(*results->getValueAsString("IsMobile")).c_str() << "\n";
+					delete results;
+
 					// Free the evidence.
 					delete evidence;
 				}
@@ -173,7 +218,8 @@ namespace FiftyoneDegrees {
  * Implementation of function fiftyoneDegreesExampleRunPtr.
  * Need to wrapped with 'extern "C"' as this will be called in C.
  */
-extern "C" void fiftyoneDegreesExampleCPPGettingStartedRun(ExampleParameters *params) {
+extern "C" void fiftyoneDegreesExampleCPPGettingStartedRun(
+	ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
 	ConfigHash* cppConfig = new ConfigHash(&configHash);
