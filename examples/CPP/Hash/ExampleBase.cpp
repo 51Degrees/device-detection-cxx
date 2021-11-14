@@ -25,6 +25,10 @@
 using namespace FiftyoneDegrees;
 using namespace FiftyoneDegrees::Examples::Hash;
 
+const char *RequiredProperties = 
+	"ScreenPixelsWidth,IsMobile,BrowserName,PlatformName,PlatformVersion,"
+	"SetHeaderPlatformAccept-CH";
+
 const char *ExampleBase::mobileUserAgent = (
 	"Mozilla/5.0 (iPhone; CPU iPhone OS 7_1 like Mac OS X) "
 	"AppleWebKit/537.51.2 (KHTML, like Gecko) Version/7.0 Mobile/11D167 "
@@ -39,13 +43,15 @@ const char *ExampleBase::mediaHubUserAgent = (
 	"Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
 	"Chrome/30.0.0.0 Safari/537.36");
 
+const char* ExampleBase::uachPlatform = ("Windows");
+
+const char* ExampleBase::uachPlatformVersion = ("14.0.0");
+
 ExampleBase::ExampleBase(byte *data, long length, ConfigHash *config) {
 	this->config = config;
 
 	// Set the properties to be returned for each User-Agent.
-	string propertiesString =
-		"ScreenPixelsWidth,IsMobile,BrowserName";
-	properties = new RequiredPropertiesConfig(propertiesString);
+	properties = new RequiredPropertiesConfig(RequiredProperties);
 
 	// Initialise the engine for device detection.
 	engine = new EngineHash(
@@ -59,9 +65,7 @@ ExampleBase::ExampleBase(string dataFilePath, ConfigHash *config) {
 	this->config = config;
 
 	// Set the properties to be returned for each User-Agent.
-	string propertiesString =
-		"ScreenPixelsWidth,IsMobile,BrowserName";
-	properties = new RequiredPropertiesConfig(propertiesString);
+	properties = new RequiredPropertiesConfig(RequiredProperties);
 
 	// Initialise the engine for device detection.
 	engine = new EngineHash(
