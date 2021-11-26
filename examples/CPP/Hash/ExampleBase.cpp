@@ -43,9 +43,9 @@ const char *ExampleBase::mediaHubUserAgent = (
 	"Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
 	"Chrome/30.0.0.0 Safari/537.36");
 
-const char* ExampleBase::uachPlatform = ("Windows");
+const char* ExampleBase::uachPlatform = ("\"Windows\"");
 
-const char* ExampleBase::uachPlatformVersion = ("14.0.0");
+const char* ExampleBase::uachPlatformVersion = ("\"14.0.0\"");
 
 ExampleBase::ExampleBase(byte *data, long length, ConfigHash *config) {
 	this->config = config;
