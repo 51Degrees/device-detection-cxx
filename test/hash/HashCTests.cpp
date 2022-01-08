@@ -73,6 +73,15 @@ protected:
 	ResourceManager manager;
 };
 
+static int getRequiredPropertyIndex(
+	ResultsHash* results,
+	const char* propertyName) {
+	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
+	return PropertiesGetRequiredPropertyIndexFromName(
+		dataSet->b.b.available,
+		propertyName);
+}
+
 static char* getPropertyValueAsString(
 	ResultsHash* results,
 	const char* propertyName,
@@ -99,6 +108,7 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 	ResultsHash* resultsUserAgents;
 	ResultsHash* resultsDeviceId;
 
+	string testPropertyName = "IsMobile";
 	char deviceId[40] = "";
 	char isMobile[40] = "";
 
@@ -113,15 +123,21 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 		strlen(mobileUserAgent),
 		exception);
 	EXCEPTION_THROW;
+
 	EXPECT_EQ(1, resultsUserAgents->count) << "Only one results should be "
 		<< "returned.\n";
+	EXPECT_EQ(true, ResultsHashGetHasValues(
+		resultsUserAgents,
+		getRequiredPropertyIndex(resultsUserAgents, testPropertyName.c_str()),
+		exception));
+	EXCEPTION_THROW;
 	EXPECT_EQ(0, strcmp(
 		"True",
 		getPropertyValueAsString(
 			resultsUserAgents,
-			"isMobile",
+			testPropertyName.c_str(),
 			isMobile,
-			sizeof(isMobile)))) << "Property isMobile should be true.\n";
+			sizeof(isMobile)))) << "Property " + testPropertyName + " should be true.\n";
 
 	// Obtain device ID from result
 	HashGetDeviceIdFromResults(
@@ -142,13 +158,18 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 	memset(isMobile, 0, sizeof(isMobile));
 	EXPECT_EQ(1, resultsDeviceId->count) << "Only one results should be "
 		<< "returned from detection using device ID.\n";
+	EXPECT_EQ(true, ResultsHashGetHasValues(
+		resultsDeviceId,
+		getRequiredPropertyIndex(resultsDeviceId, testPropertyName.c_str()),
+		exception));
+	EXCEPTION_THROW;
 	EXPECT_EQ(0, strcmp(
 		"True",
 		getPropertyValueAsString(
 			resultsDeviceId,
-			"isMobile",
+			testPropertyName.c_str(),
 			isMobile,
-			sizeof(isMobile)))) << "Property isMobile should be true.\n";
+			sizeof(isMobile)))) << "Property " + testPropertyName + " should be true.\n";
 
 	// Free the results and resource
 	ResultsHashFree(resultsUserAgents);

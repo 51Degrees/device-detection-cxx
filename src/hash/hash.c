@@ -2322,7 +2322,7 @@ static void setProfileFromProfileId(
 	char *value,
 	Exception *exception) {
 	const uint32_t profileId = (const uint32_t)atoi(value);
-	addProfileById(results, profileId, false, exception);
+	addProfileById(results, profileId, true, exception);
 }
 
 void fiftyoneDegreesResultsHashFromDeviceId(
