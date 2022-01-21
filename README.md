@@ -55,6 +55,8 @@ rather than the files themselves. As such, these need to be downloaded individua
 
 You will need either Visual Studio 2019 or the [C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) installed.
 If you have Visual Studio Code, you'll still need to install the build tools from the link above.
+- Minimum Platform Toolset Version `v142`
+- Minimum Windows SDK Version `10.0.18362.0`
 
 ### Linux 
 

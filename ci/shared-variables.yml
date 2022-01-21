@@ -1,10 +1,4 @@
 variables:
-- name: windowsImage
-  value: 'vs2017-win2016'
-- name: linuxImage
-  value: 'ubuntu-18.04'
-- name: macImage
-  value: 'macOS-10.14'
 # Full tests run.
 - name: vsFullTestsToRun
   value: '-*TestOfflineProcessing*'

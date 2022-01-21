@@ -7,6 +7,8 @@ parameters:
 - name: runTests
   type: string
   default: 'On'
+- name: platformToolsetVersion
+- name: windowsSDKVersion
 
 stages:
 
@@ -231,7 +233,7 @@ stages:
       displayName: 'CMake Configure'
       inputs:
         workingDirectory: build
-        cmakeArgs: '.. -A $(BuildPlatform) $(BuildArguments)'
+        cmakeArgs: '.. -A $(BuildPlatform) $(BuildArguments) -DCMAKE_GENERATOR_TOOLSET=${{ parameters.platformToolsetVersion }} -DCMAKE_SYSTEM_VERSION=${{ parameters.windowsSDKVersion }}'
 
     - task: CMake@1
       displayName: 'CMake Build'

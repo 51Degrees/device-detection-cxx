@@ -11,9 +11,16 @@ pr:
     - release/*
     - hotfix/*
 
+resources:
+  repositories:
+  - repository: ciTemplates # Id of the repository used to reference to in this script
+    type: git
+    name: common-ci # Name of the actual repository
+
 # Include shared variables
 variables:
 - template: shared-variables.yml
+- template: shared-variables.yml@ciTemplates
 - group: CIAutomation # Required to access CI variables
 
 stages:
@@ -25,4 +32,6 @@ stages:
     macImage: $(macImage)
     vsTestsToRun: $(vsSmokeTestsToRun)
     cmakeTestsToRun: $(cmakeSmokeTestsToRun)
+    platformToolsetVersion: '${{ variables.plfTsVer }}'
+    windowsSDKVersion: '${{ variables.winSDKVer }}'
     runTests: variables['RunTests']

@@ -72,7 +72,7 @@ static const char* mediaHubUserAgent = (
 
 // User-Agent string from an Opera Mini browser.
 static const char* operaUserAgent = (
-	"Opera/9.80 (Android; Opera Mini/32.0.2254/88.150; U; en) Presto/2.12.423 "
+	"Opera/9.80 (Android; Opera Mini/12.0.1987/37.7327; U; pl) Presto/2.12.423 "
 	"Version/12.16");
 
 // User-Agent string which will never result in anything other than a not found
