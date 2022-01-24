@@ -19,7 +19,7 @@ resources:
 
 # Include shared variables
 variables:
-- template: shared-variables.yml
+- template: shared-variables.yml@ciTemplates
 
 stages:
 - template: shared-publish-github-stage.yml@ciTemplates
