@@ -139,7 +139,7 @@ public:
 		Collection<string, PropertyMetaData> *properties, *hardwareProperties;
 		PropertyMetaData *hardwareProperty, *property;
 		EngineHash* localEngine = (EngineHash*)getEngine();
-		if (strcmp("Lite", localEngine->getProduct().c_str()) != 0) {
+		if (strcmp("Lite", localEngine->getType().c_str()) != 0) {
 			if (this->requiredProperties->containsProperty("ScreenPixelsWidth") == true ||
 				this->requiredProperties->getCount() == 0) {
 				checkEvidenceProperty(localEngine, "ScreenPixelsWidth", "ScreenPixelsWidthJavaScript");
