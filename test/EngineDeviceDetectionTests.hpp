@@ -163,8 +163,8 @@ public: \
 	void TearDown() { ENGINE_CLASS_NAME_BASE(e,t)::TearDown(); } \
 }; \
 TEST_F(ENGINE_CLASS_NAME(e,t,c,p), Attributes) { \
-	testType(getExpectedFileType()); \
-	testProduct(_##e##Product); \
+	testType(_##e##Product); \
+	testProduct(getExpectedFileType()); \
 	testPublishedDate(); \
 	testUpdateDate(); \
 	properties(); } \
