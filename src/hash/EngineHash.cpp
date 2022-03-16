@@ -115,26 +115,22 @@ void* EngineHash::copyData(void *data, size_t length) const {
 }
 
 /**
- * Get the name of the data set being used e.g. Pattern or Hash.
- * This is also the string that represents the type of data file when
- * requesting an updated file.
- * @return product name
+ * @return the name of the data set used contained in the source file.
  */
 string EngineHash::getProduct() const {
-	return string("HashV41");
-}
-
-/**
- * Get the tier of the data set being used e.g. Premium or
- * Enterprise.
- * @return data set type
- */
-string EngineHash::getType() const {
 	stringstream stream;
-	DataSetHash* dataSet = DataSetHashGet(manager.get());
+	DataSetHash *dataSet = DataSetHashGet(manager.get());
 	appendString(stream, dataSet->strings, dataSet->header.nameOffset);
 	DataSetHashRelease(dataSet);
 	return stream.str();
+}
+
+/**
+ * Returns the string that represents the type of data file when requesting an
+ * updated file.
+ */
+string EngineHash::getType() const {
+	return string("HashV41");
 }
 
 /**
