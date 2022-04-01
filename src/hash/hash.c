@@ -878,7 +878,7 @@ static void addTraceRootName(
 		return;
 	}
 
-	node = GraphTraceCreate("%s %s %s", STRING(componentName), STRING(header->name.data.ptr), key);
+	node = GraphTraceCreate("%s %s %s", STRING(componentName), header->name, key);
 	COLLECTION_RELEASE(state->dataSet->strings, &componentNameItem);
 	GraphTraceAppend(state->result->trace, node);
 }
@@ -2131,11 +2131,16 @@ static bool setResultFromEvidence(
 	DataSetHash *dataSet =
 		(DataSetHash*)results->b.b.dataSet;
 	Exception *exception = ((stateWithException*)state)->exception;
+
+	// Get the header and only proceed if the header was provided by the 
+	// data set and therefore relates to a graph.
 	int headerIndex = HeaderGetIndex(
 		dataSet->b.b.uniqueHeaders,
 		pair->field,
 		strlen(pair->field));
-	if (headerIndex >= 0) {
+	if (headerIndex >= 0 && 
+		(uint32_t)headerIndex < dataSet->b.b.uniqueHeaders->count &&
+		dataSet->b.b.uniqueHeaders->items[headerIndex].isDataSet) {
 
 		// Configure the next result in the array of results.
 		result = &((ResultHash*)results->items)[results->count];
@@ -2190,8 +2195,7 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		results->count = 0;
 
 		// Construct the evidence for pseudo header
-		if (dataSet->b.b.isClientHintsEnabled &&
-			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+		if (dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
 			evidence->pseudoEvidence = results->pseudoEvidence;
 
 			PseudoHeadersAddEvidence(
@@ -2280,8 +2284,7 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		// Check for and process any profile Id overrides.
 		OverrideProfileIds(evidence, &state, overrideProfileId);
 
-		if (dataSet->b.b.isClientHintsEnabled &&
-			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+		if (dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
 			// Reset pseudo evidence
 			PseudoHeadersRemoveEvidence(
 				evidence,
@@ -2422,10 +2425,8 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 
 	// Create a new instance of results. Also take into account the
 	// results potentially added for pseudo evidence.
-	uint32_t capacity = userAgentCapacity;
-	if (dataSet->b.b.isClientHintsEnabled) {
-		capacity += dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
-	}
+	uint32_t capacity =
+		userAgentCapacity + dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
 	FIFTYONE_DEGREES_ARRAY_CREATE(ResultHash, results, capacity);
 
 	if (results != NULL) {
@@ -2455,15 +2456,12 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 		}
 
 		// Initialise pseudo evidence
-		results->pseudoEvidence = NULL;
-		if (dataSet->b.b.isClientHintsEnabled) {
-			results->pseudoEvidence =
-				createPseudoEvidenceKeyValueArray(dataSet);
-			if (results->pseudoEvidence == NULL &&
-				dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
-				fiftyoneDegreesResultsHashFree(results);
-				return NULL;
-			}
+		results->pseudoEvidence =
+			createPseudoEvidenceKeyValueArray(dataSet);
+		if (results->pseudoEvidence == NULL &&
+			dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+			fiftyoneDegreesResultsHashFree(results);
+			return NULL;
 		}
 
 		// Reset the property and values list ready for first use sized for 
@@ -2603,6 +2601,66 @@ static uint32_t addValuesFromResult(
 	return count;
 }
 
+/** 
+ * Choose the result from the list of results based in the unique id of the 
+ * required header.
+ */
+static ResultHash* getResultFromResultsWithUniqueId(
+	DataSetHash* dataSet,
+	ResultsHash* results,
+	byte componentIndex,
+	uint32_t uniqueId) {
+	for (uint32_t h = 0; h < results->count; h++) {
+		int uniqueHttpHeaderIndex =
+			results->items[h].b.uniqueHttpHeaderIndex;
+		if (uniqueHttpHeaderIndex >= 0 &&
+			uniqueHttpHeaderIndex < (int)dataSet->b.b.uniqueHeaders->count &&
+			dataSet->b.b.uniqueHeaders->items[uniqueHttpHeaderIndex].uniqueId 
+				== uniqueId) {
+			// Only return the result if the profile is not null.
+			if (results->items[h].profileOffsets[
+				componentIndex] != NULL_PROFILE_OFFSET) {
+				return &results->items[h];
+			}
+			break;
+		}
+	}
+	return NULL;
+}
+
+/**
+ * Where there are more than one result for the component identifies the result
+ * to use for property value get, and device id operations.
+ */
+static ResultHash* getResultFromResults(
+	DataSetHash* dataSet,
+	ResultsHash* results,
+	byte componentIndex) {
+	uint32_t i = 0, uniqueId;
+	ResultHash* result = NULL;
+	Component* component = (Component*)dataSet->componentsList
+		.items[componentIndex].data.ptr;
+	for (i = 0; i < component->keyValuesCount && result == NULL; i++) {
+		uniqueId = (&component->firstKeyValuePair)[i].key;
+		if (results->count == 1 &&
+			results->items[0].b.uniqueHttpHeaderIndex == -1) {
+			// If uniqueHttpHeaderIndex was not set then use
+			// the only result that exists.
+			result = results->items;
+		}
+		else {
+			// There are multiple results so use the one that results to the
+			// unique Id of the header for the component.
+			result = getResultFromResultsWithUniqueId(
+				dataSet,
+				results,
+				componentIndex,
+				uniqueId);
+		}
+	}
+	return result;
+}
+
 /**
  * Loop through the HTTP headers that matter to this property until a matching
  * result for an HTTP header is found in the results.
@@ -2611,49 +2669,30 @@ static ResultHash* getResultFromResultsWithProperty(
 	DataSetHash *dataSet,
 	ResultsHash* results,
 	Property *property) {
-	uint32_t i = 0, h, uniqueId;
-	Component *component = (Component*)dataSet->componentsList
-		.items[property->componentIndex].data.ptr;
+	uint32_t i;
+	ResultHash* result = NULL;
 
 	// Check if there are any results with on overridden profile. This takes
-	// prescience.
+	// precedence.
 	for (i = 0; i < results->count; i++) {
 		if (results->items[i].profileIsOverriden[property->componentIndex]) {
 			return &results->items[i];
 		}
 	}
+
 	// Now look for the best result based on the order of preference for HTTP
 	// headers.
-	for (i = 0; i < component->keyValuesCount; i++) {
-		uniqueId = (&component->firstKeyValuePair)[i].key;
-		if (results->count == 1 &&
-			results->items[0].b.uniqueHttpHeaderIndex == -1) {
-			// If uniqueHttpHeaderIndex was not set then use
-			// the only result existed
-			return results->items;
-		}
-		else {
-			for (h = 0; h < results->count; h++) {
-				if (results->items[h].b.uniqueHttpHeaderIndex >= 0 &&
-					results->items[h].b.uniqueHttpHeaderIndex <
-					(int)dataSet->b.b.uniqueHeaders->count &&
-					dataSet->b.b.uniqueHeaders->items[
-						results->items[h].b.uniqueHttpHeaderIndex]
-					.uniqueId == uniqueId) {
-					// Only return the result if the profile is not null.
-					if (results->items[h].profileOffsets[
-						property->componentIndex] != NULL_PROFILE_OFFSET) {
-						return &results->items[h];
-					}
-					break;
-				}
-			}
-		}
-	}
+	result = getResultFromResults(dataSet, results, property->componentIndex);
+	
 	// Return the first result if an unmatched result is allowed, otherwise
 	// null.
-	return dataSet->config.b.allowUnmatched && results->count > 0 ?
-		results->items : NULL;
+	if (result == NULL && 
+		dataSet->config.b.allowUnmatched && 
+		results->count > 0) {
+		result = results->items;
+	}
+
+	return result;
 }
 
 static Item* getValuesFromOverrides(
@@ -3233,118 +3272,105 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 	char *destination,
 	size_t size,
 	fiftyoneDegreesException *exception) {
-	uint32_t componentIndex, componentHeaderIndex, resultIndex;
-	Header *header;
+	byte componentIndex;
 	ResultHash *result;
 	Profile *profile;
 	Item profileItem;
-	Component *component;
+	uint32_t profileOffset, found = 0;
 	char *buffer = destination;
 	DataReset(&profileItem.data);
 	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
 	if (results->count > 1) {
+
 		// There are multiple results, so the overall device id must be
 		// determined by finding the best profile id for each component.
 		for (componentIndex = 0;
 			componentIndex < dataSet->componentsList.count;
 			componentIndex++) {
-			component = (Component*)dataSet->componentsList.items[
-				componentIndex].data.ptr;
-			// Reset the found flag.
-			bool found = false;
-			bool foundButNull = false;
-			// Loop over all headers that should be considered for this
-			// component until one is found in the results.
-			for (componentHeaderIndex = 0;
-				componentHeaderIndex < component->keyValuesCount  &&
-				(found == false || foundButNull == true);
-				componentHeaderIndex++) {
-				header = HeadersGetHeaderFromUniqueId(
-					dataSet->b.b.uniqueHeaders,
-					(&component->firstKeyValuePair)[componentHeaderIndex].key);
-				// Loop over the results until the header is found or the end
-				// is reached.
-				for (resultIndex = 0;
-					resultIndex < results->count;
-					resultIndex++) {
-					result = &(results->items)[resultIndex];
-					if (result->b.uniqueHttpHeaderIndex ==
-						header - dataSet->b.b.uniqueHeaders->items) {
-						if (componentIndex != 0 &&
-							foundButNull == false) {
+
+			// Get the result for the component.
+			result = getResultFromResults(dataSet, results, componentIndex);
+
+			// If the result is not null then print the profile id, otherwise
+			// the default value depending on the configuration.
+			if (result != NULL) {
+
+				profileOffset = result->profileOffsets[componentIndex];
+				if (profileOffset == NULL_PROFILE_OFFSET) {
+					if (printNullProfileId(
+						&destination,
+						buffer,
+						size) <= 0) {
+						break;
+					}
+				}
+				else {
+
+					// Get the profile for the result.
+					profile = dataSet->profiles->get(
+						dataSet->profiles,
+						profileOffset,
+						&profileItem,
+						exception);
+
+					// If there is no profile then print the null profile id.
+					if (profile == NULL) {
+						if (printNullProfileId(
+							&destination,
+							buffer,
+							size) <= 0) {
+							break;
+						}
+					}
+
+					// If there is a profile but it's the unmatched value then 
+					// print the null profile id.
+					else if (ISUNMATCHED(dataSet, result)) {
+						COLLECTION_RELEASE(dataSet->profiles, &profileItem);
+						if (printNullProfileId(
+							&destination,
+							buffer,
+							size) <= 0) {
+							break;
+						}
+					}
+
+					// Otherwise print the actual profile id.
+					else {
+
+						// If this is not the first component then add the 
+						// separator.
+						if (found > 0) {
 							if (printProfileSep(
 								&destination,
 								buffer,
 								size,
 								"-") <= 0) {
+								COLLECTION_RELEASE(dataSet->profiles, &profileItem);
 								break;
 							}
 						}
-						// We found the header, so write it and move on to the
-						// next component.
-						found = true;
-						if (result->profileOffsets[componentIndex] ==
-							NULL_PROFILE_OFFSET) {
-							if (foundButNull ||
-								printNullProfileId(
-								&destination,
-								buffer,
-								size) <= 0) {
-								break;
-							}
-							foundButNull = true;
+
+						// Profile the profile Id.
+						found++;
+						if (printProfileId(
+							&destination,
+							buffer,
+							size,
+							"%i",
+							profile->profileId) <= 0) {
+							COLLECTION_RELEASE(dataSet->profiles, &profileItem);
+							break;
 						}
-						else {
-							profile = dataSet->profiles->get(
-								dataSet->profiles,
-								result->profileOffsets[componentIndex],
-								&profileItem,
-								exception);
-							if (profile == NULL) {
-								if (foundButNull ||
-									printNullProfileId(
-									&destination,
-									buffer,
-									size
-								) <= 0) {
-									break;
-								}
-								foundButNull = true;
-							}
-							else if (ISUNMATCHED(dataSet, result)) {
-								if (foundButNull ||
-									printNullProfileId(
-									&destination,
-									buffer,
-									size
-								) <= 0) {
-									break;
-								}
-								foundButNull = true;
-								COLLECTION_RELEASE(dataSet->profiles, &profileItem);
-							}
-							else {
-								if (foundButNull == true) {
-									destination = destination - 1;
-								}
-								if (printProfileId(
-									&destination,
-									buffer,
-									size,
-									"%i",
-									profile->profileId) <= 0) {
-									break;
-								}
-								foundButNull = false;
-								COLLECTION_RELEASE(dataSet->profiles, &profileItem);
-							}
-						}
+						COLLECTION_RELEASE(dataSet->profiles, &profileItem);
 					}
 				}
 			}
 		}
+		return destination;
 	}
-	else if (results->count == 1 ) {
+	else if (results->count == 1) {
+
 		// There is only one result, so just get the device id for that.
 		return HashGetDeviceIdFromResult(
 			results->b.b.dataSet,
@@ -3359,6 +3385,5 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 			destination,
 			size);
 	}
-	return destination;
 }
 

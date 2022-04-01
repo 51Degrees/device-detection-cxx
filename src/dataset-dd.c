@@ -57,10 +57,6 @@ fiftyoneDegreesDataSetDeviceDetectionInitPropertiesAndHeaders(
 		return status;
 	}
 
-	// Check if SetHeader properties are present
-	dataSet->b.isClientHintsEnabled =
-		PropertiesIsSetHeaderAvailable(dataSet->b.available);
-
 	// Work out the unique HTTP header index of the User-Agent field.
 	dataSet->uniqueUserAgentHeaderIndex = HeaderGetIndex(
 		dataSet->b.uniqueHeaders,

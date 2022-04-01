@@ -180,9 +180,20 @@ public:
 				dataSet->componentsList.items[i].data.ptr;
 			count += component->keyValuesCount;
 		}
+
+		for (uint32_t i = 0; i < dataSet->b.b.uniqueHeaders->count; i++) {
+			// There is always one segment per header so only add when there
+			// are more than one.
+			if (dataSet->b.b.uniqueHeaders->items[i].segments->count > 1) {
+				count += dataSet->b.b.uniqueHeaders->items[i].segments->count;
+			}
+		}
+
 		ASSERT_EQ(dataSet->b.b.uniqueHeaders->capacity, count) <<
 			L"The HTTP headers counted when initialising the headers was not " <<
-			L"equal to the total headers from all components.";
+			L"equal to the total headers from all components plus any headers " <<
+			L"which could potentially be created from the pseudo headers if " <<
+			L"they have not already existed.";
 		fiftyoneDegreesDataSetHashRelease(dataSet);
 	}
 

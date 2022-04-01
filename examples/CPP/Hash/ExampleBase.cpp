@@ -26,8 +26,7 @@ using namespace FiftyoneDegrees;
 using namespace FiftyoneDegrees::Examples::Hash;
 
 const char *RequiredProperties = 
-	"ScreenPixelsWidth,IsMobile,BrowserName,PlatformName,PlatformVersion,"
-	"SetHeaderPlatformAccept-CH";
+	"ScreenPixelsWidth,IsMobile,BrowserName,PlatformName,PlatformVersion";
 
 const char *ExampleBase::mobileUserAgent = (
 	"Mozilla/5.0 (iPhone; CPU iPhone OS 7_1 like Mac OS X) "
