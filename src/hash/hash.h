@@ -55,6 +55,7 @@
 #include <windows.h>
 #pragma warning(pop)
 #endif
+#include "../common-cxx/common.h"
 #include "../common-cxx/data.h"
 #include "../common-cxx/exceptions.h"
 #include "../common-cxx/threading.h"
