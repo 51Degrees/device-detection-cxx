@@ -30,7 +30,7 @@ public:
 		// Capture stdout for the test.
 		testing::internal::CaptureStdout();
 
-		fiftyoneDegreesHashGettingStarted(dataFilePath.c_str(), &config);
+		fiftyoneDegreesHashGettingStarted(dataFilePath.c_str(), &config, stdout);
 
 		// Don't print the stdout
 		std::string output = testing::internal::GetCapturedStdout();

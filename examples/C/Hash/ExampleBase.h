@@ -40,6 +40,7 @@ typedef struct fiftyoneDegrees_example_parameters_t{
     char *outputFilePath; /**< Path to an output file */
     char *propertiesString; /**< Required properties string */
     fiftyoneDegreesConfigHash *config; /**< Hash Configuration */
+    FILE* output; /**< Output target for the example */
 } fiftyoneDegreesExampleParameters;
 
 typedef fiftyoneDegreesExampleParameters ExampleParameters;
@@ -60,5 +61,12 @@ typedef void (*fiftyoneDegreesExampleRunPtr)(
 EXTERNAL void fiftyoneDegreesExampleMemCheck(
     fiftyoneDegreesExampleParameters *parameters,
     fiftyoneDegreesExampleRunPtr run);
+
+/**
+ * Check data file tier and published date.
+ * @param dataset pointer to the dataset structure
+ */
+EXTERNAL void fiftyoneDegreesExampleCheckDataFile(
+    fiftyoneDegreesDataSetHash *dataset);
 
 #endif
