@@ -1,7 +1,7 @@
 /* *********************************************************************
  * This Original Work is copyright of 51 Degrees Mobile Experts Limited.
- * Copyright 2019 51 Degrees Mobile Experts Limited, 5 Charlotte Close,
- * Caversham, Reading, Berkshire, United Kingdom RG4 7BY.
+ * Copyright 2022 51 Degrees Mobile Experts Limited, Davidson House,
+ * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
  * This Original Work is the subject of the following patents and patent
  * applications, owned by 51 Degrees Mobile Experts Limited of 5 Charlotte
@@ -9,8 +9,8 @@
  * European Patent No. 3438848; and 
  * United States Patent No. 10,482,175.
  *
- * This Original Work is licensed under the European Union Public Licence (EUPL) 
- * v.1.2 and is subject to its terms as set out below.
+ * This Original Work is licensed under the European Union Public Licence
+ * (EUPL) v.1.2 and is subject to its terms as set out below.
  *
  * If a copy of the EUPL was not distributed with this file, You can obtain
  * one at https://opensource.org/licenses/EUPL-1.2.
@@ -23,7 +23,7 @@
  * If using the Work as, or as part of, a network application, by 
  * including the attribution notice(s) required under Article 5 of the EUPL
  * in the end user terms of the application under an appropriate heading, 
- * such notice(s) shall fulfil the requirements of that article.
+ * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
 %module "DeviceDetectionHashEngineModule"
