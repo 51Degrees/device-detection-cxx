@@ -36,7 +36,7 @@
 */
 typedef struct fiftyoneDegrees_example_parameters_t{
     char *dataFilePath; /**< Path to a data file */
-    char *userAgentsFilePath; /**< Path to a user agents file */
+    char *evidenceFilePath; /**< Path to a evidence file */
     char *outputFilePath; /**< Path to an output file */
     char *propertiesString; /**< Required properties string */
     fiftyoneDegreesConfigHash *config; /**< Hash Configuration */

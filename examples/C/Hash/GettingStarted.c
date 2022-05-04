@@ -232,7 +232,7 @@ void fiftyoneDegreesHashGettingStarted(
 	}
 
 	// Check data file
-	DataSetHash* dataset = results->b.b.dataSet;
+	DataSetHash* dataset = (DataSetHash *)results->b.b.dataSet;
 	fiftyoneDegreesExampleCheckDataFile(dataset);
 
 	// Ensure the results are freed to avoid memory leaks.

@@ -384,7 +384,7 @@ void fiftyoneDegreesExampleCReloadFromFileRun(ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesHashReloadFromFileRun(
 		params->dataFilePath,
-		params->userAgentsFilePath,
+		params->evidenceFilePath,
 		params->propertiesString,
 		*params->config);
 }
@@ -429,7 +429,7 @@ int main(int argc, char* argv[]) {
 	ConfigHash config = CONFIG;
 	ExampleParameters params;
 	params.dataFilePath = dataFilePath;
-	params.userAgentsFilePath = userAgentFilePath;
+	params.evidenceFilePath = userAgentFilePath;
 	params.propertiesString =
 		argc > 3 ? argv[3] : "IsMobile,BrowserName,DeviceType";
 	params.config = &config;

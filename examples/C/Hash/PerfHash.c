@@ -442,7 +442,7 @@ void fiftyoneDegreesExampleCPerfHashRun(ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesPerfHashRun(
 		params->dataFilePath,
-		params->userAgentsFilePath,
+		params->evidenceFilePath,
 		*params->config);
 }
 
@@ -521,7 +521,7 @@ int main(int argc, char* argv[]) {
 	
 	ExampleParameters params;
 	params.dataFilePath = dataFilePath;
-	params.userAgentsFilePath = userAgentFilePath;
+	params.evidenceFilePath = userAgentFilePath;
 	params.config = &config;
 	// Run the example
 	fiftyoneDegreesExampleMemCheck(
