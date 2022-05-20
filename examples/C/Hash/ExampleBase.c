@@ -81,7 +81,11 @@ void fiftyoneDegreesExampleCheckDataFile(
 	time_t now = time(NULL);
 
 	char timeStr[500] = "";
+#ifndef _MSC_VER
+	if (asctime_r((const struct tm*)&gt, timeStr) != timeStr) {
+#else
 	if (asctime_s(timeStr, 500, (const struct tm*)&gt) != 0) {
+#endif
 		printf("\033[0;33m");
 		printf(("Failed to obtain textual representation of the data file "
 			"published date\n"));
