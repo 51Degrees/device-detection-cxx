@@ -32,10 +32,12 @@ public:
 	ExampleDeviceDetectionTest(
 		const char **dataFileNames,
 		int dataFileNamesLength,
-		const char *userAgentFileName);
+		const char *userAgentFileName,
+		const char *evidenceFileName);
 protected:
 	string dataFilePath;
 	string userAgentFilePath;
+	string evidenceFilePath;
 	const char *requiredProperties;
 };
 

@@ -187,7 +187,7 @@ extern "C" void fiftyoneDegreesExampleCPPReloadFromMemoryRun(ExampleParameters *
 	ReloadFromMemory *reloadFromMemory = new ReloadFromMemory(
 		reader.startByte,
 		reader.length,
-		params->userAgentsFilePath,
+		params->evidenceFilePath,
 		cppConfig);
 	reloadFromMemory->run();
 	delete reloadFromMemory;
@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
 
 	ExampleParameters params;
 	params.dataFilePath = dataFilePath;
-	params.userAgentsFilePath = userAgentFilePath;
+	params.evidenceFilePath = userAgentFilePath;
 	// run the example
 	fiftyoneDegreesExampleMemCheck(
 		&params,

@@ -28,8 +28,8 @@ private:
 	string getOutputFilePath() {
 		stringstream output;
 		uint32_t i = 0;
-		while (userAgentFilePath[i] != '.' && userAgentFilePath[i] != '\0') {
-			output << userAgentFilePath[i++];
+		while (evidenceFilePath[i] != '.' && evidenceFilePath[i] != '\0') {
+			output << evidenceFilePath[i++];
 		}
 		output << ".processed.csv";
 		return output.str();
@@ -41,10 +41,11 @@ public:
 
 		fiftyoneDegreesOfflineProcessingRun(
 			dataFilePath.c_str(),
-			userAgentFilePath.c_str(),
+			evidenceFilePath.c_str(),
 			getOutputFilePath().c_str(),
 			"IsMobile,BrowserName,DeviceType",
-			config);
+			config,
+			stdout);
 		fiftyoneDegreesFileDelete(getOutputFilePath().c_str());
 
 		// Don't print the stdout

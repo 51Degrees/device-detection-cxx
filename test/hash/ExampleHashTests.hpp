@@ -27,7 +27,8 @@ public:
 	ExampleHashTest() : ExampleDeviceDetectionTest(
 		_HashFileNames,
         _HashFileNamesLength,
-		_userAgentsFileName) {}
+		_userAgentsFileName,
+		_evidenceFileName) {}
 };
 
 #define EXAMPLE_HASH_TESTS(c) EXAMPLE_TESTS(c, Hash)
