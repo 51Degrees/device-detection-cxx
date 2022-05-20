@@ -38,7 +38,7 @@ header.sec-ch-ua-platform: '"Android"'
 We create a resource manager and results hash to read the data and find out about the associated device,
 we write this data to a YAML formatted output stream.
 
-As well as explaining the basic operation of off line processing using the defaults, for
+As well as explaining the basic operation of offline processing using the defaults, for
 advanced operation this example can be used to experiment with tuning device detection for
 performance and predictive power using Performance Profile, Graph and Difference and Drift 
 settings.
