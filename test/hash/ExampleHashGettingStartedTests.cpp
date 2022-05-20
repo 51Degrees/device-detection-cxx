@@ -21,8 +21,6 @@
  * ********************************************************************* */
 
 #include "ExampleHashTests.hpp"
-// TODO: The logic in ExampleBase should be extracted to a separate lib
-// which can be linked at build time.
 #include "../../examples/C/Hash/ExampleBase.c"
 #include "../../examples/C/Hash/GettingStarted.c"
 
