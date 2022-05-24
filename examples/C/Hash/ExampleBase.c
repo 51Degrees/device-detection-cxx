@@ -81,10 +81,10 @@ void fiftyoneDegreesExampleCheckDataFile(
 	time_t now = time(NULL);
 
 	char timeStr[500] = "";
-#ifndef _MSC_VER
-	if (asctime_r((const struct tm*)&gt, timeStr) != timeStr) {
-#else
+#if defined( _MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
 	if (asctime_s(timeStr, 500, (const struct tm*)&gt) != 0) {
+#else
+	if (asctime_r((const struct tm*)&gt, timeStr) != timeStr) {
 #endif
 		printf("\033[0;33m");
 		printf(("Failed to obtain textual representation of the data file "

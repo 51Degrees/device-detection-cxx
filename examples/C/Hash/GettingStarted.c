@@ -65,8 +65,8 @@ typedef struct {
 	uint32_t count;
 	struct {
 		EvidencePrefix prefix;
-		char* key;
-		char* value;
+		const char* key;
+		const char* value;
 	} items[MAX_EVIDENCE];
 } evidence;
 
@@ -214,7 +214,7 @@ void fiftyoneDegreesHashGettingStarted(
 	// evidence that can be provided.
 	ResultsHash *results = ResultsHashCreate(&manager, MAX_EVIDENCE, MAX_EVIDENCE);
 
-	for (int i = 0; i < sizeof(evidenceValues)/sizeof(evidence *); i++) {
+	for (int i = 0; i < (int)(sizeof(evidenceValues)/sizeof(evidence *)); i++) {
 		// Create an evidence collection and add the evidence to the collection
 		EvidenceKeyValuePairArray* evidenceArray = EvidenceCreate(MAX_EVIDENCE);
 		evidence *evs = evidenceValues[i];
