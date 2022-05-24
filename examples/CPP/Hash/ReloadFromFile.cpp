@@ -172,7 +172,7 @@ extern "C" void fiftyoneDegreesExampleCPPReloadFromFileRun(ExampleParameters *pa
 	cppConfig->setConcurrency(THREAD_COUNT);
 	ReloadFromFile *reloadFromFile = new ReloadFromFile(
 		params->dataFilePath,
-		params->userAgentsFilePath,
+		params->evidenceFilePath,
 		cppConfig);
 	reloadFromFile->run();
 	delete reloadFromFile;
@@ -221,7 +221,7 @@ int main(int argc, char* argv[]) {
 
 	ExampleParameters params;
 	params.dataFilePath = dataFilePath;
-	params.userAgentsFilePath = userAgentFilePath;
+	params.evidenceFilePath = userAgentFilePath;
 	// run the example
 	fiftyoneDegreesExampleMemCheck(
 		&params,

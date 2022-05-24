@@ -22,74 +22,22 @@
 
 /**
 @example Hash/GettingStarted.c
-Getting started example of using 51Degrees device detection.
 
-The example shows how to:
+This example shows how to use 51Degrees on-premise device detection to determine details about a
+device based on its User-Agent and User-Agent Client Hint HTTP header values.
 
-1. Specify the name of the data file and properties the data set should be
-initialised with.
-```
-const char* fileName = argv[1];
-fiftyoneDegreesPropertiesRequired properties =
-	fiftyoneDegreesPropertiesDefault;
-properties.string = "IsMobile";
-```
+You will learn:
+1. How to initialise a resource manager and a place holder for the results
+2. How to pass input data (evidence) to the detection APIs
+3. How to retrieve the results
 
-2. Instantiate the 51Degrees data set within a resource manager from the
-specified data file with the required properties and the specified
-configuration.
-```
-fiftyoneDegreesStatusCode status =
-	fiftyoneDegreesHashInitManagerFromFile(
-		&manager,
-		&config,
-		&properties,
-		dataFilePath,
-		exception);
-```
+This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-cxx/blob/master/examples/C/Hash/GettingStarted.c).
 
-3. Create a results instance ready to be populated by the data set.
-```
-fiftyoneDegreesResultsHash *results =
-	fiftyoneDegreesResultsHashCreate(
-		&manager,
-		1,
-		0);
-```
-
-4. Process a single HTTP User-Agent string to retrieve the values associated
-with the User-Agent for the selected properties.
-```
-fiftyoneDegreesResultsHashFromUserAgent(
-	results,
-	mobileUserAgent,
-	strlen(mobileUserAgent),
-	exception);
-```
-
-5. Extract the value of a property as a string from the results.
-```
-fiftyoneDegreesResultsHashGetValueString(
-	results,
-	propertyName,
-	valueBuffer,
-	sizeof(valueBuffer),
-	",",
-	exception);
-```
-
-6. Release the memory used by the results.
-```
-fiftyoneDegreesResultsHashFree(results);
-```
-
-7. Finally release the memory used by the data set resource.
-```
-fiftyoneDegreesResourceManagerFree(&manager);
-```
+@include{doc} example-require-datafile.text
 */
 
 #include <stdio.h>
+#include <time.h>
 
 // Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
 // which requires to be included before 'malloc.h'.
@@ -97,25 +45,102 @@ fiftyoneDegreesResourceManagerFree(&manager);
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
 
+#define MAX_EVIDENCE 5
+
 static const char *dataDir = "device-detection-data";
 
+// In this example, by default, the 51degrees "Lite" file needs to be in the
+// device-detection-data,
+// or you may specify another file as a command line parameter.
+//
+// Note that the Lite data file is only used for illustration, and has
+// limited accuracy and capabilities.
+// Find out about the Enterprise data file on our pricing page:
+// https://51degrees.com/pricing
 static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static char valueBuffer[1024] = "";
 
-static const char* getPropertyValueAsString(
+typedef struct {
+	uint32_t count;
+	struct {
+		EvidencePrefix prefix;
+		const char* key;
+		const char* value;
+	} items[MAX_EVIDENCE];
+} evidence;
+
+// A User-Agent from a mobile device.
+static evidence mobileDevice = { 
+	1, 
+	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", ("Mozilla/5.0 (Linux; Android 9; SAMSUNG SM-G960U) "
+	  "AppleWebKit/537.36 (KHTML, like Gecko) "
+	  "SamsungBrowser/10.1 Chrome/71.0.3578.99 Mobile "
+	  "Safari/537.36") } } 
+};
+
+// A User-Agent from a desktop device.
+static evidence desktopDevice = { 
+	1, 
+	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", ("Mozilla / 5.0 (Windows NT 10.0; Win64; x64) "
+	  "AppleWebKit/537.36 (KHTML, like Gecko) "
+	  "Chrome/78.0.3904.108 Safari/537.36") } } 
+};
+
+// Evidence values from a windows 11 device using a browser
+// that supports User-Agent Client Hints.
+static evidence userAgentClientHints = { 
+	MAX_EVIDENCE,
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+	  "AppleWebKit/537.36 (KHTML, like Gecko) "
+	  "Chrome/98.0.4758.102 Safari/537.36"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-mobile", "?0"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", ("\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
+	  "\"Google Chrome\";v=\"98\"")},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", "Windows"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"14.0.0\""} }
+};
+
+// This collection contains the various input values that will
+// be passed to the device detection algorithm.
+static evidence* evidenceValues[3] = {
+	&mobileDevice,
+	&desktopDevice,
+	&userAgentClientHints
+};
+
+static void outputValue(
 	ResultsHash *results,
-	const char *propertyName) {
+	const char *name,
+	const char* propertyName,
+	FILE *output) {
+	DataSetHash* dataset = (DataSetHash*)results->b.b.dataSet;
+
 	EXCEPTION_CREATE;
-	ResultsHashGetValuesString(
-		results,
-		propertyName,
-		valueBuffer,
-		sizeof(valueBuffer),
-		",",
-		exception);
-	EXCEPTION_THROW;
-	return valueBuffer;
+	int propertyIndex = PropertiesGetPropertyIndexFromName(dataset->b.b.available, "IsMobile");
+	// If a value has not been set then trying to access the value will
+	// result in an exception.
+	if (ResultsHashGetHasValues(
+		results, propertyIndex, exception)) {
+		ResultsHashGetValuesString(
+			results,
+			propertyName,
+			valueBuffer,
+			sizeof(valueBuffer),
+			",",
+			exception);
+		EXCEPTION_THROW;
+	}
+	else {
+		// A no value message can also be obtained. This message describes why
+		// the value has not been set.
+		fiftyoneDegreesResultsNoValueReason reason =
+			ResultsHashGetNoValueReason(results, propertyIndex, exception);
+		EXCEPTION_THROW;
+
+		sprintf(valueBuffer, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
+	}
+	fprintf(output, "\n\t%s: %s", name, valueBuffer);
 }
 
 /**
@@ -128,15 +153,47 @@ static void reportStatus(StatusCode status,
 	Free((void*)message);
 }
 
+static void analyse(
+	ResultsHash* results,
+	EvidenceKeyValuePairArray* evidence,
+	FILE* output) {
+	// Information required for detection is called "evidence"
+    // and usually consists of a number of HTTP Header field
+    // values, in this case represented by a
+    // Object of header name/value entries.
+
+	// list the evidence
+	fprintf(output, "Input values:");
+	for (uint32_t i = 0; i < evidence->count; i++) {
+		EvidenceKeyValuePair e = evidence->items[i];
+		fprintf(output,
+			"\n\t%s%s: %s",
+			EvidencePrefixString(e.prefix), e.field, (char *)e.originalValue);
+	}
+	fprintf(output, "\n");
+
+	EXCEPTION_CREATE
+	ResultsHashFromEvidence(results, evidence, exception);
+	EXCEPTION_THROW
+
+	fprintf(output, "Results:");
+	outputValue(results, "Mobile Device", "IsMobile", output);
+	outputValue(results, "Platform Name", "PlatformName", output);
+	outputValue(results, "Platform Version", "PlatformVersion", output);
+	outputValue(results, "Browser Name", "BrowserName", output);
+	outputValue(results, "Browser Version", "BrowserVersion", output);
+	fprintf(output, "\n\n");
+}
+
 void fiftyoneDegreesHashGettingStarted(
 	const char *dataFilePath,
-	ConfigHash *config) {
+	ConfigHash *config,
+	FILE* output) {
 	ResourceManager manager;
 	EXCEPTION_CREATE;
 
 	// Set the properties to be returned for each User-Agent.
 	PropertiesRequired properties = PropertiesDefault;
-	properties.string = "ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName";
 
 	// Initialise the manager for device detection.
 	StatusCode status = HashInitManagerFromFile(
@@ -152,66 +209,31 @@ void fiftyoneDegreesHashGettingStarted(
 		return;
 	}
 
-	// Create a results instance to store and process User-Agents.
-	ResultsHash *results = ResultsHashCreate(&manager, 1, 0);
+	// Create a results instance to store and process evidence.
+	// The capacity of the results should be the same as the maximum potential
+	// evidence that can be provided.
+	ResultsHash *results = ResultsHashCreate(&manager, MAX_EVIDENCE, MAX_EVIDENCE);
 
-	// User-Agent string of an iPhone mobile device.
-	const char* mobileUserAgent = (
-		"Mozilla/5.0 (iPhone; CPU iPhone OS 7_1 like Mac OS X) "
-		"AppleWebKit/537.51.2 (KHTML, like Gecko) Version/7.0 Mobile/11D167 "
-		"Safari/9537.53");
-
-	// User-Agent string of Firefox Web browser version 41 on desktop.
-	const char* desktopUserAgent = (
-		"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:41.0) "
-		"Gecko/20100101 Firefox/41.0");
-
-	// User-Agent string of a MediaHub device.
-	const char* mediaHubUserAgent = (
-		"Mozilla/5.0 (Linux; Android 4.4.2; X7 Quad Core "
-		"Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
-		"Chrome/30.0.0.0 Safari/537.36");
-
-	printf("Starting Getting Started Example.\n");
-	
-	// Carries out a match for a mobile User-Agent.
-	printf("\nMobile User-Agent: %s\n", mobileUserAgent);
-	ResultsHashFromUserAgent(
-		results,
-		mobileUserAgent,
-		strlen(mobileUserAgent),
-		exception);
-	if (EXCEPTION_FAILED) {
-		printf("%s\n", ExceptionGetMessage(exception));
+	for (int i = 0; i < (int)(sizeof(evidenceValues)/sizeof(evidence *)); i++) {
+		// Create an evidence collection and add the evidence to the collection
+		EvidenceKeyValuePairArray* evidenceArray = EvidenceCreate(MAX_EVIDENCE);
+		evidence *evs = evidenceValues[i];
+		for (uint32_t j = 0; j < evs->count; j++) {
+			// Add the evidence as string
+			EvidenceAddString(
+				evidenceArray,
+				evs->items[j].prefix,
+				evs->items[j].key,
+				evs->items[j].value);
+		}
+		analyse(results, evidenceArray, output);
+		// Ensure the evidence collection is freed after used
+		EvidenceFree(evidenceArray);
 	}
-	printf("   IsMobile: %s\n",
-		getPropertyValueAsString(results, "IsMobile"));
 
-	// Carries out a match for a desktop User-Agent.
-	printf("\nDesktop User-Agent: %s\n", desktopUserAgent);
-	ResultsHashFromUserAgent(
-		results,
-		desktopUserAgent,
-		strlen(desktopUserAgent),
-		exception);
-	if (EXCEPTION_FAILED) {
-		printf("%s\n", ExceptionGetMessage(exception));
-	}
-	printf("   IsMobile: %s\n",
-		getPropertyValueAsString(results, "IsMobile"));
-
-	// Carries out a match for a MediaHub User-Agent.
-	printf("\nMedia hub User-Agent: %s\n", mediaHubUserAgent);
-	ResultsHashFromUserAgent(
-		results,
-		mediaHubUserAgent,
-		strlen(mediaHubUserAgent),
-		exception);
-	if (EXCEPTION_FAILED) {
-		printf("%s\n", ExceptionGetMessage(exception));
-	}
-	printf("   IsMobile: %s\n",
-		getPropertyValueAsString(results, "IsMobile"));
+	// Check data file
+	DataSetHash* dataset = (DataSetHash *)results->b.b.dataSet;
+	fiftyoneDegreesExampleCheckDataFile(dataset);
 
 	// Ensure the results are freed to avoid memory leaks.
 	ResultsHashFree(results);
@@ -227,15 +249,25 @@ void fiftyoneDegreesExampleCGettingStartedRun(ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesHashGettingStarted(
 		params->dataFilePath,
-		params->config);
+		params->config,
+		params->output);
 }
 
 #ifndef TEST
 
 int main(int argc, char* argv[]) {
 	StatusCode status = SUCCESS;
-	ConfigHash config = HashDefaultConfig;
+	// We use the low memory profile as its performance is
+	// sufficient for this example. See the documentation for
+	// more detail on this and other configuration options:
+	// http://51degrees.com/documentation/_device_detection__features__performance_options.html
+	// http://51degrees.com/documentation/_features__automatic_datafile_updates.html
+	// http://51degrees.com/documentation/_features__usage_sharing.html
+	ConfigHash config = HashLowMemoryConfig;
 	char dataFilePath[FILE_MAX_PATH];
+
+	// Use the supplied path for the data file or find the lite data that
+	// is included in the repository
 	if (argc > 1) {
 		strcpy(dataFilePath, argv[1]);
 	}
@@ -246,11 +278,17 @@ int main(int argc, char* argv[]) {
 			dataFilePath,
 			sizeof(dataFilePath));
 	}
+
 	if (status != SUCCESS) {
-		reportStatus(status, dataFileName);
+		printf(("Failed to find a device detection "
+			"data file. Make sure the device-detection-data "
+			"submodule has been updated by running "
+			"`git submodule update --recursive`"));
 		fgetc(stdin);
 		return 1;
 	}
+
+	// Check if the example is compiled for memory usage only
 	if (CollectionGetIsMemoryOnly()) {
 		config = HashInMemoryConfig;
 	}
@@ -258,6 +296,8 @@ int main(int argc, char* argv[]) {
 	ExampleParameters params;
 	params.dataFilePath = dataFilePath;
 	params.config = &config;
+	params.output = stdout;
+
 	// Run the example
 	fiftyoneDegreesExampleMemCheck(
 		&params,

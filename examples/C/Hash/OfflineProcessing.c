@@ -22,77 +22,31 @@
 
 /**
 @example Hash/OfflineProcessing.c
-Offline processing example of using 51Degrees device detection.
 
-The example shows how to:
+Provides an example of processing a YAML file containing evidence for device detection. 
+There are 20,000 examples in the supplied file of evidence representing HTTP Headers.
+For example:
 
-1. Specify the name of the data file and properties the data set should be
-initialised with.
 ```
-const char* fileName = argv[1];
-fiftyoneDegreesPropertiesRequired properties =
-	fiftyoneDegreesPropertiesDefault;
-properties.string = "IsMobile";
-```
-
-2. Instantiate the 51Degrees data set within a resource manager from the
-specified data file with the required properties and the specified
-configuration.
-```
-fiftyoneDegreesStatusCode status =
-	fiftyoneDegreesHashInitManagerFromFile(
-		&manager,
-		&config,
-		&properties,
-		dataFilePath,
-		exception);
+header.user-agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'
+header.sec-ch-ua: '" Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"'
+header.sec-ch-ua-full-version: '"98.0.4758.87"'
+header.sec-ch-ua-mobile: '?0'
+header.sec-ch-ua-platform: '"Android"'
 ```
 
-3. Create a results instance ready to be populated by the data set.
-```
-fiftyoneDegreesResultsHash*results =
-	fiftyoneDegreesResultsHashCreate(
-		&manager,
-		1,
-		0);
-```
+We create a resource manager and results hash to read the data and find out about the associated device,
+we write this data to a YAML formatted output stream.
 
-4. Open an output file to write the results to.
-```
-	FILE* fout = fopen(outputFile, "w");
-```
+As well as explaining the basic operation of offline processing using the defaults, for
+advanced operation this example can be used to experiment with tuning device detection for
+performance and predictive power using Performance Profile, Graph and Difference and Drift 
+settings.
 
-5. Write a header to the output file with the property names in '|'	separated
-CSV format ('|' separated because some User-Agents contain commas)
-```
-fprintf(fout, "User-Agent");
-for (i = 0; i < dataSet->b.b.available->count; i++) {
-	fprintf(fout, ",\"%s\"",
-		&((fiftyoneDegreesString*)
-			dataSet->b.b.available->items[i].name.data.ptr)->value);
-}
-fprintf(fout, "\n");
-```
+This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-cxx/blob/master/examples/C/Hash/OfflineProcessing.c)
 
-6. Iterate over the User-Agents in an input file writing the processing results
-to the output file.
-```
-fiftyoneDegreesTextFileIterate(
-	userAgentFilePath,
-	userAgent,
-	sizeof(userAgent),
-	&state,
-	executeTest);
-```
+@include{doc} example-require-datafile.txt
 
-7. Finally release the memory used by the data set resource.
-```
-fiftyoneDegreesResourceManagerFree(&manager);
-```
-
-This example demonstrates one possible use of the API and device data for 
-offline data processing. It also demonstrates that you can reuse the retrieved
-results for multiple uses and only then release it.
 */
 
 // Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
@@ -104,35 +58,34 @@ results for multiple uses and only then release it.
 
 static const char *dataDir = "device-detection-data";
 
+// In this example, by default, the 51degrees "Lite" file needs to be somewhere in the
+// project space, or you may specify another file as a command line parameter.
+//
+// Note that the Lite data file is only used for illustration, and has limited accuracy
+// and capabilities. Find out about the Enterprise data file on our pricing page:
+// https://51degrees.com/pricing
 static const char *dataFileName = "51Degrees-LiteV4.1.hash";
-
-static const char *userAgentFileName = "20000 User Agents.csv";
+// This file contains the 20,000 most commonly seen combinations of header values 
+// that are relevant to device detection. For example, User-Agent and UA-CH headers.
+static const char *evidenceFileName = "20000 Evidence Records.yml";
 
 static char valueBuffer[1024] = "";
-
-static char* getPropertyValueAsString(
-	ResultsHash*results,
-	uint32_t requiredPropertyIndex) {
-	EXCEPTION_CREATE;
-	ResultsHashGetValuesStringByRequiredPropertyIndex(
-		results,
-		requiredPropertyIndex,
-		valueBuffer,
-		sizeof(valueBuffer),
-		",",
-		exception);
-	EXCEPTION_THROW;
-	return valueBuffer;
-}
 
 /**
  * CHOOSE THE DEFAULT MEMORY CONFIGURATION BY UNCOMMENTING ONE OF THE FOLLOWING
  * MACROS.
  */
 
-#define CONFIG fiftyoneDegreesHashInMemoryConfig
+// We use the low memory profile as its performance is sufficient for this
+// example. See the documentation for more detail on this and other
+// configuration options:
+// http://51degrees.com/documentation/_device_detection__features__performance_options.html
+// http://51degrees.com/documentation/_features__automatic_datafile_updates.html
+// http://51degrees.com/documentation/_features__usage_sharing.html
+
+// #define CONFIG fiftyoneDegreesHashInMemoryConfig
 // #define CONFIG fiftyoneDegreesHashHighPerformanceConfig
-// #define CONFIG fiftyoneDegreesHashLowMemoryConfig
+#define CONFIG fiftyoneDegreesHashLowMemoryConfig
 // #define CONFIG fiftyoneDegreesHashBalancedConfig
 // #define CONFIG fiftyoneDegreesHashBalancedTempConfig
 
@@ -140,9 +93,98 @@ static char* getPropertyValueAsString(
  * State used for the offline processing operation.
  */
 typedef struct t_offline_processing_state {
-	FILE *output; /**< Output stream for the results */
+	FILE *outputFile; /**< Output stream for the results */
+	FILE *outputLog; /**< Output stream for log */
 	ResultsHash *results; /**< The results used by the thread */
 } offlineProcessState;
+
+static void outputDeviceId(
+	ResultsHash *results,
+	const char *name,
+	FILE *output) {
+	char buffer[50];
+	EXCEPTION_CREATE
+	HashGetDeviceIdFromResults (results, buffer, 50, exception);
+	EXCEPTION_THROW
+	fprintf(output, "%s: %s\n", name, buffer);
+}
+
+static void outputValue(
+	ResultsHash *results,
+	const char *name,
+	const char* propertyName,
+	FILE *output) {
+	DataSetHash* dataset = (DataSetHash*)results->b.b.dataSet;
+
+	EXCEPTION_CREATE;
+	int propertyIndex = PropertiesGetPropertyIndexFromName(dataset->b.b.available, propertyName);
+	// If a value has not been set then trying to access the value will
+	// result in an exception.
+	if (ResultsHashGetHasValues(
+		results, propertyIndex, exception)) {
+		ResultsHashGetValuesString(
+			results,
+			propertyName,
+			valueBuffer,
+			sizeof(valueBuffer),
+			",",
+			exception);
+		EXCEPTION_THROW;
+	}
+	else {
+		// A no value message can also be obtained. This message describes why
+		// the value has not been set.
+		fiftyoneDegreesResultsNoValueReason reason =
+			ResultsHashGetNoValueReason(results, propertyIndex, exception);
+		EXCEPTION_THROW;
+
+		sprintf(valueBuffer, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
+	}
+	fprintf(output, "%s: %s\n", name, valueBuffer);
+}
+
+static void analyse(
+	ResultsHash* results,
+	EvidenceKeyValuePairArray* evidence,
+	FILE* outputFile) {
+	// Information required for detection is called "evidence"
+    // and usually consists of a number of HTTP Header field
+    // values, in this case represented by a
+    // Object of header name/value entries.
+
+	// list the evidence
+	fprintf(outputFile, "---\n");
+	for (uint32_t i = 0; i < evidence->count; i++) {
+		EvidenceKeyValuePair e = evidence->items[i];
+		fprintf(outputFile,
+			"%s%s: %s\n",
+			EvidencePrefixString(e.prefix), e.field, (char *)e.originalValue);
+	}
+
+	EXCEPTION_CREATE
+	ResultsHashFromEvidence(results, evidence, exception);
+	EXCEPTION_THROW
+
+	outputValue(results, "device.ismobile", "IsMobile", outputFile);
+	outputValue(results, "device.platformname", "PlatformName", outputFile);
+	outputValue(results, "device.platformversion", "PlatformVersion", outputFile);
+	outputValue(results, "device.browsername", "BrowserName", outputFile);
+	outputValue(results, "device.browserversion", "BrowserVersion", outputFile);
+	// DeviceId is a unique identifier for the combination of hardware, operating
+    // system, browser and crawler that has been detected.
+    // Our device detection solution uses machine learning to find the optimal
+    // way to identify devices based on the real-world evidence values that we
+    // observe each day.
+    // As this changes over time, the result of detection can potentially change
+    // as well. By storing the device id, we can use this as a lookup in future
+    // rather than performing detection with the original evidence again.
+    // Do this by passing an evidence entry with:
+    // key = query.51D_ProfileIds
+    // value = [the device id]
+    // This is much faster and avoids the potential for getting a different 
+    // result.
+	outputDeviceId(results, "device.deviceid", outputFile);
+}
 
 /**
  * Processes the User-Agent provided, writing the results to the output file.
@@ -150,97 +192,79 @@ typedef struct t_offline_processing_state {
  * @param userAgent to be used for the test
  * @param state instance of offlineProcessState
  */
-static void process(const char *userAgent, void *state) {
+static void process(KeyValuePair *pairs, uint16_t size, void *state) {
 	EXCEPTION_CREATE;
-	uint32_t i;
 	offlineProcessState *offline = (offlineProcessState*)state;
-	ResultHash *result;
-	DataSetHash *dataSet = (DataSetHash*)offline->results->b.b.dataSet;
-	ResultsHashFromUserAgent(
-		offline->results,
-		userAgent,
-		strlen(userAgent),
-		exception);
-	result = (ResultHash*)offline->results->items;
-
-	// Write the User-Agent, method, difference and rank.
-	fprintf(
-		offline->output,
-		"\"%s\",%i,%i,%i", 
-		result->b.matchedUserAgent == NULL ? userAgent : result->b.matchedUserAgent,
-		result->drift, 
-		result->difference, 
-		result->iterations);
-
-	// Write all the available properties.
-	for (i = 0; i < dataSet->b.b.available->count; i++) {
-		if (ResultsHashGetValues(
-			offline->results,
-			i,
-			exception) == NULL ||
-			EXCEPTION_FAILED ||
-			offline->results->values.count == 0) {
-
-			// Write an empty value if one isn't available.
-			fprintf(offline->output, ",\"\"");
-		}
-		else {
-
-			// Write value(s) with comma separator.
-			fprintf(offline->output, ",\"");
-			fprintf(offline->output, "%s", getPropertyValueAsString(
-				offline->results,
-				i));
-			fprintf(offline->output, "\"");
-		}
+	// Create an evidence collection and add the evidence to the collection
+	EvidenceKeyValuePairArray* evidenceArray = EvidenceCreate(size);
+	for (uint32_t i = 0; i < size; i++) {
+		// Get prefix
+		EvidencePrefixMap *prefixMap = EvidenceMapPrefix(pairs[i].key);
+		// Add the evidence as string
+		EvidenceAddString(
+			evidenceArray,
+			prefixMap->prefixEnum,
+			pairs[i].key + prefixMap->prefixLength,
+			pairs[i].value);
 	}
-	fprintf(offline->output, "\n");
+	analyse(
+		offline->results,
+		evidenceArray,
+		offline->outputFile);
+	// Ensure the evidence collection is freed after used
+	EvidenceFree(evidenceArray);
 }
 
 void run(
 	ResourceManager *manager, 
-	const char *userAgentFilePath, 
-	const char *outputFilePath) {
-	uint32_t i;
-	char userAgent[1000];
+	const char *evidenceFilePath, 
+	const char *outputFilePath,
+	FILE *output) {
+	char buffer[1000];
 	offlineProcessState state;
-	DataSetHash *dataSet;
 
 	// Open a fresh data file for writing the output to.
 	FileDelete(outputFilePath);
-	state.output = fopen(outputFilePath, "w");
-	if (state.output == NULL) {
-		printf("Could not open file %s for write\n", outputFilePath);
+	state.outputFile = fopen(outputFilePath, "w");
+	if (state.outputFile == NULL) {
+		fprintf(output, "Could not open file %s for write\n", outputFilePath);
 		return;
 	}
+	state.outputLog = output;
 
 	// Get the results and data set from the manager. Use a higher closest 
 	// number of signatures than the default because performance is less 
 	// important for offline processing and expanding the number of 
 	// alternatives evaluated can lead to a better result.
-	state.results = ResultsHashCreate(manager, 1, 0);
-	dataSet = (DataSetHash*)state.results->b.b.dataSet;
-				
-	printf("Starting Offline Processing Example.\n");
-	
-	// Print CSV headers to output file.
-	fprintf(state.output, "\"User-Agent\",\"Drift\",\"Difference\",\"Iterations\"");
-	for (i = 0; i < dataSet->b.b.available->count; i++) {
-		fprintf(state.output, ",\"%s\"", 
-			&((String*)dataSet->b.b.available->items[i].name.data.ptr)->value);
+	state.results = ResultsHashCreate(manager, 10, 10);
+
+	KeyValuePair pair[10];
+	char key[10][500];
+	char value[10][1000];
+	for (int i = 0; i < 10; i++) {
+		pair[i].key = key[i];
+		pair[i].keyLength = 500;
+		pair[i].value = value[i];
+		pair[i].valueLength = 1000;
 	}
-	fprintf(state.output, "\n");
 
 	// Perform offline processing.
-	TextFileIterate(
-		userAgentFilePath,
-		userAgent,
-		sizeof(userAgent),
+	YamlFileIterate(
+		evidenceFilePath,
+		buffer,
+		sizeof(buffer),
+		pair,
+		10,
 		&state,
-		process);
+		process
+	);
+	fprintf(state.outputFile, "...\n");
 
-	fclose(state.output);
-	printf("Output Written to %s\n", outputFilePath);
+	fclose(state.outputFile);
+	fprintf(output, "Output Written to %s\n", outputFilePath);
+
+	DataSetHash* dataset = (DataSetHash *)state.results->b.b.dataSet;
+	fiftyoneDegreesExampleCheckDataFile(dataset);
 
 	// Free the memory used by the results instance.
 	ResultsHashFree(state.results);
@@ -255,22 +279,22 @@ static void reportStatus(
 	StatusCode status,
 	const char* fileName) {
 	const char *message = StatusGetMessage(status, fileName);
-	printf("%s\n", message);
 	Free((void*)message);
 }
 
 /**
  * Start the offline processing with the files and configuration provided.
  * @param dataFilePath full file path to the Hash device data file
- * @param userAgentFilePath full file path to the User-Agent test data
+ * @param evidenceFilePath full file path to the User-Agent test data
  * @param config configuration to use for the memory test
  */
 void fiftyoneDegreesOfflineProcessingRun(
 	const char *dataFilePath,
-	const char *userAgentFilePath,
+	const char *evidenceFilePath,
 	const char *outputFilePath, 
 	const char *requiredProperties,
-	ConfigHash config) {
+	ConfigHash config,
+	FILE* output) {
 	EXCEPTION_CREATE;
 
 	// Set concurrency to ensure sufficient shared resources available.
@@ -302,16 +326,19 @@ void fiftyoneDegreesOfflineProcessingRun(
 		dataFilePath,
 		exception);
 
+	printf("%s\n", dataFilePath);
 	if (status != SUCCESS) {
 		reportStatus(status, dataFilePath);
 	}
 	else {
 
-		// Process the User-Agents writing the results to the output path.
-		run(&manager, userAgentFilePath, outputFilePath);
+		// Process the evidence writing the results to the output path.
+		run(&manager, evidenceFilePath, outputFilePath, output);
 
 		// Free the memory used by the data set.
 		ResourceManagerFree(&manager);
+
+		fprintf(output, "Processing complete. See results in: '%s'", outputFilePath);
 	}
 }
 
@@ -322,13 +349,27 @@ void fiftyoneDegreesExampleCOfflineProcessingRun(ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesOfflineProcessingRun(
 		params->dataFilePath,
-		params->userAgentsFilePath,
+		params->evidenceFilePath,
 		params->outputFilePath,
 		params->propertiesString,
-		*params->config);
+		*params->config,
+		params->output);
 }
 
 #ifndef TEST
+
+static const char* getBaseName(const char* path) {
+	for (size_t i = strlen(path) - 1; i >= 0; i--) {
+		if (path[i] == '\\' || path[i] == '/') {
+			// Check if there is a basename
+			if (i == (strlen(path) - 1)) {
+				return NULL;
+			}
+			return path + i + 1;
+		}
+	}
+	return path;
+}
 
 /**
  * Only included if the example us being used from the console. Not included
@@ -337,11 +378,12 @@ void fiftyoneDegreesExampleCOfflineProcessingRun(ExampleParameters *params) {
  * @arg2 User-Agent file path
  */
 int main(int argc, char* argv[]) {
-	int i = 0;
 	StatusCode status = SUCCESS;
 	char dataFilePath[FILE_MAX_PATH];
-	char userAgentFilePath[FILE_MAX_PATH];
+	char evidenceFilePath[FILE_MAX_PATH];
 	char outputFilePath[FILE_MAX_PATH];
+
+	// Set data file path
 	if (argc > 1) {
 		strcpy(dataFilePath, argv[1]);
 	}
@@ -351,46 +393,57 @@ int main(int argc, char* argv[]) {
 			dataFileName,
 			dataFilePath,
 			sizeof(dataFilePath));
+		if (status != SUCCESS) {
+			printf(("Failed to find a device detection "
+				"data file. Make sure the device-detection-data "
+				"submodule has been updated by running "
+				"`git submodule update --recursive`"));
+			fgetc(stdin);
+			return 1;
+		}
 	}
-	if (status != SUCCESS) {
-		reportStatus(status, dataFileName);
-		fgetc(stdin);
-		return 1;
-	}
+
+	// Set evidence file path
 	if (argc > 2) {
-		strcpy(userAgentFilePath, argv[2]);
+		strcpy(evidenceFilePath, argv[2]);
 	}
 	else {
 		status = FileGetPath(
 			dataDir,
-			userAgentFileName,
-			userAgentFilePath,
-			sizeof(userAgentFilePath));
+			evidenceFileName,
+			evidenceFilePath,
+			sizeof(evidenceFilePath));
+		if (status != SUCCESS) {
+			reportStatus(status, evidenceFilePath);
+			fgetc(stdin);
+			return 1;
+		}
 	}
-	if (status != SUCCESS) {
-		reportStatus(status, userAgentFilePath);
-		fgetc(stdin);
-		return 1;
-	}
+	
+	// Set output file path
 	if (argc > 3) {
 		strcpy(outputFilePath, argv[3]);
 	}
 	else {
-		while (userAgentFilePath[i] != '.' && userAgentFilePath[i] != '\0') {
-			outputFilePath[i] = userAgentFilePath[i];
-			i++;
+		const char* baseName = getBaseName(evidenceFilePath);
+		if (baseName == NULL) {
+			printf("Invalid evidence file path.\n");
+			fgetc(stdin);
+			return 1;
 		}
-		strcpy(&outputFilePath[i], ".processed.csv");
+		size_t cpySize = baseName - evidenceFilePath;
+		strncpy(outputFilePath, evidenceFilePath, cpySize);
+		strcpy(outputFilePath + cpySize, "offline-processing-output.yml");
 	}
 
 	ConfigHash config = CONFIG;
 	ExampleParameters params;
 	params.dataFilePath = dataFilePath;
-	params.userAgentsFilePath = userAgentFilePath;
+	params.evidenceFilePath = evidenceFilePath;
 	params.outputFilePath = outputFilePath;
-	params.propertiesString = argc > 4 ? argv[4] : "IsMobile,BrowserName,DeviceType,PriceBand,"
-							 "ReleaseMonth,ReleaseYear";
+	params.propertiesString = argc > 4 ? argv[4] : "";
 	params.config = &config;
+	params.output = stdout;
 	// Run the example
 	fiftyoneDegreesExampleMemCheck(
 		&params,
