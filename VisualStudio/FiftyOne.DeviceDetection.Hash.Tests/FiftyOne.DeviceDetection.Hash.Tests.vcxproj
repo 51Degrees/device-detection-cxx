@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3b6efece-fa4d-437f-ad9b-6b1c66b67647}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -83,7 +83,7 @@
     <ClCompile Include="..\..\test\hash\ExampleHashGettingStartedTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashMatchMetricsTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashMemTests.cpp" />
-    <ClCompile Include="..\..\test\hash\ExampleHashPerfTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleHashPerformanceTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashProcTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashReloadFromFileTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashReloadFromMemoryTests.cpp" />
@@ -107,9 +107,6 @@
     </ProjectReference>
     <ProjectReference Include="..\Examples\C\Hash\MemHash\MemHash.vcxproj">
       <Project>{7fc13028-d652-4275-a96d-d8efc8f0ccb8}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Examples\C\Hash\PerfHash\PerfHash.vcxproj">
-      <Project>{c25bb61e-5453-4396-a0f6-396271781a89}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Examples\C\Hash\ProcHash\ProcHash.vcxproj">
       <Project>{40ceef4c-8cf9-48d7-8e86-47f3d9fee848}</Project>

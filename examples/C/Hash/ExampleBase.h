@@ -31,6 +31,20 @@
 #endif
 #include "../../../src/hash/hash.h"
 
+
+#ifdef _MSC_VER
+#define TIMER_CREATE double start, end
+#define TIMER_START start = GetTickCount()
+#define TIMER_END end = GetTickCount()
+#define TIMER_ELAPSED (end - start)
+#else
+#define TIMER_CREATE struct timespec start, end
+#define TIMER_START clock_gettime(CLOCK_MONOTONIC, &start)
+#define	TIMER_END clock_gettime(CLOCK_MONOTONIC, &end)
+#define TIMER_ELAPSED (((end.tv_sec - start.tv_sec) + \
+(end.tv_nsec - start.tv_nsec) / 1.0e9) * 1000.0)
+#endif
+
 /*
 * Structure that contains the parameters that might be required by an example.
 */
@@ -40,6 +54,7 @@ typedef struct fiftyoneDegrees_example_parameters_t{
     char *outputFilePath; /**< Path to an output file */
     char *propertiesString; /**< Required properties string */
     fiftyoneDegreesConfigHash *config; /**< Hash Configuration */
+    uint16_t numberOfThreads;
     FILE* output; /**< Output target for the example */
 } fiftyoneDegreesExampleParameters;
 
@@ -51,6 +66,11 @@ typedef fiftyoneDegreesExampleParameters ExampleParameters;
  */
 typedef void (*fiftyoneDegreesExampleRunPtr)(
     fiftyoneDegreesExampleParameters *);
+
+EXTERNAL unsigned long fiftyoneDegreesGenerateHash(unsigned char* value);
+
+EXTERNAL const char* fiftyoneDegreesExampleGetConfigName(
+    fiftyoneDegreesConfigHash config);
 
 /**
  * Function that perform memory check on example function to run. This function

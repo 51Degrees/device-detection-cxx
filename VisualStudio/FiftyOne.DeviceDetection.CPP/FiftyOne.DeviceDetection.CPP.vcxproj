@@ -75,7 +75,7 @@
     <ProjectGuid>{79B9D213-082A-40D9-B5A7-2758AEDFCBEC}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>FiftyOneDeviceDetectionCPP</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

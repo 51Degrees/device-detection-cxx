@@ -31,7 +31,7 @@
     <ProjectGuid>{AF1E3B5B-A039-4855-BAB3-8455119ECD09}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ReloadFromMemory</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

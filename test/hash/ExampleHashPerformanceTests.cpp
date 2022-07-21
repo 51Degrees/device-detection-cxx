@@ -21,29 +21,27 @@
  * ********************************************************************* */
 
 #include "ExampleHashTests.hpp"
-#include "../../examples/C/Hash/PerfHash.c"
+#include "../../examples/C/Hash/Performance.c"
 
-class ExampleHashTestPerf : public ExampleHashTest {
+class ExampleHashTestPerformance : public ExampleHashTest {
 public:
-	void run(fiftyoneDegreesConfigHash config) {
+	void run() {
 		// Capture stdout for the test.
 		testing::internal::CaptureStdout();
 
-		fiftyoneDegreesPerfHashRun(
+		fiftyoneDegreesHashPerformance(
 			dataFilePath.c_str(),
 			userAgentFilePath.c_str(),
-			config);
+			4,
+			stdout);
 
 		// Don't print the stdout
 		std::string output = testing::internal::GetCapturedStdout();
 	}
 };
 
-TEST_F(ExampleHashTestPerf, LowMemory) {
+TEST_F(ExampleHashTestPerformance, All) {
     if (fiftyoneDegreesCollectionGetIsMemoryOnly() == false) {
-        run(fiftyoneDegreesHashLowMemoryConfig);
+        run();
     }
-}
-TEST_F(ExampleHashTestPerf, InMemory) {
-    run(fiftyoneDegreesHashInMemoryConfig);
 }

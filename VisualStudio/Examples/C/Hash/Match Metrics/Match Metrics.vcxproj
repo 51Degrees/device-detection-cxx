@@ -46,7 +46,7 @@
     <ProjectGuid>{21918EB5-0A76-4CDF-860A-F3725C357260}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>MatchMetrics</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
