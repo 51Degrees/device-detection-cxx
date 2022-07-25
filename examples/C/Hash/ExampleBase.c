@@ -22,6 +22,58 @@
 
 #include "ExampleBase.h"
 #include "../../../src/hash/fiftyone.h"
+#include <string.h>
+
+unsigned long fiftyoneDegreesGenerateHash(unsigned char* value) {
+	unsigned long hashCode = 5381;
+	int i = *value++;
+	while (i != 0) {
+		hashCode = ((hashCode << 5) + hashCode) + i;
+		i = *value++;
+	}
+	return hashCode;
+}
+
+const char* fiftyoneDegreesExampleGetConfigName(
+	fiftyoneDegreesConfigHash config) {
+	if (memcmp(
+		&config,
+		&fiftyoneDegreesHashInMemoryConfig,
+		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+		return "InMemory";
+	}
+	if (memcmp(
+		&config,
+		&fiftyoneDegreesHashHighPerformanceConfig,
+		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+		return "HighPerformance";
+	}
+	if (memcmp(
+		&config,
+		&fiftyoneDegreesHashLowMemoryConfig,
+		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+		return "LowMemory";
+	}
+	if (memcmp(
+		&config,
+		&fiftyoneDegreesHashBalancedConfig,
+		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+		return "Balanced";
+	}
+	if (memcmp(
+		&config,
+		&fiftyoneDegreesHashBalancedTempConfig,
+		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+		return "BalancedTemp";
+	}
+	if (memcmp(
+		&config,
+		&fiftyoneDegreesHashSingleLoadedConfig,
+		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+		return "SingleLoaded";
+	}
+	return "Unknown";
+}
 
 void fiftyoneDegreesExampleMemCheck(
     fiftyoneDegreesExampleParameters *parameters,
@@ -31,7 +83,7 @@ void fiftyoneDegreesExampleMemCheck(
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
 	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
 #endif
-
+	
 // Use memory tracking for non Windows platforms. can be enabled on Windows
 // platform via FORCE_MEMORY_TRACKING
 #if (defined(_DEBUG) && !defined(_MSC_VER)) || defined(FORCE_MEMORY_TRACKING)
@@ -118,6 +170,5 @@ void fiftyoneDegreesExampleCheckDataFile(
 			"out about the Enterprise data file on our "
 			"pricing page: https://51degrees.com/pricing\n"));
 	}
-
-	dataset->strings->release(&item);
+	COLLECTION_RELEASE(dataset->strings, &item);
 }

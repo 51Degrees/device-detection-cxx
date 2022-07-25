@@ -15,7 +15,7 @@
     <ClCompile Include="..\..\test\hash\ExampleHashGettingStartedTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashMatchMetricsTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashMemTests.cpp" />
-    <ClCompile Include="..\..\test\hash\ExampleHashPerfTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ExampleHashPerformanceTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashProcTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashReloadFromFileTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleHashReloadFromMemoryTests.cpp" />

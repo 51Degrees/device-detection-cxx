@@ -38,7 +38,7 @@
     <ProjectGuid>{890B74F4-D72A-4F93-A500-4EF2196CB3EB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ReloadFromMemoryTrie</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>Reload From Memory</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

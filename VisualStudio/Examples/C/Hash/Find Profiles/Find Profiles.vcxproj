@@ -38,7 +38,7 @@
     <ProjectGuid>{22E3BB54-2542-4641-9A07-7EFE0DD64670}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>FindProfiles</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
