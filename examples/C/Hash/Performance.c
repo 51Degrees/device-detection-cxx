@@ -93,12 +93,8 @@ typedef struct performanceConfig_t {
  * Dataset configurations to run benchmarking against.
  */
 performanceConfig performanceConfigs[] = {
-	{ &HashInMemoryConfig, false, true, true},
-	{ &HashInMemoryConfig, false, false, true },
-	{ &HashInMemoryConfig, true, true, false },
-	{ &HashBalancedConfig, false, true, true },
-	{ &HashBalancedConfig, false, false, true },
-	{ &HashBalancedConfig, true, true, false } };
+	{ &HashInMemoryConfig, false, true, false},
+	{ &HashInMemoryConfig, true, true, false } };
 
 /**
  * Result of benchmarking from a single thread.
@@ -242,24 +238,20 @@ void runPerformanceThread(void* state) {
 				(&thisState->mainState->evidence[i]->pairs)[j].value);
 		}
 		ResultsHashFromEvidence(results, evidence, exception);
-		// Calculate a checksum to compare different runs on
-		// the same data.
-		for (uint32_t propertyIndex = 0;
-			propertyIndex < ((DataSetHash*)results->b.b.dataSet)->b.b.available->count;
-			propertyIndex++){
-			if (ResultsHashGetValuesStringByRequiredPropertyIndex(
-				results,
-				propertyIndex,
-				buffer,
-				1000,
-				"|",
-				exception) > 0) {
-				EXCEPTION_THROW;
-				thisState->result->checkSum +=
-					fiftyoneDegreesGenerateHash((unsigned char*)buffer);
-			}
+
+		// Access the value for the first property
+		if (ResultsHashGetValuesStringByRequiredPropertyIndex(
+			results,
+			0,
+			buffer,
+			1000,
+			"|",
+			exception) > 0) {
 			EXCEPTION_THROW;
+			thisState->result->checkSum +=
+				fiftyoneDegreesGenerateHash((unsigned char*)buffer);
 		}
+
 		thisState->result->count++;
 		EvidenceFree(evidence);
 		
@@ -346,7 +338,7 @@ void doReport(performanceState *state) {
 	}
 
 	// output the results from the benchmark to the console
-	double millisPerTest = ((double)totalMillis / (4 * totalChecks));
+	double millisPerTest = ((double)totalMillis / (state->numberOfThreads * totalChecks));
 	fprintf(state->output,
 		"Overall: %ld detections, Average millisecs per detection: %f, Detections per second: %.0lf\n",
 		totalChecks,
