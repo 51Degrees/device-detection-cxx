@@ -202,6 +202,7 @@ public:
 		verifyProfileOverrideDefault();
 		verifyProfileOverrideBad();
 		verifyProfileOverrideNoUserAgent();
+		verifyWithLongPseudoHeader();
 		verifyProcessDeviceId();
 		verifyProfileOverridePartial();
 		verifyProfileOverrideZero();
@@ -638,6 +639,22 @@ public:
 		delete properties;
 		delete component;
 		delete components;
+		delete results;
+	}
+
+	void verifyWithLongPseudoHeader() {
+		char* almostTooLongHeader = (char*)
+			malloc(sizeof(char) *
+				this->config->getMaxMatchedUserAgentLength() - 1);
+		memset(almostTooLongHeader, 'X', this->config->getMaxMatchedUserAgentLength() - 1);
+		almostTooLongHeader[this->config->getMaxMatchedUserAgentLength() - 2] = '\0';
+		EvidenceDeviceDetection evidence;
+		evidence["header.Sec-CH-UA-Platform"] = almostTooLongHeader;
+		evidence["header.Sec-CH-UA-Platform-Version"] = almostTooLongHeader;
+		ResultsHash* results = 
+			((EngineHash*)getEngine())->process(&evidence);
+		validate(results);
+		free((void*)almostTooLongHeader);
 		delete results;
 	}
 
