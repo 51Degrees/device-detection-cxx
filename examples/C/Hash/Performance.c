@@ -30,7 +30,7 @@
 #include "../../../src/hash/fiftyone.h"
 
 /**
- * @example Performance.c
+ * @example Hash/Performance.c
  * The example illustrates a "clock-time" benchmark for assessing detection speed.
  *
  * Using a YAML formatted evidence file - "20000 Evidence Records.yml" - supplied with the
