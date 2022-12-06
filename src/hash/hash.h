@@ -380,7 +380,7 @@ typedef fiftyoneDegreesResultHashArray fiftyoneDegreesResultsHash;
  * In this configuration, only the performance optimised graph is enabled for
  * processing to give the fastest operation.
  */
-EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig;
+EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig;
 
 /**
  * Highest performance configuration. Loads all the data into memory and does
@@ -390,7 +390,7 @@ EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig;
  * In this configuration, only the performance optimised graph is enabled for
  * processing to give the fastest operation.
  */
-EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig;
+EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig;
 
 /**
  * Low memory configuration. A connection is maintained to the source data file
@@ -403,7 +403,7 @@ EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig;
  * falling back to the more predictive graph if nothing is found on the first
  * pass can be afforded.
  */
-EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig;
+EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig;
 
 /**
  * Uses caching to balance memory usage and performance. A connection is
@@ -417,7 +417,7 @@ EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig;
  * falling back to the more predictive graph if nothing is found on the first
  * pass can be afforded.
  */
-EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedConfig;
+EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedConfig;
 
 /**
  * Balanced configuration modified to create a temporary file copy of the
@@ -427,7 +427,7 @@ EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedConfig;
  * falling back to the more predictive graph if nothing is found on the first
  * pass can be afforded.
  */
-EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedTempConfig;
+EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedTempConfig;
 
 /**
  * Default detection configuration. This configures the data set to not create
@@ -438,7 +438,7 @@ EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedTempConfig;
  * falling back to the more predictive graph if nothing is found on the first
  * pass can be afforded.
  */
-EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashDefaultConfig;
+EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashDefaultConfig;
 
 /**
  * Configuration designed only for testing. This uses a loaded size of 1 in
@@ -446,7 +446,7 @@ EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashDefaultConfig;
  * items which do not exist in the root collection. This configuration is not
  * exposed through C++ intentionally as it is only used in testing.
  */
-EXTERNAL fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig;
+EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig;
 
 /**
  * EXTERNAL METHODS
