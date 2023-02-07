@@ -444,8 +444,106 @@ TEST_F(HashCTests, HashSizeManagerFromFileException) {
 	EXPECT_EQ(FIFTYONE_DEGREES_STATUS_FILE_NOT_FOUND, exception->status) <<
 		"Exception status should be set to " <<
 		FIFTYONE_DEGREES_STATUS_FILE_NOT_FOUND << ".\n";
-	
+
 	// SetUp the test at this point so the test will perform memory free as
 	// normal and memory check will not fail for this test.
 	internalSetUp();
+}
+
+/**
+ * Check that when an index for a property was not found (i.e. the index is -1)
+ * an approriate error is set, and there is no segfault.
+ */
+TEST_F(HashCTests, HashResultsGetValuesNoPropertyIndex) {
+	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+
+	EXCEPTION_CREATE;
+	// Obtain results from user agent
+	ResultsHashFromUserAgent(
+		results,
+		mobileUserAgent,
+		strlen(mobileUserAgent),
+		exception);
+	EXCEPTION_THROW;
+	Item item;
+	DataReset(&item.data);
+	ResultsHashGetValues(results, -1, exception);
+	ResultsHashFree(results);
+
+	EXPECT_FALSE(EXCEPTION_OKAY);
+	EXPECT_EQ(COLLECTION_INDEX_OUT_OF_RANGE, exception->status);
+}
+
+/**
+ * Check that when an index for a property is out of range,
+ * an approriate error is set, and there is no segfault.
+ */
+TEST_F(HashCTests, HashResultsGetValuesOutOfRangePropertyIndex) {
+	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+
+	EXCEPTION_CREATE;
+	// Obtain results from user agent
+	ResultsHashFromUserAgent(
+		results,
+		mobileUserAgent,
+		strlen(mobileUserAgent),
+		exception);
+	EXCEPTION_THROW;
+	Item item;
+	DataReset(&item.data);
+	ResultsHashGetValues(results, dataSet->b.b.available->count, exception);
+	ResultsHashFree(results);
+	DataSetHashRelease(dataSet);
+
+	EXPECT_FALSE(EXCEPTION_OKAY);
+	EXPECT_EQ(COLLECTION_INDEX_OUT_OF_RANGE, exception->status);
+}
+
+#ifdef _MSC_VER
+#pragma warning (push)
+#pragma warning (disable: 4100) 
+#endif
+
+static void* getFail(
+	fiftyoneDegreesCollection* collection,
+	uint32_t indexOrOffset,
+	fiftyoneDegreesCollectionItem* item,
+	fiftyoneDegreesException* exception) {
+	EXCEPTION_SET(CORRUPT_DATA);
+	return NULL;
+}
+
+#ifdef _MSC_VER
+#pragma warning (default: 4100) 
+#pragma warning (pop)
+#endif
+
+/**
+ * Check that when an exception is set by the values collection,
+ * an approriate error is set, and there is no segfault.
+ */
+TEST_F(HashCTests, HashResultsGetValuesNoProfileValues) {
+	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+
+	EXCEPTION_CREATE;
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+	fiftyoneDegreesCollectionGetMethod oldGetValue = dataSet->values->get;
+	dataSet->values->get = getFail;
+	// Obtain results from user agent
+	ResultsHashFromUserAgent(
+		results,
+		mobileUserAgent,
+		strlen(mobileUserAgent),
+		exception);
+	Item item;
+	DataReset(&item.data);
+	ResultsHashGetValues(results, -1, exception);
+	dataSet->values->get = oldGetValue;
+
+	ResultsHashFree(results);
+	DataSetHashRelease(dataSet);
+
+	EXPECT_FALSE(EXCEPTION_OKAY);
+	EXPECT_EQ(COLLECTION_INDEX_OUT_OF_RANGE, exception->status);
 }

@@ -2536,32 +2536,32 @@ static uint32_t addValuesFromProfile(
 		&state,
 		addValue,
 		exception);
-	EXCEPTION_THROW;
 
-	// The count of values should always be lower or the same as the profile
-	// count. i.e. there can never be more values counted than there are values
-	// against the profile.
-	assert(count <= profile->valueCount);
-	
-	// Check to see if the capacity of the list needs to increase. If
-	// it does then free the list and initialise it with a larger
-	// capacity before adding the values again.
-	if (count > results->values.count) {
-		ListFree(&results->values);
-		ListInit(&results->values, count);
-		ProfileIterateValuesForProperty(
-			dataSet->values,
-			profile,
-			property,
-			&state,
-			addValue,
-			exception);
+	if (EXCEPTION_OKAY) {
+		// The count of values should always be lower or the same as the profile
+		// count. i.e. there can never be more values counted than there are values
+		// against the profile.
+		assert(count <= profile->valueCount);
 
-		// The number of items that are set should exactly match the count from
-		// the initial iteration.
-		assert(count == results->values.count);
+		// Check to see if the capacity of the list needs to increase. If
+		// it does then free the list and initialise it with a larger
+		// capacity before adding the values again.
+		if (count > results->values.count) {
+			ListFree(&results->values);
+			ListInit(&results->values, count);
+			ProfileIterateValuesForProperty(
+				dataSet->values,
+				profile,
+				property,
+				&state,
+				addValue,
+				exception);
+
+			// The number of items that are set should exactly match the count from
+			// the initial iteration.
+			assert(count == results->values.count);
+		}
 	}
-
 	return count;
 }
 
@@ -3029,34 +3029,42 @@ fiftyoneDegreesCollectionItem* fiftyoneDegreesResultsHashGetValues(
 			dataSet->b.b.available,
 			requiredPropertyIndex);
 
-		// Set the property that will be available in the results structure. 
-		// This may also be needed to work out which of a selection of results 
-		// are used to obtain the values.
-		property = PropertyGet(
-			dataSet->properties,
-			propertyIndex,
-			&results->propertyItem,
-			exception);
+		if (((int32_t)propertyIndex) < 0) {
+			EXCEPTION_SET(COLLECTION_INDEX_OUT_OF_RANGE);
+		}
 
-		result = getResultFromResultsWithProperty(
-			dataSet,
-			results,
-			property);
+		if (EXCEPTION_OKAY) {
+			// Set the property that will be available in the results structure. 
+			// This may also be needed to work out which of a selection of results 
+			// are used to obtain the values.
+			property = PropertyGet(
+				dataSet->properties,
+				propertyIndex,
+				&results->propertyItem,
+				exception);
 
-		if (property != NULL && EXCEPTION_OKAY) {
-
-			// Ensure there is a collection available to the property item so
-			// that it can be freed when the results are freed.
-			if (results->propertyItem.collection == NULL) {
-				results->propertyItem.collection = dataSet->properties;
-			}
-
-			if (result != NULL && EXCEPTION_OKAY) {
-				firstValue = getValuesFromResult(
+			if (property != NULL && EXCEPTION_OKAY) {
+				result = getResultFromResultsWithProperty(
+					dataSet,
 					results,
-					result,
-					property,
-					exception);
+					property);
+
+				if (result != NULL) {
+
+					// Ensure there is a collection available to the property item so
+					// that it can be freed when the results are freed.
+					if (results->propertyItem.collection == NULL) {
+						results->propertyItem.collection = dataSet->properties;
+					}
+
+					if (result != NULL && EXCEPTION_OKAY) {
+						firstValue = getValuesFromResult(
+							results,
+							result,
+							property,
+							exception);
+					}
+				}
 			}
 		}
 
