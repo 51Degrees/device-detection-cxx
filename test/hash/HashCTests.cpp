@@ -536,6 +536,7 @@ TEST_F(HashCTests, HashResultsGetValuesNoProfileValues) {
 		mobileUserAgent,
 		strlen(mobileUserAgent),
 		exception);
+	EXCEPTION_THROW; 
 	Item item;
 	DataReset(&item.data);
 	ResultsHashGetValues(results, -1, exception);

@@ -238,6 +238,7 @@ void runPerformanceThread(void* state) {
 				(&thisState->mainState->evidence[i]->pairs)[j].value);
 		}
 		ResultsHashFromEvidence(results, evidence, exception);
+		EXCEPTION_THROW;
 
 		// Access the value for the first property
 		if (ResultsHashGetValuesStringByRequiredPropertyIndex(

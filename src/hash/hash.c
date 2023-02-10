@@ -858,7 +858,10 @@ static bool processFromRoot(
 		}
 		state->iterations++;
 		state->currentDepth++;
-	} while (state->complete == false);
+	} while (state->complete == false && EXCEPTION_OKAY);
+	if (EXCEPTION_OKAY == false) {
+		return false;
+	}
 	return state->matchedNodes > previouslyMatchedNodes;
 }
 
@@ -2402,6 +2405,7 @@ createPseudoEvidenceKeyValueArray(
 						(void*)((char*)evidenceMem + i * maxUaLength);
 					pseudoEvidence->items[i].parsedValue = NULL;
 				}
+				pseudoEvidence->pseudoEvidence = NULL;
 			}
 			else {
 				Free(pseudoEvidence);
