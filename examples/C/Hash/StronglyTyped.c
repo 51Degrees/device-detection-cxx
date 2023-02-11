@@ -243,6 +243,7 @@ void fiftyoneDegreesHashStronglyTyped(
 		mobileUserAgent,
 		strlen(mobileUserAgent),
 		exception);
+	EXCEPTION_THROW;
 	printBoolValues(results);
 
 	// Carries out a match for a desktop User-Agent.
@@ -252,6 +253,7 @@ void fiftyoneDegreesHashStronglyTyped(
 		desktopUserAgent,
 		strlen(desktopUserAgent),
 		exception);
+	EXCEPTION_THROW;
 	printBoolValues(results);
 
 	// Carries out a match for a MediaHub User-Agent.
@@ -261,6 +263,7 @@ void fiftyoneDegreesHashStronglyTyped(
 		mediaHubUserAgent,
 		strlen(mediaHubUserAgent),
 		exception);
+	EXCEPTION_THROW;
 	printBoolValues(results);
 
 	// Ensure the results are freed to avoid memory leaks.

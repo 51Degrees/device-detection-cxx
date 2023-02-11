@@ -245,6 +245,7 @@ void fiftyoneDegreesHashMatchMetrics(
 		mobileUserAgent,
 		strlen(mobileUserAgent),
 		exception);
+	EXCEPTION_THROW;
 	outputMatchMetrics(results);
 
 	// Carries out a match for a desktop User-Agent.
@@ -254,6 +255,7 @@ void fiftyoneDegreesHashMatchMetrics(
 		desktopUserAgent,
 		strlen(desktopUserAgent),
 		exception);
+	EXCEPTION_THROW;
 	outputMatchMetrics(results);
 
 	// Carries out a match for a MediaHub User-Agent.
@@ -263,6 +265,7 @@ void fiftyoneDegreesHashMatchMetrics(
 		mediaHubUserAgent,
 		strlen(mediaHubUserAgent),
 		exception);
+	EXCEPTION_THROW;
 	outputMatchMetrics(results);
 
 	// Ensure the results are freed to avoid memory leaks.
