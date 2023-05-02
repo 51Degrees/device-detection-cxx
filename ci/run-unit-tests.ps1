@@ -16,7 +16,7 @@ try {
 
     Write-Output "Testing $($Options.Name)"
 
-    # TODO ctest -C $Configuration -T test --no-compress-output --output-junit "../test-results/unit/$Name.xml" --exclude-regex ".*Example.*"
+    ctest -C $Configuration -T test --no-compress-output --output-junit "../test-results/unit/$Name.xml" --exclude-regex ".*Example.*"
 }
 finally {
 
