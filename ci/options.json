@@ -1,10 +1,16 @@
 [
   {
-    "Image": "ubuntu-20.04",
-    "Name": "Ubuntu20_x64_Debug",
+    "Image": "ubuntu-latest",
+    "Name": "Ubuntu_x64_Debug",
     "Configuration": "Debug",
+    "Arch": "x64"
+  },
+ {
+    "Image": "ubuntu-latest",
+    "Name": "Ubuntu_x64_Release",
+    "Configuration": "Release",
     "Arch": "x64",
     "RunPerformance": true
-  }
+  } 
 ]
  
