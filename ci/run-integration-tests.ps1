@@ -17,7 +17,7 @@ try {
 
     Write-Output "Testing $($Options.Name)"
 
-    # TODO ctest -C $Configuration -T test --no-compress-output --output-on-failure --output-junit "../test-results/integration/$Name.xml" --tests-regex ".*Integration|Example.*" --exclude-regex ".*OfflineProcessing.*"
+    ctest -C $Configuration -T test --no-compress-output --output-on-failure --output-junit "../test-results/integration/$Name.xml" --tests-regex ".*Integration|Example.*" --exclude-regex ".*OfflineProcessing.*"
 
 }
 finally {
