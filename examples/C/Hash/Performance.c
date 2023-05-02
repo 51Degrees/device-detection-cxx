@@ -136,6 +136,8 @@ typedef struct performanceState_t {
 	const char* dataFileLocation;
 	// File pointer to write output to, usually stdout
 	FILE* output;
+	// File pointer to write results to, usually null
+	FILE* resultsOutput;
 	// Manager containing the dataset
 	ResourceManager manager;
 	// Running threads
@@ -350,6 +352,10 @@ void doReport(performanceState *state) {
 		state->numberOfThreads,
 		checksum);
 	fprintf(state->output, "\n");
+
+	if (state->resultsOutput != NULL) {
+		fprintf(state->resultsOutput, "  \"DetectionsPerSecond\": %.2f,\n", round(1000.0 / millisPerTest));
+	}
 }
 
 /**
@@ -435,12 +441,14 @@ void executeBenchmark(
  * @param evidenceFilePath path to a text file of evidence
  * @param numberOfThreads number of concurrent threads
  * @param output file pointer to print output to
+ * @param resultsOutput file pointer to print results file to
  */
 void fiftyoneDegreesHashPerformance(
 	const char* dataFilePath,
 	const char* evidenceFilePath,
 	int numberOfThreads,
-	FILE* output) {
+	FILE* output,
+	FILE* resultsOutput) {
 	performanceState state;
 	char buffer[1000];
 
@@ -448,6 +456,7 @@ void fiftyoneDegreesHashPerformance(
 
 	state.dataFileLocation = dataFilePath;
 	state.output = output;
+	state.resultsOutput = resultsOutput;
 	state.evidenceCount = 0;
 	if (ThreadingGetIsThreadSafe()) {
 		state.numberOfThreads = (uint16_t)numberOfThreads;
@@ -487,14 +496,35 @@ void fiftyoneDegreesHashPerformance(
 		&state,
 		storeEvidence);
 
+	if (state.resultsOutput != NULL) {
+		fprintf(state.resultsOutput, "{\n");
+	}
+
 	// run the selected benchmarks from disk
 	for (int i = 0;
 		i < (int)(sizeof(performanceConfigs) / sizeof(performanceConfig));
 		i++) {
+		
 		if (fiftyoneDegreesCollectionGetIsMemoryOnly() == false ||
 			performanceConfigs[i].config->b.b.allInMemory == true) {
+			
+			if (state.resultsOutput != NULL) {
+				fprintf(state.resultsOutput, "%s\n\"%s%s\": {\n",
+					i > 0 ? "," : "",
+					fiftyoneDegreesExampleGetConfigName(*(performanceConfigs[i].config)),
+					performanceConfigs[i].allProperties ? "_All" : "");
+			}
+
 			executeBenchmark(&state, performanceConfigs[i]);
+
+			if (state.resultsOutput != NULL) {
+				fprintf(state.resultsOutput, "}");
+			}
 		}
+	}
+	
+	if (state.resultsOutput != NULL) {
+		fprintf(state.resultsOutput, "}\n");
 	}
 
 	for (int i = 0; i < state.evidenceCount; i++) {
@@ -518,29 +548,97 @@ void fiftyoneDegreesExampleCPerformanceRun(ExampleParameters* params) {
 		params->dataFilePath,
 		params->evidenceFilePath,
 		params->numberOfThreads,
-		params->output);
+		params->output,
+		params->resultsOutput);
 }
 
 #ifndef TEST
+
+#define DATA_OPTION "--data-file"
+#define DATA_OPTION_SHORT "-d"
+#define UA_OPTION "--user-agent-file"
+#define UA_OPTION_SHORT "-u"
+#define THREAD_OPTION "--threads"
+#define THREAD_OPTION_SHORT "-t"
+#define JSON_OPTION "--json-output"
+#define JSON_OPTION_SHORT "-j"
+#define HELP_OPTION "--help"
+#define HELP_OPTION_SHORT "-h"
+#define OPTION_PADDING(o) ((int)(30 - strlen(o)))
+#define OPTION_MESSAGE(m, o, s) printf("  %s, %s%*s: %s\n", o, s, OPTION_PADDING(o), " ", m);
+
+/**
+ * Print the available options to the output.
+ */
+void printHelp() {
+	printf("Available options are:\n");
+	OPTION_MESSAGE("Path to a 51Degrees Hash data file", DATA_OPTION, DATA_OPTION_SHORT);
+	OPTION_MESSAGE("Path to a User-Agents YAML file", UA_OPTION, UA_OPTION_SHORT);
+	OPTION_MESSAGE("Number of threads to run", THREAD_OPTION, THREAD_OPTION_SHORT);
+	OPTION_MESSAGE("Path to a file to output JSON format results to", JSON_OPTION, JSON_OPTION_SHORT);
+	OPTION_MESSAGE("Print this help", HELP_OPTION, HELP_OPTION_SHORT);
+}
 
 /**
  * Only included if the example us being used from the console. Not included
  * when part of a test framework where the main method is not required.
  * @arg1 data file path
  * @arg2 User-Agent file path
+ * @arg3 number of threads
+ * @arg4 JSON output file
  */
 int main(int argc, char* argv[]) {
 
 	StatusCode status = SUCCESS;
 	char dataFilePath[FILE_MAX_PATH];
 	char evidenceFilePath[FILE_MAX_PATH];
-	int numberOfThreads;
+	int numberOfThreads = DEFAULT_NUMBER_OF_THREADS;
+	char *outFile = NULL;
+	dataFilePath[0] = '\0';
+	evidenceFilePath[0] = '\0';
 
-	// Set data file path
-	if (argc > 1) {
-		strcpy(dataFilePath, argv[1]);
+	for (int i = 0; i < argc; i++) {
+		if (strcmp(argv[i], DATA_OPTION) == 0 ||
+			strcmp(argv[i], DATA_OPTION_SHORT) == 0) {
+			// Set data file path
+			strcpy(dataFilePath, argv[i + 1]);
+		}
+		else if (strcmp(argv[i], UA_OPTION) == 0 ||
+			strcmp(argv[i], UA_OPTION_SHORT) == 0) {
+			// Set evidence file path
+			strcpy(evidenceFilePath, argv[i + 1]);
+		}
+		else if (strcmp(argv[i], THREAD_OPTION) == 0 ||
+			strcmp(argv[i], THREAD_OPTION_SHORT) == 0) {
+			// Set the number of threads
+			numberOfThreads = atoi(argv[i + 1]);
+		}
+		else if (strcmp(argv[i], JSON_OPTION) == 0 ||
+			strcmp(argv[i], JSON_OPTION_SHORT) == 0) {
+			// Set the JSON results file
+			outFile = argv[i + 1];
+		}
+		else if (strcmp(argv[i], HELP_OPTION) == 0 ||
+			strcmp(argv[i], HELP_OPTION_SHORT) == 0) {
+			// Print the help options
+			printHelp();
+			return 0;
+		}
+		else if (argv[i][0] == '-') {
+			// Something invalid was entered, so do not continue
+			printf(
+				"The option '%s' is not recognized. Use %s (%s) to list options.",
+				argv[i],
+				HELP_OPTION,
+				HELP_OPTION_SHORT);
+			return 1;
+		}
+		else {
+			// Do nothing, this is a value.
+		}
 	}
-	else {
+
+	if (strlen(dataFilePath) == 0) {
 		status = FileGetPath(
 			dataDir,
 			dataFileName,
@@ -556,11 +654,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	// Set evidence file path
-	if (argc > 2) {
-		strcpy(evidenceFilePath, argv[2]);
-	}
-	else {
+	if (strlen(evidenceFilePath) == 0) {
 		status = FileGetPath(
 			dataDir,
 			evidenceFileName,
@@ -576,26 +670,25 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	if (argc > 3) {
-		numberOfThreads = atoi(argv[3]);
-	}
-	else {
-		numberOfThreads = DEFAULT_NUMBER_OF_THREADS;
-	}
-
 	ExampleParameters params;
 	params.dataFilePath = dataFilePath;
 	params.evidenceFilePath = evidenceFilePath;
 	params.numberOfThreads = (uint16_t)numberOfThreads;
 	params.output = stdout;
-
+	if (outFile != NULL) {
+		params.resultsOutput = fopen(outFile, "w");
+	}
+	else {
+		params.resultsOutput = NULL;
+	}
 	// Run the example
 	fiftyoneDegreesExampleMemCheck(
 		&params,
 		fiftyoneDegreesExampleCPerformanceRun);
 
-	// Wait for a character to be pressed.
-	fgetc(stdin);
+	if (outFile != NULL) {
+		fclose(params.resultsOutput);
+	}
 
 	return 0;
 }

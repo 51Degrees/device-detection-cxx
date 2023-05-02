@@ -1,0 +1,10 @@
+[
+  {
+    "Image": "ubuntu-20.04",
+    "Name": "Ubuntu20_x64_Debug",
+    "Configuration": "Debug",
+    "Arch": "x64",
+    "RunPerformance": true
+  }
+]
+ 

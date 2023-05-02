@@ -43,7 +43,7 @@
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "51Degrees-LiteV4.1.hash";
+static const char *dataFileName = "TAC-HashV41.hash";
 
 static const char *userAgentFileName = "20000 User Agents.csv";
 
@@ -462,7 +462,7 @@ int main(int argc, char* argv[]) {
 
 	// Wait for a character to be pressed.
 	printf("\nPress enter to start memory test.\n");
-	fgetc(stdin);
+	//fgetc(stdin);
 
 	ConfigHash config = CONFIG;
 	ExampleParameters params;
@@ -475,7 +475,7 @@ int main(int argc, char* argv[]) {
 		fiftyoneDegreesExampleCMemHashRun);
 
 	// Wait for a character to be pressed.
-	fgetc(stdin);
+	//fgetc(stdin);
 
 	return 0;
 }

@@ -56,6 +56,7 @@ typedef struct fiftyoneDegrees_example_parameters_t{
     fiftyoneDegreesConfigHash *config; /**< Hash Configuration */
     uint16_t numberOfThreads;
     FILE* output; /**< Output target for the example */
+    FILE* resultsOutput; /**< Output target for any results. Null if not required */
 } fiftyoneDegreesExampleParameters;
 
 typedef fiftyoneDegreesExampleParameters ExampleParameters;
