@@ -25,7 +25,7 @@
 
 const static char _dataFolderName[] = "device-detection-data";
 
-const static char* _HashFileNames[] = { "51Degrees-EnterpriseV4.1.hash", "51Degrees-LiteV4.1.hash" };
+const static char* _HashFileNames[] = { "TAC-HashV41.hash", "51Degrees-EnterpriseV4.1.hash", "51Degrees-LiteV4.1.hash" };
 
 const static int _HashFileNamesLength = 2;
 
@@ -35,7 +35,7 @@ const static char _userAgentsFileName[] = "20000 User Agents.csv";
 
 const static char _evidenceFileName[] = "20000 Evidence Records.yml";
 
-const static char* _fileTypes[] = { "Enterprise", "Lite" };
+const static char* _fileTypes[] = { "TAC", "Enterprise", "Lite" };
 
 const static char _reloadTestFile[] = "reload-test-file.dat";
 

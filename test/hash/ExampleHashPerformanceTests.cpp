@@ -33,7 +33,8 @@ public:
 			dataFilePath.c_str(),
 			userAgentFilePath.c_str(),
 			4,
-			stdout);
+			stdout,
+			NULL);
 
 		// Don't print the stdout
 		std::string output = testing::internal::GetCapturedStdout();
