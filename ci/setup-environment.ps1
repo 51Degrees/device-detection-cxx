@@ -8,6 +8,7 @@ param(
 
 if ($BuildMethod -eq "msbuild") {
 
+    # Setup the MSBuild environment if it is required.
     ./environments/setup-msbuild.ps1
 
 }

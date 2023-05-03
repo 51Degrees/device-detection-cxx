@@ -7,6 +7,7 @@ param(
     [string]$BuildMethod = "cmake"
 )
 
+# This is common logic, so let's call the common script
 ./cxx/build-project.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -Configuration $Configuration -BuildMethod $BuildMethod
 
 exit $LASTEXITCODE

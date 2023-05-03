@@ -16,6 +16,8 @@ try {
 
     Write-Output "Testing $($Options.Name)"
 
+    # Instead of calling the common CTest script, we want to allow the inclusion of tests with Performance in the name.
+    # This is because HighPerformance is the name of a configuration.
     ctest -C $Configuration -T test --no-compress-output --output-junit "../test-results/unit/$Name.xml" --exclude-regex ".*Example.*"
 }
 finally {
