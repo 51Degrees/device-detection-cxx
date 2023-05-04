@@ -17,6 +17,7 @@ try {
 
     Write-Output "Testing $($Options.Name)"
 
+    # Instead of calling the common CTest script, we want to exclude specific long running tests.
     ctest -C $Configuration -T test --no-compress-output --output-on-failure --output-junit "../test-results/integration/$Name.xml" --tests-regex ".*Integration|Example.*" --exclude-regex ".*OfflineProcessing.*"
 
 }

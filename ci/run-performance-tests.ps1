@@ -16,6 +16,8 @@ try {
 
     Write-Output "Testing $($Options.Name)"
 
+    # Instead of calling the common CTest script, we want to exclude tests which have HighPerformance in the name.
+    # This is the name of a configuration, not an indication that the test is a performance test.
     ctest -C $Configuration -T test --no-compress-output --output-junit "../test-results/performance/$Name.xml" --tests-regex ".*Performance.*" --exclude-regex ".*HighPerformance.*"
 }
 finally {
@@ -46,7 +48,11 @@ try {
     else {
         $PerfPath = [IO.Path]::Combine($RepoPath, "build", "bin", "PerformanceHashC")
     }
+    
+    # Run the performance test
     . $PerfPath --json-output $OutputFile --data-file $DataFile
+
+    # Output the results for comparison
     $Results = Get-Content $OutputFile | ConvertFrom-Json -AsHashtable
     Write-Output "{
         'HigherIsBetter': {
