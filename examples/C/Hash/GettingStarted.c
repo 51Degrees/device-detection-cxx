@@ -117,7 +117,7 @@ static void outputValue(
 	DataSetHash* dataset = (DataSetHash*)results->b.b.dataSet;
 
 	EXCEPTION_CREATE;
-	int propertyIndex = PropertiesGetPropertyIndexFromName(dataset->b.b.available, "IsMobile");
+	int propertyIndex = PropertiesGetPropertyIndexFromName(dataset->b.b.available, propertyName);
 	// If a value has not been set then trying to access the value will
 	// result in an exception.
 	if (ResultsHashGetHasValues(
