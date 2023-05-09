@@ -1,0 +1,5 @@
+<map id="fiftyoneDegreesHeader" name="fiftyoneDegreesHeader">
+<area shape="rect" id="node1" title="Header structure to identify a header that either comes directly from the data set,..." alt="" coords="35,199,207,225"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_header_segment_array.html" title="Array of items of type fiftyoneDegreesHeaderSegment used to easily access and track the size of the a..." alt="" coords="5,95,236,136"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_header_segment.html" title="Null or PSEUDO_HEADER_SEP terminated string segment within a header." alt="" coords="5,5,236,32"/>
+</map>

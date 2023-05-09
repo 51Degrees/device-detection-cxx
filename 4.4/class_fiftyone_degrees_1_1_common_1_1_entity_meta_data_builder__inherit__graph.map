@@ -1,0 +1,7 @@
+<map id="FiftyoneDegrees::Common::EntityMetaDataBuilder" name="FiftyoneDegrees::Common::EntityMetaDataBuilder">
+<area shape="rect" id="node1" title="Meta data builder class contains static helper methods used when building meta data instances." alt="" coords="5,104,200,145"/>
+<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_device_detection_1_1_hash_1_1_component_meta_data_builder_hash.html" title="Meta data builder class contains static helper methods used when building component meta data instanc..." alt="" coords="248,5,537,47"/>
+<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_device_detection_1_1_hash_1_1_profile_meta_data_builder_hash.html" title="Meta data builder class contains static helper methods used when building profile meta data instances..." alt="" coords="265,71,520,112"/>
+<area shape="rect" id="node4" href="$class_fiftyone_degrees_1_1_device_detection_1_1_hash_1_1_property_meta_data_builder_hash.html" title="Meta data builder class contains static helper methods used when building property meta data instance..." alt="" coords="258,136,527,177"/>
+<area shape="rect" id="node5" href="$class_fiftyone_degrees_1_1_device_detection_1_1_hash_1_1_value_meta_data_builder_hash.html" title="Meta data builder class contains static helper methods used when building value meta data instances f..." alt="" coords="267,201,518,243"/>
+</map>

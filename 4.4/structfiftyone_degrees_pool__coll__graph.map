@@ -1,0 +1,5 @@
+<map id="fiftyoneDegreesPool" name="fiftyoneDegreesPool">
+<area shape="rect" id="node1" title="Pool of resources stored as items in a stack." alt="" coords="22,95,175,121"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_pool_item.html" title="Pool item node in the stack of items." alt="" coords="7,184,190,211"/>
+<area shape="rect" id="node2" href="$unionfiftyone_degrees_pool_head.html" title="The head of the stack used for pop and push operations." alt="" coords="5,5,192,32"/>
+</map>

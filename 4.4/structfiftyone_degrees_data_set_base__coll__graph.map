@@ -1,0 +1,22 @@
+<map id="fiftyoneDegreesDataSetBase" name="fiftyoneDegreesDataSetBase">
+<area shape="rect" id="node1" title="Base data set structure which contains the &#39;must have&#39;s for all data sets." alt="" coords="1943,191,2153,217"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_header_array.html" title="Array of items of type fiftyoneDegreesHeader used to easily access and track the size of the array." alt="" coords="1555,80,1761,107"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_header.html" title="Header structure to identify a header that either comes directly from the data set,..." alt="" coords="1048,77,1220,104"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_header_segment_array.html" title="Array of items of type fiftyoneDegreesHeaderSegment used to easily access and track the size of the a..." alt="" coords="663,70,894,111"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_header_segment.html" title="Null or PSEUDO_HEADER_SEP terminated string segment within a header." alt="" coords="247,77,477,104"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_resource_handle.html" title="Handle for a shared resource." alt="" coords="1543,24,1773,51"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="1927,5,2169,32"/>
+<area shape="rect" id="node8" href="$structfiftyone_degrees_interlock_double_width.html" title="Double width (64 or 128 depending on the architecture) compare and exchange." alt="" coords="1043,11,1225,53"/>
+<area shape="rect" id="node9" href="$structfiftyone_degrees_file_pool.html" title="Stack of handles used to read data from a single source file." alt="" coords="1570,191,1746,217"/>
+<area shape="rect" id="node10" href="$structfiftyone_degrees_pool.html" title="Pool of resources stored as items in a stack." alt="" coords="1057,167,1211,193"/>
+<area shape="rect" id="node12" href="$structfiftyone_degrees_pool_item.html" title="Pool item node in the stack of items." alt="" coords="1567,133,1749,160"/>
+<area shape="rect" id="node11" href="$unionfiftyone_degrees_pool_head.html" title="The head of the stack used for pop and push operations." alt="" coords="685,167,872,193"/>
+<area shape="rect" id="node13" href="$structfiftyone_degrees_override_property_array.html" title="Array of items of type fiftyoneDegreesOverrideProperty used to easily access and track the size of th..." alt="" coords="1540,242,1776,283"/>
+<area shape="rect" id="node14" href="$structfiftyone_degrees_override_property.html" title="Index and pointer to a property which can be overridden." alt="" coords="1016,257,1252,284"/>
+<area shape="rect" id="node15" href="$structfiftyone_degrees_property_available.html" title="Used to access the property item quickly without the need to search." alt="" coords="659,284,899,311"/>
+<area shape="rect" id="node20" href="$structfiftyone_degrees_property_available_array.html" title="Array of items of type fiftyoneDegreesPropertyAvailable used to easily access and track the size of t..." alt="" coords="1276,302,1516,343"/>
+<area shape="rect" id="node16" href="$structfiftyone_degrees_evidence_property_index_array.html" title="Array of items of type fiftyoneDegreesEvidencePropertyIndex used to easily access and track the size ..." alt="" coords="243,271,481,313"/>
+<area shape="rect" id="node17" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="252,369,472,396"/>
+<area shape="rect" id="node18" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="683,407,874,433"/>
+<area shape="rect" id="node19" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="5,369,161,396"/>
+</map>

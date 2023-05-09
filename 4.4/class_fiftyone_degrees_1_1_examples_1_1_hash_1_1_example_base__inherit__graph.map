@@ -1,0 +1,9 @@
+<map id="FiftyoneDegrees::Examples::Hash::ExampleBase" name="FiftyoneDegrees::Examples::Hash::ExampleBase">
+<area shape="rect" id="node1" title="Base class extended by all Hash examples." alt="" coords="5,169,205,211"/>
+<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_examples_1_1_hash_1_1_getting_started.html" title="Hash Getting Started Example." alt="" coords="255,5,455,47"/>
+<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_examples_1_1_hash_1_1_match_metrics.html" title="Match Metrics Hash Example." alt="" coords="255,71,455,112"/>
+<area shape="rect" id="node4" href="$class_fiftyone_degrees_1_1_examples_1_1_hash_1_1_meta_data_example.html" title="Hash Meta Data Example." alt="" coords="255,136,455,177"/>
+<area shape="rect" id="node5" href="$class_fiftyone_degrees_1_1_examples_1_1_hash_1_1_reload_from_file.html" title="Hash Reload From File Example." alt="" coords="255,201,455,243"/>
+<area shape="rect" id="node6" href="$class_fiftyone_degrees_1_1_examples_1_1_hash_1_1_reload_from_memory.html" title="Hash Reload From Memory Example." alt="" coords="253,267,456,308"/>
+<area shape="rect" id="node7" href="$class_fiftyone_degrees_1_1_examples_1_1_hash_1_1_strongly_typed.html" title="Hash Strongly Typed Example." alt="" coords="255,332,455,373"/>
+</map>

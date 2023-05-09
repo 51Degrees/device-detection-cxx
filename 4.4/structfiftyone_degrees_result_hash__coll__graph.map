@@ -1,0 +1,5 @@
+<map id="fiftyoneDegreesResultHash" name="fiftyoneDegreesResultHash">
+<area shape="rect" id="node1" title="Singular User&#45;Agent result returned by a Hash process method." alt="" coords="170,109,369,136"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_graph_trace_node.html" title="Trace node structure used to trace the route taken when evaluating a graph." alt="" coords="5,13,237,39"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_result_user_agent.html" title="Singular User&#45;Agent result returned by a device detection process method." alt="" coords="319,5,515,47"/>
+</map>

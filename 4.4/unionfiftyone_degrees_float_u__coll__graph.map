@@ -1,0 +1,4 @@
+<map id="fiftyoneDegreesFloatU" name="fiftyoneDegreesFloatU">
+<area shape="rect" id="node1" title="Union that breaks down 51Degrees implementation to its components: sign, exponent and mantissa." alt="" coords="25,95,193,121"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_float_internal.html" title="Struture that represents 51Degrees implementation, which encapsulate an array of 4 bytes." alt="" coords="5,5,213,32"/>
+</map>

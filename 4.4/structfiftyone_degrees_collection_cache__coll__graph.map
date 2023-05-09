@@ -1,0 +1,11 @@
+<map id="fiftyoneDegreesCollectionCache" name="fiftyoneDegreesCollectionCache">
+<area shape="rect" id="node1" title="Type of collection where items are cached as they are used." alt="" coords="921,114,1112,155"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_cache.html" title="Cache structure to store the root of the red black tree and a list of allocated cache nodes." alt="" coords="310,221,475,248"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_cache_shard.html" title="Cache shard structure used to enable concurrent access to the cache." alt="" coords="619,267,821,293"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_cache_node.html" title="Cache node structure used for storing data in the cache along with its key." alt="" coords="917,276,1116,303"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_tree_node.html" title="Node structure defining a single node in the tree." alt="" coords="5,359,192,385"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_tree_root.html" title="Tree root structure defining the beginning of the tree." alt="" coords="301,352,484,379"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="21,124,177,151"/>
+<area shape="rect" id="node9" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="283,73,503,100"/>
+<area shape="rect" id="node8" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="625,73,815,100"/>
+</map>

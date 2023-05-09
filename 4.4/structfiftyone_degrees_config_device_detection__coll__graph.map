@@ -1,0 +1,4 @@
+<map id="fiftyoneDegreesConfigDeviceDetection" name="fiftyoneDegreesConfigDeviceDetection">
+<area shape="rect" id="node1" title="Device detection configuration structure containing device detection specific configuration options,..." alt="" coords="5,95,216,136"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_config_base.html" title="Base configuration structure containing common configuration options, and options that apply to struc..." alt="" coords="11,5,210,32"/>
+</map>

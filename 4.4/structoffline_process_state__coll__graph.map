@@ -1,0 +1,17 @@
+<map id="offlineProcessState" name="offlineProcessState">
+<area shape="rect" id="node1" title="State used for the offline processing operation." alt="" coords="1579,223,1725,249"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_result_hash_array.html" title="Array of items of type fiftyoneDegreesResultHash used to easily access and track the size of the arra..." alt="" coords="1283,215,1481,257"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_list.html" title="List structure which contains a list of collection items." alt="" coords="941,44,1089,71"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="563,88,783,115"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="919,163,1110,189"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="5,119,161,145"/>
+<area shape="rect" id="node9" href="$structfiftyone_degrees_override_value.html" title="String value which should override the value for the property indicated by the required property inde..." alt="" coords="251,151,468,177"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_results_device_detection.html" title="Device detection specific results structure which any device detection processing results should exte..." alt="" coords="905,215,1124,257"/>
+<area shape="rect" id="node8" href="$structfiftyone_degrees_override_value_array.html" title="An array of properties and values to use when getting override values." alt="" coords="565,149,782,190"/>
+<area shape="rect" id="node10" href="$structfiftyone_degrees_results_base.html" title="Base results structure which any processing results should extend." alt="" coords="571,223,776,249"/>
+<area shape="rect" id="node11" href="$structfiftyone_degrees_result_hash.html" title="Singular User&#45;Agent result returned by a Hash process method." alt="" coords="915,312,1114,339"/>
+<area shape="rect" id="node12" href="$structfiftyone_degrees_graph_trace_node.html" title="Trace node structure used to trace the route taken when evaluating a graph." alt="" coords="557,312,789,339"/>
+<area shape="rect" id="node13" href="$structfiftyone_degrees_result_user_agent.html" title="Singular User&#45;Agent result returned by a device detection process method." alt="" coords="575,363,771,405"/>
+<area shape="rect" id="node14" href="$structfiftyone_degrees_evidence_key_value_pair_array.html" title="Array of items of type fiftyoneDegreesEvidenceKeyValuePair used to easily access and track the size o..." alt="" coords="911,395,1119,437"/>
+<area shape="rect" id="node15" href="$structfiftyone_degrees_evidence_key_value_pair.html" title="Evidence key value pair structure which combines the prefix, key and value." alt="" coords="569,429,777,470"/>
+</map>

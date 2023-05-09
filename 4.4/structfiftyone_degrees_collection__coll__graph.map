@@ -1,0 +1,5 @@
+<map id="fiftyoneDegreesCollection" name="fiftyoneDegreesCollection">
+<area shape="rect" id="node1" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="5,14,196,41"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="89,112,309,139"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="336,14,492,41"/>
+</map>
