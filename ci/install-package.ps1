@@ -2,7 +2,7 @@ param (
     [string]$RepoName
 )
 
-$PackagePath = [IO.Path]::Combine($pwd, $RepoName, "package")
+$PackagePath = [IO.Path]::Combine($pwd, "package")
 $BuildPath = [IO.Path]::Combine($pwd, $RepoName, "build")
 $BinPath = [IO.Path]::Combine($BuildPath, "bin")
 
