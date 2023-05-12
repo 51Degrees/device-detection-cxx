@@ -1,4 +1,4 @@
-name: Nigthly PR to Main
+name: Nightly PR to Main
 
 on:
   workflow_dispatch:
