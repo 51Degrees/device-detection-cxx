@@ -26,6 +26,10 @@
 #include <iostream>
 #include <fstream>
 
+using std::ifstream;
+using std::ofstream;
+using std::ios;
+
 using namespace FiftyoneDegrees::Common;
 using namespace FiftyoneDegrees::DeviceDetection;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;

@@ -34,7 +34,8 @@ static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static const char *userAgentFileName = "20000 User Agents.csv";
 
-using namespace std;
+using std::cout;
+using std::thread;
 using namespace FiftyoneDegrees::Common;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
 

@@ -28,8 +28,6 @@
 #include "../common-cxx/EntityMetaDataBuilder.hpp"
 #include "hash.h"
 
-using namespace std;
-
 using namespace FiftyoneDegrees::Common;
 
 namespace FiftyoneDegrees {

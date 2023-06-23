@@ -28,7 +28,6 @@
 #include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
-using namespace std;
 using namespace FiftyoneDegrees::Common;
 using namespace FiftyoneDegrees::DeviceDetection;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;

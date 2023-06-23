@@ -34,7 +34,6 @@
 #include "ResultsHash.hpp"
 #include "MetaDataHash.hpp"
 
-using namespace std;
 using namespace FiftyoneDegrees::Common;
 
 namespace FiftyoneDegrees {
