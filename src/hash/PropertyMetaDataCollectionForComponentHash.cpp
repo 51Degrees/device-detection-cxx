@@ -24,6 +24,7 @@
 #include "../common-cxx/Exceptions.hpp"
 #include "fiftyone.h"
 
+using std::shared_ptr;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
 
 PropertyMetaDataCollectionForComponentHash::PropertyMetaDataCollectionForComponentHash(

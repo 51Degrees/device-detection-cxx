@@ -27,7 +27,6 @@
 #include "../ResultsDeviceDetection.hpp"
 #include "hash.h"
 
-using namespace std;
 
 class EngineHashTests;
 

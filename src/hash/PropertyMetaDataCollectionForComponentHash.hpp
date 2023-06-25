@@ -31,7 +31,6 @@
 #include "hash.h"
 #include <memory>
 
-using namespace std;
 using namespace FiftyoneDegrees::Common;
 
 namespace FiftyoneDegrees {

@@ -27,7 +27,6 @@
 #include "common-cxx/ConfigBase.hpp"
 #include "config-dd.h"
 
-using namespace std;
 using namespace FiftyoneDegrees::Common;
 
 namespace FiftyoneDegrees {

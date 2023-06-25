@@ -27,7 +27,7 @@
 #include "../ConfigDeviceDetection.hpp"
 #include "hash.h"
 
-using namespace std;
+using std::min_element;
 using namespace FiftyoneDegrees::Common;
 
 namespace FiftyoneDegrees {
