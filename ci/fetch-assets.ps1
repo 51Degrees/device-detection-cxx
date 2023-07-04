@@ -27,3 +27,5 @@ try {
 finally {
     Pop-Location
 }
+
+ls $DataFileDir
