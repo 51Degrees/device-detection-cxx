@@ -28,4 +28,6 @@ finally {
     Pop-Location
 }
 
-ls $DataFileDir
+if ($IsLinux) {
+    ls -l $DataFileDir
+}
