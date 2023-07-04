@@ -117,11 +117,13 @@ static void outputValue(
 	DataSetHash* dataset = (DataSetHash*)results->b.b.dataSet;
 
 	EXCEPTION_CREATE;
-	int propertyIndex = PropertiesGetPropertyIndexFromName(dataset->b.b.available, propertyName);
+	int requiredPropertyIndex = PropertiesGetRequiredPropertyIndexFromName(
+		dataset->b.b.available, 
+		propertyName);
 	// If a value has not been set then trying to access the value will
 	// result in an exception.
 	if (ResultsHashGetHasValues(
-		results, propertyIndex, exception)) {
+		results, requiredPropertyIndex, exception)) {
 		ResultsHashGetValuesString(
 			results,
 			propertyName,
@@ -135,7 +137,7 @@ static void outputValue(
 		// A no value message can also be obtained. This message describes why
 		// the value has not been set.
 		fiftyoneDegreesResultsNoValueReason reason =
-			ResultsHashGetNoValueReason(results, propertyIndex, exception);
+			ResultsHashGetNoValueReason(results, requiredPropertyIndex, exception);
 		EXCEPTION_THROW;
 
 		sprintf(valueBuffer, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
