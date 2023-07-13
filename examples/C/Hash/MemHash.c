@@ -43,7 +43,7 @@
 
 static const char *dataDir = "device-detection-data";
 
-static const char *dataFileName = "TAC-HashV41.hash";
+static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static const char *userAgentFileName = "20000 User Agents.csv";
 
@@ -416,8 +416,8 @@ int main(int argc, char* argv[]) {
 	printf("\t#                                                           #\n");
 	printf("\t#    Command line arguments should be a Hash format data    #\n");
 	printf("\t#   file and a CSV file containing a list of User-Agents.   #\n");
-	printf("\t#      A test file of 1 million can be downloaded from      #\n");
-	printf("\t#            http://51degrees.com/million.zip               #\n");
+	printf("\t#        A test file of 20,000 can be downloaded from       #\n");
+	printf("\t#    https://github.com/51Degrees/device-detection-data     #\n");
 	printf("\t#                                                           #\n");
 	printf("\t#############################################################\n");
 
