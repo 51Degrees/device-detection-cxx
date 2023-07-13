@@ -56,7 +56,7 @@
 // the default number of threads if one is not provided.
 #define DEFAULT_NUMBER_OF_THREADS 2
 // the default number of tests to execute.
-#define DEFAULT_TESTS_PER_THREAD 10000
+#define DEFAULT_ITERATIONS_PER_THREAD 10000
 
 #define MAX_EVIDENCE 5
 
@@ -133,7 +133,7 @@ typedef struct performanceState_t {
 	// Number of sets of evidence in the evidence array
 	int evidenceCount;
 	// Number of sets of evidence to process
-	int testCount;
+	int iterationsPerThread;
 	// Location of the 51Degrees data file
 	const char* dataFileLocation;
 	// File pointer to write output to, usually stdout
@@ -144,6 +144,8 @@ typedef struct performanceState_t {
 	ResourceManager manager;
 	// Running threads
 	FIFTYONE_DEGREES_THREAD* threads;
+	// True if the check for all available properties should be performed
+	bool retrievePropertyValues;
 } performanceState;
 
 /**
@@ -211,6 +213,7 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
  */
 void runPerformanceThread(void* state) {
 	EXCEPTION_CREATE;
+	const char* value;
 	threadState *thisState = (threadState*)state;
 	char buffer[1000];
 
@@ -222,9 +225,10 @@ void runPerformanceThread(void* state) {
 		&thisState->mainState->manager,
 		MAX_EVIDENCE,
 		MAX_EVIDENCE);
+	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 
 	// Execute the performance test.
-	for (int i = 0; i < thisState->mainState->testCount; i++) {
+	for (int i = 0; i < thisState->mainState->iterationsPerThread; i++) {
 		EvidenceKeyValuePairArray* evidence =
 			EvidenceCreate(thisState->mainState->evidence[i]->count);
 		for (uint32_t j = 0;
@@ -244,17 +248,41 @@ void runPerformanceThread(void* state) {
 		ResultsHashFromEvidence(results, evidence, exception);
 		EXCEPTION_THROW;
 
-		// Access the value for the first property
-		if (ResultsHashGetValuesStringByRequiredPropertyIndex(
-			results,
-			0,
-			buffer,
-			1000,
-			"|",
-			exception) > 0) {
-			EXCEPTION_THROW;
-			thisState->result->checkSum +=
-				fiftyoneDegreesGenerateHash((unsigned char*)buffer);
+		// Get the device id(s) from the results.
+		for (uint32_t j = 0; j < results->count; j++) {
+			value = HashGetDeviceIdFromResult(
+				results->b.b.dataSet,
+				&results->items[j],
+				buffer,
+				sizeof(buffer),
+				exception);
+			if (EXCEPTION_OKAY) {
+				// Increase the checksum with the first bytes of the 
+				// value to ensure that the compiler doesn't optimize
+				// out this code and not actually perform the 
+				// operation.
+				thisState->result->checkSum += *(int*)value;
+			}
+		}
+
+		// Get the all properties from the results if this is part of the
+		// performance evaluation.
+		if (thisState->mainState->retrievePropertyValues) {
+			for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
+				if (ResultsHashGetValues(
+					results,
+					j,
+					exception) != NULL && EXCEPTION_OKAY) {
+					value = STRING(results->values.items[0].data.ptr);
+					if (value != NULL) {
+						// Increase the checksum with the first bytes of the 
+						// value to ensure that the compiler doesn't optimize
+						// out this code and not actually perform the 
+						// operation.
+						thisState->result->checkSum += *(int*)value;;
+					}
+				}
+			}
 		}
 
 		thisState->result->count++;
@@ -377,9 +405,7 @@ void executeBenchmark(
 	EXCEPTION_CREATE;
 
 	PropertiesRequired properties = PropertiesDefault;
-	if (config.allProperties == false) {
-		properties.string = "IsMobile";
-	}
+	state->retrievePropertyValues = config.allProperties;
 
 	dataSetConfig.usePerformanceGraph = config.performanceGraph;
 	dataSetConfig.usePredictiveGraph = config.predictiveGraph;
@@ -444,8 +470,8 @@ void executeBenchmark(
 void fiftyoneDegreesHashPerformance(
 	const char* dataFilePath,
 	const char* evidenceFilePath,
-	int numberOfThreads,
-	int testCount,
+	uint16_t numberOfThreads,
+	int iterationsPerThread,
 	FILE* output,
 	FILE* resultsOutput) {
 	performanceState state;
@@ -458,14 +484,14 @@ void fiftyoneDegreesHashPerformance(
 	state.resultsOutput = resultsOutput;
 	state.evidenceCount = 0;
 	if (ThreadingGetIsThreadSafe()) {
-		state.numberOfThreads = (uint16_t)numberOfThreads;
+		state.numberOfThreads = numberOfThreads;
 	}
 	else {
 		state.numberOfThreads = 1;
 	}
 	state.resultList = (benchmarkResult*)
 		Malloc(sizeof(benchmarkResult) * numberOfThreads);
-	state.testCount = testCount;
+	state.iterationsPerThread = iterationsPerThread;
 
 	KeyValuePair pair[10];
 	char key[10][500];
@@ -486,10 +512,11 @@ void fiftyoneDegreesHashPerformance(
 		getCount);
 	state.evidence = (keyValuePairArray**)
 		Malloc(sizeof(EvidencePrefixMap*) * state.evidenceCount);
-	if (state.evidenceCount < state.testCount) {
-		fprintf(state.output, "Not enough evidence for the requested number of tests. "
-			"Only running %d tests per thread\n", state.evidenceCount);
-		state.testCount = state.evidenceCount;
+	if (state.evidenceCount < state.iterationsPerThread) {
+		fprintf(state.output, 
+			"Not enough evidence for the requested number of iterations. "
+			"Running %d iterations per thread\n", state.evidenceCount);
+		state.iterationsPerThread = state.evidenceCount;
 	}
 	state.evidenceCount = 0;
 	YamlFileIterate(
@@ -553,7 +580,7 @@ void fiftyoneDegreesExampleCPerformanceRun(ExampleParameters* params) {
 		params->dataFilePath,
 		params->evidenceFilePath,
 		params->numberOfThreads,
-		params->testCount,
+		params->iterationsPerThread,
 		params->output,
 		params->resultsOutput);
 }
@@ -568,8 +595,8 @@ void fiftyoneDegreesExampleCPerformanceRun(ExampleParameters* params) {
 #define THREAD_OPTION_SHORT "-t"
 #define JSON_OPTION "--json-output"
 #define JSON_OPTION_SHORT "-j"
-#define COUNT_OPTION "--count"
-#define COUNT_OPTION_SHORT "-c"
+#define ITERATIONS_OPTION "--iterations"
+#define ITERATIONS_OPTION_SHORT "-i"
 #define HELP_OPTION "--help"
 #define HELP_OPTION_SHORT "-h"
 #define OPTION_PADDING(o) ((int)(30 - strlen(o)))
@@ -583,7 +610,7 @@ void printHelp() {
 	OPTION_MESSAGE("Path to a 51Degrees Hash data file", DATA_OPTION, DATA_OPTION_SHORT);
 	OPTION_MESSAGE("Path to a User-Agents YAML file", UA_OPTION, UA_OPTION_SHORT);
 	OPTION_MESSAGE("Number of threads to run", THREAD_OPTION, THREAD_OPTION_SHORT);
-	OPTION_MESSAGE("Number of tests to run per thread", COUNT_OPTION, COUNT_OPTION_SHORT);
+	OPTION_MESSAGE("Number of iterations per thread", ITERATIONS_OPTION, ITERATIONS_OPTION_SHORT);
 	OPTION_MESSAGE("Path to a file to output JSON format results to", JSON_OPTION, JSON_OPTION_SHORT);
 	OPTION_MESSAGE("Print this help", HELP_OPTION, HELP_OPTION_SHORT);
 }
@@ -602,7 +629,7 @@ int main(int argc, char* argv[]) {
 	char dataFilePath[FILE_MAX_PATH];
 	char evidenceFilePath[FILE_MAX_PATH];
 	int numberOfThreads = DEFAULT_NUMBER_OF_THREADS;
-	int testCount = DEFAULT_TESTS_PER_THREAD;
+	int iterationsPerThread = DEFAULT_ITERATIONS_PER_THREAD;
 	char *outFile = NULL;
 	dataFilePath[0] = '\0';
 	evidenceFilePath[0] = '\0';
@@ -628,10 +655,10 @@ int main(int argc, char* argv[]) {
 			// Set the JSON results file
 			outFile = argv[i + 1];
 		}
-		else if (strcmp(argv[i], COUNT_OPTION) == 0 ||
-			strcmp(argv[i], COUNT_OPTION_SHORT) == 0) {
-			// Set the test count
-			testCount = atoi(argv[i + 1]);
+		else if (strcmp(argv[i], ITERATIONS_OPTION) == 0 ||
+			strcmp(argv[i], ITERATIONS_OPTION_SHORT) == 0) {
+			// Set the iterations per thread
+			iterationsPerThread = atoi(argv[i + 1]);
 		}
 		else if (strcmp(argv[i], HELP_OPTION) == 0 ||
 			strcmp(argv[i], HELP_OPTION_SHORT) == 0) {
@@ -688,8 +715,8 @@ int main(int argc, char* argv[]) {
 	ExampleParameters params;
 	params.dataFilePath = dataFilePath;
 	params.evidenceFilePath = evidenceFilePath;
-	params.numberOfThreads = (uint16_t)numberOfThreads;
-	params.testCount = (uint16_t)testCount;
+	params.numberOfThreads = numberOfThreads;
+	params.iterationsPerThread = iterationsPerThread;
 	params.output = stdout;
 	if (outFile != NULL) {
 		params.resultsOutput = fopen(outFile, "w");
