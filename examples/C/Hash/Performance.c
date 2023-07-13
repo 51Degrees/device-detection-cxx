@@ -56,7 +56,7 @@
 // the default number of threads if one is not provided.
 #define DEFAULT_NUMBER_OF_THREADS 2
 // the number of tests to execute.
-#define TESTS_PER_THREAD 10000
+#define DEFAULT_TESTS_PER_THREAD 10000
 
 #define MAX_EVIDENCE 5
 
@@ -132,6 +132,7 @@ typedef struct performanceState_t {
 	keyValuePairArray **evidence;
 	// Number of sets of evidence in the evidence array
 	int evidenceCount;
+	int testCount;
 	// Location of the 51Degrees data file
 	const char* dataFileLocation;
 	// File pointer to write output to, usually stdout
@@ -222,7 +223,7 @@ void runPerformanceThread(void* state) {
 		MAX_EVIDENCE);
 
 	// Execute the performance test.
-	for (int i = 0; i < thisState->mainState->evidenceCount; i++) {
+	for (int i = 0; i < thisState->mainState->testCount; i++) {
 		EvidenceKeyValuePairArray* evidence =
 			EvidenceCreate(thisState->mainState->evidence[i]->count);
 		for (uint32_t j = 0;
@@ -257,10 +258,6 @@ void runPerformanceThread(void* state) {
 
 		thisState->result->count++;
 		EvidenceFree(evidence);
-		
-		if (thisState->result->count >= TESTS_PER_THREAD) {
-			break;
-		}
 	}
 
 	ResultsHashFree(results);
@@ -447,6 +444,7 @@ void fiftyoneDegreesHashPerformance(
 	const char* dataFilePath,
 	const char* evidenceFilePath,
 	int numberOfThreads,
+	int testCount,
 	FILE* output,
 	FILE* resultsOutput) {
 	performanceState state;
@@ -466,6 +464,7 @@ void fiftyoneDegreesHashPerformance(
 	}
 	state.resultList = (benchmarkResult*)
 		Malloc(sizeof(benchmarkResult) * numberOfThreads);
+	state.testCount = testCount;
 
 	KeyValuePair pair[10];
 	char key[10][500];
@@ -486,6 +485,11 @@ void fiftyoneDegreesHashPerformance(
 		getCount);
 	state.evidence = (keyValuePairArray**)
 		Malloc(sizeof(EvidencePrefixMap*) * state.evidenceCount);
+	if (state.evidenceCount < state.testCount) {
+		fprintf(state.output, "Not enough evidence for the requested number of tests. "
+			"Only running %d tests per thread\n", state.evidenceCount);
+		state.testCount = state.evidenceCount;
+	}
 	state.evidenceCount = 0;
 	YamlFileIterate(
 		evidenceFilePath,
@@ -548,6 +552,7 @@ void fiftyoneDegreesExampleCPerformanceRun(ExampleParameters* params) {
 		params->dataFilePath,
 		params->evidenceFilePath,
 		params->numberOfThreads,
+		params->testCount,
 		params->output,
 		params->resultsOutput);
 }
@@ -562,6 +567,8 @@ void fiftyoneDegreesExampleCPerformanceRun(ExampleParameters* params) {
 #define THREAD_OPTION_SHORT "-t"
 #define JSON_OPTION "--json-output"
 #define JSON_OPTION_SHORT "-j"
+#define COUNT_OPTION "--count"
+#define COUNT_OPTION_SHORT "-c"
 #define HELP_OPTION "--help"
 #define HELP_OPTION_SHORT "-h"
 #define OPTION_PADDING(o) ((int)(30 - strlen(o)))
@@ -575,6 +582,7 @@ void printHelp() {
 	OPTION_MESSAGE("Path to a 51Degrees Hash data file", DATA_OPTION, DATA_OPTION_SHORT);
 	OPTION_MESSAGE("Path to a User-Agents YAML file", UA_OPTION, UA_OPTION_SHORT);
 	OPTION_MESSAGE("Number of threads to run", THREAD_OPTION, THREAD_OPTION_SHORT);
+	OPTION_MESSAGE("Number of tests to run per thread", COUNT_OPTION, COUNT_OPTION_SHORT);
 	OPTION_MESSAGE("Path to a file to output JSON format results to", JSON_OPTION, JSON_OPTION_SHORT);
 	OPTION_MESSAGE("Print this help", HELP_OPTION, HELP_OPTION_SHORT);
 }
@@ -593,6 +601,7 @@ int main(int argc, char* argv[]) {
 	char dataFilePath[FILE_MAX_PATH];
 	char evidenceFilePath[FILE_MAX_PATH];
 	int numberOfThreads = DEFAULT_NUMBER_OF_THREADS;
+	int testCount = DEFAULT_TESTS_PER_THREAD;
 	char *outFile = NULL;
 	dataFilePath[0] = '\0';
 	evidenceFilePath[0] = '\0';
@@ -617,6 +626,11 @@ int main(int argc, char* argv[]) {
 			strcmp(argv[i], JSON_OPTION_SHORT) == 0) {
 			// Set the JSON results file
 			outFile = argv[i + 1];
+		}
+		else if (strcmp(argv[i], COUNT_OPTION) == 0 ||
+			strcmp(argv[i], COUNT_OPTION_SHORT) == 0) {
+			// Set the test count
+			testCount = atoi(argv[i + 1]);
 		}
 		else if (strcmp(argv[i], HELP_OPTION) == 0 ||
 			strcmp(argv[i], HELP_OPTION_SHORT) == 0) {
@@ -674,6 +688,7 @@ int main(int argc, char* argv[]) {
 	params.dataFilePath = dataFilePath;
 	params.evidenceFilePath = evidenceFilePath;
 	params.numberOfThreads = (uint16_t)numberOfThreads;
+	params.testCount = (uint16_t)testCount;
 	params.output = stdout;
 	if (outFile != NULL) {
 		params.resultsOutput = fopen(outFile, "w");
