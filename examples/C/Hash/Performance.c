@@ -55,7 +55,7 @@
 
 // the default number of threads if one is not provided.
 #define DEFAULT_NUMBER_OF_THREADS 2
-// the number of tests to execute.
+// the default number of tests to execute.
 #define DEFAULT_TESTS_PER_THREAD 10000
 
 #define MAX_EVIDENCE 5
@@ -132,6 +132,7 @@ typedef struct performanceState_t {
 	keyValuePairArray **evidence;
 	// Number of sets of evidence in the evidence array
 	int evidenceCount;
+	// Number of sets of evidence to process
 	int testCount;
 	// Location of the 51Degrees data file
 	const char* dataFileLocation;
