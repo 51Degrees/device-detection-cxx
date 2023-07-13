@@ -69,8 +69,6 @@ typedef fiftyoneDegreesExampleParameters ExampleParameters;
 typedef void (*fiftyoneDegreesExampleRunPtr)(
     fiftyoneDegreesExampleParameters *);
 
-EXTERNAL unsigned long fiftyoneDegreesGenerateHash(unsigned char* value);
-
 EXTERNAL const char* fiftyoneDegreesExampleGetConfigName(
     fiftyoneDegreesConfigHash config);
 

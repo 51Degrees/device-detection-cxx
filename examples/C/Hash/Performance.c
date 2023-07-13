@@ -253,8 +253,8 @@ void runPerformanceThread(void* state) {
 			"|",
 			exception) > 0) {
 			EXCEPTION_THROW;
-			thisState->result->checkSum +=
-				fiftyoneDegreesGenerateHash((unsigned char*)buffer);
+			// Just hash the first byte to confirm threads are the same.
+			thisState->result->checkSum += (unsigned long)buffer[0];
 		}
 
 		thisState->result->count++;
