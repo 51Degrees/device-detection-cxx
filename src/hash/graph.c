@@ -127,7 +127,6 @@ fiftyoneDegreesGraphGetMatchingHashFromListNodeTable(
 		// There are multiple records at this index, so go through them to find
 		// a match.
 		nodeHash = &nodeHashes[nodeHash->nodeOffset];
-		int iterations = 0;
 		while (nodeHash->hashCode != 0) {
 			if (hash == nodeHash->hashCode) {
 				// There was a match, so stop looking.
@@ -135,7 +134,6 @@ fiftyoneDegreesGraphGetMatchingHashFromListNodeTable(
 				break;
 			}
 			nodeHash++;
-			iterations++;
 		}
 	}
 	return foundHash;
