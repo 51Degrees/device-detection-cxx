@@ -101,8 +101,8 @@ void EngineHash::init(
 	initMetaData();
 	
 	// Two new override properties available.
-	keys.push_back("query.51D_ProfileIds");
-	keys.push_back("cookie.51D_ProfileIds");
+	addKey("query.51D_ProfileIds");
+	addKey("cookie.51D_ProfileIds");
 }
 
 void* EngineHash::copyData(void *data, size_t length) const {

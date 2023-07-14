@@ -33,6 +33,7 @@ public:
 			dataFilePath.c_str(),
 			userAgentFilePath.c_str(),
 			4,
+			10000,
 			stdout,
 			NULL);
 

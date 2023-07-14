@@ -24,16 +24,6 @@
 #include "../../../src/hash/fiftyone.h"
 #include <string.h>
 
-unsigned long fiftyoneDegreesGenerateHash(unsigned char* value) {
-	unsigned long hashCode = 5381;
-	int i = *value++;
-	while (i != 0) {
-		hashCode = ((hashCode << 5) + hashCode) + i;
-		i = *value++;
-	}
-	return hashCode;
-}
-
 const char* fiftyoneDegreesExampleGetConfigName(
 	fiftyoneDegreesConfigHash config) {
 	if (memcmp(

@@ -3217,7 +3217,7 @@ char* fiftyoneDegreesHashGetDeviceIdFromResult(
 			COLLECTION_RELEASE(dataSet->profiles, &item);
 		}
 	}
-	return destination;
+	return buffer;
 }
 
 char *getDefaultDeviceId(
