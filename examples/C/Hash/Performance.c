@@ -628,7 +628,7 @@ int main(int argc, char* argv[]) {
 	StatusCode status = SUCCESS;
 	char dataFilePath[FILE_MAX_PATH];
 	char evidenceFilePath[FILE_MAX_PATH];
-	int numberOfThreads = DEFAULT_NUMBER_OF_THREADS;
+	uint16_t numberOfThreads = DEFAULT_NUMBER_OF_THREADS;
 	int iterationsPerThread = DEFAULT_ITERATIONS_PER_THREAD;
 	char *outFile = NULL;
 	dataFilePath[0] = '\0';
