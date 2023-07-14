@@ -251,7 +251,7 @@ void runPerformanceThread(void* state) {
 		// Get the device id(s) from the results.
 		for (uint32_t j = 0; j < results->count; j++) {
 			value = HashGetDeviceIdFromResult(
-				results->b.b.dataSet,
+				(DataSetHash*)results->b.b.dataSet,
 				&results->items[j],
 				buffer,
 				sizeof(buffer),
