@@ -648,7 +648,7 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[i], THREAD_OPTION) == 0 ||
 			strcmp(argv[i], THREAD_OPTION_SHORT) == 0) {
 			// Set the number of threads
-			numberOfThreads = atoi(argv[i + 1]);
+			numberOfThreads = (uint16_t)atoi(argv[i + 1]);
 		}
 		else if (strcmp(argv[i], JSON_OPTION) == 0 ||
 			strcmp(argv[i], JSON_OPTION_SHORT) == 0) {
