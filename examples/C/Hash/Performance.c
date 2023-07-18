@@ -94,7 +94,9 @@ typedef struct performanceConfig_t {
  */
 performanceConfig performanceConfigs[] = {
 	{ &HashInMemoryConfig, false, true, false},
-	{ &HashInMemoryConfig, true, true, false } };
+	{ &HashInMemoryConfig, true, true, false },
+	{ &HashInMemoryConfig, false, false, true},
+	{ &HashInMemoryConfig, true, false, true }, };
 
 /**
  * Result of benchmarking from a single thread.
@@ -217,7 +219,6 @@ void runPerformanceThread(void* state) {
 	EXCEPTION_CREATE;
 	const char* value;
 	threadState *thisState = (threadState*)state;
-	char buffer[1000];
 
 	TIMER_CREATE;
 	TIMER_START;
@@ -529,7 +530,7 @@ void fiftyoneDegreesHashPerformance(
 		storeEvidence);
 
 	if (state.resultsOutput != NULL) {
-		fprintf(state.resultsOutput, "{\n");
+		fprintf(state.resultsOutput, "{");
 	}
 
 	// run the selected benchmarks from disk
@@ -541,9 +542,10 @@ void fiftyoneDegreesHashPerformance(
 			performanceConfigs[i].config->b.b.allInMemory == true) {
 			
 			if (state.resultsOutput != NULL) {
-				fprintf(state.resultsOutput, "%s\n\"%s%s\": {\n",
+				fprintf(state.resultsOutput, "%s\n\"%s%s%s\": {\n",
 					i > 0 ? "," : "",
 					fiftyoneDegreesExampleGetConfigName(*(performanceConfigs[i].config)),
+					performanceConfigs[i].predictiveGraph ? "_Pred" : "",
 					performanceConfigs[i].allProperties ? "_All" : "");
 			}
 
