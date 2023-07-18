@@ -115,13 +115,14 @@ static void outputValue(
 	const char* propertyName,
 	FILE *output) {
 	DataSetHash* dataset = (DataSetHash*)results->b.b.dataSet;
-
+	int requiredIndex = PropertiesGetRequiredPropertyIndexFromName(
+		dataset->b.b.available,
+		propertyName);
 	EXCEPTION_CREATE;
-	int propertyIndex = PropertiesGetPropertyIndexFromName(dataset->b.b.available, propertyName);
 	// If a value has not been set then trying to access the value will
 	// result in an exception.
 	if (ResultsHashGetHasValues(
-		results, propertyIndex, exception)) {
+		results, requiredIndex, exception)) {
 		ResultsHashGetValuesString(
 			results,
 			propertyName,
