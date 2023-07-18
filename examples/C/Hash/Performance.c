@@ -94,7 +94,9 @@ typedef struct performanceConfig_t {
  */
 performanceConfig performanceConfigs[] = {
 	{ &HashInMemoryConfig, false, true, false},
-	{ &HashInMemoryConfig, true, true, false } };
+	{ &HashInMemoryConfig, true, true, false },
+	{ &HashInMemoryConfig, false, false, true},
+	{ &HashInMemoryConfig, true, false, true }, };
 
 /**
  * Result of benchmarking from a single thread.
@@ -144,8 +146,10 @@ typedef struct performanceState_t {
 	ResourceManager manager;
 	// Running threads
 	FIFTYONE_DEGREES_THREAD* threads;
-	// True if the check for all available properties should be performed
-	bool retrievePropertyValues;
+	// Time in millis to startup the device detection component.
+	double startUpMillis;
+	// Number of property values retrieved for each iteration.
+	int availableProperties;
 } performanceState;
 
 /**
@@ -215,7 +219,6 @@ void runPerformanceThread(void* state) {
 	EXCEPTION_CREATE;
 	const char* value;
 	threadState *thisState = (threadState*)state;
-	char buffer[1000];
 
 	TIMER_CREATE;
 	TIMER_START;
@@ -248,39 +251,20 @@ void runPerformanceThread(void* state) {
 		ResultsHashFromEvidence(results, evidence, exception);
 		EXCEPTION_THROW;
 
-		// Get the device id(s) from the results.
-		for (uint32_t j = 0; j < results->count; j++) {
-			value = HashGetDeviceIdFromResult(
-				(DataSetHash*)results->b.b.dataSet,
-				&results->items[j],
-				buffer,
-				sizeof(buffer),
-				exception);
-			if (EXCEPTION_OKAY) {
-				// Increase the checksum with the first bytes of the 
-				// value to ensure that the compiler doesn't optimize
-				// out this code and not actually perform the 
-				// operation.
-				thisState->result->checkSum += *(int*)value;
-			}
-		}
-
 		// Get the all properties from the results if this is part of the
 		// performance evaluation.
-		if (thisState->mainState->retrievePropertyValues) {
-			for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
-				if (ResultsHashGetValues(
-					results,
-					j,
-					exception) != NULL && EXCEPTION_OKAY) {
-					value = STRING(results->values.items[0].data.ptr);
-					if (value != NULL) {
-						// Increase the checksum with the first bytes of the 
-						// value to ensure that the compiler doesn't optimize
-						// out this code and not actually perform the 
-						// operation.
-						thisState->result->checkSum += *(int*)value;;
-					}
+		for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
+			if (ResultsHashGetValues(
+				results,
+				j,
+				exception) != NULL && EXCEPTION_OKAY) {
+				value = STRING(results->values.items[0].data.ptr);
+				if (value != NULL) {
+					// Increase the checksum with the first bytes of the 
+					// value to ensure that the compiler doesn't optimize
+					// out this code and not actually perform the 
+					// operation.
+					thisState->result->checkSum += *(int*)value;;
 				}
 			}
 		}
@@ -356,7 +340,7 @@ void doReport(performanceState *state) {
 	for (int i = 0; i < state->numberOfThreads; i++) {
 		benchmarkResult *result = &state->resultList[i];
 		fprintf(state->output,
-			"Thread:  %ld detections, elapsed %.3f seconds, %.0lf Detections per second\n",
+			"Thread: %ld detections, elapsed %.3f seconds, %.0lf Detections per second\n",
 			result->count,
 			result->elapsedMillis / 1000.0,
 			round(1000.0 * result->count / result->elapsedMillis));
@@ -369,18 +353,25 @@ void doReport(performanceState *state) {
 	// output the results from the benchmark to the console
 	double millisPerTest = ((double)totalMillis / (state->numberOfThreads * totalChecks));
 	fprintf(state->output,
-		"Overall: %ld detections, Average millisecs per detection: %f, Detections per second: %.0lf\n",
+		"Overall: %ld detections, Average ms per detection: %f, Detections per second: %.0lf\n",
 		totalChecks,
 		millisPerTest,
 		round(1000.0 / millisPerTest));
 	fprintf(state->output,
-		"Overall: Concurrent threads: %d, Checksum: %lx \n",
+		"Overall: Concurrent threads: %d, Checksum: %lx\n",
 		state->numberOfThreads,
 		checksum);
+	fprintf(state->output,
+		"Overall: Startup ms %.0lf\n",
+		state->startUpMillis);
+	fprintf(state->output,
+		"Overall: Properties retrieved %d\n",
+		state->availableProperties);
 	fprintf(state->output, "\n");
 
 	if (state->resultsOutput != NULL) {
 		fprintf(state->resultsOutput, "  \"DetectionsPerSecond\": %.2f,\n", round(1000.0 / millisPerTest));
+		fprintf(state->resultsOutput, "  \"StartupMs\": %.0lf,\n", state->startUpMillis);
 	}
 }
 
@@ -405,7 +396,9 @@ void executeBenchmark(
 	EXCEPTION_CREATE;
 
 	PropertiesRequired properties = PropertiesDefault;
-	state->retrievePropertyValues = config.allProperties;
+	if (config.allProperties == false) {
+		properties.string = "IsMobile";
+	}
 
 	dataSetConfig.usePerformanceGraph = config.performanceGraph;
 	dataSetConfig.usePredictiveGraph = config.predictiveGraph;
@@ -423,6 +416,10 @@ void executeBenchmark(
 		Malloc(sizeof(FIFTYONE_DEGREES_THREAD) * state->numberOfThreads);
 
 	fprintf(state->output, "Load from disk\n");
+	
+	TIMER_CREATE;
+	TIMER_START;
+	
 	StatusCode status = HashInitManagerFromFile(
 		&state->manager,
 		&dataSetConfig,
@@ -436,9 +433,13 @@ void executeBenchmark(
 		Free((void*)message);
 		return;
 	}
+	
+	TIMER_END;
+	state->startUpMillis = TIMER_ELAPSED;
 
 	// Check data file
 	DataSetHash* dataset = DataSetHashGet(&state->manager);
+	state->availableProperties = dataset->b.b.available->count;
 	fiftyoneDegreesExampleCheckDataFile(dataset);
 	DataSetHashRelease(dataset);
 
@@ -529,7 +530,7 @@ void fiftyoneDegreesHashPerformance(
 		storeEvidence);
 
 	if (state.resultsOutput != NULL) {
-		fprintf(state.resultsOutput, "{\n");
+		fprintf(state.resultsOutput, "{");
 	}
 
 	// run the selected benchmarks from disk
@@ -541,9 +542,10 @@ void fiftyoneDegreesHashPerformance(
 			performanceConfigs[i].config->b.b.allInMemory == true) {
 			
 			if (state.resultsOutput != NULL) {
-				fprintf(state.resultsOutput, "%s\n\"%s%s\": {\n",
+				fprintf(state.resultsOutput, "%s\n\"%s%s%s\": {\n",
 					i > 0 ? "," : "",
 					fiftyoneDegreesExampleGetConfigName(*(performanceConfigs[i].config)),
+					performanceConfigs[i].predictiveGraph ? "_Pred" : "",
 					performanceConfigs[i].allProperties ? "_All" : "");
 			}
 
