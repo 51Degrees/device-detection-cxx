@@ -136,7 +136,7 @@ static void outputValue(
 		// A no value message can also be obtained. This message describes why
 		// the value has not been set.
 		fiftyoneDegreesResultsNoValueReason reason =
-			ResultsHashGetNoValueReason(results, propertyIndex, exception);
+			ResultsHashGetNoValueReason(results, requiredIndex, exception);
 		EXCEPTION_THROW;
 
 		sprintf(valueBuffer, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
