@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+option(BUILD_TESTING "Enable testing" ON)
+
 # Include the common API
 
 include(${CMAKE_CURRENT_LIST_DIR}/src/common-cxx/CMakeLists.txt NO_POLICY_SCOPE)
@@ -146,49 +148,51 @@ endforeach()
 
 # Tests
 
-set(COMMON_TEST ${CMAKE_CURRENT_LIST_DIR}/src/common-cxx/tests)
-set(HASH_TEST ${CMAKE_CURRENT_LIST_DIR}/test/hash)
-set(DD_TEST	${CMAKE_CURRENT_LIST_DIR}/test)
+if(BUILD_TESTING)
+	set(COMMON_TEST ${CMAKE_CURRENT_LIST_DIR}/src/common-cxx/tests)
+	set(HASH_TEST ${CMAKE_CURRENT_LIST_DIR}/test/hash)
+	set(DD_TEST	${CMAKE_CURRENT_LIST_DIR}/test)
 
-FILE(GLOB DD_TEST_SRC ${DD_TEST}/*.cpp)
-FILE(GLOB DD_TEST_H ${DD_TEST}/*.hpp)
-FILE(GLOB HASH_TEST_SRC ${HASH_TEST}/*.cpp)
-FILE(GLOB HASH_TEST_H ${HASH_TEST}/*.hpp)
+	FILE(GLOB DD_TEST_SRC ${DD_TEST}/*.cpp)
+	FILE(GLOB DD_TEST_H ${DD_TEST}/*.hpp)
+	FILE(GLOB HASH_TEST_SRC ${HASH_TEST}/*.cpp)
+	FILE(GLOB HASH_TEST_H ${HASH_TEST}/*.hpp)
 
-add_library(fiftyone-device-detection-test-base
-	${DD_TEST_SRC} ${DD_TEST_H}
-	${COMMON_TEST}/Base.cpp
-	${COMMON_TEST}/EngineTests.cpp
-	${COMMON_TEST}/ExampleTests.cpp)
-target_link_libraries(fiftyone-device-detection-test-base gtest_main)
-if (NOT MSVC)
-	target_compile_options(fiftyone-device-detection-test-base PRIVATE ${COMPILE_OPTION_DEBUG})
-endif()
+	add_library(fiftyone-device-detection-test-base
+		${DD_TEST_SRC} ${DD_TEST_H}
+		${COMMON_TEST}/Base.cpp
+		${COMMON_TEST}/EngineTests.cpp
+		${COMMON_TEST}/ExampleTests.cpp)
+	target_link_libraries(fiftyone-device-detection-test-base gtest_main)
+	if (NOT MSVC)
+		target_compile_options(fiftyone-device-detection-test-base PRIVATE ${COMPILE_OPTION_DEBUG})
+	endif()
 
-set_target_properties(fiftyone-device-detection-test-base PROPERTIES FOLDER "Tests") 
+	set_target_properties(fiftyone-device-detection-test-base PROPERTIES FOLDER "Tests") 
 
-add_executable(HashTests 
-	${HASH_TEST_SRC} ${HASH_TEST_H}
-	${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.cpp
-	${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.hpp)
-target_link_libraries(HashTests
-	fiftyone-device-detection-test-base
-	fiftyone-hash-cxx)
+	add_executable(HashTests 
+		${HASH_TEST_SRC} ${HASH_TEST_H}
+		${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.cpp
+		${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.hpp)
+	target_link_libraries(HashTests
+		fiftyone-device-detection-test-base
+		fiftyone-hash-cxx)
 
-gtest_discover_tests(HashTests)
+	gtest_discover_tests(HashTests)
 
-set_target_properties(HashTests PROPERTIES FOLDER "Tests")
+	set_target_properties(HashTests PROPERTIES FOLDER "Tests")
 
-if (MSVC)
-	target_compile_options(HashTests PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/W4" "/WX")
-	target_link_options(HashTests PRIVATE "/WX")
-else ()
-	target_compile_options(HashTests PRIVATE ${COMPILE_OPTION_DEBUG})
-endif()
+	if (MSVC)
+		target_compile_options(HashTests PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/W4" "/WX")
+		target_link_options(HashTests PRIVATE "/WX")
+	else ()
+		target_compile_options(HashTests PRIVATE ${COMPILE_OPTION_DEBUG})
+	endif()
 
-if (CMAKE_COMPILER_IS_GNUCC)
-	target_compile_options(HashTests PRIVATE "-Wall" "-Werror" "-Wno-unused-variable" "-Wno-unused-result" "-Wno-unused-but-set-variable")
-	if (MINGW)
-		target_compile_options(HashTests PRIVATE "-Wa,-mbig-obj")
+	if (CMAKE_COMPILER_IS_GNUCC)
+		target_compile_options(HashTests PRIVATE "-Wall" "-Werror" "-Wno-unused-variable" "-Wno-unused-result" "-Wno-unused-but-set-variable")
+		if (MINGW)
+			target_compile_options(HashTests PRIVATE "-Wa,-mbig-obj")
+		endif()
 	endif()
 endif()
