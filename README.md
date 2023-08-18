@@ -78,6 +78,8 @@ cmake ..
 ```
 Note: on an x64 Windows system, it is neccessary to add `-A x64` as CMake will build a Win32 Solution by default.
 
+Note: when building arm64 binaries on x64 Mac system, it is neccessary to add `-DBUILD_TESTING=OFF` as CTest ([ref](https://cmake.org/cmake/help/latest/module/CTest.html)) will otherwise fail the build due to inability to run test executables designated for different CPU.
+
 Then build the whole solution with
 
 ```
