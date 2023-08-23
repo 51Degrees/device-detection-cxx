@@ -96,6 +96,7 @@ $(document).ready(function(){initNavTree('md__home_runner_work_device-detection-
 <h2>Using CMake</h2>
 <p>To build the make files required to build, open a <code>bash</code> or <code>Visual Studio Developer Command Prompt</code> terminal and run</p>
 <div class="c-code__block c-code__block--outline"><div class="c-code__line">mkdir build</div><div class="c-code__line">cd build</div><div class="c-code__line">cmake .. </div></div><p> Note: on an x64 Windows system, it is neccessary to add <code>-A x64</code> as CMake will build a Win32 Solution by default.</p>
+<p>Note: when building arm64 binaries on x64 Mac system, it is neccessary to add <code>-DBUILD_TESTING=OFF</code> as CTest (<a href="https://cmake.org/cmake/help/latest/module/CTest.html">ref</a>) will otherwise fail the build due to inability to run test executables designated for different CPU.</p>
 <p>Then build the whole solution with</p>
 <div class="c-code__block c-code__block--outline"><div class="c-code__line">cmake --build . --config Release</div></div><p>Libraries are output to the <code>lib/</code> directory, and executables like examples and tests are output to the <code>bin/</code> directory.</p>
 <h2>Using Visual Studio</h2>
