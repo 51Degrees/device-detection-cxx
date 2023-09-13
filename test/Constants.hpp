@@ -27,7 +27,7 @@ const static char _dataFolderName[] = "device-detection-data";
 
 const static char* _HashFileNames[] = { "TAC-HashV41.hash", "51Degrees-EnterpriseV4.1.hash", "51Degrees-LiteV4.1.hash" };
 
-const static int _HashFileNamesLength = 2;
+const static int _HashFileNamesLength = 3;
 
 const static char _HashProduct[] = "HashV41";
 
