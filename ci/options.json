@@ -4,32 +4,28 @@
     "Name": "Windows_VS_x64_Debug",
     "Configuration": "Debug",
     "Arch": "x64",
-    "BuildMethod": "msbuild",
-    "ProjectDir": "VisualStudio"
+    "BuildMethod": "msbuild"
   },
   {
     "Image": "windows-latest",
     "Name": "Windows_VS_x86_Debug",
     "Configuration": "Debug",
     "Arch": "x86",
-    "BuildMethod": "msbuild",
-    "ProjectDir": "VisualStudio"
+    "BuildMethod": "msbuild"
   },
   {
     "Image": "windows-latest",
     "Name": "Windows_VS_x64_Release",
     "Configuration": "Release",
     "Arch": "x64",
-    "BuildMethod": "msbuild",
-    "ProjectDir": "VisualStudio"
+    "BuildMethod": "msbuild"
   },
   {
     "Image": "windows-latest",
     "Name": "Windows_VS_x86_Release",
     "Configuration": "Release",
     "Arch": "x86",
-    "BuildMethod": "msbuild",
-    "ProjectDir": "VisualStudio"
+    "BuildMethod": "msbuild"
   },
   {
     "Image": "windows-latest",
