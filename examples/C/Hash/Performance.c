@@ -34,7 +34,7 @@
  * The example illustrates a "clock-time" benchmark for assessing detection speed.
  *
  * Using a YAML formatted evidence file - "20000 Evidence Records.yml" - supplied with the
- * distribution or can be obtained from the (data repository on Github)[https://github.com/51Degrees/device-detection-data/blob/master/20000%20Evidence%20Records.yml].
+ * distribution or can be obtained from the [data repository on Github](https://github.com/51Degrees/device-detection-data/blob/master/20000%20Evidence%20Records.yml).
  *
  * It's important to understand the trade-offs between performance, memory usage and accuracy, that
  * the 51Degrees pipeline configuration makes available, and this example shows a range of
@@ -44,8 +44,8 @@
  * reduces detection time compared with requesting properties from multiple components. If you
  * don't specify any properties to detect, then all properties are detected.
  *
- * Please review (performance options)[https://51degrees.com/documentation/_device_detection__features__performance_options.html]
- * and (hash dataset options)[https://51degrees.com/documentation/_device_detection__hash.html#DeviceDetection_Hash_DataSetProduction_Performance]
+ * Please review [performance options](https://51degrees.com/documentation/_device_detection__features__performance_options.html)
+ * and [hash dataset options](https://51degrees.com/documentation/_device_detection__hash.html#DeviceDetection_Hash_DataSetProduction_Performance)
  * for more information about adjusting performance.
  *
  * This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-cxx/blob/master/examples/C/Hash/Performance.c).
