@@ -1198,6 +1198,7 @@ HTML_EXTRA_FILES       = ../../documentation/docs/images/icon-arrow-left-black.s
                          ../../documentation/docs/images/icon-arrow-solid-right-orange.svg \
                          ../../documentation/docs/images/icon-search.svg \
                          ../../documentation/docs/examplegrabber.js \
+                         ../../documentation/docs/testedversionsgrabber.js \
                          ../../documentation/docs/search51.js
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
