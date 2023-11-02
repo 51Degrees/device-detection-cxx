@@ -34,7 +34,7 @@
  * The example illustrates a "clock-time" benchmark for assessing detection speed.
  *
  * Using a YAML formatted evidence file - "20000 Evidence Records.yml" - supplied with the
- * distribution or can be obtained from the [data repository on Github](https://github.com/51Degrees/device-detection-data/blob/master/20000%20Evidence%20Records.yml).
+ * distribution or can be obtained from the [data repository on Github](https://github.com/51Degrees/device-detection-data/blob/main/20000%20Evidence%20Records.yml).
  *
  * It's important to understand the trade-offs between performance, memory usage and accuracy, that
  * the 51Degrees pipeline configuration makes available, and this example shows a range of
