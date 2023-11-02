@@ -832,6 +832,7 @@ INPUT                  = ../ \
                          ../examples/C/Hash/GettingStarted.c \
                          ../examples/C/Hash/MatchMetrics.c \
                          ../examples/C/Hash/OfflineProcessing.c \
+                         ../examples/C/Hash/Performance.c \
                          ../examples/C/Hash/ReloadFromFile.c \
                          ../examples/C/Hash/ReloadFromMemory.c \
                          ../examples/C/Hash/StronglyTyped.c
