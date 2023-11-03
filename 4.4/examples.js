@@ -6,6 +6,7 @@ var examples =
     [ "Hash/MatchMetrics.cpp", "_hash_2_match_metrics_8cpp-example.html", null ],
     [ "Hash/MetaData.cpp", "_hash_2_meta_data_8cpp-example.html", null ],
     [ "Hash/OfflineProcessing.c", "_hash_2_offline_processing_8c-example.html", null ],
+    [ "Hash/Performance.c", "_hash_2_performance_8c-example.html", null ],
     [ "Hash/ReloadFromFile.c", "_hash_2_reload_from_file_8c-example.html", null ],
     [ "Hash/ReloadFromFile.cpp", "_hash_2_reload_from_file_8cpp-example.html", null ],
     [ "Hash/ReloadFromMemory.c", "_hash_2_reload_from_memory_8c-example.html", null ],

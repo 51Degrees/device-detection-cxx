@@ -7,12 +7,13 @@ var NAVTREEINDEX0 =
 "_hash_2_match_metrics_8cpp-example.html":[5,3],
 "_hash_2_meta_data_8cpp-example.html":[5,4],
 "_hash_2_offline_processing_8c-example.html":[5,5],
-"_hash_2_reload_from_file_8c-example.html":[5,6],
-"_hash_2_reload_from_file_8cpp-example.html":[5,7],
-"_hash_2_reload_from_memory_8c-example.html":[5,8],
-"_hash_2_reload_from_memory_8cpp-example.html":[5,9],
-"_hash_2_strongly_typed_8c-example.html":[5,10],
-"_hash_2_strongly_typed_8cpp-example.html":[5,11],
+"_hash_2_performance_8c-example.html":[5,6],
+"_hash_2_reload_from_file_8c-example.html":[5,7],
+"_hash_2_reload_from_file_8cpp-example.html":[5,8],
+"_hash_2_reload_from_memory_8c-example.html":[5,9],
+"_hash_2_reload_from_memory_8cpp-example.html":[5,10],
+"_hash_2_strongly_typed_8c-example.html":[5,11],
+"_hash_2_strongly_typed_8cpp-example.html":[5,12],
 "examples.html":[5],
 "group___fifty_one_degrees_array.html":[3,1,0],
 "group___fifty_one_degrees_array.html#ga080116602969b828ac0324434b1409b3":[3,1,0,2],
@@ -248,6 +249,5 @@ var NAVTREEINDEX0 =
 "group___fifty_one_degrees_hash_synonyms.html#ga840206fdcd9bc13e7542cc9037fba112":[3,0,0,0,35],
 "group___fifty_one_degrees_hash_synonyms.html#ga843327681e14efbfb5f63d08c9fba4c5":[3,0,0,0,46],
 "group___fifty_one_degrees_hash_synonyms.html#ga8a07b79f5353aad9e06d12c8eed6b95e":[3,0,0,0,44],
-"group___fifty_one_degrees_hash_synonyms.html#ga8edef4662b36c83bef48c5d1b7d50a5e":[3,0,0,0,47],
-"group___fifty_one_degrees_hash_synonyms.html#ga90e4ca7b9a7843dcfd2ab2a2340ca694":[3,0,0,0,21]
+"group___fifty_one_degrees_hash_synonyms.html#ga8edef4662b36c83bef48c5d1b7d50a5e":[3,0,0,0,47]
 };

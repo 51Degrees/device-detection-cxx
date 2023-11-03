@@ -1,0 +1,7 @@
+<map id="performanceConfig" name="performanceConfig">
+<area shape="rect" id="node1" title="Configuration to use when building the dataset for benchmarking." alt="" coords="89,405,235,432"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_config_hash.html" title="Hash specific configuration structure." alt="" coords="63,316,261,343"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_collection_config.html" title="Collection configuration structure which defines how the collection should be created by the create m..." alt="" coords="5,95,196,136"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_config_device_detection.html" title="Device detection configuration structure containing device detection specific configuration options,..." alt="" coords="221,95,431,136"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_config_base.html" title="Base configuration structure containing common configuration options, and options that apply to struc..." alt="" coords="227,5,425,32"/>
+</map>

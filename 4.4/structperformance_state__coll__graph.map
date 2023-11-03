@@ -1,0 +1,9 @@
+<map id="performanceState" name="performanceState">
+<area shape="rect" id="node1" title="Single state containing everything needed for running and then reporting the performance tests." alt="" coords="478,199,617,225"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="213,102,455,129"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_resource_handle.html" title="Handle for a shared resource." alt="" coords="143,199,373,225"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_interlock_double_width.html" title="Double width (64 or 128 depending on the architecture) compare and exchange." alt="" coords="5,95,188,136"/>
+<area shape="rect" id="node5" href="$structbenchmark_result.html" title="Result of benchmarking from a single thread." alt="" coords="479,102,615,129"/>
+<area shape="rect" id="node6" href="$structkey_value_pair_array.html" title="Contains one or more piece of evidence." alt="" coords="640,102,780,129"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_key_value_pair.html" title=" " alt="" coords="605,5,815,32"/>
+</map>
