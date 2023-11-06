@@ -37,7 +37,7 @@ static void buildString(
 	int i;
 	const char *property, *value;
 	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
-	int remainingCapacity = outputLength;
+	long long remainingCapacity = outputLength;
 	for (i = 0; i < (int)dataSet->b.b.available->count; i++) {
 		property = STRING(
 			PropertiesGetNameFromRequiredIndex(
