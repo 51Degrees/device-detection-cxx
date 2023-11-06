@@ -49,7 +49,7 @@ static void buildString(
 			exception) != NULL && EXCEPTION_OKAY) {
 			value = STRING(results->values.items[0].data.ptr);
 
-			const size_t written = snprintf(
+			const int written = snprintf(
 				output, remainingCapacity,
 				"%s: %s\n",
 				property,
