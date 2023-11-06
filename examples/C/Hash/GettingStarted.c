@@ -60,6 +60,7 @@ static const char *dataDir = "device-detection-data";
 static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static char valueBuffer[1024] = "";
+static const size_t valueBufferLength = sizeof(valueBuffer) / sizeof(valueBuffer[0]);
 
 typedef struct {
 	uint32_t count;
@@ -128,7 +129,7 @@ static void outputValue(
 			results,
 			propertyName,
 			valueBuffer,
-			sizeof(valueBuffer),
+			valueBufferLength,
 			",",
 			exception);
 		EXCEPTION_THROW;
@@ -140,7 +141,7 @@ static void outputValue(
 			ResultsHashGetNoValueReason(results, requiredPropertyIndex, exception);
 		EXCEPTION_THROW;
 
-		sprintf(valueBuffer, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
+		snprintf(valueBuffer, valueBufferLength, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
 	}
 	fprintf(output, "\n\t%s: %s", name, valueBuffer);
 }
