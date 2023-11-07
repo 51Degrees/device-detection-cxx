@@ -560,6 +560,7 @@ public:
 		EvidenceDeviceDetection evidence;
 		const char *evidenceValue = "17779|17470|18092";
 		char expectedDeviceId2[24];
+		const size_t expectedDeviceId2Length = sizeof(expectedDeviceId2) / sizeof(expectedDeviceId2[0]);
 		const char* expectedDeviceId1 = "0-17779-17470-18092";
 		EngineHash *localEngine = (EngineHash*)getEngine();
 
@@ -568,7 +569,7 @@ public:
 		Common::Collection<byte, ComponentMetaData> *components =
 			getEngine()->getMetaData()->getComponents();
 		ComponentMetaData *component = components->getByIndex(0);
-		sprintf(expectedDeviceId2, "%d-17779-17470-18092", component->getDefaultProfileId());
+		snprintf(expectedDeviceId2, expectedDeviceId2Length, "%d-17779-17470-18092", component->getDefaultProfileId());
 
 		// Get a property to check which belongs to the component with no
 		// profile.

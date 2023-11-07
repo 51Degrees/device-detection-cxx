@@ -70,6 +70,7 @@ static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 static const char *evidenceFileName = "20000 Evidence Records.yml";
 
 static char valueBuffer[1024] = "";
+static const size_t valueBufferLength = sizeof(valueBuffer) / sizeof(valueBuffer[0]);
 
 /**
  * CHOOSE THE DEFAULT MEMORY CONFIGURATION BY UNCOMMENTING ONE OF THE FOLLOWING
@@ -127,7 +128,7 @@ static void outputValue(
 			results,
 			propertyName,
 			valueBuffer,
-			sizeof(valueBuffer),
+			valueBufferLength,
 			",",
 			exception);
 		EXCEPTION_THROW;
@@ -139,7 +140,7 @@ static void outputValue(
 			ResultsHashGetNoValueReason(results, requiredIndex, exception);
 		EXCEPTION_THROW;
 
-		sprintf(valueBuffer, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
+		snprintf(valueBuffer, valueBufferLength, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
 	}
 	fprintf(output, "%s: %s\n", name, valueBuffer);
 }

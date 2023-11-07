@@ -31,11 +31,13 @@ static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static void buildString(
 	fiftyoneDegreesResultsHash *results,
-	char *output) {
+	char *output,
+	const size_t outputLength) {
 	EXCEPTION_CREATE;
 	int i;
 	const char *property, *value;
 	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
+	long long remainingCapacity = outputLength;
 	for (i = 0; i < (int)dataSet->b.b.available->count; i++) {
 		property = STRING(
 			PropertiesGetNameFromRequiredIndex(
@@ -46,9 +48,20 @@ static void buildString(
 			i,
 			exception) != NULL && EXCEPTION_OKAY) {
 			value = STRING(results->values.items[0].data.ptr);
-			output = output + sprintf(output, "%s: %s\n",
+
+			const int written = snprintf(
+				output, remainingCapacity,
+				"%s: %s\n",
 				property,
 				value);
+			if (written <= 0) {
+				break;
+			}
+			remainingCapacity -= written;
+			if (remainingCapacity <= 0) {
+				break;
+			}
+			output += written;
 		}
 	}
 }
@@ -69,6 +82,8 @@ static void reportStatus(
 static int run(fiftyoneDegreesResourceManager *manager) {
 	EXCEPTION_CREATE;
 	char userAgent[500], output[50000];
+ 	const size_t outputLength = sizeof(output) / sizeof(output[0]);
+
 	int count = 0;
 	ResultsHash *results = ResultsHashCreate(
 		manager,
@@ -85,7 +100,7 @@ static int run(fiftyoneDegreesResourceManager *manager) {
 		EXCEPTION_THROW;
 
 		// Print the values for all the required properties.
-		buildString(results, output);
+		buildString(results, output, outputLength);
 		printf("%s", output);
 
 		count++;
