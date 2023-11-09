@@ -32,7 +32,7 @@
 
 /**
  * @ingroup FiftyOneDegreesHash
- * @defgroup FiftyOneDegreesHashSynonyms Synonyms
+ * @defgroup FiftyOneDegreesHashSynonyms Hash Synonyms
  *
  * Quick shortenings of Hash specific methods and types.
  *

@@ -26,7 +26,7 @@
 
 /**
  * @ingroup FiftyOneDegreesDeviceDetection
- * @defgroup FiftyOneDegreesConfigDeviceDetection Config
+ * @defgroup FiftyOneDegreesConfigDeviceDetection Device Detection Config
  *
  * Configuration for building device detection data sets.
  *

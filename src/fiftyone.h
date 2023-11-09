@@ -32,7 +32,7 @@
 
 /**
  * @ingroup FiftyOneDegreesDeviceDetection
- * @defgroup FiftyOneDegreesDeviceDetectionSynonyms Synonyms
+ * @defgroup FiftyOneDegreesDeviceDetectionSynonyms Device Detection Synonyms
  *
  * Quick shortenings of device detection specific methods and types.
  *

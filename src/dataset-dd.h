@@ -29,7 +29,7 @@
 
 /**
  * @ingroup FiftyOneDegreesDeviceDetection
- * @defgroup FiftyOneDegreesDataSetDeviceDetection Data Set
+ * @defgroup FiftyOneDegreesDataSetDeviceDetection Device Detection Data Set
  *
  * A device detection specific data file initialised in a structure.
  *
