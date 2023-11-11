@@ -72,7 +72,7 @@ $(document).ready(function(){initNavTree('group___fifty_one_degrees_headers.html
 <h2>Creation</h2>
 <p>A header structure is created using the <a class="el" href="group___fifty_one_degrees_headers.html#ga7af50e2aa51c94a9dec82ac55b5477fa" title="Creates a new headers instance configured with the unique HTTP names needed from evidence.">fiftyoneDegreesHeadersCreate</a> method. This takes a state and a method used to extract the unique headers from the state. See the method description for more details.</p>
 <h2>Get</h2>
-<p>A header can be fetched using it's unique id with the <a class="el" href="group___fifty_one_degrees_headers.html#gad0a687d335a6871c1b25bdfb94511e77" title="Gets a pointer to the header in the headers structure with a unique id matching the one provided.">fiftyoneDegreesHeadersGetHeaderFromUniqueId</a> method.</p>
+<p>A header can be fetched using it's unique id with the <a class="el" href="group___fifty_one_degrees_headers.html#ga34b072924c217c04997603b8e6add094" title="Gets a pointer to the header in the headers structure with a unique id matching the one provided.">fiftyoneDegreesHeadersGetHeaderFromUniqueId</a> method.</p>
 <p>The index of a header in the unique headers structure can also be fetched using the <a class="el" href="group___fifty_one_degrees_headers.html#gaea092397f599134c43b9283e34df2bb0" title="Provides the integer index of the HTTP header name.">fiftyoneDegreesHeaderGetIndex</a> method.</p>
 <h2>Free</h2>
 <p>Once a headers structure is finished with, it is released using the <a class="el" href="group___fifty_one_degrees_headers.html#ga543fc7c6ee493f25a4e98e4e4c433520" title="Frees the memory allocated by the fiftyoneDegreesHeadersCreate method.">fiftyoneDegreesHeadersFree</a> method.</p>
@@ -161,6 +161,12 @@ Typedefs</h2>
 <tbody class="c-table__body">
 <!-- member dec start -->
 <!-- startMemberItem() -->
+<tr class="c-table__row memitem:gad04ce6ea2ee64e34192c9071655e15b2"><td class="c-table__cell"><a id="gad04ce6ea2ee64e34192c9071655e15b2"></a>
+typedef&#160;uint32_t<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><b>fiftyoneDegreesHeaderID</b>
+</div></td></tr>
+<!-- member dec start -->
+<!-- startMemberItem() -->
 <tr class="c-table__row memitem:ga8742ecca65bb05ccfb68ae6e23afa6b0"><td class="c-table__cell"><a id="ga8742ecca65bb05ccfb68ae6e23afa6b0"></a>
 typedef&#160;<a class="el" href="structfiftyone_degrees_header_array.html">fiftyoneDegreesHeaderArray</a><!-- insertMemberAlign -->
 &#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_headers.html#ga8742ecca65bb05ccfb68ae6e23afa6b0">fiftyoneDegreesHeaders</a>
@@ -223,10 +229,10 @@ Functions</h2>
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:gad0a687d335a6871c1b25bdfb94511e77"><td class="c-table__cell"><a class="el" href="structfiftyone_degrees_header.html">fiftyoneDegreesHeader</a>&#160;*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_headers.html#gad0a687d335a6871c1b25bdfb94511e77">fiftyoneDegreesHeadersGetHeaderFromUniqueId</a> (<a class="el" href="group___fifty_one_degrees_headers.html#ga8742ecca65bb05ccfb68ae6e23afa6b0">fiftyoneDegreesHeaders</a> *headers, uint32_t uniqueId)
+<tr class="c-table__row memitem:ga34b072924c217c04997603b8e6add094"><td class="c-table__cell"><a class="el" href="structfiftyone_degrees_header.html">fiftyoneDegreesHeader</a>&#160;*<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_headers.html#ga34b072924c217c04997603b8e6add094">fiftyoneDegreesHeadersGetHeaderFromUniqueId</a> (<a class="el" href="group___fifty_one_degrees_headers.html#ga8742ecca65bb05ccfb68ae6e23afa6b0">fiftyoneDegreesHeaders</a> *headers, fiftyoneDegreesHeaderID uniqueId)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:gad0a687d335a6871c1b25bdfb94511e77">Gets a pointer to the header in the headers structure with a unique id matching the one provided.  <a href="#gad0a687d335a6871c1b25bdfb94511e77">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:ga34b072924c217c04997603b8e6add094">Gets a pointer to the header in the headers structure with a unique id matching the one provided.  <a href="#ga34b072924c217c04997603b8e6add094">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
@@ -516,9 +522,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="gad0a687d335a6871c1b25bdfb94511e77"></a><!-- startMemberDoc -->
+<a id="ga34b072924c217c04997603b8e6add094"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gad0a687d335a6871c1b25bdfb94511e77">&#9670;&nbsp;</a></span>fiftyoneDegreesHeadersGetHeaderFromUniqueId()</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga34b072924c217c04997603b8e6add094">&#9670;&nbsp;</a></span>fiftyoneDegreesHeadersGetHeaderFromUniqueId()</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -542,7 +548,7 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell">uint32_t<!-- endParameterType -->
+          <td class="c-table__cell">fiftyoneDegreesHeaderID<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>uniqueId</em><!-- endParameterName -->

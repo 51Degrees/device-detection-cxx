@@ -14,7 +14,7 @@ var group___fifty_one_degrees_headers =
       [ "name", "structfiftyone_degrees_header.html#a0110924a26d499fc861fcb2e400de119", null ],
       [ "nameLength", "structfiftyone_degrees_header.html#af8fe4036f41e090ec41329b2053dd4b0", null ],
       [ "segments", "structfiftyone_degrees_header.html#a7381db20276d5823968ac1a6bcc8c124", null ],
-      [ "uniqueId", "structfiftyone_degrees_header.html#aeb4eb8722fa0466bf273f918d1af8dbe", null ]
+      [ "uniqueId", "structfiftyone_degrees_header.html#a85ca80a32333c426d9fd8b52072d6d33", null ]
     ] ],
     [ "fiftyoneDegreesHeaderArray", "structfiftyone_degrees_header_array.html", [
       [ "capacity", "structfiftyone_degrees_header_array.html#a5d6d73fef9550b5252bd4988ae8e5dcb", null ],
@@ -29,7 +29,7 @@ var group___fifty_one_degrees_headers =
     [ "fiftyoneDegreesHeaderGetIndex", "group___fifty_one_degrees_headers.html#gaea092397f599134c43b9283e34df2bb0", null ],
     [ "fiftyoneDegreesHeadersCreate", "group___fifty_one_degrees_headers.html#ga7af50e2aa51c94a9dec82ac55b5477fa", null ],
     [ "fiftyoneDegreesHeadersFree", "group___fifty_one_degrees_headers.html#ga543fc7c6ee493f25a4e98e4e4c433520", null ],
-    [ "fiftyoneDegreesHeadersGetHeaderFromUniqueId", "group___fifty_one_degrees_headers.html#gad0a687d335a6871c1b25bdfb94511e77", null ],
+    [ "fiftyoneDegreesHeadersGetHeaderFromUniqueId", "group___fifty_one_degrees_headers.html#ga34b072924c217c04997603b8e6add094", null ],
     [ "fiftyoneDegreesHeadersIsHttp", "group___fifty_one_degrees_headers.html#ga287ce98cd2475a91ce6208840ba74ca6", null ],
     [ "fiftyoneDegreesHeadersIsPseudo", "group___fifty_one_degrees_headers.html#ga5f62434b3f3d6e0955e216a50ce74737", null ],
     [ "fiftyoneDegreesHeadersSize", "group___fifty_one_degrees_headers.html#ga6f8fe9b59b270ecdf73ca12e4b8c0451", null ]
