@@ -88,9 +88,9 @@ typedef struct t_thread_memory_state {
  * @param state information about the overall performance test
  */
 void printLoadBar(memoryThreadState *state) {
-	int i;
-	int full = state->count / state->main->progress;
-	int empty = (state->main->userAgentsCount - state->count) /
+	long i;
+	const long full = state->count / state->main->progress;
+    const long empty = (state->main->userAgentsCount - state->count) /
 		state->main->progress;
 	printf("\r\t[");
 	for (i = 0; i < full; i++) {
