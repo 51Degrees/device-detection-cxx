@@ -50,7 +50,7 @@ static void buildString(
 			value = STRING(results->values.items[0].data.ptr);
 
 			const int written = snprintf(
-				output, remainingCapacity,
+				output, (size_t)remainingCapacity,
 				"%s: %s\n",
 				property,
 				value);
