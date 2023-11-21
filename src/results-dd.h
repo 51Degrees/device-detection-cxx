@@ -25,7 +25,7 @@
 
 /**
  * @ingroup FiftyOneDegreesDeviceDetection
- * @defgroup FiftyOneDegreesDeviceDetectionResults Results
+ * @defgroup FiftyOneDegreesDeviceDetectionResults Device Detection Results
  *
  * Structure returned by a device detection engine's process method(s),
  * containing values.
