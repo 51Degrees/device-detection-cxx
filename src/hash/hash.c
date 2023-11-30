@@ -63,6 +63,8 @@ MAP_TYPE(Collection)
 /**
  * Array of powers for the RK_PRIME.
  */
+#ifndef FIFTYONE_DEGREES_POWERS
+#define FIFTYONE_DEGREES_POWERS
 static unsigned int POWERS[129] = {
 	0U,	997U, 994009U, 991026973U, 211414001U, 326361493U, 3259861321U,
 	3086461261U, 2005293281U, 2117608517U, 2426749113U, 1402278013U,
@@ -91,6 +93,7 @@ static unsigned int POWERS[129] = {
 	455980793U, 3641284541U, 1113322257U, 1880727861U, 2479936361U,
 	2890356717U, 4057558529U
 };
+#endif
 
 #define MAX_CONCURRENCY(t) if (config->t.concurrency > concurrency) { \
 concurrency = config->t.concurrency; }
