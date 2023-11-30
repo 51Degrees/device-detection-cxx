@@ -38,10 +38,12 @@ MAP_TYPE(Collection)
 /** Offset used for a null profile. */
 #define NULL_PROFILE_OFFSET UINT32_MAX
 
+#ifndef MAX
 #ifdef max
 #define MAX(a,b) max(a,b)
 #else
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
 #endif
 
 #define NODE(s) ((GraphNode*)((s)->node.data.ptr))
@@ -286,10 +288,12 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedTempConfig = {
 #define FIFTYONE_DEGREES_CONFIG_USE_TEMP_FILE \
 FIFTYONE_DEGREES_CONFIG_USE_TEMP_FILE_DEFAULT
 
+#ifndef MIN
 #ifdef min
 #define MIN(a,b) min(a,b)
 #else
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
 #endif
 
 /**
