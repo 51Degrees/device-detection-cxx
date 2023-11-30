@@ -24,10 +24,12 @@
 
 #include "fiftyone.h"
 
+#ifndef MIN
 #ifdef min
 #define MIN(a,b) min(a,b)
 #else
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
 #endif
 
 fiftyoneDegreesStatusCode 
