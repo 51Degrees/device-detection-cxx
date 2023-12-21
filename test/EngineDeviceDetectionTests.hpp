@@ -117,6 +117,7 @@ public:
 	void verifyWithUserAgent();
 	void verifyWithEvidenceMultiHeaderQuery();
 	void verifyWithEvidenceMultiHeaderCookie();
+	void verifyWithEvidenceOverrideProfileIDQuery();
 	void verifyWithBadUserAgent();
 	void verifyWithInvalidCharUserAgent();
 	void verifyWithLongUserAgent();

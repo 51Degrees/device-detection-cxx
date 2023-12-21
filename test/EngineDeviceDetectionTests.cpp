@@ -117,6 +117,26 @@ void EngineDeviceDetectionTests::verifyWithEvidenceMultiHeaderQuery() {
 	delete results;
 }
 
+void EngineDeviceDetectionTests::verifyWithEvidenceOverrideProfileIDQuery() {
+	EvidenceDeviceDetection evidence;
+	evidence["header.user-agent"] = operaUserAgent;
+	evidence["query.51D_ProfileIds"] = "MacBook Air(2019)";
+	evidence["query.screenpixelswidth"] = "250";
+	evidence["query.screenpixelsheight"] = "350";
+	EngineTests::verifyWithEvidence(&evidence);
+	ResultsBase* results = getEngine()->processBase(&evidence);
+	verifyPropertyValue(results, "BrowserName", "Opera Mini");
+	if (strcmp(getEngine()->getProduct().c_str(), "Lite") != 0) {
+		verifyPropertyValue(results, "ScreenPixelsWidth", "250");
+		verifyPropertyValue(results, "ScreenPixelsHeight", "350");
+	}
+	else {
+		cout << "Lite data file does not support overrides, so they are not being tested.";
+	}
+	delete results;
+}
+
+
 void EngineDeviceDetectionTests::verifyWithEvidenceMultiHeaderCookie() {
 	EvidenceDeviceDetection evidence;
 	evidence["header.user-agent"] = operaUserAgent;
@@ -299,6 +319,7 @@ void EngineDeviceDetectionTests::verify() {
 	verifyWithInvalidCharUserAgent();
 	verifyWithEvidenceMultiHeaderQuery();
 	verifyWithEvidenceMultiHeaderCookie();
+	verifyWithEvidenceOverrideProfileIDQuery();
 	verifyUserAgentInQuery();
 	verifyValueOverride();
 }
