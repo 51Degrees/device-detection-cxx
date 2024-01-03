@@ -142,12 +142,23 @@ namespace FiftyoneDegrees {
 					: ExampleBase(dataFilePath, config) {
 				};
 
+				void printResults(ResultsHash* results) {
+					cout << "   PlatformName: " <<
+						(*results->getValueAsString("PlatformName")).c_str()
+						<< "\n";
+					cout << "   PlatformVersion: " <<
+						(*results->getValueAsString("PlatformVersion")).c_str()
+						<< "\n";
+					cout << "   IsMobile: " <<
+						(*results->getValueAsString("IsMobile")).c_str() << "\n";
+					cout << "   Devide ID: " <<
+						results->getDeviceId() << "\n";
+				}
+
 				/**
 				 * @copydoc ExampleBase::run
 				 */
 				void run() {
-					ResultsHash *results;
-
 					// Create an evidence instance to store and process
 					// User-Agents.
 					EvidenceDeviceDetection *evidence =
@@ -155,101 +166,103 @@ namespace FiftyoneDegrees {
 
 					cout << "Starting Getting Started Example.\n";
 
-					// Carries out a match for a mobile User-Agent.
-					cout << "\nMobile User-Agent: " <<
-						 mobileUserAgent << "\n";
-					evidence->operator[]("header.user-agent")
+					std::string deviceId_mobile;
+					{
+						// Carries out a match for a mobile User-Agent.
+						cout << "\n";
+						cout << "Mobile User-Agent: " <<
+							mobileUserAgent << "\n";
+						evidence->operator[]("header.user-agent")
 							= mobileUserAgent;
-					results = engine->process(evidence);
-					cout << "   IsMobile: " <<
-						 (*results->getValueAsString("IsMobile")).c_str() << "\n";
-					delete results;
 
-					// Carries out a match for a desktop User-Agent.
-					cout << "\nDesktop User-Agent: " <<
-						 desktopUserAgent << "\n";
-					evidence->operator[]("header.user-agent")
+						ResultsHash* results = engine->process(evidence);
+						printResults(results);
+						deviceId_mobile = results->getDeviceId();
+						delete results;
+					};
+					{
+						// Carries out a match for a desktop User-Agent.
+						cout << "\n[---]\n";
+						cout << "Desktop User-Agent: " <<
+							desktopUserAgent << "\n";
+						evidence->operator[]("header.user-agent")
 							= desktopUserAgent;
-					results = engine->process(evidence);
-					cout << "   IsMobile: " <<
-						(*results->getValueAsString("IsMobile")).c_str() << "\n";
-					delete results;
 
-					// Carries out a match for a MediaHub User-Agent.
-					cout << "\nMediaHub User-Agent: " <<
-						 mediaHubUserAgent << "\n";
-					evidence->operator[]("header.user-agent")
+						ResultsHash* results = engine->process(evidence);
+						printResults(results);
+						delete results;
+					};
+					{
+						// Carries out a match for a MediaHub User-Agent.
+						cout << "\n[---]\n";
+						cout << "MediaHub User-Agent: " <<
+							mediaHubUserAgent << "\n";
+						evidence->operator[]("header.user-agent")
 							= mediaHubUserAgent;
-					results = engine->process(evidence);
-					cout << "   IsMobile: " <<
-						(*results->getValueAsString("IsMobile")).c_str() << "\n";
-					delete results;
 
-					// Carries out a match for a platform based on UACH headers.
-					cout << "\nUACH Sec-CH-UA-Platform: " <<
-						uachPlatform << "\n";
-					cout << "UACH Sec-CH-UA-Platform-Version: " <<
-						uachPlatformVersion << "\n";
-					evidence->operator[]("header.Sec-CH-UA-Platform")
-						= uachPlatform;
-					evidence->operator[]("header.Sec-CH-UA-Platform-Version")
-						= uachPlatformVersion;
-					results = engine->process(evidence);
-					cout << "   PlatformName: " <<
-						(*results->getValueAsString("PlatformName")).c_str() 
-						<< "\n";
-					cout << "   PlatformVersion: " <<
-						(*results->getValueAsString("PlatformVersion")).c_str()
-						<< "\n";
-					cout << "   IsMobile: " <<
-						(*results->getValueAsString("IsMobile")).c_str() << "\n";
+						ResultsHash* results = engine->process(evidence);
+						printResults(results);
+						delete results;
+					};
+					std::string deviceId_hintedHub;
+					{
+						// Carries out a match for a platform based on UACH headers.
+						cout << "\n(+)\n";
+						cout << "UACH Sec-CH-UA-Platform: " <<
+							uachPlatform << "\n";
+						cout << "UACH Sec-CH-UA-Platform-Version: " <<
+							uachPlatformVersion << "\n";
+						evidence->operator[]("header.Sec-CH-UA-Platform")
+							= uachPlatform;
+						evidence->operator[]("header.Sec-CH-UA-Platform-Version")
+							= uachPlatformVersion;
 
-					if (0) {
+						ResultsHash* results = engine->process(evidence);
+						printResults(results);
+						deviceId_hintedHub = results->getDeviceId();
+						delete results;
+					};
+					{
 						// Carries out a match for a platform based on device ID.
-						std::string deviceID = results->getDeviceId();
-						cout << "   query.51D_deviceId: " <<
-							deviceID.c_str() << "\n";
-						
-						EvidenceDeviceDetection* evidence2 =
+						cout << "\n(+)\n";
+						cout << "DeviceID: " << deviceId_mobile << " -- Mobile\n";
+
+						evidence->operator[]("query.51D_deviceId")
+							= deviceId_mobile.c_str();
+
+						ResultsHash* results = engine->process(evidence);
+						printResults(results);
+						cout << "  [control platform ID: " << deviceId_hintedHub << " -- MediaHub (hinted, no-deviceId)]\n";
+						delete results;
+					};
+					{
+						// Carries out a match for a mobile User-Agent with hinted MediaHub DeviceID.
+
+						EvidenceDeviceDetection* const evidence2 =
 							new EvidenceDeviceDetection();
+
+						cout << "\n[---]\n";
+						cout << "Mobile User-Agent: " <<
+							mobileUserAgent << "\n";
+						cout << "DeviceID: " << deviceId_hintedHub << " -- MediaHub (hinted)\n";
+
 						evidence2->operator[]("header.user-agent")
 							= mobileUserAgent;
-
-						cout << "\nMobile User-Agent: " <<
-							mobileUserAgent << "\n";
-						ResultsHash* results2 = engine->process(evidence2);
-						cout << "   PlatformName: " <<
-							(*results2->getValueAsString("PlatformName")).c_str()
-							<< "\n";
-						cout << "   PlatformVersion: " <<
-							(*results2->getValueAsString("PlatformVersion")).c_str()
-							<< "\n";
-						cout << "   IsMobile: " <<
-							(*results2->getValueAsString("IsMobile")).c_str() << "\n";
-						delete results2;
-
-						cout << "\nMobile User-Agent: " <<
-							mobileUserAgent << "\n";
-						cout << "query.51D_deviceId: " <<
-							deviceID.c_str() << "\n";
 						evidence2->operator[]("query.51D_deviceId")
-							= deviceID.c_str();
-						results2 = engine->process(evidence2);
-						cout << "   PlatformName: " <<
-							(*results2->getValueAsString("PlatformName")).c_str()
-							<< "\n";
-						cout << "   PlatformVersion: " <<
-							(*results2->getValueAsString("PlatformVersion")).c_str()
-							<< "\n";
-						cout << "   IsMobile: " <<
-							(*results2->getValueAsString("IsMobile")).c_str() << "\n";
-						delete results2;
+							= deviceId_hintedHub.c_str();
+
+						ResultsHash* results = engine->process(evidence2);
+						printResults(results);
+
+						cout << "  [control platform ID: " << deviceId_mobile << " -- Mobile (no-deviceId)]\n";
+						delete results;
 						delete evidence2;
 					};
-					delete results;
 
 					// Free the evidence.
 					delete evidence;
+
+					cout << "\n";
 				}
 			};
 		}
