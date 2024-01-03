@@ -262,7 +262,8 @@ namespace FiftyoneDegrees {
 
 						evidence2->operator[]("header.user-agent")
 							= mobileUserAgent;
-						evidence2->operator[]("query.51D_deviceId")
+						// case-insensitive
+						evidence2->operator[]("query.51d_dEVIcEiD")
 							= deviceId_hintedHub.c_str();
 
 						ResultsHash* results = engine->process(evidence2);
