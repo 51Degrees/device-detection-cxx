@@ -204,6 +204,7 @@ public:
 		verifyProfileOverrideNoUserAgent();
 		verifyWithLongPseudoHeader();
 		verifyProcessDeviceId();
+		verifyProcessDeviceIdQuery();
 		verifyProfileOverridePartial();
 		verifyProfileOverrideZero();
 		verifyNoMatchedNodes();
@@ -671,6 +672,59 @@ public:
 		EXPECT_STREQ(results->getDeviceId().c_str(), expectedDeviceId) <<
 			L"The device id was not correct.";
 		delete results;
+	}
+
+	void verifyProcessDeviceIdQuery() {
+		EvidenceDeviceDetection evidence;
+
+		std::string deviceId_mobile;
+		{
+			// Carries out a match for a mobile User-Agent.
+			evidence["header.user-agent"] = mobileUserAgent;
+
+			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+			deviceId_mobile = results->getDeviceId();
+			delete results;
+		};
+		std::string deviceId_mediaHub;
+		{
+			// Carries out a match for a MediaHub User-Agent.
+			evidence["header.user-agent"] = mediaHubUserAgent;
+
+			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+			deviceId_mediaHub = results->getDeviceId();
+			delete results;
+		};
+		{
+			// Carries out a match for a platform based on device ID.
+			evidence["query.51D_deviceId"] = deviceId_mobile.c_str();
+
+			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+			EXPECT_STREQ(deviceId_mobile.c_str(), results->getDeviceId().c_str());
+			delete results;
+		};
+		{
+			// Carries out a match for a platform with invalid device ID.
+			const char* const deviceId_dummy = "190706-2244-1242-2412";
+			evidence["query.51D_deviceId"] = deviceId_dummy;
+
+			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+			EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
+			delete results;
+		};
+		{
+			// Carries out a match for a mobile User-Agent with hinted MediaHub DeviceID.
+
+			EvidenceDeviceDetection evidence2;
+
+			evidence2["header.user-agent"] = mobileUserAgent;
+			// case-insensitive
+			evidence2["query.51d_dEVIcEiD"] = deviceId_mediaHub.c_str();
+
+			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence2);
+			EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
+			delete results;
+		};
 	}
 
 	void verifyProfileOverrideBad() {
