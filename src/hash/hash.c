@@ -2178,35 +2178,11 @@ static bool setResultFromEvidence(
 	return EXCEPTION_OKAY;
 }
 
-static bool isDeviceIdKey(const char* fieldName) {
-	static const char * const reference = "51D_deviceId";
-	if (!fieldName) {
-		return false;
-	}
-	const char *a = fieldName, *b = reference;
-	for (; (*a) && (*b); ++a, ++b) {
-		if (*a == *b) {
-			continue;
-		}
-		const char rawB = *b;
-		if (!(('A' <= rawB && rawB <= 'Z') || ('a' <= rawB && rawB <= 'z'))) {
-			return false; // not a letter + strict equality already failed
-		}
-		const char lowerB = rawB | 0x20; // 'a' - 'A'
-		const char upperB = lowerB - 0x20;
-		if ((*a == lowerB) || (*a == upperB)) {
-			continue;
-		}
-		return false;
-	}
-	return !*a && !*b; // both reached '\0' at the same time
-}
-
 static bool setResultFromDeviceID(
 	void* state,
 	EvidenceKeyValuePair* pair) {
 
-	if (!isDeviceIdKey(pair->field)) {
+	if (StringCompare(pair->field, "51D_deviceId")) {
 		return true; // not a match, skip
 	}
 
