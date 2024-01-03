@@ -169,6 +169,11 @@ typedef struct detection_state_t {
 	Exception *exception; /* Exception pointer */
 } detectionState;
 
+typedef struct deviceId_lookup_state_t {
+	ResultsHash* results; /* The detection results to modify */
+	int deviceIdsFound; /* The number of deviceIds found */
+} deviceIdLookupState;
+
 /**
  * PRESET HASH CONFIGURATIONS
  */
@@ -2173,6 +2178,58 @@ static bool setResultFromEvidence(
 	return EXCEPTION_OKAY;
 }
 
+static bool isDeviceIdKey(const char* fieldName) {
+	static const char * const reference = "51D_deviceId";
+	if (!fieldName) {
+		return false;
+	}
+	const char *a = fieldName, *b = reference;
+	for (; (*a) && (*b); ++a, ++b) {
+		if (*a == *b) {
+			continue;
+		}
+		const char rawB = *b;
+		if (!(('A' <= rawB && rawB <= 'Z') || ('a' <= rawB && rawB <= 'z'))) {
+			return false; // not a letter + strict equality already failed
+		}
+		const char lowerB = rawB | 0x20; // 'a' - 'A'
+		const char upperB = lowerB - 0x20;
+		if ((*a == lowerB) || (*a == upperB)) {
+			continue;
+		}
+		return false;
+	}
+	return !*a && !*b; // both reached '\0' at the same time
+}
+
+static bool setResultFromDeviceID(
+	void* state,
+	EvidenceKeyValuePair* pair) {
+
+	if (!isDeviceIdKey(pair->field)) {
+		return true; // not a match, skip
+	}
+
+	const char* const deviceId = (const char*)pair->parsedValue;
+	if (!deviceId) {
+		return true; // unexpected nullptr value, skip
+	}
+
+	deviceIdLookupState* const lookupState = (deviceIdLookupState*)((stateWithException*)state)->state;
+	ResultsHash* const results = lookupState->results;
+	Exception* const exception = ((stateWithException*)state)->exception;
+
+	lookupState->deviceIdsFound += 1;
+
+	fiftyoneDegreesResultsHashFromDeviceId(
+		results,
+		deviceId,
+		strlen(deviceId) + 1,
+		exception);
+
+	return EXCEPTION_OKAY;
+}
+
 static void overrideProfileId(
 	void *state,
 	const uint32_t profileId) {
@@ -2197,6 +2254,7 @@ void fiftyoneDegreesResultsHashFromEvidence(
 	int overrideIndex, overridingPropertyIndex, overridesCount, propertyIndex;
 	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
 	stateWithException state;
+	deviceIdLookupState stateFragment;
 	state.state = results;
 	state.exception = exception;
 
@@ -2267,27 +2325,52 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			return;
 		}
 
-		// Values provided are processed based on the Evidence prefix order
-		// of precedence. In the case of Hash, query prefixed evidence should
-		// be used in preference to the header prefix. This supports
-		// situations where a User-Agent that is provided by the calling
-		// application can be used in preference to the one associated with the
-		// calling device.
-		for (int i = 0;
-			i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE &&
-			results->count == 0;
-			i++) {
+		
+		{
+			stateFragment.results = results;
+			stateFragment.deviceIdsFound = 0;
+			state.state = &stateFragment;
+
 			EvidenceIterate(
 				evidence,
-				prefixOrderOfPrecedence[i],
+				FIFTYONE_DEGREES_EVIDENCE_QUERY,
 				&state,
-				setResultFromEvidence);
+				setResultFromDeviceID);
+
 			if (EXCEPTION_FAILED) {
 				PseudoHeadersRemoveEvidence(
 					evidence->pseudoEvidence,
 					dataSet->config.b.maxMatchedUserAgentLength);
 				evidence->pseudoEvidence = NULL;
 				return;
+			}
+
+			state.state = results;
+		};
+
+		if (!stateFragment.deviceIdsFound) {
+			// Values provided are processed based on the Evidence prefix order
+			// of precedence. In the case of Hash, query prefixed evidence should
+			// be used in preference to the header prefix. This supports
+			// situations where a User-Agent that is provided by the calling
+			// application can be used in preference to the one associated with the
+			// calling device.
+			for (int i = 0;
+				i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE &&
+				results->count == 0;
+				i++) {
+				EvidenceIterate(
+					evidence,
+					prefixOrderOfPrecedence[i],
+					&state,
+					setResultFromEvidence);
+				if (EXCEPTION_FAILED) {
+					PseudoHeadersRemoveEvidence(
+						evidence->pseudoEvidence,
+						dataSet->config.b.maxMatchedUserAgentLength);
+					evidence->pseudoEvidence = NULL;
+					return;
+				}
 			}
 		}
 
