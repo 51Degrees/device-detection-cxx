@@ -203,6 +203,49 @@ namespace FiftyoneDegrees {
 						<< "\n";
 					cout << "   IsMobile: " <<
 						(*results->getValueAsString("IsMobile")).c_str() << "\n";
+
+					if (0) {
+						// Carries out a match for a platform based on device ID.
+						std::string deviceID = results->getDeviceId();
+						cout << "   query.51D_deviceId: " <<
+							deviceID.c_str() << "\n";
+						
+						EvidenceDeviceDetection* evidence2 =
+							new EvidenceDeviceDetection();
+						evidence2->operator[]("header.user-agent")
+							= mobileUserAgent;
+
+						cout << "\nMobile User-Agent: " <<
+							mobileUserAgent << "\n";
+						ResultsHash* results2 = engine->process(evidence2);
+						cout << "   PlatformName: " <<
+							(*results2->getValueAsString("PlatformName")).c_str()
+							<< "\n";
+						cout << "   PlatformVersion: " <<
+							(*results2->getValueAsString("PlatformVersion")).c_str()
+							<< "\n";
+						cout << "   IsMobile: " <<
+							(*results2->getValueAsString("IsMobile")).c_str() << "\n";
+						delete results2;
+
+						cout << "\nMobile User-Agent: " <<
+							mobileUserAgent << "\n";
+						cout << "query.51D_deviceId: " <<
+							deviceID.c_str() << "\n";
+						evidence2->operator[]("query.51D_deviceId")
+							= deviceID.c_str();
+						results2 = engine->process(evidence2);
+						cout << "   PlatformName: " <<
+							(*results2->getValueAsString("PlatformName")).c_str()
+							<< "\n";
+						cout << "   PlatformVersion: " <<
+							(*results2->getValueAsString("PlatformVersion")).c_str()
+							<< "\n";
+						cout << "   IsMobile: " <<
+							(*results2->getValueAsString("IsMobile")).c_str() << "\n";
+						delete results2;
+						delete evidence2;
+					};
 					delete results;
 
 					// Free the evidence.
