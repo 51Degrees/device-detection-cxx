@@ -236,6 +236,20 @@ namespace FiftyoneDegrees {
 						delete results;
 					};
 					{
+						// Carries out a match for a platform with invalid device ID.
+						cout << "\n(+)\n";
+						const char* const deviceId_dummy = "123234-2244-1242-2412";
+						cout << "DeviceID: " << deviceId_dummy << " -- Dummy\n";
+
+						evidence->operator[]("query.51D_deviceId")
+							= deviceId_dummy;
+
+						ResultsHash* results = engine->process(evidence);
+						printResults(results);
+						cout << "  [control platform ID: " << deviceId_hintedHub << " -- MediaHub (hinted, no-deviceId)]\n";
+						delete results;
+					};
+					{
 						// Carries out a match for a mobile User-Agent with hinted MediaHub DeviceID.
 
 						EvidenceDeviceDetection* const evidence2 =

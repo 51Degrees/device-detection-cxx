@@ -2345,6 +2345,19 @@ void fiftyoneDegreesResultsHashFromEvidence(
 				return;
 			}
 
+			if (stateFragment.deviceIdsFound && !fiftyoneDegreesResultsHashGetHasValues(results, 0, exception)) {
+				stateFragment.deviceIdsFound = 0;
+				results->count = 0;
+			}
+
+			if (EXCEPTION_FAILED) {
+				PseudoHeadersRemoveEvidence(
+					evidence->pseudoEvidence,
+					dataSet->config.b.maxMatchedUserAgentLength);
+				evidence->pseudoEvidence = NULL;
+				return;
+			}
+
 			state.state = results;
 		};
 
