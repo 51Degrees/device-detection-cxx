@@ -705,12 +705,20 @@ public:
 		};
 		{
 			// Carries out a match for a platform with invalid device ID.
-			const char* const deviceId_dummy = "190706-2244-1242-2412";
-			evidence["query.51D_deviceId"] = deviceId_dummy;
+			const char* const deviceId_dummies[] = {
+				"190706-2244-1242-2412",
+				"190706~2244~1242~2412",
+				"aksjfb~ks98-7sd9#83ru",
+				"z",
+				"42",
+			};
+			for (int i = 0, n = sizeof(deviceId_dummies) / sizeof(deviceId_dummies[0]); i < n; ++i) {
+				evidence["query.51D_deviceId"] = deviceId_dummies[i];
 
-			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
-			EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
-			delete results;
+				ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+				EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
+				delete results;
+			}
 		};
 		{
 			// Carries out a match for a mobile User-Agent with hinted MediaHub DeviceID.
