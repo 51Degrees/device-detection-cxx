@@ -150,7 +150,7 @@ All the examples are available to run in the `VisualStudio/DeviceDetection.sln` 
 
 |Example|Description|Language|
 |-------|-----------|--------|
-|Getting Started|This example shows how to get set up with a Device Detection Cloud aspect engine and begin using it to process User-Agents.|C / C++|
+|Getting Started|This example shows how to get set up with a Device Detection Cloud aspect engine and begin using it to process User-Agents and Client Hints.<br>Also showcase `query.51D_deviceId` high-priority evidence feature (streamlines profile selection). |C / C++|
 |Match Metrics|This example shows how to view metrics associated with the results of processing with a Device Detection aspect engine using the Hash algorithm.|C / C++|
 |Meta Data|This example shows how to interrogate the meta data associated with the contents of a Device Detection Hash data file.|C++|
 |MemHash|This example measures the memory usage of the Hash algorithm.|C|
