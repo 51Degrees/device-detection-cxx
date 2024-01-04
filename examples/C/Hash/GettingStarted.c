@@ -45,7 +45,7 @@ This example is available in full on [GitHub](https://github.com/51Degrees/devic
 #include "../../../src/hash/hash.h"
 #include "../../../src/hash/fiftyone.h"
 
-#define MAX_EVIDENCE 5
+#define MAX_EVIDENCE 6
 
 static const char *dataDir = "device-detection-data";
 
@@ -91,7 +91,7 @@ static evidence desktopDevice = {
 // Evidence values from a windows 11 device using a browser
 // that supports User-Agent Client Hints.
 static evidence userAgentClientHints = { 
-	MAX_EVIDENCE,
+	5,
 	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
 	  "AppleWebKit/537.36 (KHTML, like Gecko) "
 	  "Chrome/98.0.4758.102 Safari/537.36"},
@@ -102,12 +102,27 @@ static evidence userAgentClientHints = {
 	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"14.0.0\""} }
 };
 
+static char modileDeviceIDBuffer[50] = ""; // Evaluated at run time
+static evidence userAgentWithMobileID = {
+	6,
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+	  "AppleWebKit/537.36 (KHTML, like Gecko) "
+	  "Chrome/98.0.4758.102 Safari/537.36"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-mobile", "?0"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", ("\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
+	  "\"Google Chrome\";v=\"98\"")},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", "Windows"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"14.0.0\""},
+	{FIFTYONE_DEGREES_EVIDENCE_QUERY, "51D_deviceId", modileDeviceIDBuffer} }
+};
+
 // This collection contains the various input values that will
 // be passed to the device detection algorithm.
-static evidence* evidenceValues[3] = {
+static evidence* evidenceValues[] = {
 	&mobileDevice,
 	&desktopDevice,
-	&userAgentClientHints
+	&userAgentClientHints,
+	&userAgentWithMobileID,
 };
 
 static void outputValue(
@@ -185,6 +200,16 @@ static void analyse(
 	outputValue(results, "Platform Version", "PlatformVersion", output);
 	outputValue(results, "Browser Name", "BrowserName", output);
 	outputValue(results, "Browser Version", "BrowserVersion", output);
+
+	char deviceIdBuffer[50] = "";
+	HashGetDeviceIdFromResults(
+		results,
+		deviceIdBuffer,
+		sizeof(deviceIdBuffer),
+		exception);
+	EXCEPTION_THROW;
+	fprintf(output, "\n\tDevice ID: %s\n", deviceIdBuffer);
+
 	fprintf(output, "\n\n");
 }
 
@@ -230,6 +255,17 @@ void fiftyoneDegreesHashGettingStarted(
 				evs->items[j].value);
 		}
 		analyse(results, evidenceArray, output);
+
+		if (i == 0) {
+			// save mobile device ID to be used in later evidence
+			HashGetDeviceIdFromResults(
+				results,
+				modileDeviceIDBuffer,
+				sizeof(modileDeviceIDBuffer),
+				exception);
+			EXCEPTION_THROW;
+		}
+
 		// Ensure the evidence collection is freed after used
 		EvidenceFree(evidenceArray);
 	}
