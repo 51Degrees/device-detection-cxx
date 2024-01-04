@@ -724,6 +724,17 @@ public:
 			}
 		};
 		{
+			// Carries out a match for a platform with device ID and profile overrides.
+			const char* expectedDeviceId = "12280-17779-17470-18092";
+			const char* evidenceValue = "12280|17779|17470|18092";
+			evidence["query.ProfileIds"] = evidenceValue;
+			evidence["query.51D_deviceId"] = deviceId_mediaHub;
+
+			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+			EXPECT_STREQ(expectedDeviceId, results->getDeviceId().c_str());
+			delete results;
+		};
+		{
 			// Carries out a match for a mobile User-Agent with MediaHub DeviceID.
 			EvidenceDeviceDetection evidence2;
 
