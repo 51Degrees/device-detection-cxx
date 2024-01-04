@@ -677,6 +677,7 @@ public:
 	void verifyProcessDeviceIdQuery() {
 		EvidenceDeviceDetection evidence;
 
+		// Collect control device IDs
 		std::string deviceId_mobile;
 		{
 			// Carries out a match for a mobile User-Agent.
@@ -695,6 +696,8 @@ public:
 			deviceId_mediaHub = results->getDeviceId();
 			delete results;
 		};
+
+		// Inject IDs and check expectations
 		{
 			// Carries out a match for a platform based on device ID.
 			evidence["query.51D_deviceId"] = deviceId_mobile.c_str();
@@ -721,8 +724,7 @@ public:
 			}
 		};
 		{
-			// Carries out a match for a mobile User-Agent with hinted MediaHub DeviceID.
-
+			// Carries out a match for a mobile User-Agent with MediaHub DeviceID.
 			EvidenceDeviceDetection evidence2;
 
 			evidence2["header.user-agent"] = mobileUserAgent;
