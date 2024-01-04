@@ -107,8 +107,7 @@
  */
 #ifndef FIFTYONE_DEGREES_STRING_CACHE_SIZE
 #define FIFTYONE_DEGREES_STRING_CACHE_SIZE 10000
-#endif
-/**
+#endif/**
  * Default value for the string cache loaded size used in the default
  * collection configuration.
  */
@@ -560,6 +559,12 @@ fiftyoneDegreesHashInitManagerFromMemory(
  * dynamically override values returned from device detection. 'query' prefixes 
  * are also used in preference to 'header' for HTTP header values that are 
  * provided by the application rather than the calling device.
+ * 'query.51D_deviceId' special evidence key has the highest priority and
+ * allows to retrieve the designated device by its 'deviceId'.
+ * 'deviceId' value is obtained as a property in the device detection results
+ * and may be stored and used later to retrieve the same device.
+ * In case provided 'query.51D_deviceId' value is invalid or does not match any
+ * device the other provided evidence will be considered.
  * @param results preallocated results structure to populate containing a
  *                pointer to an initialised resource manager
  * @param evidence to process containing parsed or unparsed values
