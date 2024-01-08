@@ -24,6 +24,7 @@
 #include "../EngineDeviceDetectionTests.hpp"
 #include "../../src/hash/EngineHash.hpp"
 #include <memory>
+#include <functional>
 
 using namespace FiftyoneDegrees::Common;
 using namespace FiftyoneDegrees::DeviceDetection;
@@ -926,23 +927,16 @@ inline static void verifyProcessDeviceIdQuery(EngineHash* const hashEngine) {
 
 	// Collect control device IDs
 
-	std::string deviceId_mobile;
-	{
+	std::function<std::string(const char*)> const deviceIdFromUserAgent = [hashEngine](const char* ua) {
 		EvidenceDeviceDetection evidence;
-		evidence["header.user-agent"] = mobileUserAgent;
+		evidence["header.user-agent"] = ua;
 
 		std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
-		deviceId_mobile = results->getDeviceId();
+		return results->getDeviceId();
 	};
 
-	std::string deviceId_mediaHub;
-	{
-		EvidenceDeviceDetection evidence;
-		evidence["header.user-agent"] = mediaHubUserAgent;
-
-		std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
-		deviceId_mediaHub = results->getDeviceId();
-	};
+	auto const deviceId_mobile = deviceIdFromUserAgent(mobileUserAgent);
+	auto const deviceId_mediaHub = deviceIdFromUserAgent(mediaHubUserAgent);
 
 	std::vector<std::string> const knownIDs = {
 		deviceId_mobile,
