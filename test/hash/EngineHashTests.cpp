@@ -205,7 +205,7 @@ public:
 		verifyProfileOverrideNoUserAgent();
 		verifyWithLongPseudoHeader();
 		verifyProcessDeviceId();
-		verifyProcessDeviceIdQuery();
+		verifyProcessDeviceIdQuery((EngineHash*)getEngine());
 		verifyProfileOverridePartial();
 		verifyProfileOverrideZero();
 		verifyNoMatchedNodes();
@@ -675,8 +675,7 @@ public:
 		delete results;
 	}
 
-	void verifyProcessDeviceIdQuery() {
-		auto const hashEngine = (EngineHash*)getEngine();
+	inline static void verifyProcessDeviceIdQuery(EngineHash* const hashEngine) {
 
 		// Collect control device IDs
 
