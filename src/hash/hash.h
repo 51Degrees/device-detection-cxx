@@ -107,7 +107,8 @@
  */
 #ifndef FIFTYONE_DEGREES_STRING_CACHE_SIZE
 #define FIFTYONE_DEGREES_STRING_CACHE_SIZE 10000
-#endif/**
+#endif
+/**
  * Default value for the string cache loaded size used in the default
  * collection configuration.
  */
