@@ -2223,156 +2223,172 @@ static void overrideProfileId(
 	}
 }
 
-void fiftyoneDegreesResultsHashFromEvidence(
-	fiftyoneDegreesResultsHash *results,
-	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
-	fiftyoneDegreesException *exception) {
-	int overrideIndex, overridingPropertyIndex, overridesCount, propertyIndex;
-	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
-	stateWithException state;
-	deviceIdLookupState stateFragment;
-	state.state = results;
-	state.exception = exception;
+inline static void resultsHashFromEvidence_constructEvidenceWithPseudoHeaders(
+	DataSetHash* const dataSet,
+	EvidenceKeyValuePairArray* const evidence,
+	ResultsHash* const results,
+	Exception* const exception)
+{
+	if (dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+		evidence->pseudoEvidence = results->pseudoEvidence;
 
-	if (evidence != (EvidenceKeyValuePairArray*)NULL) {
-		// Reset the results data before iterating the evidence.
-		results->count = 0;
-
-		// Construct the evidence for pseudo header
-		if (dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
-			evidence->pseudoEvidence = results->pseudoEvidence;
-
-			PseudoHeadersAddEvidence(
-				evidence,
-				dataSet->b.b.uniqueHeaders,
-				((ConfigHash*)dataSet->b.b.config)->b.maxMatchedUserAgentLength,
-				prefixOrderOfPrecedence,
-				FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE,
-				exception);
-			if (EXCEPTION_FAILED) {
-				evidence->pseudoEvidence = NULL;
-				return;
-			}
-		}
-
-		// Extract any property value overrides from the evidence.
-		OverridesExtractFromEvidence(
-			dataSet->b.b.overridable,
-			results->b.overrides,
-			evidence);
-
-		// If a value has been overridden, override the property which
-		// calculates its override with an empty string to ensure that an
-		// infinite loop of overrides can't occur.
-		overridesCount = results->b.overrides->count;
-		overrideIndex = 0;
-		while (overrideIndex < overridesCount && EXCEPTION_OKAY) {
-			overridingPropertyIndex =
-				OverridesGetOverridingRequiredPropertyIndex(
-					dataSet->b.b.available,
-					results->b.overrides->items[overrideIndex++]
-						.requiredPropertyIndex);
-			if (overridingPropertyIndex >= 0) {
-
-				// Get the property index so that the type of the property that 
-				// performs the override can be checked before it is removed
-				// from  the result.
-				propertyIndex = PropertiesGetPropertyIndexFromRequiredIndex(
-					dataSet->b.b.available,
-					overridingPropertyIndex);
-				if (PropertyGetValueType(
-					dataSet->properties,
-					propertyIndex,
-					exception) ==
-					FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_JAVASCRIPT &&
-					EXCEPTION_OKAY) {
-					OverridesAdd(
-						results->b.overrides,
-						overridingPropertyIndex,
-						"");
-				}
-			}
-		}
+		PseudoHeadersAddEvidence(
+			evidence,
+			dataSet->b.b.uniqueHeaders,
+			((ConfigHash*)dataSet->b.b.config)->b.maxMatchedUserAgentLength,
+			prefixOrderOfPrecedence,
+			FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE,
+			exception);
 		if (EXCEPTION_FAILED) {
-			PseudoHeadersRemoveEvidence(
-				evidence->pseudoEvidence,
-				dataSet->config.b.maxMatchedUserAgentLength);
 			evidence->pseudoEvidence = NULL;
 			return;
 		}
+	}
+}
 
-		
-		{
-			stateFragment.results = results;
+inline static void resultsHashFromEvidence_extractOverrides(
+	DataSetHash* const dataSet,
+	EvidenceKeyValuePairArray* const evidence,
+	ResultsHash* const results,
+	Exception* const exception)
+{
+	// Extract any property value overrides from the evidence.
+	OverridesExtractFromEvidence(
+		dataSet->b.b.overridable,
+		results->b.overrides,
+		evidence);
+
+	// If a value has been overridden, override the property which
+	// calculates its override with an empty string to ensure that an
+	// infinite loop of overrides can't occur.
+	const int overridesCount = results->b.overrides->count;
+	for (int overrideIndex = 0;
+		overrideIndex < overridesCount && EXCEPTION_OKAY;
+		++overrideIndex)
+	{
+		const int overridingPropertyIndex =
+			OverridesGetOverridingRequiredPropertyIndex(
+				dataSet->b.b.available,
+				results->b.overrides->items[overrideIndex]
+				.requiredPropertyIndex);
+
+		if (overridingPropertyIndex >= 0) {
+			// Get the property index so that the type of the property that 
+			// performs the override can be checked before it is removed
+			// from  the result.
+			const int propertyIndex = PropertiesGetPropertyIndexFromRequiredIndex(
+				dataSet->b.b.available,
+				overridingPropertyIndex);
+			if (PropertyGetValueType(
+				dataSet->properties,
+				propertyIndex,
+				exception) ==
+				FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_JAVASCRIPT &&
+				EXCEPTION_OKAY) {
+				OverridesAdd(
+					results->b.overrides,
+					overridingPropertyIndex,
+					"");
+			}
+		}
+	}
+}
+
+inline static int resultsHashFromEvidence_findAndApplyDeviceIDs(
+	EvidenceKeyValuePairArray* const evidence,
+	ResultsHash* const results,
+	Exception* const exception)
+{
+	deviceIdLookupState stateFragment = { results, 0 };
+	stateWithException state = { &stateFragment, exception };
+
+	do {
+		EvidenceIterate(
+			evidence,
+			FIFTYONE_DEGREES_EVIDENCE_QUERY,
+			&state,
+			setResultFromDeviceID);
+		if (EXCEPTION_FAILED) { break; }
+
+		if (stateFragment.deviceIdsFound && !fiftyoneDegreesResultsHashGetHasValues(results, 0, exception)) {
 			stateFragment.deviceIdsFound = 0;
-			state.state = &stateFragment;
+			results->count = 0;
+		}
+		if (EXCEPTION_FAILED) { break; }
+	} while (false); // once
 
-			EvidenceIterate(
-				evidence,
-				FIFTYONE_DEGREES_EVIDENCE_QUERY,
-				&state,
-				setResultFromDeviceID);
+	return stateFragment.deviceIdsFound;
+}
 
-			if (EXCEPTION_FAILED) {
-				PseudoHeadersRemoveEvidence(
-					evidence->pseudoEvidence,
-					dataSet->config.b.maxMatchedUserAgentLength);
-				evidence->pseudoEvidence = NULL;
-				return;
-			}
+inline static void resultsHashFromEvidence_handleAllEvidence(
+	EvidenceKeyValuePairArray* const evidence,
+	stateWithException* const state,
+	ResultsHash* const results,
+	Exception* const exception)
+{
+	// Values provided are processed based on the Evidence prefix order
+	// of precedence. In the case of Hash, query prefixed evidence should
+	// be used in preference to the header prefix. This supports
+	// situations where a User-Agent that is provided by the calling
+	// application can be used in preference to the one associated with the
+	// calling device.
+	for (int i = 0;
+		i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE &&
+		results->count == 0;
+		i++) {
+		EvidenceIterate(
+			evidence,
+			prefixOrderOfPrecedence[i],
+			state,
+			setResultFromEvidence);
+		if (EXCEPTION_FAILED) { return; }
+	}
+}
 
-			if (stateFragment.deviceIdsFound && !fiftyoneDegreesResultsHashGetHasValues(results, 0, exception)) {
-				stateFragment.deviceIdsFound = 0;
-				results->count = 0;
-			}
+void fiftyoneDegreesResultsHashFromEvidence(
+	fiftyoneDegreesResultsHash *results,
+	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
+	fiftyoneDegreesException *exception) 
+{
+	if (evidence == (EvidenceKeyValuePairArray*)NULL) {
+		return;
+	}
 
-			if (EXCEPTION_FAILED) {
-				PseudoHeadersRemoveEvidence(
-					evidence->pseudoEvidence,
-					dataSet->config.b.maxMatchedUserAgentLength);
-				evidence->pseudoEvidence = NULL;
-				return;
-			}
+	DataSetHash * const dataSet = (DataSetHash*)results->b.b.dataSet;
 
-			state.state = results;
-		};
+	// Reset the results data before iterating the evidence.
+	results->count = 0;
 
-		if (!stateFragment.deviceIdsFound) {
-			// Values provided are processed based on the Evidence prefix order
-			// of precedence. In the case of Hash, query prefixed evidence should
-			// be used in preference to the header prefix. This supports
-			// situations where a User-Agent that is provided by the calling
-			// application can be used in preference to the one associated with the
-			// calling device.
-			for (int i = 0;
-				i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE &&
-				results->count == 0;
-				i++) {
-				EvidenceIterate(
-					evidence,
-					prefixOrderOfPrecedence[i],
-					&state,
-					setResultFromEvidence);
-				if (EXCEPTION_FAILED) {
-					PseudoHeadersRemoveEvidence(
-						evidence->pseudoEvidence,
-						dataSet->config.b.maxMatchedUserAgentLength);
-					evidence->pseudoEvidence = NULL;
-					return;
-				}
-			}
+	do {
+		// Construct the evidence for pseudo header
+		resultsHashFromEvidence_constructEvidenceWithPseudoHeaders(dataSet, evidence, results, exception);
+		if (EXCEPTION_FAILED) { break; };
+
+		resultsHashFromEvidence_extractOverrides(dataSet, evidence, results, exception);
+		if (EXCEPTION_FAILED) { break; };
+
+		const int deviceIdsFound = resultsHashFromEvidence_findAndApplyDeviceIDs(evidence, results, exception);
+		if (EXCEPTION_FAILED) { break; };
+
+		stateWithException state = { results, exception };
+
+		if (!deviceIdsFound) {
+			resultsHashFromEvidence_handleAllEvidence(evidence, &state, results, exception);
+			if (EXCEPTION_FAILED) { break; };
 		}
 
 		// Check for and process any profile Id overrides.
 		OverrideProfileIds(evidence, &state, overrideProfileId);
+		if (EXCEPTION_FAILED) { break; };
 
-		if (dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
-			// Reset pseudo evidence
-			PseudoHeadersRemoveEvidence(
-				evidence,
-				dataSet->config.b.maxMatchedUserAgentLength);
-			evidence->pseudoEvidence = NULL;
-		}
+	} while (false); // once
+
+	if (EXCEPTION_FAILED || dataSet->b.b.uniqueHeaders->pseudoHeadersCount > 0) {
+		// Reset pseudo evidence
+		PseudoHeadersRemoveEvidence(
+			evidence,
+			dataSet->config.b.maxMatchedUserAgentLength);
+		evidence->pseudoEvidence = NULL;
 	}
 }
 
