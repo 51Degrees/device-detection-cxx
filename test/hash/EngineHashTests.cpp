@@ -760,7 +760,7 @@ public:
 				"z",
 				"42",
 			};
-			for (int i = 0; i < deviceId_dummies.size(); ++i) {
+			for (size_t i = 0; i < deviceId_dummies.size(); ++i) {
 				{
 					// no match
 					EvidenceDeviceDetection evidence;
