@@ -23,6 +23,7 @@
 #include "../Constants.hpp"
 #include "../EngineDeviceDetectionTests.hpp"
 #include "../../src/hash/EngineHash.hpp"
+#include <memory>
 
 using namespace FiftyoneDegrees::Common;
 using namespace FiftyoneDegrees::DeviceDetection;
@@ -675,76 +676,80 @@ public:
 	}
 
 	void verifyProcessDeviceIdQuery() {
-		EvidenceDeviceDetection evidence;
+		auto const hashEngine = (EngineHash*)getEngine();
 
 		// Collect control device IDs
+
 		std::string deviceId_mobile;
 		{
 			// Carries out a match for a mobile User-Agent.
+			EvidenceDeviceDetection evidence;
 			evidence["header.user-agent"] = mobileUserAgent;
 
-			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+			std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
 			deviceId_mobile = results->getDeviceId();
-			delete results;
 		};
 		std::string deviceId_mediaHub;
 		{
 			// Carries out a match for a MediaHub User-Agent.
+			EvidenceDeviceDetection evidence;
 			evidence["header.user-agent"] = mediaHubUserAgent;
 
-			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+			std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
 			deviceId_mediaHub = results->getDeviceId();
-			delete results;
 		};
 
 		// Inject IDs and check expectations
+
 		{
 			// Carries out a match for a platform based on device ID.
+			EvidenceDeviceDetection evidence;
+			evidence["header.user-agent"] = mediaHubUserAgent;
 			evidence["query.51D_deviceId"] = deviceId_mobile.c_str();
 
-			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+			std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
 			EXPECT_STREQ(deviceId_mobile.c_str(), results->getDeviceId().c_str());
-			delete results;
 		};
 		{
 			// Carries out a match for a platform with invalid device ID.
-			const char* const deviceId_dummies[] = {
+			std::vector<std::string> const deviceId_dummies = {
 				"190706-2244-1242-2412",
 				"190706~2244~1242~2412",
 				"aksjfb~ks98-7sd9#83ru",
 				"z",
 				"42",
 			};
-			for (int i = 0, n = sizeof(deviceId_dummies) / sizeof(deviceId_dummies[0]); i < n; ++i) {
+			for (int i = 0; i < deviceId_dummies.size(); ++i) {
+				EvidenceDeviceDetection evidence;
+				evidence["header.user-agent"] = mediaHubUserAgent;
 				evidence["query.51D_deviceId"] = deviceId_dummies[i];
 
-				ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+				std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
 				EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
-				delete results;
 			}
 		};
 		{
 			// Carries out a match for a platform with device ID and profile overrides.
-			const char* expectedDeviceId = "12280-17779-17470-18092";
-			const char* evidenceValue = "12280|17779|17470|18092";
+			const char* const expectedDeviceId = "12280-17779-17470-18092";
+			const char* const evidenceValue = "12280|17779|17470|18092";
+
+			EvidenceDeviceDetection evidence;
 			evidence["query.ProfileIds"] = evidenceValue;
 			evidence["query.51D_deviceId"] = deviceId_mediaHub;
 
-			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence);
+			std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
 			EXPECT_STREQ(expectedDeviceId, results->getDeviceId().c_str());
-			delete results;
 		};
 		{
 			// Carries out a match for a mobile User-Agent with MediaHub DeviceID.
-			EvidenceDeviceDetection evidence2;
+			EvidenceDeviceDetection evidence;
 
-			evidence2["header.user-agent"] = mobileUserAgent;
-			// case-insensitive
-			evidence2["query.51d_dEVIcEiD"] = deviceId_mediaHub.c_str();
+			evidence["header.user-agent"] = mobileUserAgent;
+			// case-insensitive key
+			evidence["query.51d_dEVIcEiD"] = deviceId_mediaHub.c_str();
 
-			ResultsHash* const results = ((EngineHash*)getEngine())->process(&evidence2);
+			std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
 			EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
-			delete results;
 		};
 	}
 
