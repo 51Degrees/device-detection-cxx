@@ -35,6 +35,7 @@ void EngineDeviceDetection::init(
 	fiftyoneDegreesDataSetDeviceDetection *dataSet) {
 	initHttpHeaderKeys(dataSet->b.uniqueHeaders);
 	initOverrideKeys(dataSet->b.overridable);
+	addKey("query.51D_deviceId");
 }
 
 ResultsDeviceDetection*

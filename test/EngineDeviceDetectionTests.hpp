@@ -127,6 +127,7 @@ public:
 	void verifyWithEmptyEvidence();
 	void verifyUserAgentInQuery();
 	void verifyValueOverride();
+	void verifyHasDeviceIDQueryKey();
 	static void multiThreadRandomRunThread(void* state);
 	void multiThreadRandom(uint16_t concurrency);
 	void reloadMemory();

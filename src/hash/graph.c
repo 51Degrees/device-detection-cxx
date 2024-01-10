@@ -224,7 +224,7 @@ fiftyoneDegreesGraphTraceNode* fiftyoneDegreesGraphTraceCreate(
 		length = vsnprintf(NULL, 0, fmt, args);
 		va_end(args);
 		root->rootName = (char*)Malloc((length + 1) * sizeof(char));
-		vsprintf(root->rootName, fmt, args2);
+		vsnprintf(root->rootName, length + 1, fmt, args2);
 		va_end(args2);
 	}
 	else {

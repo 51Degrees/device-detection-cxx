@@ -30,6 +30,7 @@
 #define _stricmp strcasecmp
 #endif
 #endif
+#include "../src/common-cxx/fiftyone.h"
 
 using std::ofstream;
 using std::endl;
@@ -306,6 +307,18 @@ void EngineDeviceDetectionTests::verifyWithEmptyUserAgent() {
 	delete results;
 }
 
+void EngineDeviceDetectionTests::verifyHasDeviceIDQueryKey() {
+	string userAgentKey = "query.51D_deviceId";
+	EngineDeviceDetection* engine = (EngineDeviceDetection*)getEngine();
+	const vector<string>* keys = engine->getKeys();
+	for (auto it = keys->begin(), end = keys->end(); it != end; ++it) {
+		if (!StringCompare("query.51D_deviceId", it->c_str())) {
+			return;
+		}
+	}
+	FAIL();
+}
+
 void EngineDeviceDetectionTests::verify() {
 	EngineTests::verify();
 	verifyWithEvidence();
@@ -322,6 +335,7 @@ void EngineDeviceDetectionTests::verify() {
 	verifyWithEvidenceOverrideProfileIDQuery();
 	verifyUserAgentInQuery();
 	verifyValueOverride();
+	verifyHasDeviceIDQueryKey();
 }
 
 void EngineDeviceDetectionTests::userAgentPresent(const char *userAgent) {
