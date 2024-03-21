@@ -174,6 +174,10 @@ typedef struct deviceId_lookup_state_t {
 	int deviceIdsFound; /* The number of deviceIds found */
 } deviceIdLookupState;
 
+typedef struct js_redundancy_flags_state_t {
+	bool uachPaltformVersionFound; /* Whether 'Sec-Ch-Ua-Platform-Version' header is present in evidence */
+} jsRedundancyFlagsState;
+
 /**
  * PRESET HASH CONFIGURATIONS
  */
@@ -2345,6 +2349,75 @@ inline static void resultsHashFromEvidence_handleAllEvidence(
 	}
 }
 
+static bool findRedundancyProofsInEvidence(
+	void* state,
+	EvidenceKeyValuePair* pair) 
+{
+	jsRedundancyFlagsState* const stateFragment = (jsRedundancyFlagsState*)state;
+	if (!StringCompare(pair->field, "Sec-Ch-Ua-Platform-Version")) {
+		stateFragment->uachPaltformVersionFound = true;
+		return false; // no need to continue
+	}
+	return true;
+}
+
+inline static void resultsHashFromEvidence_removeRedundantJsSnippets(
+	EvidenceKeyValuePairArray* const evidence,
+	ResultsHash* const results,
+	fiftyoneDegreesException* exception)
+{
+	jsRedundancyFlagsState stateFragment = { false };
+	for (int i = 0; i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE; i++) {
+		EvidenceIterate(
+			evidence,
+			prefixOrderOfPrecedence[i],
+			&stateFragment,
+			findRedundancyProofsInEvidence);
+	}
+
+	if (!stateFragment.uachPaltformVersionFound) {
+		// uach not found -- keep the snippet
+		return;
+	}
+
+	DataSetHash* const dataSet = (DataSetHash*)results->b.b.dataSet;
+
+	const int requiredPropertyIndex = PropertiesGetRequiredPropertyIndexFromName(
+		dataSet->b.b.available,
+		"javascriptgethighentropyvalues");
+
+	if (requiredPropertyIndex < 0) {
+		return;
+	}
+
+	// Work out the property index from the required property index.
+	const uint32_t propertyIndex = PropertiesGetPropertyIndexFromRequiredIndex(
+		dataSet->b.b.available,
+		requiredPropertyIndex);
+
+	// Set the property that will be available in the results structure. 
+	// This may also be needed to work out which of a selection of results 
+	// are used to obtain the values.
+	Property* const property = PropertyGet(
+		dataSet->properties,
+		propertyIndex,
+		&results->propertyItem,
+		exception);
+
+	if (!property || EXCEPTION_FAILED) {
+		return;
+	}
+
+	const byte componentIndex = property->componentIndex;
+
+	for (uint32_t i = 0; i < results->count; ++i) {
+		ResultHash* const nextResultHash = &((ResultHash*)results->items)[i];
+		if (nextResultHash->profileOffsets) {
+			nextResultHash->profileOffsets[componentIndex] = NULL_PROFILE_OFFSET;
+		}
+	}
+}
+
 void fiftyoneDegreesResultsHashFromEvidence(
 	fiftyoneDegreesResultsHash *results,
 	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
@@ -2376,6 +2449,9 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			resultsHashFromEvidence_handleAllEvidence(evidence, &state, results, exception);
 			if (EXCEPTION_FAILED) { break; };
 		}
+
+		resultsHashFromEvidence_removeRedundantJsSnippets(evidence, results, exception);
+		if (EXCEPTION_FAILED) { break; };
 
 		// Check for and process any profile Id overrides.
 		OverrideProfileIds(evidence, &state, overrideProfileId);
