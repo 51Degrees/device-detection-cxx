@@ -2361,10 +2361,9 @@ static bool findRedundancyProofsInEvidence(
 	return true;
 }
 
-inline static void resultsHashFromEvidence_removeRedundantJsSnippets(
+inline static void resultsHashFromEvidence_overrideRedundantJsSnippets(
 	EvidenceKeyValuePairArray* const evidence,
-	ResultsHash* const results,
-	fiftyoneDegreesException* exception)
+	ResultsHash* const results)
 {
 	jsRedundancyFlagsState stateFragment = { false };
 	for (int i = 0; i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE; i++) {
@@ -2390,32 +2389,10 @@ inline static void resultsHashFromEvidence_removeRedundantJsSnippets(
 		return;
 	}
 
-	// Work out the property index from the required property index.
-	const uint32_t propertyIndex = PropertiesGetPropertyIndexFromRequiredIndex(
-		dataSet->b.b.available,
-		requiredPropertyIndex);
-
-	// Set the property that will be available in the results structure. 
-	// This may also be needed to work out which of a selection of results 
-	// are used to obtain the values.
-	Property* const property = PropertyGet(
-		dataSet->properties,
-		propertyIndex,
-		&results->propertyItem,
-		exception);
-
-	if (!property || EXCEPTION_FAILED) {
-		return;
-	}
-
-	const byte componentIndex = property->componentIndex;
-
-	for (uint32_t i = 0; i < results->count; ++i) {
-		ResultHash* const nextResultHash = &((ResultHash*)results->items)[i];
-		if (nextResultHash->profileOffsets) {
-			nextResultHash->profileOffsets[componentIndex] = NULL_PROFILE_OFFSET;
-		}
-	}
+	fiftyoneDegreesOverridesAdd(
+		results->b.overrides,
+		requiredPropertyIndex,
+		"");
 }
 
 void fiftyoneDegreesResultsHashFromEvidence(
@@ -2437,6 +2414,9 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		resultsHashFromEvidence_constructEvidenceWithPseudoHeaders(dataSet, evidence, results, exception);
 		if (EXCEPTION_FAILED) { break; };
 
+		resultsHashFromEvidence_overrideRedundantJsSnippets(evidence, results);
+		if (EXCEPTION_FAILED) { break; };
+
 		resultsHashFromEvidence_extractOverrides(dataSet, evidence, results, exception);
 		if (EXCEPTION_FAILED) { break; };
 
@@ -2449,9 +2429,6 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			resultsHashFromEvidence_handleAllEvidence(evidence, &state, results, exception);
 			if (EXCEPTION_FAILED) { break; };
 		}
-
-		resultsHashFromEvidence_removeRedundantJsSnippets(evidence, results, exception);
-		if (EXCEPTION_FAILED) { break; };
 
 		// Check for and process any profile Id overrides.
 		OverrideProfileIds(evidence, &state, overrideProfileId);
