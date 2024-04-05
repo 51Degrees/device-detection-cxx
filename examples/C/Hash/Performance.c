@@ -385,6 +385,11 @@ void executeBenchmark(
 	performanceConfig config) {
 	// Make a local copy of the config as we're going to alter it a bit.
 	ConfigHash dataSetConfig = *config.config;
+
+	// Ensure that for performance tests the updating of the matched user-agent
+	// is disabled to reduce processing overhead.
+	dataSetConfig.b.updateMatchedUserAgent = false;
+
 	fprintf(state->output, 
 		"Benchmarking with profile: %s AllProperties: %s, "
 		"performanceGraph: %s, predictiveGraph %s\n",
