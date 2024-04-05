@@ -103,7 +103,7 @@ Calling `CMake` in an MSVC environment (as described in the [Using CMake](#Using
 
 ## Build Options
 
-For build options, see [Common API](https://github.com/51Degrees/common-cxx/blob/master/readme.md)
+For build options, see [Common API](https://github.com/51Degrees/common-cxx/blob/main/README.md#build-options).
 
 # Tests
 
