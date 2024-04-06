@@ -202,12 +202,14 @@ static void process(KeyValuePair *pairs, uint16_t size, void *state) {
 	for (uint32_t i = 0; i < size; i++) {
 		// Get prefix
 		EvidencePrefixMap *prefixMap = EvidenceMapPrefix(pairs[i].key);
-		// Add the evidence as string
-		EvidenceAddString(
-			evidenceArray,
-			prefixMap->prefixEnum,
-			pairs[i].key + prefixMap->prefixLength,
-			pairs[i].value);
+		if (prefixMap) {
+			// Add the evidence as string
+			EvidenceAddString(
+				evidenceArray,
+				prefixMap->prefixEnum,
+				pairs[i].key + prefixMap->prefixLength,
+				pairs[i].value);
+		}
 	}
 	analyse(
 		offline->results,
