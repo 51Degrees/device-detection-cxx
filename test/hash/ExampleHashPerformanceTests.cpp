@@ -31,7 +31,7 @@ public:
 
 		fiftyoneDegreesHashPerformance(
 			dataFilePath.c_str(),
-			userAgentFilePath.c_str(),
+			evidenceFilePath.c_str(),
 			4,
 			10000,
 			stdout,
