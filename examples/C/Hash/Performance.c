@@ -241,12 +241,14 @@ void runPerformanceThread(void* state) {
 			EvidencePrefixMap* prefixMap = EvidenceMapPrefix(
 				(&thisState->mainState->evidence[i]->pairs)[j].key);
 
-			// Add the evidence as string
-			EvidenceAddString(
-				evidence,
-				prefixMap->prefixEnum,
-				(&thisState->mainState->evidence[i]->pairs)[j].key + prefixMap->prefixLength,
-				(&thisState->mainState->evidence[i]->pairs)[j].value);
+			// Add the evidence as string if valid.
+			if (prefixMap != NULL) {
+				EvidenceAddString(
+					evidence,
+					prefixMap->prefixEnum,
+					(&thisState->mainState->evidence[i]->pairs)[j].key + prefixMap->prefixLength,
+					(&thisState->mainState->evidence[i]->pairs)[j].value);
+			}
 		}
 		ResultsHashFromEvidence(results, evidence, exception);
 		EXCEPTION_THROW;
@@ -515,10 +517,13 @@ void fiftyoneDegreesHashPerformance(
 		Malloc(sizeof(EvidencePrefixMap*) * state.evidenceCount);
 	if (state.evidenceCount < state.iterationsPerThread) {
 		fprintf(state.output, 
-			"Not enough evidence for the requested number of iterations. "
-			"Running %d iterations per thread\n", state.evidenceCount);
+			"Not enough evidence for %d iterations.\n",
+			state.iterationsPerThread);
 		state.iterationsPerThread = state.evidenceCount;
 	}
+	fprintf(
+		state.output,
+		"Reading %d evidence records into memory.\n", state.evidenceCount);
 	state.evidenceCount = 0;
 	YamlFileIterate(
 		evidenceFilePath,
