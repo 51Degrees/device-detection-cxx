@@ -58,7 +58,7 @@
 // the default number of tests to execute.
 #define DEFAULT_ITERATIONS_PER_THREAD 10000
 
-#define MAX_EVIDENCE 5
+#define MAX_EVIDENCE 7
 
 static const char* dataDir = "device-detection-data";
 
