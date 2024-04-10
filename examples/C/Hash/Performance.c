@@ -491,15 +491,16 @@ void executeBenchmark(
 	// Make a local copy of the config as we're going to alter it a bit.
 	ConfigHash dataSetConfig = *config.config;
 
-	// Ensure that for performance tests the updating of the matched user-agent
-	// is disabled to reduce processing overhead.
-	dataSetConfig.b.updateMatchedUserAgent = false;
-
+	// Output the name of the stock configuration before changing parameters.
 	fprintf(state->output, 
 		"Benchmarking with profile: %s AllProperties: %s\n",
 		fiftyoneDegreesExampleGetConfigName(dataSetConfig),
 		config.allProperties ? "True" : "False");
-	
+
+	// Ensure that for performance tests the updating of the matched user-agent
+	// is disabled to reduce processing overhead.
+	dataSetConfig.b.updateMatchedUserAgent = false;
+
 	EXCEPTION_CREATE;
 
 	PropertiesRequired properties = PropertiesDefault;
@@ -697,7 +698,7 @@ void fiftyoneDegreesHashPerformance(
 		i < (int)(sizeof(performanceConfigs) / sizeof(performanceConfig));
 		i++) {
 		
-		if (fiftyoneDegreesCollectionGetIsMemoryOnly() == false ||
+		if (CollectionGetIsMemoryOnly() == false ||
 			performanceConfigs[i].config->b.b.allInMemory == true) {
 			
 			if (state.resultsOutput != NULL) {
