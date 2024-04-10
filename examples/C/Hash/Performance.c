@@ -86,11 +86,21 @@ typedef struct performanceConfig_t {
 } performanceConfig;
 
 /**
- * Dataset configurations to run benchmarking against.
+ * Dataset configurations to run benchmarking against. Only InMemory is used
+ * in default performance example.
+ * InMemory - all the data is loaded into memory and file closed. Fast.
+ * Balanced - popular data is loaded into memory, other cached and loaded from 
+ *   data file. Quite slow, but okay for web sites.
+ * LowMemory - all data loaded from data file when needed. Slow.
  */
 performanceConfig performanceConfigs[] = {
 	{ &HashInMemoryConfig, false },
-	{ &HashInMemoryConfig, true } };
+	{ &HashInMemoryConfig, true },
+	//{ &HashBalancedConfig, false },
+	//{ &HashBalancedConfig, true },
+	//{ &HashLowMemoryConfig, false },
+	//{ &HashLowMemoryConfig, true }
+};
 
 /**
  * Result of benchmarking from a single thread.
