@@ -175,6 +175,7 @@ typedef struct detection_state_t {
 typedef struct deviceId_lookup_state_t {
 	ResultsHash* results; /* The detection results to modify */
 	int deviceIdsFound; /* The number of deviceIds found */
+	Exception* exception; /* Exception pointer */
 } deviceIdLookupState;
 
 /**
@@ -2366,9 +2367,9 @@ static bool setResultFromDeviceID(
 		return true; // unexpected nullptr value, skip
 	}
 
-	deviceIdLookupState* const lookupState = (deviceIdLookupState*)((stateWithException*)state)->state;
+	deviceIdLookupState* const lookupState = (deviceIdLookupState*)state;
 	ResultsHash* const results = lookupState->results;
-	Exception* const exception = ((stateWithException*)state)->exception;
+	Exception* const exception = lookupState->exception;
 
 	lookupState->deviceIdsFound += 1;
 
@@ -2498,17 +2499,20 @@ static void resultsHashFromEvidence_extractOverrides(
 	}
 }
 
+// Iterate the query evidence to find device id pairs and set the results 
+// from the profile ids contained in the string value avoiding the need for
+// device detection using the graphs.
 static int resultsHashFromEvidence_findAndApplyDeviceIDs(
 	detectionComponentState* state,
 	Exception* const exception)
 {
-	deviceIdLookupState stateFragment = { state->results, 0 };
+	deviceIdLookupState stateFragment = { state->results, 0, exception };
 
 	do {
 		EvidenceIterate(
 			state->evidence,
 			FIFTYONE_DEGREES_EVIDENCE_QUERY,
-			&state,
+			&stateFragment,
 			setResultFromDeviceID);
 		if (EXCEPTION_FAILED) { break; }
 
