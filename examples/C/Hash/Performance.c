@@ -26,6 +26,8 @@
  // Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
  // which requires to be included before 'malloc.h'.
 #include "ExampleBase.h"
+#include "../../../src/hash/hash.h"
+#include "../../../src/hash/fiftyone.h"
 
 /**
  * @example Hash/Performance.c
@@ -56,12 +58,8 @@
 // the default number of tests to execute.
 #define DEFAULT_ITERATIONS_PER_THREAD 10000
 
-// Parameters used for allocating memory when reading evidence. 
-#define SIZE_OF_KEY 500
-#define SIZE_OF_VALUE 1000
-#define MAX_EVIDENCE 20
+#define MAX_EVIDENCE 7
 
-// The device detection data folder from the sub module with lite device data.
 static const char* dataDir = "device-detection-data";
 
 // In this example, by default, the 51degrees "Lite" file needs to be in the
@@ -73,15 +71,9 @@ static const char* dataDir = "device-detection-data";
 // Find out about the Enterprise data file on our pricing page:
 // https://51degrees.com/pricing
 static const char* dataFileName = "51Degrees-LiteV4.1.hash";
-
-// This file contains the 20,000 most commonly seen combinations of header 
-// values that are relevant to device detection. For example, User-Agent and 
-// UA-CH headers.
+// This file contains the 20,000 most commonly seen combinations of header values 
+// that are relevant to device detection. For example, User-Agent and UA-CH headers.
 static const char* evidenceFileName = "20000 Evidence Records.yml";
-
-// The value of the evidence for User-Agent is not stored in the shared string
-// structure as these are almost always unique.
-static const char* userAgent = "user-agent";
 
 /**
  * Configuration to use when building the dataset for benchmarking.
@@ -114,25 +106,14 @@ typedef struct benchmarkResult_t {
 } benchmarkResult;
 
 /**
- * Pointer to evidence, and the next item in the list. 
+ * Contains one or more piece of evidence.
  */
-typedef struct evidence_node_t evidenceNode;
-typedef struct evidence_node_t {
-	EvidenceKeyValuePairArray* array; // evidence 
-	evidenceNode* next; // null if the end of the list
-} evidenceNode;
-
-/**
- * Pointer to a shared string, and the next one in the linked list. Used to 
- * reduce the memory used when conduction a performance test with a lot of
- * evidence in a memory constrained environment.
- */
-typedef struct shared_string_node_t sharedStringNode;
-typedef struct shared_string_node_t {
-	const char* value;
-	size_t length;
-	sharedStringNode* next;
-} sharedStringNode;
+typedef struct keyValuePairArray_t {
+	// Number of evidence items
+	uint32_t count;
+	// First evidence item
+	KeyValuePair pairs;
+} keyValuePairArray;
 
 /**
  * Single state containing everything needed for running and then
@@ -143,14 +124,8 @@ typedef struct performanceState_t {
 	benchmarkResult* resultList;
 	// Number of concurrent threads to benchmark
 	uint16_t numberOfThreads;
-	// Pointer to the first item of evidence available.
-	evidenceNode* evidenceFirst;
-	// Pointer to the last item of evidence available.
-	evidenceNode* evidenceLast;
-	// Pointer to the first shared string.
-	sharedStringNode* sharedStringFirst;
-	// Pointer to the last shared string.
-	sharedStringNode* sharedStringLast;
+	// Array of evidence sets. Each set contains one or more piece of evidence
+	keyValuePairArray **evidence;
 	// Number of sets of evidence in the evidence array
 	int evidenceCount;
 	// Number of sets of evidence to process
@@ -169,8 +144,6 @@ typedef struct performanceState_t {
 	double startUpMillis;
 	// Number of property values retrieved for each iteration.
 	int availableProperties;
-	// Max number of evidence key values pairs that will be processed.
-	int maxEvidence;
 } performanceState;
 
 /**
@@ -183,45 +156,20 @@ typedef struct threadState_t {
 	benchmarkResult* result;
 } threadState;
 
-static const char* getOrAddSharedString(
-	performanceState* perfState, 
-	const char* target) {
-	sharedStringNode* node = perfState->sharedStringFirst;
-	while (node != NULL) {
-		if (strcmp(target, node->value) == 0) {
-			return node->value;
-		}
-		node = node->next;
-	}
-	
-	// Create a new node to add to the head of the list.
-	size_t length = strlen(target) + 1;
-	node = (sharedStringNode*)Malloc(sizeof(sharedStringNode));
-	if (node == NULL) {
-		return NULL;
-	}
-	node->next = NULL;
-	node->value = (const char*)Malloc(sizeof(char) * length);
-	if (node->value == NULL) {
-		return NULL;
-	}
-	if (strncpy((char*)node->value, target, length) == NULL) {
-		return NULL;
-	}
-	
-	// Add to the linked list or start a new linked list if this is the first.
-	if (perfState->sharedStringFirst == NULL) {
-		perfState->sharedStringFirst = node;
-		perfState->sharedStringLast = node;
-	}
-	else {
-		perfState->sharedStringLast->next = node;
-		perfState->sharedStringLast = node;
-	}
-
-	// Return the string from the node.
-	return node->value;
+#ifdef _MSC_VER
+#pragma warning (push)
+#pragma warning (disable: 4100) 
+#endif
+/**
+ * Callback function to count the number of evidence entries in the YAML file.
+ */
+static void getCount(KeyValuePair* pairs, uint16_t size, void* state) {
+	performanceState* perfState = (performanceState*)state;
+	perfState->evidenceCount++;
 }
+#ifdef _MSC_VER
+#pragma warning (pop)
+#endif
 
 /**
  * Callback function to allocate memory for, and store, the evidence values
@@ -229,88 +177,30 @@ static const char* getOrAddSharedString(
  */
 static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 	EXCEPTION_CREATE;
-	char* ptr;
+	keyValuePairArray *targetPair;
 	performanceState* perfState = (performanceState*)state;
 
-	// Allocate space for this node and the evidence.
-	evidenceNode* node = (evidenceNode*)Malloc(sizeof(evidenceNode));
-	node->next = NULL;
-	EvidenceKeyValuePairArray* evidence = EvidenceCreate(size);
-	node->array = evidence;
-
-	// Add the evidence node to the linked list of evidence nodes.
-	if (perfState->evidenceFirst == NULL) {
-		perfState->evidenceFirst = node;
-		perfState->evidenceLast = node;
-	}
-	else {
-		perfState->evidenceLast->next = node;
-		perfState->evidenceLast = node;
-	}	
-
+	// Allocate space for this piece of evidence.
+	perfState->evidence[perfState->evidenceCount] = (keyValuePairArray*)
+		Malloc(sizeof(keyValuePairArray) + ((size - 1) * sizeof(KeyValuePair)));
+	
 	// Get the target pair that was just allocated.
+	targetPair = perfState->evidence[perfState->evidenceCount];
+	targetPair->count = 0;
 	for (uint32_t i = 0; i < size; i++) {
-
-		// Set prefix for the key.
-		EvidencePrefixMap* prefix = EvidenceMapPrefix(pairs[i].key);
-		if (prefix != NULL) {
-			evidence->items[i].prefix = prefix->prefixEnum;
-
-			// Get a shared string for the field name without the prefix and 
-			// use this. Reduces memory consumption as there are only a limited
-			// number of keys.
-			evidence->items[i].field = getOrAddSharedString(
-				perfState, 
-				pairs[i].key + prefix->prefixLength);
-			if (evidence->items[i].field == NULL) {
-				EXCEPTION_THROW
-			}
-		}
-		else {
-			evidence->items[i].prefix = FIFTYONE_DEGREES_EVIDENCE_IGNORE;
-			evidence->items[i].field = NULL;
-		}
-
-		// If the field is User-Agent or NULL then create new memory for the 
-		// string value, otherwise use shared strings.
-		if (evidence->items[i].field == NULL ||
-			strcmp(evidence->items[i].field, userAgent) == 0) {
-
-			// Copy the value to new memory at the original value, and then set
-			// the parsed value to point to the original value. This memory 
-			// will be freed after the test.
-			evidence->items[i].originalValue = (const char*)Malloc(
-				sizeof(char) * (pairs[i].valueLength + 1));
-			ptr = strncpy(
-				(char*)evidence->items[i].originalValue,
-				pairs[i].value,
-				pairs[i].valueLength);
-			if (ptr == NULL) {
-				EXCEPTION_THROW
-			}
-			evidence->items[i].parsedValue = evidence->items[i].originalValue;
-		}
-		else {
-
-			// Set the parsed value to the shared string value and set the 
-			// original value to NULL to indicate there is no memory to be 
-			// freed after the performance test.
-			evidence->items[i].parsedValue = getOrAddSharedString(
-				perfState,
-				pairs[i].value);
-			if (evidence->items[i].parsedValue == NULL) {
-				EXCEPTION_THROW
-			}
-			evidence->items[i].originalValue = NULL;
-		}
+		// Copy the key.
+		(&targetPair->pairs)[i].keyLength = strlen(pairs[i].key);
+		(&targetPair->pairs)[i].key = (char*)
+			Malloc(sizeof(char) * ((&targetPair->pairs)[i].keyLength + 1));
+		strcpy((&targetPair->pairs)[i].key, pairs[i].key);
+		// Copy the value.
+		(&targetPair->pairs)[i].valueLength = strlen(pairs[i].value);
+		(&targetPair->pairs)[i].value = (char*)
+			Malloc(sizeof(char) * ((&targetPair->pairs)[i].valueLength + 1));
+		strcpy((&targetPair->pairs)[i].value, pairs[i].value);
+		// Increment the count.
+		targetPair->count++;
 	}
-	evidence->count = size;
-
-	// Set the maximum capacity needed in evidence if higher.
-	if (size > perfState->maxEvidence) {
-		perfState->maxEvidence = size;
-	}
-
 	// Increment the total evidence count.
 	perfState->evidenceCount++;
 }
@@ -321,35 +211,39 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
  */
 void runPerformanceThread(void* state) {
 	EXCEPTION_CREATE;
-	String* value;
+	const char* value;
 	threadState *thisState = (threadState*)state;
+
+	TIMER_CREATE;
+	TIMER_START;
 
 	// Create an instance of results to access the returned values.
 	ResultsHash *results = ResultsHashCreate(
 		&thisState->mainState->manager,
-		thisState->mainState->maxEvidence,
-		thisState->mainState->maxEvidence);
-
-	// Reference to the dataset.
+		MAX_EVIDENCE,
+		MAX_EVIDENCE);
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 
-	// Thread specific evidence instance.
-	EvidenceKeyValuePairArray* evidence = EvidenceCreate(
-		thisState->mainState->maxEvidence);
+	// Execute the performance test.
+	for (int i = 0; i < thisState->mainState->iterationsPerThread; i++) {
+		EvidenceKeyValuePairArray* evidence =
+			EvidenceCreate(thisState->mainState->evidence[i]->count);
+		for (uint32_t j = 0;
+			j < thisState->mainState->evidence[i]->count;
+			j++) {
+			// Get prefix
+			EvidencePrefixMap* prefixMap = EvidenceMapPrefix(
+				(&thisState->mainState->evidence[i]->pairs)[j].key);
 
-    TIMER_CREATE;
-    TIMER_START;
-
-	// Execute the performance test moving through the linked list.
-	evidenceNode* node = thisState->mainState->evidenceFirst;
-	while(node != NULL) {
-
-		// The evidence data structure has a field for pseudoEvidence which is
-		// modified during processing. Therefore the node in the list can't
-		// be used directly as it might be in use by another thread. Therefore
-		// copy the immutable members of the evidence node.
-		*evidence = *node->array;
-
+			// Add the evidence as string if valid.
+			if (prefixMap != NULL) {
+				EvidenceAddString(
+					evidence,
+					prefixMap->prefixEnum,
+					(&thisState->mainState->evidence[i]->pairs)[j].key + prefixMap->prefixLength,
+					(&thisState->mainState->evidence[i]->pairs)[j].value);
+			}
+		}
 		ResultsHashFromEvidence(results, evidence, exception);
 		EXCEPTION_THROW;
 
@@ -360,27 +254,24 @@ void runPerformanceThread(void* state) {
 				results,
 				j,
 				exception) != NULL && EXCEPTION_OKAY) {
-				value = (String*)results->values.items[0].data.ptr;
+				value = STRING(results->values.items[0].data.ptr);
 				if (value != NULL) {
-					// Increase the checksum with the size of the string to 
-					// provide a crude checksum.
-					thisState->result->checkSum += value->size;
+					// Increase the checksum with the first bytes of the 
+					// value to ensure that the compiler doesn't optimize
+					// out this code and not actually perform the 
+					// operation.
+					thisState->result->checkSum += *(int*)value;;
 				}
 			}
 		}
 
-		// Increase the count.
 		thisState->result->count++;
-
-		// Move to the next node.
-		node = node->next;
+		EvidenceFree(evidence);
 	}
-    
-    TIMER_END;
-    
-	EvidenceFree(evidence);
+
 	ResultsHashFree(results);
 
+	TIMER_END;
 	thisState->result->elapsedMillis = TIMER_ELAPSED;
 
 	if (ThreadingGetIsThreadSafe()) {
@@ -569,38 +460,6 @@ void executeBenchmark(
 }
 
 /**
- * Frees the memory used by the evidence linked list.
- */
-void freeEvidence(performanceState* state) {
-	evidenceNode* node = state->evidenceFirst;
-	while (node != NULL) {
-		EvidenceKeyValuePairArray* evidence = node->array;
-		for (uint32_t j = 0; j < evidence->count; j++) {
-			if (evidence->items[j].originalValue != NULL) {
-				Free((void*)evidence->items[j].originalValue);
-			}
-		}
-		EvidenceFree(evidence);
-		evidenceNode* next = node->next;
-		Free(node);
-		node = next;
-	}
-}
-
-/**
- * Frees the memory used by the shared string linked list.
- */
-void freeSharedStrings(performanceState* state) {
-	sharedStringNode* node = state->sharedStringFirst;
-	while (node != NULL) {
-		Free((void*)node->value);
-		sharedStringNode* next = node->next;
-		Free(node);
-		node = next;
-	}
-}
-
-/**
  * Runs benchmarks for various configurations.
  *
  * @param dataFilePath path to the 51Degrees device data file for testing
@@ -617,21 +476,9 @@ void fiftyoneDegreesHashPerformance(
 	FILE* output,
 	FILE* resultsOutput) {
 	performanceState state;
+	char buffer[1000];
 
-	// Check that the memory only configuration is being used.
-	fprintf(output, "Running Performance example - ");
-	if (CollectionGetIsMemoryOnly()) {
-		fprintf(output, "optimised build\n");
-	}
-	else {
-		fprintf(output, "standard build\n");
-		printf("\033[0;33m");
-		fprintf(
-			output,
-			"Use FIFTYONE_DEGREES_MEMORY_ONLY directive for optimum " \
-			"performance\n");
-		printf("\033[0m");
-	}
+	fprintf(output, "Running Performance example\n");
 
 	state.dataFileLocation = dataFilePath;
 	state.output = output;
@@ -647,53 +494,49 @@ void fiftyoneDegreesHashPerformance(
 		Malloc(sizeof(benchmarkResult) * numberOfThreads);
 	state.iterationsPerThread = iterationsPerThread;
 
-	// Allocate working memory for iterating over the YAML evidence source.
-	char buffer[MAX_EVIDENCE * (SIZE_OF_KEY + SIZE_OF_VALUE)];
-	KeyValuePair pair[MAX_EVIDENCE];
-	char key[MAX_EVIDENCE][SIZE_OF_KEY];
-	char value[MAX_EVIDENCE][SIZE_OF_VALUE];
-	for (int i = 0; i < MAX_EVIDENCE; i++) {
+	KeyValuePair pair[10];
+	char key[10][500];
+	char value[10][1000];
+	for (int i = 0; i < 10; i++) {
 		pair[i].key = key[i];
-		pair[i].keyLength = SIZE_OF_KEY;
+		pair[i].keyLength = 500;
 		pair[i].value = value[i];
-		pair[i].valueLength = SIZE_OF_VALUE;
+		pair[i].valueLength = 1000;
 	}
-	// Iterate over the YAML evidence source storing each entry in memory as 
-	// evidence.
-	fprintf(
-		state.output,
-		"Reading '%i' evidence records into memory.\n",
-		state.iterationsPerThread);
-	
-	// Set the state to empty default values.
-	state.evidenceCount = 0;
-	state.maxEvidence = 0;
-	state.evidenceFirst = NULL;
-	state.evidenceLast = NULL;
-	state.sharedStringFirst = NULL;
-	state.sharedStringLast = NULL;
-
-	YamlFileIterateWithLimit(
+	YamlFileIterate(
 		evidenceFilePath,
 		buffer,
 		sizeof(buffer),
 		pair,
-		MAX_EVIDENCE,
-		state.iterationsPerThread,
+		10,
 		&state,
-		storeEvidence);
-
-	// Report the number of evidence records read.
+		getCount);
+	state.evidence = (keyValuePairArray**)
+		Malloc(sizeof(EvidencePrefixMap*) * state.evidenceCount);
+	if (state.evidenceCount < state.iterationsPerThread) {
+		fprintf(state.output, 
+			"Not enough evidence for %d iterations.\n",
+			state.iterationsPerThread);
+		state.iterationsPerThread = state.evidenceCount;
+	}
 	fprintf(
 		state.output,
-		"Read '%i' evidence records into memory.\n",
-		state.evidenceCount);
+		"Reading %d evidence records into memory.\n", state.evidenceCount);
+	state.evidenceCount = 0;
+	YamlFileIterate(
+		evidenceFilePath,
+		buffer,
+		sizeof(buffer),
+		pair,
+		10,
+		&state,
+		storeEvidence);
 
 	if (state.resultsOutput != NULL) {
 		fprintf(state.resultsOutput, "{");
 	}
 
-	// Run the selected benchmarks using the evidence now in memory.
+	// run the selected benchmarks from disk
 	for (int i = 0;
 		i < (int)(sizeof(performanceConfigs) / sizeof(performanceConfig));
 		i++) {
@@ -720,15 +563,15 @@ void fiftyoneDegreesHashPerformance(
 		fprintf(state.resultsOutput, "}\n");
 	}
 
-	// Free the memory used by the shared strings.
-	freeSharedStrings(&state);
-
-	// Free the memory used for the evidence.
-	freeEvidence(&state);
-
-	// Free the memory used for output.
+	for (int i = 0; i < state.evidenceCount; i++) {
+		for (uint32_t j = 0; j < state.evidence[i]->count; j++) {
+			Free((&state.evidence[i]->pairs)[j].key);
+			Free((&state.evidence[i]->pairs)[j].value);
+		}
+		Free(state.evidence[i]);
+	}
+	Free(state.evidence);
 	Free(state.resultList);
-
 	fprintf(output, "Finished Performance example\n");
 }
 
