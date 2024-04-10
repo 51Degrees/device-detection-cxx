@@ -24,42 +24,25 @@
 #include "../../../src/hash/fiftyone.h"
 #include <string.h>
 
-const char* fiftyoneDegreesExampleGetConfigName(
-	fiftyoneDegreesConfigHash config) {
-	if (memcmp(
-		&config,
-		&fiftyoneDegreesHashInMemoryConfig,
-		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+#define CONFIG_EQUALS(h) memcmp(&config, &h, sizeof(ConfigHash)) == 0
+
+const char* fiftyoneDegreesExampleGetConfigName(ConfigHash config) {
+	if (CONFIG_EQUALS(HashInMemoryConfig)) {
 		return "InMemory";
 	}
-	if (memcmp(
-		&config,
-		&fiftyoneDegreesHashHighPerformanceConfig,
-		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+	if (CONFIG_EQUALS(HashHighPerformanceConfig)) {
 		return "HighPerformance";
 	}
-	if (memcmp(
-		&config,
-		&fiftyoneDegreesHashLowMemoryConfig,
-		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+	if (CONFIG_EQUALS(HashLowMemoryConfig)) {
 		return "LowMemory";
 	}
-	if (memcmp(
-		&config,
-		&fiftyoneDegreesHashBalancedConfig,
-		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+	if (CONFIG_EQUALS(HashBalancedConfig)) {
 		return "Balanced";
 	}
-	if (memcmp(
-		&config,
-		&fiftyoneDegreesHashBalancedTempConfig,
-		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+	if (CONFIG_EQUALS(HashBalancedTempConfig)) {
 		return "BalancedTemp";
 	}
-	if (memcmp(
-		&config,
-		&fiftyoneDegreesHashSingleLoadedConfig,
-		sizeof(fiftyoneDegreesConfigHash)) == 0) {
+	if (CONFIG_EQUALS(fiftyoneDegreesHashSingleLoadedConfig)) {
 		return "SingleLoaded";
 	}
 	return "Unknown";
@@ -160,5 +143,7 @@ void fiftyoneDegreesExampleCheckDataFile(
 			"out about the Enterprise data file on our "
 			"pricing page: https://51degrees.com/pricing\n"));
 	}
-	COLLECTION_RELEASE(dataset->strings, &item);
+	if (!CollectionGetIsMemoryOnly()) {
+		COLLECTION_RELEASE(dataset->strings, &item);
+	}
 }
