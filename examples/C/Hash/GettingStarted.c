@@ -43,7 +43,7 @@ This example is available in full on [GitHub](https://github.com/51Degrees/devic
 // which requires to be included before 'malloc.h'.
 #include "ExampleBase.h"
 
-#define MAX_EVIDENCE 6
+#define MAX_EVIDENCE 7
 
 static const char *dataDir = "device-detection-data";
 
@@ -72,46 +72,69 @@ typedef struct {
 // A User-Agent from a mobile device.
 static evidence mobileDevice = { 
 	1, 
-	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", ("Mozilla/5.0 (Linux; Android 9; SAMSUNG SM-G960U) "
-	  "AppleWebKit/537.36 (KHTML, like Gecko) "
-	  "SamsungBrowser/10.1 Chrome/71.0.3578.99 Mobile "
-	  "Safari/537.36") } } 
+	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", (
+		"Mozilla/5.0 (Linux; Android 9; SAMSUNG SM-G960U) "
+		"AppleWebKit/537.36 (KHTML, like Gecko) "
+		"SamsungBrowser/10.1 Chrome/71.0.3578.99 Mobile "
+		"Safari/537.36") } } 
 };
 
 // A User-Agent from a desktop device.
 static evidence desktopDevice = { 
 	1, 
-	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", ("Mozilla / 5.0 (Windows NT 10.0; Win64; x64) "
-	  "AppleWebKit/537.36 (KHTML, like Gecko) "
-	  "Chrome/78.0.3904.108 Safari/537.36") } } 
+	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", (
+		"Mozilla / 5.0 (Windows NT 10.0; Win64; x64) "
+		"AppleWebKit/537.36 (KHTML, like Gecko) "
+		"Chrome/78.0.3904.108 Safari/537.36") } } 
 };
 
 // Evidence values from a windows 11 device using a browser
 // that supports User-Agent Client Hints.
 static evidence userAgentClientHints = { 
 	5,
-	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-	  "AppleWebKit/537.36 (KHTML, like Gecko) "
-	  "Chrome/98.0.4758.102 Safari/537.36"},
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", (
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+		"AppleWebKit/537.36 (KHTML, like Gecko) "
+		"Chrome/98.0.4758.102 Safari/537.36")},
 	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-mobile", "?0"},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", ("\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
-	  "\"Google Chrome\";v=\"98\"")},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", "Windows"},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"14.0.0\""} }
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", (
+		"\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
+		"\"Google Chrome\";v=\"98\"")},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", 
+		"Windows"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, 
+		"sec-ch-ua-platform-version", 
+		"\"14.0.0\""} }
 };
 
 static char modileDeviceIDBuffer[50] = ""; // Evaluated at run time
 static evidence userAgentWithMobileID = {
 	6,
-	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-	  "AppleWebKit/537.36 (KHTML, like Gecko) "
-	  "Chrome/98.0.4758.102 Safari/537.36"},
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", (
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+		"AppleWebKit/537.36 (KHTML, like Gecko) "
+		"Chrome/98.0.4758.102 Safari/537.36")},
 	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-mobile", "?0"},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", ("\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
-	  "\"Google Chrome\";v=\"98\"")},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", "Windows"},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"14.0.0\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", (
+		"\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
+		"\"Google Chrome\";v=\"98\"")},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", 
+		"Windows"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, 
+		"sec-ch-ua-platform-version", 
+		"\"14.0.0\""},
 	{FIFTYONE_DEGREES_EVIDENCE_QUERY, "51D_deviceId", modileDeviceIDBuffer} }
+};
+
+static evidence headersWithWebView = {
+	7,
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Linux; Android 13; RMX3762 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/122.0.6261.106 Mobile Safari/537.36 TwitterAndroid"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-mobile", "?1"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Android WebView\";v=\"122\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", "\"Android\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"13.0.0\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-model", "\"RMX3762\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-full-version", "\"122.0.6261.106\""} }
 };
 
 // This collection contains the various input values that will
@@ -121,6 +144,7 @@ static evidence* evidenceValues[] = {
 	&desktopDevice,
 	&userAgentClientHints,
 	&userAgentWithMobileID,
+	&headersWithWebView,
 };
 
 static void outputValue(
@@ -347,3 +371,4 @@ int main(int argc, char* argv[]) {
 }
 
 #endif
+
