@@ -64,7 +64,7 @@ public:
         catch (exception & e) {
             const char* expected = fiftyoneDegreesStatusGetMessage(
                 FIFTYONE_DEGREES_STATUS_INCORRECT_VERSION,
-                NULL);
+                badVersionFileName);
             ASSERT_STREQ(
                 e.what(),
                 expected);
@@ -87,7 +87,7 @@ public:
         catch (exception & e) {
             const char* expected = fiftyoneDegreesStatusGetMessage(
                 FIFTYONE_DEGREES_STATUS_CORRUPT_DATA,
-                NULL);
+                badDataFileName);
             ASSERT_STREQ(
                 e.what(),
                 expected);
@@ -110,7 +110,7 @@ public:
         catch (exception & e) {
             const char* expected = fiftyoneDegreesStatusGetMessage(
                 FIFTYONE_DEGREES_STATUS_CORRUPT_DATA,
-                NULL);
+                smallDataFileName);
             ASSERT_STREQ(
                 e.what(),
                 expected);
