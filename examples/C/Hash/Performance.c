@@ -425,7 +425,7 @@ void executeBenchmark(
 	state->threads = (FIFTYONE_DEGREES_THREAD*)
 		Malloc(sizeof(FIFTYONE_DEGREES_THREAD) * state->numberOfThreads);
 
-	fprintf(state->output, "Load from disk\n");
+	fprintf(state->output, "Initialize device detection\n");
 	
 	TIMER_CREATE;
 	TIMER_START;
