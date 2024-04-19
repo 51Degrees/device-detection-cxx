@@ -1033,7 +1033,8 @@ static void setResultFromUserAgentComponentIndex(
 				state->exception);
 			if (rootNodes != NULL && EXCEPTION_OKAY) {
 				if (processRoots(
-					state, state->dataSet,
+					state, 
+					state->dataSet,
 					component,
 					rootNodes) == true) {
 					addProfile(
@@ -1472,6 +1473,31 @@ static StatusCode initPropertiesAndHeaders(
 	return status;
 }
 
+static StatusCode initIndexPropertyProfile(
+	DataSetHash* dataSet,
+	Exception* exception) {
+	StatusCode status = FIFTYONE_DEGREES_STATUS_NOT_SET;
+	if (dataSet->config.b.b.propertyValueIndex == true) {
+		dataSet->b.b.indexPropertyProfile = IndexPropertyProfileCreate(
+			dataSet->profiles,
+			dataSet->profileOffsets,
+			dataSet->properties,
+			dataSet->values,
+			exception);
+		if (dataSet->b.b.indexPropertyProfile != NULL && EXCEPTION_OKAY) {
+			status = FIFTYONE_DEGREES_STATUS_SUCCESS;
+		}
+		else {
+			status = exception->status;
+		}
+	}
+	else {
+		dataSet->b.b.indexPropertyProfile = NULL;
+		status = FIFTYONE_DEGREES_STATUS_SUCCESS;
+	}
+	return status;
+}
+
 static StatusCode readHeaderFromMemory(
 	MemoryReader *reader,
 	const DataSetHashHeader *header) {
@@ -1525,6 +1551,9 @@ static void initDataSetPost(
 	for (i = 0; i < dataSet->componentsList.count; i++) {
 		dataSet->componentsAvailable[i] = false;
 	}
+
+	// Initialise the index for properties and profiles to values.
+	initIndexPropertyProfile(dataSet, exception);
 }
 
 static StatusCode initWithMemory(
@@ -1679,15 +1708,18 @@ static StatusCode readDataSetFromFile(
 	*(uint32_t*)(&dataSet->header.components.count) = 0;
 	COLLECTION_CREATE_FILE(components, fiftyoneDegreesComponentReadFromFile);
 	*(uint32_t*)(&dataSet->header.components.count) = componentCount;
+	dataSet->components->count = componentCount;
 
 	COLLECTION_CREATE_FILE(maps, CollectionReadFileFixed);
 	COLLECTION_CREATE_FILE(properties, CollectionReadFileFixed);
 	COLLECTION_CREATE_FILE(values, CollectionReadFileFixed);
 
+	// Override the header count so that the variable collection can work.
 	uint32_t profileCount = dataSet->header.profiles.count;
 	*(uint32_t*)(&dataSet->header.profiles.count) = 0;
 	COLLECTION_CREATE_FILE(profiles, fiftyoneDegreesProfileReadFromFile);
 	*(uint32_t*)(&dataSet->header.profiles.count) = profileCount;
+	dataSet->profiles->count = profileCount;
 
 	COLLECTION_CREATE_FILE(rootNodes, CollectionReadFileFixed);
 
@@ -1922,7 +1954,7 @@ size_t fiftyoneDegreesHashSizeManagerFromFile(
  	if (status == SUCCESS && EXCEPTION_OKAY) {
 		ResourceManagerFree(&manager);
 	}
-	else if (status != SUCCESS && EXCEPTION_OKAY) {
+	else if (exception != NULL && status != SUCCESS && EXCEPTION_OKAY) {
 		exception->status = status;
 	}
 	// Get the total maximum amount of allocated memory
@@ -2872,11 +2904,47 @@ static bool addValue(void *state, Item *item) {
 	return EXCEPTION_OKAY;
 }
 
+// Iterate over the values associated with the property adding them to the list 
+// of values. Get the number of values available as this will be used to 
+// increase the size of the list should there be insufficient space. Use the 
+// index if available, if not then the slower method.
+static uint32_t iterateValuesFromProfileForProperty(
+	DataSetHash* dataSet,
+	Profile* profile,
+	Property* property,
+	uint32_t propertyIndex,
+	stateWithException* state,
+	Exception* exception) {
+	uint32_t count;
+	if (dataSet->b.b.indexPropertyProfile != NULL) {
+		count = ProfileIterateValuesForPropertyWithIndex(
+			dataSet->values,
+			dataSet->b.b.indexPropertyProfile,
+			propertyIndex,
+			profile,
+			property,
+			state,
+			addValue,
+			exception);
+	}
+	else {
+		count = ProfileIterateValuesForProperty(
+			dataSet->values,
+			profile,
+			property,
+			state,
+			addValue,
+			exception);
+	}
+	return count;
+}
+
 static uint32_t addValuesFromProfile(
 	DataSetHash *dataSet,
 	ResultsHash *results,
 	Profile *profile,
 	Property *property,
+	uint32_t propertyIndex,
 	Exception *exception) {
 	uint32_t count;
 	
@@ -2885,40 +2953,37 @@ static uint32_t addValuesFromProfile(
 	state.state = results;
 	state.exception = exception;
 
-	// Iterate over the values associated with the property adding them
-	// to the list of values. Get the number of values available as 
-	// this will be used to increase the size of the list should there
-	// be insufficient space.
-	count = ProfileIterateValuesForProperty(
-		dataSet->values,
-		profile,
-		property,
-		&state,
-		addValue,
+	// Iterate over the values for the profile and property.
+	count = iterateValuesFromProfileForProperty(
+		dataSet, 
+		profile, 
+		property, 
+		propertyIndex, 
+		&state, 
 		exception);
 
 	if (EXCEPTION_OKAY) {
-		// The count of values should always be lower or the same as the profile
-		// count. i.e. there can never be more values counted than there are values
-		// against the profile.
+		// The count of values should always be lower or the same as the 
+		// profile count. i.e. there can never be more values counted than 
+		// there are values against the profile.
 		assert(count <= profile->valueCount);
 
-		// Check to see if the capacity of the list needs to increase. If
-		// it does then free the list and initialise it with a larger
-		// capacity before adding the values again.
+		// Check to see if the capacity of the list needs to increase. If it 
+		// does then free the list and initialise it with a larger capacity 
+		// before adding the values again.
 		if (count > results->values.count) {
 			ListFree(&results->values);
 			ListInit(&results->values, count);
-			ProfileIterateValuesForProperty(
-				dataSet->values,
+			iterateValuesFromProfileForProperty(
+				dataSet,
 				profile,
 				property,
+				propertyIndex,
 				&state,
-				addValue,
 				exception);
 
-			// The number of items that are set should exactly match the count from
-			// the initial iteration.
+			// The number of items that are set should exactly match the count 
+			// from the initial iteration.
 			assert(count == results->values.count);
 		}
 	}
@@ -2929,6 +2994,7 @@ static uint32_t addValuesFromResult(
 	ResultsHash *results,
 	ResultHash *result, 
 	Property *property,
+	uint32_t propertyIndex,
 	Exception *exception) {
 	uint32_t count = 0;
 	Profile *profile = NULL;
@@ -2954,6 +3020,7 @@ static uint32_t addValuesFromResult(
 			results,
 			profile,
 			property,
+			propertyIndex,
 			exception);
 		COLLECTION_RELEASE(dataSet->profiles, &item);
 	}
@@ -3044,11 +3111,12 @@ static Item* getValuesFromResult(
 	ResultsHash *results, 
 	ResultHash *result, 
 	Property *property,
+	uint32_t propertyIndex,
 	Exception *exception) {
 
 	// There is a profile available for the property requested. 
 	// Use this to add the values to the results.
-	addValuesFromResult(results, result, property, exception);
+	addValuesFromResult(results, result, property, propertyIndex, exception);
 
 	// Return the first value in the list of items.
 	return results->values.items;
@@ -3383,8 +3451,8 @@ fiftyoneDegreesCollectionItem* fiftyoneDegreesResultsHashGetValues(
 
 				if (result != NULL) {
 
-					// Ensure there is a collection available to the property item so
-					// that it can be freed when the results are freed.
+					// Ensure there is a collection available to the property 
+					// item so that it can be freed when the results are freed.
 					if (results->propertyItem.collection == NULL) {
 						results->propertyItem.collection = dataSet->properties;
 					}
@@ -3394,6 +3462,7 @@ fiftyoneDegreesCollectionItem* fiftyoneDegreesResultsHashGetValues(
 							results,
 							result,
 							property,
+							propertyIndex,
 							exception);
 					}
 				}
