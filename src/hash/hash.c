@@ -203,7 +203,7 @@ typedef struct detection_component_state_t {
 #undef FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY
 #define FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY true
 fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig = {
-	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT,
+	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_WITH_INDEX,
 	{0,0,0}, // Strings
 	{0,0,0}, // Components
 	{0,0,0}, // Maps
@@ -224,7 +224,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig = {
 FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY_DEFAULT
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
-	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT,
+	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_WITH_INDEX,
 	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Strings
 	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Components
 	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Maps
@@ -242,7 +242,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
 };
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig = {
-	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT,
+	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_NO_INDEX,
 	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Strings
 	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Components
 	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Maps
@@ -260,7 +260,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig = {
 };
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
-	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT,
+	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_NO_INDEX,
 	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Strings
 	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Components
 	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Maps
@@ -278,7 +278,7 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
 };
 
 #define FIFTYONE_DEGREES_HASH_CONFIG_BALANCED \
-FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT, \
+FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_NO_INDEX, \
 { FIFTYONE_DEGREES_STRING_LOADED, FIFTYONE_DEGREES_STRING_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Strings */ \
 { INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Components */ \
 { INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Maps */ \
@@ -1482,7 +1482,7 @@ static StatusCode initIndexPropertyProfile(
 		dataSet->b.b.indexPropertyProfile = IndexPropertyProfileCreate(
 			dataSet->profiles,
 			dataSet->profileOffsets,
-			dataSet->properties,
+			dataSet->b.b.available,
 			dataSet->values,
 			exception);
 		if (dataSet->b.b.indexPropertyProfile != NULL && EXCEPTION_OKAY) {
@@ -1552,9 +1552,6 @@ static void initDataSetPost(
 	for (i = 0; i < dataSet->componentsList.count; i++) {
 		dataSet->componentsAvailable[i] = false;
 	}
-
-	// Initialise the index for properties and profiles to values.
-	initIndexPropertyProfile(dataSet, exception);
 }
 
 static StatusCode initWithMemory(
@@ -1889,6 +1886,16 @@ static StatusCode initDataSetFromFile(
 			FileDelete(dataSet->b.b.fileName);
 		}
 		return REQ_PROP_NOT_PRESENT;
+	}
+
+	// Initialise the index for properties and profiles to values.
+	initIndexPropertyProfile(dataSet, exception);
+	if (status != SUCCESS || EXCEPTION_FAILED) {
+		freeDataSet(dataSet);
+		if (config->b.b.useTempFile == true) {
+			FileDelete(dataSet->b.b.fileName);
+		}
+		return status;
 	}
 
 	return status;
@@ -2913,7 +2920,7 @@ static uint32_t iterateValuesFromProfileForProperty(
 	DataSetHash* dataSet,
 	Profile* profile,
 	Property* property,
-	uint32_t propertyIndex,
+	uint32_t availablePropertyIndex,
 	stateWithException* state,
 	Exception* exception) {
 	uint32_t count;
@@ -2921,7 +2928,7 @@ static uint32_t iterateValuesFromProfileForProperty(
 		count = ProfileIterateValuesForPropertyWithIndex(
 			dataSet->values,
 			dataSet->b.b.indexPropertyProfile,
-			propertyIndex,
+			availablePropertyIndex,
 			profile,
 			property,
 			state,
@@ -2945,7 +2952,7 @@ static uint32_t addValuesFromProfile(
 	ResultsHash *results,
 	Profile *profile,
 	Property *property,
-	uint32_t propertyIndex,
+	uint32_t availablePropertyIndex,
 	Exception *exception) {
 	uint32_t count;
 	
@@ -2959,7 +2966,7 @@ static uint32_t addValuesFromProfile(
 		dataSet, 
 		profile, 
 		property, 
-		propertyIndex, 
+		availablePropertyIndex, 
 		&state, 
 		exception);
 
@@ -2979,7 +2986,7 @@ static uint32_t addValuesFromProfile(
 				dataSet,
 				profile,
 				property,
-				propertyIndex,
+				availablePropertyIndex,
 				&state,
 				exception);
 
@@ -2995,7 +3002,7 @@ static uint32_t addValuesFromResult(
 	ResultsHash *results,
 	ResultHash *result, 
 	Property *property,
-	uint32_t propertyIndex,
+	uint32_t availablePropertyIndex,
 	Exception *exception) {
 	uint32_t count = 0;
 	Profile *profile = NULL;
@@ -3021,7 +3028,7 @@ static uint32_t addValuesFromResult(
 			results,
 			profile,
 			property,
-			propertyIndex,
+			availablePropertyIndex,
 			exception);
 		COLLECTION_RELEASE(dataSet->profiles, &item);
 	}
@@ -3112,12 +3119,17 @@ static Item* getValuesFromResult(
 	ResultsHash *results, 
 	ResultHash *result, 
 	Property *property,
-	uint32_t propertyIndex,
+	uint32_t availablePropertyIndex,
 	Exception *exception) {
 
 	// There is a profile available for the property requested. 
 	// Use this to add the values to the results.
-	addValuesFromResult(results, result, property, propertyIndex, exception);
+	addValuesFromResult(
+		results, 
+		result, 
+		property, 
+		availablePropertyIndex, 
+		exception);
 
 	// Return the first value in the list of items.
 	return results->values.items;
@@ -3463,7 +3475,7 @@ fiftyoneDegreesCollectionItem* fiftyoneDegreesResultsHashGetValues(
 							results,
 							result,
 							property,
-							propertyIndex,
+							requiredPropertyIndex,
 							exception);
 					}
 				}
