@@ -89,6 +89,14 @@ cd build
 cmake .. -DMemoryOnly=YES
 ```
 
+Note: for maximum possible performance file based operation can be disabled by adding `-DMemoryOnly=YES` to the `cmake ..` command.
+
+```
+mkdir build
+cd build
+cmake .. -DMemoryOnly=YES
+```
+
 Then build the whole solution with
 
 ```
@@ -100,6 +108,13 @@ Libraries are output to the `lib/` directory, and executables like examples and 
 ## Using Visual Studio
 
 Calling `CMake` in an MSVC environment (as described in the [Using CMake](#Using-CMake) section) will produce a Visual Studio solution with projects for all libraries, examples, and tests. However, it is preferable to use the dedicated Visual Studio solution in the `VisualStudio/` directory.
+
+There are two additional configurations available for both `Debug` and `Release`.
+
+- MemoryOnly - Compiles for best performance. The data is held in continuous memory.
+- Single - Multi threaded operations are not supported.
+
+The standard configuration supports file based operation and multi threading.
 
 ## Build Options
 
