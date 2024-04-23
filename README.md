@@ -64,7 +64,6 @@ You will need:
 - [CMake 3.24](https://cmake.org/) or greater installed to build the project. 
 - A C++ compiler which supports C++17. The compiler and other build tools will be selected by CMake automatically based on your environment.
 
-
 # Installing
 
 ## Using CMake
@@ -76,9 +75,17 @@ mkdir build
 cd build
 cmake .. 
 ```
-Note: on an x64 Windows system, it is neccessary to add `-A x64` as CMake will build a Win32 Solution by default.
+Note: on an x64 Windows system, it is necessary to add `-A x64` as CMake will build a Win32 Solution by default.
 
 Note: when building arm64 binaries on x64 Mac system, it is neccessary to add `-DBUILD_TESTING=OFF` as CTest ([ref](https://cmake.org/cmake/help/latest/module/CTest.html)) will otherwise fail the build due to inability to run test executables designated for different CPU.
+
+Note: for maximum possible performance file based operation can be disabled by adding `-DMemoryOnly=YES` to the `cmake ..` command.
+
+```
+mkdir build
+cd build
+cmake .. -DMemoryOnly=YES
+```
 
 Then build the whole solution with
 
@@ -91,6 +98,13 @@ Libraries are output to the `lib/` directory, and executables like examples and 
 ## Using Visual Studio
 
 Calling `CMake` in an MSVC environment (as described in the [Using CMake](#Using-CMake) section) will produce a Visual Studio solution with projects for all libraries, examples, and tests. However, it is preferable to use the dedicated Visual Studio solution in the `VisualStudio/` directory.
+
+There are two additional configurations available for both `Debug` and `Release`.
+
+- MemoryOnly - Compiles for best performance. The data is held in continuous memory.
+- Single - Multi threaded operations are not supported.
+
+The standard configuration supports file based operation and multi threading.
 
 ## Build Options
 
