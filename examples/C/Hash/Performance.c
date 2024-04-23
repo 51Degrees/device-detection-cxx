@@ -88,6 +88,11 @@ typedef struct performanceConfig_t {
 /**
  * Dataset configurations to run benchmarking against. Only InMemory is used
  * in default performance example.
+ * 
+ * The compiler directive FIFTYONE_DEGREES_MEMORY_ONLY (which is not part of 
+ * configuration) to compile out considerations for file based operation and 
+ * thus provide maximum performance can be used to further improve performance.
+ * 
  * InMemory - all the data is loaded into memory and file closed. Fast.
  * Balanced - popular data is loaded into memory, other cached and loaded from 
  *   data file. Quite slow, but okay for web sites.
@@ -488,7 +493,20 @@ void fiftyoneDegreesHashPerformance(
 	performanceState state;
 	char buffer[1000];
 
-	fprintf(output, "Running Performance example\n");
+	// Check that the memory only configuration is being used.
+	fprintf(output, "Running Performance example - ");
+	if (CollectionGetIsMemoryOnly()) {
+		fprintf(output, "optimised build\n");
+	}
+	else {
+		fprintf(output, "standard build\n");
+		printf("\033[0;33m");
+		fprintf(
+			output, 
+			"Use FIFTYONE_DEGREES_MEMORY_ONLY directive for optimum " \
+			"performance\n");
+		printf("\033[0m");		
+	}
 
 	state.dataFileLocation = dataFilePath;
 	state.output = output;
