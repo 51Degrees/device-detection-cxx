@@ -2465,11 +2465,8 @@ static void resultsHashFromEvidence_releasePseudoHeaders(
 {
 	EvidenceIterate(
 		state->evidence,
-		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING |
-		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_IP_ADDRESSES |
-		FIFTYONE_DEGREES_EVIDENCE_SERVER |
-		FIFTYONE_DEGREES_EVIDENCE_QUERY |
-		FIFTYONE_DEGREES_EVIDENCE_COOKIE,
+		// Ensures all prefixes are iterated over.
+		INT_MAX,
 		state,
 		resultsHashFromEvidence_releasePseudoHeadersCallback);
 }
