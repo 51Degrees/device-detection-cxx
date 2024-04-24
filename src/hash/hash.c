@@ -2399,8 +2399,9 @@ static bool setResultFromEvidenceForComponentCallback(
 static bool setResultFromDeviceID(
 	void* state,
 	EvidenceKeyValuePair* pair) {
-
-	if (StringCompare(pair->field, "51D_deviceId")) {
+	static const char DEVICEID[] = "51D_deviceId";
+	if (sizeof(DEVICEID) != pair->fieldLength ||
+		StringCompareLength(pair->field, DEVICEID, sizeof(DEVICEID))) {
 		return true; // not a match, skip
 	}
 
