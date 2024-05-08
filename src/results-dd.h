@@ -48,8 +48,7 @@
  */
 typedef struct fiftyone_degrees_result_user_agent_t {
 	int uniqueHttpHeaderIndex; /**< Index in the headers collection of the data
-							   set to the HTTP header field
-							   i.e. User-Agent */
+							   set to the HTTP header fieldi.e. User-Agent */
 	char *matchedUserAgent; /**< Pointer to the matched User-Agent if requested
 							by setting the updateMatchedUserAgent config option
 							to true, otherwise NULL. The memory allocated to
@@ -75,6 +74,8 @@ typedef struct fiftyone_degrees_results_device_detection_t {
 	fiftyoneDegreesResultsBase b; /**< Base results */
 	fiftyoneDegreesOverrideValueArray *overrides; /**< Any value overrides in
 												  the results */
+	char* buffer; /**< String buffer optionally used for pseudo headers */
+	int bufferLength; /**< Number of bytes in buffer */
 } fiftyoneDegreesResultsDeviceDetection;
 	
 /**
