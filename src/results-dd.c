@@ -23,18 +23,26 @@
 #include "results-dd.h"
 
 #include "fiftyone.h"
+#include "config-dd.h"
+
+#define CONFIG(d) ((ConfigDeviceDetection*)d->b.config)
 
 void fiftyoneDegreesResultsDeviceDetectionInit(
 	fiftyoneDegreesResultsDeviceDetection *results,
 	fiftyoneDegreesDataSetDeviceDetection *dataSet,
 	uint32_t overridesCapacity) {
-	fiftyoneDegreesResultsInit(&results->b, (void*)dataSet);
-	results->overrides = fiftyoneDegreesOverrideValuesCreate(overridesCapacity);
+	ResultsInit(&results->b, (void*)dataSet);
+	results->overrides = OverrideValuesCreate(overridesCapacity);
+	// Allocate memory for a buffer that might be used when combining header
+	// values.
+	results->bufferLength = (int)CONFIG(dataSet)->maxMatchedUserAgentLength + 1;
+	results->buffer = (char*)Malloc(results->bufferLength);
 }
 
 void fiftyoneDegreesResultsDeviceDetectionFree(
 	fiftyoneDegreesResultsDeviceDetection *results) {
-	fiftyoneDegreesOverrideValuesFree(results->overrides);
+	OverrideValuesFree(results->overrides);
+	Free(results->buffer);
 }
 
 void fiftyoneDegreesResultsUserAgentReset(
@@ -55,16 +63,12 @@ void fiftyoneDegreesResultsUserAgentReset(
 void fiftyoneDegreesResultsUserAgentInit(
 	const fiftyoneDegreesConfigDeviceDetection *config,
 	fiftyoneDegreesResultUserAgent *result) {
-	result->matchedUserAgent = NULL;
 	if (config->updateMatchedUserAgent == true) {
-		fiftyoneDegreesResultsUserAgentReset(config, result);
 		result->matchedUserAgent = (char*)Malloc(
 			config->maxMatchedUserAgentLength + 1);
-		memset(
-			result->matchedUserAgent, 
-			'_', 
-			config->maxMatchedUserAgentLength);
-		result->matchedUserAgent[config->maxMatchedUserAgentLength] = '\0';
+	}
+	else {
+		result->matchedUserAgent = NULL;
 	}
 }
 
