@@ -300,6 +300,8 @@ typedef struct fiftyone_degrees_dataset_hash_t {
 	fiftyoneDegreesCollection *components; /**< Collection of all components */
 	fiftyoneDegreesList componentsList; /**< List of component items from the
 										components collection */
+	fiftyoneDegreesHeaderPtrs** componentHeaders; /**< Array of headers for 
+												  each component index */
 	bool *componentsAvailable; /**< Array of flags indicating if there are
 							   any properties available for the component with
 							   the matching index in componentsList */
@@ -355,9 +357,7 @@ typedef struct fiftyone_degrees_result_hash_t {
 	fiftyoneDegreesCollectionItem propertyItem; /**< Property for the current
 												request */ \
 	fiftyoneDegreesList values; /**< List of value items when results are
-								fetched */ \
-	fiftyoneDegreesEvidenceKeyValuePairArray* pseudoEvidence; /**< Array of
-															pseudo evidence */
+								fetched */
 
 FIFTYONE_DEGREES_ARRAY_TYPE(
 	fiftyoneDegreesResultHash,
