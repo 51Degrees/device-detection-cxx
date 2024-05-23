@@ -713,6 +713,23 @@ EXTERNAL size_t fiftyoneDegreesResultsHashGetValuesString(
 	fiftyoneDegreesException *exception);
 
 /**
+ * Sets the buffer to a JSON string that represents all the available 
+ * properties and values in the results.
+ * @param results pointer to the results structure to release
+ * @param buffer character buffer allocated by the caller
+ * @param bufferLength of the character buffer
+ * @param exception pointer to an exception data structure to be used if an
+ * exception occurs. See exceptions.h.
+ * @return the number of characters available for values. May be larger than
+ * bufferLength if the buffer is not long enough to return the result.
+ */
+EXTERNAL size_t fiftyoneDegreesResultsHashGetValuesJson(
+	fiftyoneDegreesResultsHash* results,
+	char* buffer,
+	size_t bufferLength,
+	fiftyoneDegreesException* exception);
+
+/**
  * Sets the buffer the values associated in the results for the property name.
  * @param results pointer to the results structure to release
  * @param requiredPropertyIndex required property index of for the values
