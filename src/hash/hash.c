@@ -516,16 +516,15 @@ static void setNextNode(detectionState *state, int32_t offset) {
  * otherwise false
  */
 static bool setInitialHash(detectionState *state) {
-	bool result = false;
 	int i;
+	bool result = false;
+	const int length = state->firstIndex + NODE(state)->length;
 	state->hash = 0;
 	// Hash over the whole length using:
 	// h[i] = (c[i]*p^(L-1)) + (c[i+1]*p^(L-2)) ... + (c[i+L]*p^(0))
-	if (state->firstIndex + NODE(state)->length <= state->result->b.targetUserAgentLength) {
+	if (length <= state->result->b.targetUserAgentLength) {
 		state->power = POWERS[NODE(state)->length];
-		for (i = state->firstIndex;
-			i < state->firstIndex + NODE(state)->length;
-			i++) {
+		for (i = state->firstIndex; i < length; i++) {
 			// Increment the powers of the prime coefficients.
 			state->hash *= RK_PRIME;
 			// Add the next character to the right.
