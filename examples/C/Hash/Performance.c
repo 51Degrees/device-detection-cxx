@@ -226,7 +226,7 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
  */
 void runPerformanceThread(void* state) {
 	EXCEPTION_CREATE;
-	const char* value;
+	Item* valueItem;
 	threadState *thisState = (threadState*)state;
 
 	TIMER_CREATE;
@@ -255,7 +255,8 @@ void runPerformanceThread(void* state) {
 				EvidenceAddString(
 					evidence,
 					prefixMap->prefixEnum,
-					(&thisState->mainState->evidence[i]->pairs)[j].key + prefixMap->prefixLength,
+					(&thisState->mainState->evidence[i]->pairs)[j].key + 
+						prefixMap->prefixLength,
 					(&thisState->mainState->evidence[i]->pairs)[j].value);
 			}
 		}
@@ -265,18 +266,17 @@ void runPerformanceThread(void* state) {
 		// Get the all properties from the results if this is part of the
 		// performance evaluation.
 		for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
-			if (ResultsHashGetValues(
+			valueItem = ResultsHashGetValues(
 				results,
 				j,
-				exception) != NULL && EXCEPTION_OKAY) {
-				value = STRING(results->values.items[0].data.ptr);
-				if (value != NULL) {
-					// Increase the checksum with the first bytes of the 
-					// value to ensure that the compiler doesn't optimize
-					// out this code and not actually perform the 
-					// operation.
-					thisState->result->checkSum += *(int*)value;;
-				}
+				exception);
+			if (valueItem != NULL && 
+				valueItem->data.ptr != NULL && 
+				EXCEPTION_OKAY) {
+				// Increase the checksum with the first bytes of the value to 
+				// ensure that the compiler doesn't optimize out this code and 
+				// not actually perform the operation.
+				thisState->result->checkSum += *(int*)valueItem->data.ptr;
 			}
 		}
 
