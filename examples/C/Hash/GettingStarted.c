@@ -223,14 +223,19 @@ static void analyse(
 	outputValue(results, "Browser Name", "BrowserName", output);
 	outputValue(results, "Browser Version", "BrowserVersion", output);
 
-	char deviceIdBuffer[50] = "";
 	HashGetDeviceIdFromResults(
 		results,
-		deviceIdBuffer,
-		sizeof(deviceIdBuffer),
+		valueBuffer,
+		sizeof(valueBuffer),
 		exception);
 	EXCEPTION_THROW;
-	fprintf(output, "\n\tDevice ID: %s\n", deviceIdBuffer);
+	fprintf(output, "\n\tDevice ID: %s\n", valueBuffer);
+
+	ResultsHashGetValuesJson(results,
+		valueBuffer,
+		sizeof(valueBuffer),
+		exception);
+	fprintf(output, "\n\tJSON: %s\n", valueBuffer);
 
 	fprintf(output, "\n\n");
 }
@@ -242,8 +247,14 @@ void fiftyoneDegreesHashGettingStarted(
 	ResourceManager manager;
 	EXCEPTION_CREATE;
 
-	// Set the properties to be returned for each User-Agent.
-	PropertiesRequired properties = PropertiesDefault;
+	// Set the properties to be returned for each User-Agent. Specifying the
+	// properties that will later be retrieved at initialisation time improves
+	// performance.
+	PropertiesRequired properties = { 
+		NULL,
+		0,
+		"IsMobile,PlatformName,PlatformVersion,BrowserName,BrowserVersion",
+		NULL };
 
 	// Initialise the manager for device detection.
 	StatusCode status = HashInitManagerFromFile(
@@ -324,7 +335,7 @@ int main(int argc, char* argv[]) {
 	// http://51degrees.com/documentation/_device_detection__features__performance_options.html
 	// http://51degrees.com/documentation/_features__automatic_datafile_updates.html
 	// http://51degrees.com/documentation/_features__usage_sharing.html
-	ConfigHash config = HashLowMemoryConfig;
+	ConfigHash config = HashInMemoryConfig;
 	char dataFilePath[FILE_MAX_PATH];
 
 	// Use the supplied path for the data file or find the lite data that
