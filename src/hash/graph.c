@@ -146,8 +146,8 @@ fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash) {
-	fiftyoneDegreesGraphNodeHash *foundHash = NULL;
-	fiftyoneDegreesGraphNodeHash *nodeHashes = (GraphNodeHash*)(node + 1);
+	GraphNodeHash* foundHash = NULL;
+	GraphNodeHash* nodeHashes = (GraphNodeHash*)(node + 1);
 	int32_t lower = 0, upper = node->hashesCount - 1, middle;
 	while (lower <= upper) {
 		middle = lower + (upper - lower) / 2;
@@ -171,12 +171,12 @@ fiftyoneDegreesGraphGetMatchingHashFromListNode(
 	uint32_t hash) {
 	fiftyoneDegreesGraphNodeHash *foundHash;
 	if (node->modulo == 0) {
-		foundHash = fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch(
+		foundHash = GraphGetMatchingHashFromListNodeSearch(
 			node,
 			hash);
 	}
 	else {
-		foundHash = fiftyoneDegreesGraphGetMatchingHashFromListNodeTable(
+		foundHash = GraphGetMatchingHashFromListNodeTable(
 			node,
 			hash);
 	}
