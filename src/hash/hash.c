@@ -697,9 +697,12 @@ static void evaluateListNode(detectionState *state) {
 	else {
 		// Set the match structure with the initial hash value.
 		if (setInitialHash(state)) {
-			// Loop between the first and last indexes checking the hash values.
+			// Loop between the first and last indexes checking the hash
+			// values.
 			do {
-				nodeHash = GraphGetMatchingHashFromListNode(NODE(state), state->hash);
+				nodeHash = GraphGetMatchingHashFromListNode(
+					NODE(state), 
+					state->hash);
 			} while (nodeHash == NULL && advanceHash(state));
 		}
 	}
@@ -708,7 +711,6 @@ static void evaluateListNode(detectionState *state) {
 	// drift option.
 	state->firstIndex = initialFirstIndex;
 	state->lastIndex = initialLastIndex;
-
 
 	if (nodeHash != NULL) {
 		// A match occurred and the hash value was found. Use the offset
@@ -993,7 +995,8 @@ static bool processRoots(
 				state,
 				"Predictive",
 				component,
-				&dataSet->b.b.uniqueHeaders->items[state->result->b.uniqueHttpHeaderIndex]);
+				&dataSet->b.b.uniqueHeaders->items[
+					state->result->b.uniqueHttpHeaderIndex]);
 		}
 		// Find a match from the predictive graph, starting from the predictive
 		// graph root defined by the root nodes structure.
@@ -1103,6 +1106,7 @@ static void resetDataSet(DataSetHash *dataSet) {
 	DataSetDeviceDetectionReset(&dataSet->b);
 	ListReset(&dataSet->componentsList);
 	dataSet->componentsAvailable = NULL;
+	dataSet->componentHeaders = NULL;
 	dataSet->components = NULL;
 	dataSet->maps = NULL;
 	dataSet->rootNodes = NULL;
@@ -1479,6 +1483,30 @@ static StatusCode initPropertiesAndHeaders(
 		initOverridesFilter,
 		initGetEvidenceProperties,
 		exception);
+	return status;
+}
+static StatusCode initIndexProfileValues(
+	DataSetHash* dataSet,
+	Exception* exception) {
+	StatusCode status = FIFTYONE_DEGREES_STATUS_NOT_SET;
+	if (dataSet->config.b.b.propertyValueIndex == true) {
+		dataSet->b.b.indexProfileValues = IndexProfileValuesCreate(
+			dataSet->profiles,
+			dataSet->profileOffsets,
+			dataSet->b.b.available,
+			dataSet->values,
+			exception);
+		if (dataSet->b.b.indexProfileValues != NULL && EXCEPTION_OKAY) {
+			status = FIFTYONE_DEGREES_STATUS_SUCCESS;
+		}
+		else {
+			status = exception->status;
+		}
+	}
+	else {
+		dataSet->b.b.indexProfileValues = NULL;
+		status = FIFTYONE_DEGREES_STATUS_SUCCESS;
+	}
 	return status;
 }
 
@@ -1923,6 +1951,16 @@ static StatusCode initDataSetFromFile(
 
 	// Initialise the index for properties and profiles to values.
 	initIndexPropertyProfile(dataSet, exception);
+	if (status != SUCCESS || EXCEPTION_FAILED) {
+		freeDataSet(dataSet);
+		if (config->b.b.useTempFile == true) {
+			FileDelete(dataSet->b.b.fileName);
+		}
+		return status;
+	}
+
+	// Initialise the index for profiles to values.
+	initIndexProfileValues(dataSet, exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
 		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
@@ -2558,6 +2596,40 @@ static void resultsHashFromEvidence_handleComponentEvidence(
 	}
 }
 
+// Assigns the header field to the evidence pair to avoid needing to lookup the
+// header during future operations.
+static void resultsHashFromEvidence_setEvidenceHeader(
+	detectionComponentState* state) {
+	EvidenceKeyValuePair* pair;
+	int headerIndex = 0;
+
+	// Get the User-Agent header to avoid iterating over all possible headers
+	// for a very common header.
+	Header* ua = &state->dataSet->b.b.uniqueHeaders->items[
+		state->dataSet->b.uniqueUserAgentHeaderIndex];
+
+	// For each of the evidence pairs assign the header.
+	for (uint32_t i = 0; i < state->evidence->count; i++) {
+		pair = &state->evidence->items[i];
+
+		// If the UA header then avoid iterating all headers. If not then find
+		// the header index.
+		if (pair->fieldLength == ua->length &&
+			StringCompareLength(pair->field, ua->name, ua->length) == 0) {
+			pair->header = ua;
+		} else if (pair->header == NULL) {
+			headerIndex = HeaderGetIndex(
+				state->dataSet->b.b.uniqueHeaders, 
+				pair->field, 
+				pair->fieldLength);
+			if (headerIndex >= 0) {
+				pair->header = 
+					&state->dataSet->b.b.uniqueHeaders->items[headerIndex];
+			}
+		}
+	}
+}
+
 // Considering only those components that have available properties perform
 // device detection using the most relevant available evidence. i.e. use UACH
 // pseudo headers before a single header like User-Agent. Ensure only one input
@@ -2607,6 +2679,8 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		if (EXCEPTION_FAILED) { break; };
 
 		if (!deviceIdsFound) {
+
+			resultsHashFromEvidence_setEvidenceHeader(&state);
 
 			// Evaluate all the available evidence for the components that
 			// relate to available properties.
@@ -2947,27 +3021,27 @@ static ResultHash* getResultFromResults(
 }
 
 /**
- * Loop through the HTTP headers that matter to this property until a matching
- * result for an HTTP header is found in the results.
+ * Loop through the HTTP headers that matter to this component index until a 
+ * matching result for an HTTP header is found in the results.
  */
-static ResultHash* getResultFromResultsWithProperty(
+static ResultHash* getResultFromResultsForComponentIndex(
 	DataSetHash *dataSet,
 	ResultsHash* results,
-	Property *property) {
+	byte componentIndex) {
 	uint32_t i;
 	ResultHash* result = NULL;
 
 	// Check if there are any results with on overridden profile. This takes
 	// precedence.
 	for (i = 0; i < results->count; i++) {
-		if (results->items[i].profileIsOverriden[property->componentIndex]) {
+		if (results->items[i].profileIsOverriden[componentIndex]) {
 			return &results->items[i];
 		}
 	}
 
 	// Now look for the best result based on the order of preference for HTTP
 	// headers.
-	result = getResultFromResults(results, property->componentIndex);
+	result = getResultFromResults(results, componentIndex);
 	
 	// Return the first result if an unmatched result is allowed, otherwise
 	// null.
@@ -3003,10 +3077,10 @@ static Item* getValuesFromResult(
 	// There is a profile available for the property requested. 
 	// Use this to add the values to the results.
 	addValuesFromResult(
-		results, 
-		result, 
-		property, 
-		availablePropertyIndex, 
+		results,
+		result,
+		property,
+		availablePropertyIndex,
 		exception);
 
 	// Return the first value in the list of items.
@@ -3175,10 +3249,10 @@ ResultHash* getResultForPropertyIndex(
 			// Multiple headers could contain the best result for the 
 			// property. Find the best one available before retrieving the 
 			// property value.
-			result = getResultFromResultsWithProperty(
+			result = getResultFromResultsForComponentIndex(
 				dataSet,
 				results,
-				property);
+				property->componentIndex);
 		}
 	}
 	return result;
@@ -3240,10 +3314,10 @@ bool fiftyoneDegreesResultsHashGetHasValues(
 		&results->propertyItem,
 		exception);
 
-	ResultHash *result = getResultFromResultsWithProperty(
+	ResultHash *result = getResultFromResultsForComponentIndex(
 		dataSet,
 		results,
-		property);
+		property->componentIndex);
 
 	if (result == NULL) {
 		// There is no result which contains values for the property.
@@ -3372,8 +3446,8 @@ fiftyoneDegreesCollectionItem* fiftyoneDegreesResultsHashGetValues(
 
 		if (EXCEPTION_OKAY) {
 			// Set the property that will be available in the results structure. 
-			// This may also be needed to work out which of a selection of results 
-			// are used to obtain the values.
+			// This may also be needed to work out which of a selection of 
+			// results are used to obtain the values.
 			property = PropertyGet(
 				dataSet->properties,
 				propertyIndex,
@@ -3381,10 +3455,10 @@ fiftyoneDegreesCollectionItem* fiftyoneDegreesResultsHashGetValues(
 				exception);
 
 			if (property != NULL && EXCEPTION_OKAY) {
-				result = getResultFromResultsWithProperty(
+				result = getResultFromResultsForComponentIndex(
 					dataSet,
 					results,
-					property);
+					property->componentIndex);
 
 				if (result != NULL) {
 
@@ -3635,7 +3709,10 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 			componentIndex++) {
 
 			// Get the result for the component.
-			result = getResultFromResults(results, componentIndex);
+			result = getResultFromResultsForComponentIndex(
+				dataSet,
+				results,
+				componentIndex);
 
 			// If the result is not null then print the profile id, otherwise
 			// the default value depending on the configuration.
@@ -3733,3 +3810,270 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 	}
 }
 
+typedef struct json_state {
+	DataSetHash* dataSet; // Data set containing the values and properties
+	int16_t lastPropertyIndex; // The last property index, or -1 if first value
+	char* buffer; // Buffer to add characters to
+	size_t bufferLength; // Length of the buffer
+	size_t charsAdded; // Total characters added over all iterations
+	Exception* exception; // Exception
+} jsonState;
+
+void resultsHashGetValuesJson_Memcpy(
+	jsonState* s, 
+	const char* value, 
+	size_t valueLength) {
+	if (valueLength <= s->bufferLength) {
+		memcpy(s->buffer, value, valueLength);
+		s->buffer += valueLength;
+		s->bufferLength -= valueLength;
+	}
+	s->charsAdded += valueLength;
+}
+
+void resultsHashGetValuesJson_String(jsonState* s, const char* value, size_t length) {
+	const char quote[] = "\"";
+	resultsHashGetValuesJson_Memcpy(s, quote, sizeof(quote) - 1);
+	resultsHashGetValuesJson_Memcpy(s, value, length);
+	resultsHashGetValuesJson_Memcpy(s, quote, sizeof(quote) - 1);
+}
+
+void resultsHashGetValuesJson_Separator(jsonState* s) {
+	const char sep[] = ",";
+	resultsHashGetValuesJson_Memcpy(s, sep, sizeof(sep) - 1);
+}
+
+void resultsHashGetValuesJson_PropertyEnd(
+	jsonState* s, 
+	int16_t propertyIndex) {
+	const char list[] = "]";
+
+	Exception* exception = s->exception;
+	Property* property;
+	Item propertyItem;
+
+	// Get the property for the value.
+	DataReset(&propertyItem.data);
+	property = s->dataSet->properties->get(
+		s->dataSet->properties,
+		propertyIndex,
+		&propertyItem,
+		exception);
+	if (property != NULL && EXCEPTION_OKAY) {
+
+		// Add the ending character if a list.
+		if (property->isList) {
+			resultsHashGetValuesJson_Memcpy(s, list, sizeof(list) - 1);
+		}
+
+		// Release the property.
+		COLLECTION_RELEASE(s->dataSet->properties, &propertyItem);
+	}
+}
+
+size_t resultsHashGetValuesJson_PropertyStart(
+	jsonState* s, 
+	int16_t propertyIndex) {
+	const char colon[] = ":";
+	const char bracket[] = "[";
+
+	Property* property;
+	String* name;
+	Item propertyItem;
+	Item stringItem;
+	int charsAdded = 0;
+	Exception* exception = s->exception;
+
+	// Get the property for the value.
+	DataReset(&propertyItem.data);
+	property = s->dataSet->properties->get(
+		s->dataSet->properties,
+		propertyIndex,
+		&propertyItem,
+		exception);
+	if (property != NULL && EXCEPTION_OKAY) {
+
+		// Get the property name.
+		DataReset(&stringItem.data);
+		name = StringGet(
+			s->dataSet->strings,
+			property->nameOffset,
+			&stringItem,
+			exception);
+		if (name != NULL && EXCEPTION_OKAY) {
+
+			// Add the property name to the JSON buffer considering whether 
+			// it's a list or single value property.
+			resultsHashGetValuesJson_String(s, STRING(name), strlen(STRING(name)));
+			resultsHashGetValuesJson_Memcpy(s, colon, sizeof(colon) - 1);
+			if (property->isList) {
+				resultsHashGetValuesJson_Memcpy(s, bracket, sizeof(bracket) - 1);
+			}
+
+			// Release the string.
+			COLLECTION_RELEASE(s->dataSet->strings, &stringItem);
+		}
+
+		// Release the property.
+		COLLECTION_RELEASE(s->dataSet->properties, &propertyItem);
+	}
+
+	return charsAdded;
+}
+
+bool resultsHashGetValuesJsonCallback(uint32_t valueOffset, void* state) {
+	const char sep[] = ",";
+
+	Item valueItem;
+	Item stringItem;
+	Value* value;
+	String* name;
+	bool result = false;
+	jsonState* s = (jsonState*)state;
+	Exception* exception = s->exception;
+	
+	// Get the value from the value offset.
+	DataReset(&valueItem.data);
+	value = (Value*)s->dataSet->values->get(
+		s->dataSet->values, 
+		valueOffset, 
+		&valueItem, 
+		s->exception);
+	if (value != NULL && EXCEPTION_OKAY) {
+
+		// Is this a new property?
+		if (s->lastPropertyIndex != value->propertyIndex)
+		{
+
+			// Is there a previous property that needs to be ended and a 
+			// separator added?
+			if (s->lastPropertyIndex >= 0) {
+				resultsHashGetValuesJson_PropertyEnd(
+					s, 
+					s->lastPropertyIndex);
+				resultsHashGetValuesJson_Separator(s);
+			}
+
+			// Start the new property.
+			resultsHashGetValuesJson_PropertyStart(
+				s, 
+				value->propertyIndex);
+		}
+		else {
+
+			// Add a value separator.
+			resultsHashGetValuesJson_Memcpy(s, sep, sizeof(sep) - 1);
+		}
+
+		// Get the string associated with the value.
+		DataReset(&stringItem.data);
+		name = StringGet(
+			s->dataSet->strings,
+			value->nameOffset,
+			&stringItem,
+			exception);
+		if (name != NULL && EXCEPTION_OKAY) {
+
+			// Add the string to the buffer.
+			resultsHashGetValuesJson_String(
+				s, 
+				STRING(name), 
+				strlen(STRING(name)));
+
+			// Set the result to continue as the value was written 
+			// successfully.
+			result = true;
+
+			// Release the string.
+			COLLECTION_RELEASE(s->dataSet->strings, &stringItem);
+		}
+
+		// Update the last property index.
+		s->lastPropertyIndex = value->propertyIndex;
+
+		// Release the value.
+		COLLECTION_RELEASE(s->dataSet->values, &valueItem);
+	}
+
+	return result;
+}
+
+size_t fiftyoneDegreesResultsHashGetValuesJson(
+	fiftyoneDegreesResultsHash* results,
+	char* buffer,
+	size_t bufferLength,
+	fiftyoneDegreesException* exception) {
+	const char start[] = "{";
+	const char end[] = "}";
+
+	ResultHash* result;
+	Item profileItem;
+	Profile* profile;
+
+	// Set the state used with the iteration callback.
+	jsonState state = { 
+		(DataSetHash*)results->b.b.dataSet, 
+		-1,
+		buffer, 
+		bufferLength, 
+		0,
+		exception };	
+
+	// Ensure any previous uses of the results to get values are released.
+	resultsHashRelease(results);
+
+	// Method can only be used with the profile values index.
+	// TODO: Add implementation without the index.
+	if (state.dataSet->b.b.indexProfileValues == NULL) {
+		return 0;
+	}
+
+	// Add the start character.
+	resultsHashGetValuesJson_Memcpy(&state, start, sizeof(start) - 1);
+
+	// For each of the components that the data knows about.
+	for (byte i = 0; i < state.dataSet->componentsList.count; i++) {
+
+		// Get the result for the component index.
+		result = getResultFromResultsForComponentIndex(
+			state.dataSet, 
+			results, 
+			i);
+
+		// If there is a result available then add the properties to the 
+		// output.
+		if (result != NULL && result->profileOffsets[i] >= 0) {
+			DataReset(&profileItem.data);
+			profile = (Profile*)state.dataSet->profiles->get(
+				state.dataSet->profiles,
+				result->profileOffsets[i],
+				&profileItem, 
+				exception);
+			if (profile == NULL || EXCEPTION_FAILED) {
+				return 0;
+			}
+			assert(profile->componentIndex == i);
+
+			// Add the properties and values.
+			IndexProfileValuesIterate(
+				state.dataSet->b.b.indexProfileValues,
+				profile->profileId,
+				&state,
+				resultsHashGetValuesJsonCallback);
+
+			COLLECTION_RELEASE(state.dataSet->profiles, &profileItem);
+		}
+	}
+
+	// Complete the last property if properties were added.
+	if (state.lastPropertyIndex >= 0) {
+		resultsHashGetValuesJson_PropertyEnd(
+			&state,
+			state.lastPropertyIndex);
+	}
+
+	// Add the end character.
+	resultsHashGetValuesJson_Memcpy(&state, end, sizeof(end));
+
+	return state.charsAdded;
+}
