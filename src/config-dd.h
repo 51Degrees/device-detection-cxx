@@ -78,10 +78,21 @@ typedef struct fiftyone_degrees_config_device_detecton_t {
 FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_UPDATE_DEFAULT
 
 /**
- * Default value for the #fiftyoneDegreesConfigDeviceDetection structure.
+ * Default value for the #fiftyoneDegreesConfigDeviceDetection structure with
+ * index
  */
-#define FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT \
-	FIFTYONE_DEGREES_CONFIG_DEFAULT, \
+#define FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_WITH_INDEX \
+	FIFTYONE_DEGREES_CONFIG_DEFAULT_WITH_INDEX, \
+	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_UPDATE, \
+	500, /* Default to 500 characters for the matched User-Agent */ \
+	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_UNMATCHED
+
+ /**
+  * Default value for the #fiftyoneDegreesConfigDeviceDetection structure 
+  * without index.
+  */
+#define FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_NO_INDEX \
+	FIFTYONE_DEGREES_CONFIG_DEFAULT_NO_INDEX, \
 	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_UPDATE, \
 	500, /* Default to 500 characters for the matched User-Agent */ \
 	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_UNMATCHED

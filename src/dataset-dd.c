@@ -40,7 +40,8 @@ fiftyoneDegreesDataSetDeviceDetectionInitPropertiesAndHeaders(
 	fiftyoneDegreesPropertiesGetMethod getPropertyMethod,
 	fiftyoneDegreesHeadersGetMethod getHeaderMethod,
 	fiftyoneDegreesOverridesFilterMethod overridesFilter,
-	fiftyoneDegreesEvidencePropertiesGetMethod getEvidencePropertiesMethod) {
+	fiftyoneDegreesEvidencePropertiesGetMethod getEvidencePropertiesMethod,
+	fiftyoneDegreesException* exception) {
 	StatusCode status = DataSetInitProperties(
 		&dataSet->b,
 		properties,
@@ -54,7 +55,8 @@ fiftyoneDegreesDataSetDeviceDetectionInitPropertiesAndHeaders(
 	status = DataSetInitHeaders(
 		&dataSet->b,
 		state,
-		getHeaderMethod);
+		getHeaderMethod,
+		exception);
 	if (status != SUCCESS) {
 		return status;
 	}

@@ -58,7 +58,7 @@
 // the default number of tests to execute.
 #define DEFAULT_ITERATIONS_PER_THREAD 10000
 
-#define MAX_EVIDENCE 5
+#define MAX_EVIDENCE 7
 
 static const char* dataDir = "device-detection-data";
 
@@ -83,20 +83,29 @@ typedef struct performanceConfig_t {
 	ConfigHash *config;
 	// True if all properties should be initialized and fetched
 	bool allProperties;
-	// True if performance graph should be used
-	bool performanceGraph;
-	// True if predictive graph should be used.
-	bool predictiveGraph;
 } performanceConfig;
 
 /**
- * Dataset configurations to run benchmarking against.
+ * Dataset configurations to run benchmarking against. Only InMemory is used
+ * in default performance example.
+ * 
+ * The compiler directive FIFTYONE_DEGREES_MEMORY_ONLY (which is not part of 
+ * configuration) to compile out considerations for file based operation and 
+ * thus provide maximum performance can be used to further improve performance.
+ * 
+ * InMemory - all the data is loaded into memory and file closed. Fast.
+ * Balanced - popular data is loaded into memory, other cached and loaded from 
+ *   data file. Quite slow, but okay for web sites.
+ * LowMemory - all data loaded from data file when needed. Slow.
  */
 performanceConfig performanceConfigs[] = {
-	{ &HashInMemoryConfig, false, true, false},
-	{ &HashInMemoryConfig, true, true, false },
-	{ &HashInMemoryConfig, false, false, true},
-	{ &HashInMemoryConfig, true, false, true }, };
+	{ &HashInMemoryConfig, false },
+	{ &HashInMemoryConfig, true },
+	//{ &HashBalancedConfig, false },
+	//{ &HashBalancedConfig, true },
+	//{ &HashLowMemoryConfig, false },
+	//{ &HashLowMemoryConfig, true }
+};
 
 /**
  * Result of benchmarking from a single thread.
@@ -217,7 +226,7 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
  */
 void runPerformanceThread(void* state) {
 	EXCEPTION_CREATE;
-	const char* value;
+	Item* valueItem;
 	threadState *thisState = (threadState*)state;
 
 	TIMER_CREATE;
@@ -246,7 +255,8 @@ void runPerformanceThread(void* state) {
 				EvidenceAddString(
 					evidence,
 					prefixMap->prefixEnum,
-					(&thisState->mainState->evidence[i]->pairs)[j].key + prefixMap->prefixLength,
+					(&thisState->mainState->evidence[i]->pairs)[j].key + 
+						prefixMap->prefixLength,
 					(&thisState->mainState->evidence[i]->pairs)[j].value);
 			}
 		}
@@ -256,18 +266,17 @@ void runPerformanceThread(void* state) {
 		// Get the all properties from the results if this is part of the
 		// performance evaluation.
 		for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
-			if (ResultsHashGetValues(
+			valueItem = ResultsHashGetValues(
 				results,
 				j,
-				exception) != NULL && EXCEPTION_OKAY) {
-				value = STRING(results->values.items[0].data.ptr);
-				if (value != NULL) {
-					// Increase the checksum with the first bytes of the 
-					// value to ensure that the compiler doesn't optimize
-					// out this code and not actually perform the 
-					// operation.
-					thisState->result->checkSum += *(int*)value;;
-				}
+				exception);
+			if (valueItem != NULL && 
+				valueItem->data.ptr != NULL && 
+				EXCEPTION_OKAY) {
+				// Increase the checksum with the first bytes of the value to 
+				// ensure that the compiler doesn't optimize out this code and 
+				// not actually perform the operation.
+				thisState->result->checkSum += *(int*)valueItem->data.ptr;
 			}
 		}
 
@@ -387,14 +396,17 @@ void executeBenchmark(
 	performanceConfig config) {
 	// Make a local copy of the config as we're going to alter it a bit.
 	ConfigHash dataSetConfig = *config.config;
+
+	// Output the name of the stock configuration before changing parameters.
 	fprintf(state->output, 
-		"Benchmarking with profile: %s AllProperties: %s, "
-		"performanceGraph: %s, predictiveGraph %s\n",
+		"Benchmarking with profile: %s AllProperties: %s\n",
 		fiftyoneDegreesExampleGetConfigName(dataSetConfig),
-		config.allProperties ? "True" : "False",
-		config.performanceGraph ? "True" : "False",
-		config.predictiveGraph ? "True" :  "False");
-	
+		config.allProperties ? "True" : "False");
+
+	// Ensure that for performance tests the updating of the matched user-agent
+	// is disabled to reduce processing overhead.
+	dataSetConfig.b.updateMatchedUserAgent = false;
+
 	EXCEPTION_CREATE;
 
 	PropertiesRequired properties = PropertiesDefault;
@@ -402,8 +414,9 @@ void executeBenchmark(
 		properties.string = "IsMobile";
 	}
 
-	dataSetConfig.usePerformanceGraph = config.performanceGraph;
-	dataSetConfig.usePredictiveGraph = config.predictiveGraph;
+	// Multi graph operation is being deprecated. There is only one graph.
+	dataSetConfig.usePerformanceGraph = false;
+	dataSetConfig.usePredictiveGraph = true;
 
 	dataSetConfig.strings.concurrency = state->numberOfThreads;
 	dataSetConfig.properties.concurrency = state->numberOfThreads;
@@ -417,7 +430,7 @@ void executeBenchmark(
 	state->threads = (FIFTYONE_DEGREES_THREAD*)
 		Malloc(sizeof(FIFTYONE_DEGREES_THREAD) * state->numberOfThreads);
 
-	fprintf(state->output, "Load from disk\n");
+	fprintf(state->output, "Initialize device detection\n");
 	
 	TIMER_CREATE;
 	TIMER_START;
@@ -480,7 +493,20 @@ void fiftyoneDegreesHashPerformance(
 	performanceState state;
 	char buffer[1000];
 
-	fprintf(output, "Running Performance example\n");
+	// Check that the memory only configuration is being used.
+	fprintf(output, "Running Performance example - ");
+	if (CollectionGetIsMemoryOnly()) {
+		fprintf(output, "optimised build\n");
+	}
+	else {
+		fprintf(output, "standard build\n");
+		printf("\033[0;33m");
+		fprintf(
+			output, 
+			"Use FIFTYONE_DEGREES_MEMORY_ONLY directive for optimum " \
+			"performance\n");
+		printf("\033[0m");		
+	}
 
 	state.dataFileLocation = dataFilePath;
 	state.output = output;
@@ -543,14 +569,13 @@ void fiftyoneDegreesHashPerformance(
 		i < (int)(sizeof(performanceConfigs) / sizeof(performanceConfig));
 		i++) {
 		
-		if (fiftyoneDegreesCollectionGetIsMemoryOnly() == false ||
+		if (CollectionGetIsMemoryOnly() == false ||
 			performanceConfigs[i].config->b.b.allInMemory == true) {
 			
 			if (state.resultsOutput != NULL) {
-				fprintf(state.resultsOutput, "%s\n\"%s%s%s\": {\n",
+				fprintf(state.resultsOutput, "%s\n\"%s%s\": {\n",
 					i > 0 ? "," : "",
 					fiftyoneDegreesExampleGetConfigName(*(performanceConfigs[i].config)),
-					performanceConfigs[i].predictiveGraph ? "_Pred" : "",
 					performanceConfigs[i].allProperties ? "_All" : "");
 			}
 

@@ -25,6 +25,7 @@
 
 #include <stdlib.h>
 #include "common-cxx/dataset.h"
+#include "common-cxx/exceptions.h"
 #include "config-dd.h"
 
 /**
@@ -89,6 +90,8 @@ fiftyoneDegreesDataSetDeviceDetectionGet(
  * or not a property is eligible to be overridden
  * @param getEvidencePropertiesMethod method used to populate the list of
  * evidence required for a property in the data set
+ * @param exception pointer to an exception data structure to be used if an
+ * exception occurs. See exceptions.h
  * @return the status associated with the header initialisation. Any value
  * other than #FIFTYONE_DEGREES_STATUS_SUCCESS  means the headers were not
  * initialised correctly
@@ -101,7 +104,8 @@ fiftyoneDegreesDataSetDeviceDetectionInitPropertiesAndHeaders(
 	fiftyoneDegreesPropertiesGetMethod getPropertyMethod,
 	fiftyoneDegreesHeadersGetMethod getHeaderMethod,
 	fiftyoneDegreesOverridesFilterMethod overridesFilter,
-    fiftyoneDegreesEvidencePropertiesGetMethod getEvidencePropertiesMethod) ;
+    fiftyoneDegreesEvidencePropertiesGetMethod getEvidencePropertiesMethod,
+	fiftyoneDegreesException* exception);
 
 /**
  * @copydoc fiftyoneDegreesDataSetReset

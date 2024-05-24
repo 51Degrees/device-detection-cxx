@@ -73,6 +73,7 @@
 #include "../common-cxx/value.h"
 #include "../common-cxx/profile.h"
 #include "../common-cxx/overrides.h"
+#include "../common-cxx/json.h"
 #include "../config-dd.h"
 #include "../dataset-dd.h"
 #include "../results-dd.h"
@@ -300,6 +301,8 @@ typedef struct fiftyone_degrees_dataset_hash_t {
 	fiftyoneDegreesCollection *components; /**< Collection of all components */
 	fiftyoneDegreesList componentsList; /**< List of component items from the
 										components collection */
+	fiftyoneDegreesHeaderPtrs** componentHeaders; /**< Array of headers for 
+												  each component index */
 	bool *componentsAvailable; /**< Array of flags indicating if there are
 							   any properties available for the component with
 							   the matching index in componentsList */
@@ -355,9 +358,7 @@ typedef struct fiftyone_degrees_result_hash_t {
 	fiftyoneDegreesCollectionItem propertyItem; /**< Property for the current
 												request */ \
 	fiftyoneDegreesList values; /**< List of value items when results are
-								fetched */ \
-	fiftyoneDegreesEvidenceKeyValuePairArray* pseudoEvidence; /**< Array of
-															pseudo evidence */
+								fetched */
 
 FIFTYONE_DEGREES_ARRAY_TYPE(
 	fiftyoneDegreesResultHash,
@@ -711,6 +712,23 @@ EXTERNAL size_t fiftyoneDegreesResultsHashGetValuesString(
 	size_t bufferLength,
 	const char *separator,
 	fiftyoneDegreesException *exception);
+
+/**
+ * Sets the buffer to a JSON string that represents all the available 
+ * properties and values in the results.
+ * @param results pointer to the results structure to release
+ * @param buffer character buffer allocated by the caller
+ * @param bufferLength of the character buffer
+ * @param exception pointer to an exception data structure to be used if an
+ * exception occurs. See exceptions.h.
+ * @return the number of characters available for values. May be larger than
+ * bufferLength if the buffer is not long enough to return the result.
+ */
+EXTERNAL size_t fiftyoneDegreesResultsHashGetValuesJson(
+	fiftyoneDegreesResultsHash* results,
+	char* buffer,
+	size_t bufferLength,
+	fiftyoneDegreesException* exception);
 
 /**
  * Sets the buffer the values associated in the results for the property name.
