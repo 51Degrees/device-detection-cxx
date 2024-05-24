@@ -253,7 +253,7 @@ void fiftyoneDegreesHashGettingStarted(
 	PropertiesRequired properties = { 
 		NULL,
 		0,
-		"IsMobile,PlatformName,PlatformVersion,BrowserName,BrowserVersion",
+		"IsMobile,PlatformName,PlatformVersion,BrowserName,BrowserVersion,HardwareImages",
 		NULL };
 
 	// Initialise the manager for device detection.
