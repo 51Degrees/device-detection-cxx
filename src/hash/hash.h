@@ -73,6 +73,7 @@
 #include "../common-cxx/value.h"
 #include "../common-cxx/profile.h"
 #include "../common-cxx/overrides.h"
+#include "../common-cxx/json.h"
 #include "../config-dd.h"
 #include "../dataset-dd.h"
 #include "../results-dd.h"
