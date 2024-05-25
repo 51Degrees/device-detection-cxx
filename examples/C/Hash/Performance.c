@@ -83,20 +83,14 @@ typedef struct performanceConfig_t {
 	ConfigHash *config;
 	// True if all properties should be initialized and fetched
 	bool allProperties;
-	// True if performance graph should be used
-	bool performanceGraph;
-	// True if predictive graph should be used.
-	bool predictiveGraph;
 } performanceConfig;
 
 /**
  * Dataset configurations to run benchmarking against.
  */
 performanceConfig performanceConfigs[] = {
-	{ &HashInMemoryConfig, false, true, false},
-	{ &HashInMemoryConfig, true, true, false },
-	{ &HashInMemoryConfig, false, false, true},
-	{ &HashInMemoryConfig, true, false, true }, };
+	{ &HashInMemoryConfig, false },
+	{ &HashInMemoryConfig, true } };
 
 /**
  * Result of benchmarking from a single thread.
@@ -388,12 +382,9 @@ void executeBenchmark(
 	// Make a local copy of the config as we're going to alter it a bit.
 	ConfigHash dataSetConfig = *config.config;
 	fprintf(state->output, 
-		"Benchmarking with profile: %s AllProperties: %s, "
-		"performanceGraph: %s, predictiveGraph %s\n",
+		"Benchmarking with profile: %s AllProperties: %s\n",
 		fiftyoneDegreesExampleGetConfigName(dataSetConfig),
-		config.allProperties ? "True" : "False",
-		config.performanceGraph ? "True" : "False",
-		config.predictiveGraph ? "True" :  "False");
+		config.allProperties ? "True" : "False");
 	
 	EXCEPTION_CREATE;
 
@@ -402,8 +393,9 @@ void executeBenchmark(
 		properties.string = "IsMobile";
 	}
 
-	dataSetConfig.usePerformanceGraph = config.performanceGraph;
-	dataSetConfig.usePredictiveGraph = config.predictiveGraph;
+	// Multi graph operation is being deprecated. There is only one graph.
+	dataSetConfig.usePerformanceGraph = false;
+	dataSetConfig.usePredictiveGraph = true;
 
 	dataSetConfig.strings.concurrency = state->numberOfThreads;
 	dataSetConfig.properties.concurrency = state->numberOfThreads;
@@ -547,10 +539,9 @@ void fiftyoneDegreesHashPerformance(
 			performanceConfigs[i].config->b.b.allInMemory == true) {
 			
 			if (state.resultsOutput != NULL) {
-				fprintf(state.resultsOutput, "%s\n\"%s%s%s\": {\n",
+				fprintf(state.resultsOutput, "%s\n\"%s%s\": {\n",
 					i > 0 ? "," : "",
 					fiftyoneDegreesExampleGetConfigName(*(performanceConfigs[i].config)),
-					performanceConfigs[i].predictiveGraph ? "_Pred" : "",
 					performanceConfigs[i].allProperties ? "_All" : "");
 			}
 
