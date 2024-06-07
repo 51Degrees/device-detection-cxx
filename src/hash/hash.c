@@ -3788,7 +3788,7 @@ size_t fiftyoneDegreesResultsHashGetValuesJson(
 	DataReset(&propertyItem.data);
 
 	// Set the state used with the JSON methods.
-	fiftyoneDegreesJson s;
+	Json s;
 	s.buffer = buffer;
 	s.bufferLength = bufferLength;
 	s.charsAdded = 0;
