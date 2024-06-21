@@ -174,6 +174,10 @@ typedef struct deviceId_lookup_state_t {
 	int deviceIdsFound; /* The number of deviceIds found */
 } deviceIdLookupState;
 
+typedef struct js_redundancy_flags_state_t {
+	bool uachPaltformVersionFound; /* Whether 'Sec-Ch-Ua-Platform-Version' header is present in evidence */
+} jsRedundancyFlagsState;
+
 /**
  * PRESET HASH CONFIGURATIONS
  */
@@ -2344,6 +2348,52 @@ inline static void resultsHashFromEvidence_handleAllEvidence(
 	}
 }
 
+static bool findRedundancyProofsInEvidence(
+	void* state,
+	EvidenceKeyValuePair* pair) 
+{
+	jsRedundancyFlagsState* const stateFragment = (jsRedundancyFlagsState*)state;
+	if (!StringCompare(pair->field, "Sec-Ch-Ua-Platform-Version")) {
+		stateFragment->uachPaltformVersionFound = true;
+		return false; // no need to continue
+	}
+	return true;
+}
+
+inline static void resultsHashFromEvidence_overrideRedundantJsSnippets(
+	EvidenceKeyValuePairArray* const evidence,
+	ResultsHash* const results)
+{
+	jsRedundancyFlagsState stateFragment = { false };
+	for (int i = 0; i < FIFTYONE_DEGREES_ORDER_OF_PRECEDENCE_SIZE; i++) {
+		EvidenceIterate(
+			evidence,
+			prefixOrderOfPrecedence[i],
+			&stateFragment,
+			findRedundancyProofsInEvidence);
+	}
+
+	if (!stateFragment.uachPaltformVersionFound) {
+		// uach not found -- keep the snippet
+		return;
+	}
+
+	DataSetHash* const dataSet = (DataSetHash*)results->b.b.dataSet;
+
+	const int requiredPropertyIndex = PropertiesGetRequiredPropertyIndexFromName(
+		dataSet->b.b.available,
+		"javascriptgethighentropyvalues");
+
+	if (requiredPropertyIndex < 0) {
+		return;
+	}
+
+	fiftyoneDegreesOverridesAdd(
+		results->b.overrides,
+		requiredPropertyIndex,
+		"");
+}
+
 void fiftyoneDegreesResultsHashFromEvidence(
 	fiftyoneDegreesResultsHash *results,
 	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
@@ -2361,6 +2411,9 @@ void fiftyoneDegreesResultsHashFromEvidence(
 	do {
 		// Construct the evidence for pseudo header
 		resultsHashFromEvidence_constructEvidenceWithPseudoHeaders(dataSet, evidence, results, exception);
+		if (EXCEPTION_FAILED) { break; };
+
+		resultsHashFromEvidence_overrideRedundantJsSnippets(evidence, results);
 		if (EXCEPTION_FAILED) { break; };
 
 		resultsHashFromEvidence_extractOverrides(dataSet, evidence, results, exception);
