@@ -232,8 +232,6 @@ void runPerformanceThread(void* state) {
 	const char* value;
 	threadState *thisState = (threadState*)state;
 
-	TIMER_CREATE;
-	TIMER_START;
 
 	// Create an instance of results to access the returned values.
 	ResultsHash *results = ResultsHashCreate(
@@ -243,6 +241,9 @@ void runPerformanceThread(void* state) {
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 	EvidenceKeyValuePairArray* evidence = EvidenceCreate(
 		thisState->mainState->maxEvidence);
+
+    TIMER_CREATE;
+    TIMER_START;
 
 	// Execute the performance test.
 	for (int i = 0; i < thisState->mainState->iterationsPerThread; i++) {
@@ -278,11 +279,12 @@ void runPerformanceThread(void* state) {
 
 		thisState->result->count++;
 	}
-
+    
+    TIMER_END;
+    
 	EvidenceFree(evidence);
 	ResultsHashFree(results);
 
-	TIMER_END;
 	thisState->result->elapsedMillis = TIMER_ELAPSED;
 
 	if (ThreadingGetIsThreadSafe()) {
