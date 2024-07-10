@@ -26,8 +26,6 @@
  // Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
  // which requires to be included before 'malloc.h'.
 #include "ExampleBase.h"
-#include "../../../src/hash/hash.h"
-#include "../../../src/hash/fiftyone.h"
 
 /**
  * @example Hash/Performance.c
@@ -58,6 +56,12 @@
 // the default number of tests to execute.
 #define DEFAULT_ITERATIONS_PER_THREAD 10000
 
+// Parameters used for allocating memory when reading evidence. 
+#define SIZE_OF_KEY 500
+#define SIZE_OF_VALUE 1000
+#define MAX_EVIDENCE 20
+
+// The device detection data folder from the sub module with lite device data.
 static const char* dataDir = "device-detection-data";
 
 // In this example, by default, the 51degrees "Lite" file needs to be in the
@@ -69,8 +73,10 @@ static const char* dataDir = "device-detection-data";
 // Find out about the Enterprise data file on our pricing page:
 // https://51degrees.com/pricing
 static const char* dataFileName = "51Degrees-LiteV4.1.hash";
-// This file contains the 20,000 most commonly seen combinations of header values 
-// that are relevant to device detection. For example, User-Agent and UA-CH headers.
+
+// This file contains the 20,000 most commonly seen combinations of header 
+// values that are relevant to device detection. For example, User-Agent and 
+// UA-CH headers.
 static const char* evidenceFileName = "20000 Evidence Records.yml";
 
 /**
@@ -104,6 +110,15 @@ typedef struct benchmarkResult_t {
 } benchmarkResult;
 
 /**
+ * Pointer to evidence, and the next item in the list. 
+ */
+typedef struct evidence_node_t evidenceNode;
+typedef struct evidence_node_t {
+	EvidenceKeyValuePairArray* array; // evidence 
+	evidenceNode* next; // null if the end of the list
+} evidenceNode;
+
+/**
  * Single state containing everything needed for running and then
  * reporting the performance tests.
  */
@@ -112,8 +127,10 @@ typedef struct performanceState_t {
 	benchmarkResult* resultList;
 	// Number of concurrent threads to benchmark
 	uint16_t numberOfThreads;
-	// Array of evidence sets. Each set contains one or more piece of evidence
-	EvidenceKeyValuePairArray **evidence;
+	// Pointer to the first item of evidence available.
+	evidenceNode* evidenceFirst;
+	// Pointer to the last item of evidence available.
+	evidenceNode* evidenceLast;
 	// Number of sets of evidence in the evidence array
 	int evidenceCount;
 	// Number of sets of evidence to process
@@ -146,21 +163,6 @@ typedef struct threadState_t {
 	benchmarkResult* result;
 } threadState;
 
-#ifdef _MSC_VER
-#pragma warning (push)
-#pragma warning (disable: 4100) 
-#endif
-/**
- * Callback function to count the number of evidence entries in the YAML file.
- */
-static void getCount(KeyValuePair* pairs, uint16_t size, void* state) {
-	performanceState* perfState = (performanceState*)state;
-	perfState->evidenceCount++;
-}
-#ifdef _MSC_VER
-#pragma warning (pop)
-#endif
-
 /**
  * Callback function to allocate memory for, and store, the evidence values
  * read from the YAML file.
@@ -168,13 +170,29 @@ static void getCount(KeyValuePair* pairs, uint16_t size, void* state) {
 static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 	EXCEPTION_CREATE;
 	char* ptr;
-	EvidenceKeyValuePairArray *evidence;
 	performanceState* perfState = (performanceState*)state;
+	
+	// If there are already enough evidence records in memory then don't add
+	// anymore.
+	if (perfState->evidenceCount >= perfState->iterationsPerThread) {
+		return;
+	}
 
-	// Allocate space for this piece of evidence.
-	evidence = EvidenceCreate(size);
-	perfState->evidence[perfState->evidenceCount] = evidence;
-	evidence->pseudoEvidence = NULL;
+	// Allocate space for this node and the evidence.
+	evidenceNode* node = (evidenceNode*)Malloc(sizeof(evidenceNode));
+	node->next = NULL;
+	EvidenceKeyValuePairArray* evidence = EvidenceCreate(size);
+	node->array = evidence;
+
+	// Add the evidence node to the linked list of evidence nodes.
+	if (perfState->evidenceFirst == NULL) {
+		perfState->evidenceFirst = node;
+		perfState->evidenceLast = node;
+	}
+	else {
+		perfState->evidenceLast->next = node;
+		perfState->evidenceLast = node;
+	}	
 
 	// Get the target pair that was just allocated.
 	for (uint32_t i = 0; i < size; i++) {
@@ -184,7 +202,7 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 		if (prefix != NULL) {
 			evidence->items[i].prefix = prefix->prefixEnum;
 
-			// Copy the key.
+			// Copy the YAML key to the field name taking off the prefix.
 			evidence->items[i].field = (const char*)Malloc(
 				sizeof(char) * (pairs[i].keyLength + 1 - prefix->prefixLength));
 			ptr = strncpy(
@@ -232,29 +250,32 @@ void runPerformanceThread(void* state) {
 	const char* value;
 	threadState *thisState = (threadState*)state;
 
-
 	// Create an instance of results to access the returned values.
 	ResultsHash *results = ResultsHashCreate(
 		&thisState->mainState->manager,
 		thisState->mainState->maxEvidence,
 		thisState->mainState->maxEvidence);
+
+	// Reference to the dataset.
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
+
+	// Thread specific evidence instance.
 	EvidenceKeyValuePairArray* evidence = EvidenceCreate(
 		thisState->mainState->maxEvidence);
 
     TIMER_CREATE;
     TIMER_START;
 
-	// Execute the performance test.
-	for (int i = 0; i < thisState->mainState->iterationsPerThread; i++) {
+	// Execute the performance test moving through the linked list.
+	evidenceNode* node = thisState->mainState->evidenceFirst;
+	while(node != NULL) {
 
-		// Copy the source evidence to this thread's evidence.
-		EvidenceKeyValuePairArray* src = thisState->mainState->evidence[i];
-		for (uint32_t j = 0; j < src->count; j++)
-		{
-			evidence->items[j] = src->items[j];
-		}
-		evidence->count = src->count;
+		// The evidence data structure has a field for pseudoEvidence which is
+		// modified during processing. Therefore the node in the list can't
+		// be used directly as it might be in use by another thread. Therefore
+		// copy the immutable members of the evidence node.
+		evidence->items = node->array->items;
+		evidence->count = node->array->count;
 
 		ResultsHashFromEvidence(results, evidence, exception);
 		EXCEPTION_THROW;
@@ -277,7 +298,11 @@ void runPerformanceThread(void* state) {
 			}
 		}
 
+		// Increase the count.
 		thisState->result->count++;
+
+		// Move to the next node.
+		node = node->next;
 	}
     
     TIMER_END;
@@ -483,7 +508,6 @@ void fiftyoneDegreesHashPerformance(
 	FILE* output,
 	FILE* resultsOutput) {
 	performanceState state;
-	char buffer[1000];
 
 	// Check that the memory only configuration is being used.
 	fprintf(output, "Running Performance example - ");
@@ -514,42 +538,32 @@ void fiftyoneDegreesHashPerformance(
 		Malloc(sizeof(benchmarkResult) * numberOfThreads);
 	state.iterationsPerThread = iterationsPerThread;
 
-	KeyValuePair pair[10];
-	char key[10][500];
-	char value[10][1000];
-	for (int i = 0; i < 10; i++) {
+	// Allocate working memory for iterating over the YAML evidence source.
+	char buffer[MAX_EVIDENCE * (SIZE_OF_KEY + SIZE_OF_VALUE)];
+	KeyValuePair pair[MAX_EVIDENCE];
+	char key[MAX_EVIDENCE][SIZE_OF_KEY];
+	char value[MAX_EVIDENCE][SIZE_OF_VALUE];
+	for (int i = 0; i < MAX_EVIDENCE; i++) {
 		pair[i].key = key[i];
-		pair[i].keyLength = 500;
+		pair[i].keyLength = SIZE_OF_KEY;
 		pair[i].value = value[i];
-		pair[i].valueLength = 1000;
+		pair[i].valueLength = SIZE_OF_VALUE;
 	}
-	YamlFileIterate(
-		evidenceFilePath,
-		buffer,
-		sizeof(buffer),
-		pair,
-		10,
-		&state,
-		getCount);
-	state.evidence = (EvidenceKeyValuePairArray**)
-		Malloc(sizeof(EvidenceKeyValuePairArray*) * state.evidenceCount);
-	if (state.evidenceCount < state.iterationsPerThread) {
-		fprintf(state.output, 
-			"Not enough evidence for %d iterations.\n",
-			state.iterationsPerThread);
-		state.iterationsPerThread = state.evidenceCount;
-	}
+	// Iterate over the YAML evidence source storing each entry in memory as 
+	// evidence.
 	fprintf(
 		state.output,
-		"Reading %d evidence records into memory.\n", state.evidenceCount);
+		"Reading evidence records into memory.\n");
 	state.evidenceCount = 0;
 	state.maxEvidence = 0;
+	state.evidenceFirst = NULL;
+	state.evidenceLast = NULL;
 	YamlFileIterate(
 		evidenceFilePath,
 		buffer,
 		sizeof(buffer),
 		pair,
-		10,
+		MAX_EVIDENCE,
 		&state,
 		storeEvidence);
 
@@ -557,7 +571,7 @@ void fiftyoneDegreesHashPerformance(
 		fprintf(state.resultsOutput, "{");
 	}
 
-	// run the selected benchmarks from disk
+	// Run the selected benchmarks using the evidence now in memory.
 	for (int i = 0;
 		i < (int)(sizeof(performanceConfigs) / sizeof(performanceConfig));
 		i++) {
@@ -584,8 +598,10 @@ void fiftyoneDegreesHashPerformance(
 		fprintf(state.resultsOutput, "}\n");
 	}
 
-	for (int i = 0; i < state.evidenceCount; i++) {
-		EvidenceKeyValuePairArray* evidence = state.evidence[i];
+	// Free the memory used for the evidence.
+	evidenceNode* node = state.evidenceFirst;
+	while (node != NULL) {
+		EvidenceKeyValuePairArray* evidence = node->array;
 		for (uint32_t j = 0; j < evidence->count; j++) {
 			if (evidence->items[j].field != NULL) {
 				Free((void*)evidence->items[j].field);
@@ -593,9 +609,14 @@ void fiftyoneDegreesHashPerformance(
 			Free((void*)evidence->items[j].originalValue);
 		}
 		EvidenceFree(evidence);
+		evidenceNode* next = node->next;
+		Free(node);
+		node = next;
 	}
-	Free(state.evidence);
+
+	// Free the memory used for output.
 	Free(state.resultList);
+
 	fprintf(output, "Finished Performance example\n");
 }
 
