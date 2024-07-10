@@ -29,8 +29,7 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #endif
-#include "../../../src/hash/hash.h"
-
+#include "../../../src/hash/fiftyone.h"
 
 #ifdef _MSC_VER
 #define TIMER_CREATE double start, end

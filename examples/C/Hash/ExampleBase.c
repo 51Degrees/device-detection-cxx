@@ -21,8 +21,6 @@
  * ********************************************************************* */
 
 #include "ExampleBase.h"
-#include "../../../src/hash/fiftyone.h"
-#include <string.h>
 
 const char* fiftyoneDegreesExampleGetConfigName(
 	fiftyoneDegreesConfigHash config) {

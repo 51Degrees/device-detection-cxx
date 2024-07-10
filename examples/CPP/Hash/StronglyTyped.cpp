@@ -20,18 +20,8 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
  
-#include <string>
-#include <iostream>
-// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
-// which requires to be included before 'malloc.h'.
-#include "../../C/Hash/ExampleBase.h"
-#include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
-using namespace std;
-using namespace FiftyoneDegrees::Common;
-using namespace FiftyoneDegrees::DeviceDetection;
-using namespace FiftyoneDegrees::DeviceDetection::Hash;
 using namespace FiftyoneDegrees::Examples::Hash;
 
 /**
@@ -114,7 +104,9 @@ namespace FiftyoneDegrees {
 				/**
 				 * @copydoc ExampleBase::ExampleBase(string)
 				 */
-				StronglyTyped(string dataFilePath, ConfigHash *config)
+				StronglyTyped(
+					string dataFilePath, 
+					DeviceDetection::Hash::ConfigHash *config)
 					: ExampleBase(dataFilePath, config)
 				{};
 
@@ -122,7 +114,7 @@ namespace FiftyoneDegrees {
 				 * @copydoc ExampleBase::run
 				 */
 				void run() {
-					ResultsHash *results;
+					DeviceDetection::Hash::ResultsHash *results;
 
 					// Create an evidence instance to store and process User-Agents.
 					EvidenceDeviceDetection *evidence = new EvidenceDeviceDetection();
@@ -183,10 +175,12 @@ namespace FiftyoneDegrees {
  * Implementation of function fiftyoneDegreesExampleRunPtr.
  * Need to wrapped with 'extern "C"' as this will be called in C.
  */
-extern "C" void fiftyoneDegreesExampleCPPStronglyTypedRun(ExampleParameters *params) {
+extern "C" void fiftyoneDegreesExampleCPPStronglyTypedRun(
+	ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
-	ConfigHash* cppConfig = new ConfigHash(&configHash);
+	DeviceDetection::Hash::ConfigHash* cppConfig = 
+		new DeviceDetection::Hash::ConfigHash(&configHash);
 
 	StronglyTyped *stronglyTyped = new StronglyTyped(
 		params->dataFilePath, cppConfig);

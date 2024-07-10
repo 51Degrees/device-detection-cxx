@@ -20,18 +20,11 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
  
-#include <string>
-#include <iostream>
 // Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
 // which requires to be included before 'malloc.h'.
 #include "../../C/Hash/ExampleBase.h"
-#include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
-using namespace std;
-using namespace FiftyoneDegrees::Common;
-using namespace FiftyoneDegrees::DeviceDetection;
-using namespace FiftyoneDegrees::DeviceDetection::Hash;
 using namespace FiftyoneDegrees::Examples::Hash;
 
 /**
@@ -49,8 +42,8 @@ string fileName = "51Degrees-V4.1.hash";
 string propertiesString = "ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName";
 Common::RequiredPropertiesConfig *properties =
 	new Common::RequiredPropertiesConfig(&propertiesString);
-DeviceDetection::Hash ConfigHash *config =
-	new DeviceDetection::Hash::ConfigHash();
+DeviceDetection::Hash DeviceDetection::Hash::ConfigHash *config =
+	new DeviceDetection::Hash::DeviceDetection::Hash::ConfigHash();
 ```
 
 2. Construct a new engine from the specified data file with the required
@@ -80,7 +73,7 @@ with the User-Agent for the selected properties.
 ```
 using namespace FiftyoneDegrees;
 
-DeviceDetection::Hash::ResultsHash *results = engine->process(evidence);
+DeviceDetection::Hash::DeviceDetection::Hash::ResultsHash *results = engine->process(evidence);
 ```
 
 5. Obtain drift: The maximum drift for a matched substring from the character
@@ -143,7 +136,7 @@ namespace FiftyoneDegrees {
 				/**
 				 * @copydoc ExampleBase::ExampleBase(string)
 				 */
-				MatchMetrics(string dataFilePath, ConfigHash *config)
+				MatchMetrics(string dataFilePath, DeviceDetection::Hash::ConfigHash *config)
 					: ExampleBase(dataFilePath, config)
 				{};
 
@@ -165,7 +158,7 @@ namespace FiftyoneDegrees {
 				 * @copydoc ExampleBase::run
 				 */
 				void run() {
-					ResultsHash *results;
+					DeviceDetection::Hash::ResultsHash *results;
 
 					// Create an evidence instance to store and process User-Agents.
 					EvidenceDeviceDetection *evidence = new EvidenceDeviceDetection();
@@ -241,7 +234,7 @@ namespace FiftyoneDegrees {
 extern "C" void fiftyoneDegreesExampleCPPMatchMetricsRun(ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
-	ConfigHash* cppConfig = new ConfigHash(&configHash);
+	DeviceDetection::Hash::ConfigHash* cppConfig = new DeviceDetection::Hash::ConfigHash(&configHash);
 
 	MatchMetrics *matchMetrics = new MatchMetrics(
 		params->dataFilePath, cppConfig);

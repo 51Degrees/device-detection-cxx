@@ -31,8 +31,6 @@
 #include "ExampleBase.h"
 #undef FORCE_MEMORY_TRACKING
 
-#include "../../../src/hash/hash.h"
-#include "../../../src/hash/fiftyone.h"
 #include "../.././../src/common-cxx/textfile.h"
 
 // Number of marks to make when showing progress.

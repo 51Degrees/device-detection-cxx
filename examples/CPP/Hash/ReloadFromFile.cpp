@@ -20,19 +20,11 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
  
-#include <string>
-#include <iostream>
-#include <thread>
 // Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
 // which requires to be included before 'malloc.h'.
-#include "../../C/Hash/ExampleBase.h"
-#include "../../../src/hash/EngineHash.hpp"
+#include "../../C/Hash/ExampleBase.h" 
 #include "ExampleBase.hpp"
 
-using namespace std;
-using namespace FiftyoneDegrees::Common;
-using namespace FiftyoneDegrees::DeviceDetection;
-using namespace FiftyoneDegrees::DeviceDetection::Hash;
 using namespace FiftyoneDegrees::Examples::Hash;
 
 /**
@@ -96,14 +88,14 @@ namespace FiftyoneDegrees {
 			class ReloadFromFile : public ExampleBase {
 			public:
 				/**
-				 * @copydoc ExampleBase::ExampleBase(string, DeviceDetection::Hash::ConfigHash*)
+				 * @copydoc ExampleBase::ExampleBase(string, DeviceDetection::Hash::DeviceDetection::Hash::ConfigHash*)
 				 * @param userAgentFilePath path to the CSV file containing the
 				 * User-Agents to process
 				 */
 				ReloadFromFile(
 					string dataFilePath,
 					string userAgentFilePath,
-					ConfigHash *config)
+					DeviceDetection::Hash::ConfigHash *config)
 					: ExampleBase(dataFilePath, config) {
 					this->userAgentFilePath = userAgentFilePath;
 				};
@@ -168,7 +160,7 @@ namespace FiftyoneDegrees {
 extern "C" void fiftyoneDegreesExampleCPPReloadFromFileRun(ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
-	ConfigHash* cppConfig = new ConfigHash(&configHash);
+	DeviceDetection::Hash::ConfigHash* cppConfig = new DeviceDetection::Hash::ConfigHash(&configHash);
 	cppConfig->setConcurrency(THREAD_COUNT);
 	ReloadFromFile *reloadFromFile = new ReloadFromFile(
 		params->dataFilePath,

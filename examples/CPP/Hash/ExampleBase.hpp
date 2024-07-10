@@ -20,10 +20,16 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
  
+#ifndef FIFTYONE_DEGREES_EXAMPLE_BASE_CPLUSPLUS_INCLUDED
+#define FIFTYONE_DEGREES_EXAMPLE_BASE_CPLUSPLUS_INCLUDED
+
+// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
+// which requires to be included before 'malloc.h'.
+#include "../../C/Hash/ExampleBase.h"
+#include "../../../src/hash/EngineHash.hpp"
 #include <string>
 #include <iostream>
 #include <thread>
-#include "../../../src/hash/EngineHash.hpp"
 #include "../../../src/common-cxx/textfile.h"
 
 #define THREAD_COUNT 4
@@ -37,6 +43,7 @@ static const char *userAgentFileName = "20000 User Agents.csv";
 using std::cout;
 using std::thread;
 using namespace FiftyoneDegrees::Common;
+using namespace FiftyoneDegrees::DeviceDetection;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
 
 namespace FiftyoneDegrees {
@@ -58,7 +65,10 @@ namespace FiftyoneDegrees {
 				 * @param length of the data in bytes
 				 * @param config to configure the engine with
 				 */
-				ExampleBase(byte *data, long length, ConfigHash *config);
+				ExampleBase(
+					byte *data, 
+					long length, 
+					DeviceDetection::Hash::ConfigHash *config);
 
 				/**
 				 * Construct a new instance of the example to be run using the
@@ -73,7 +83,9 @@ namespace FiftyoneDegrees {
 				 * @param dataFilePath path to the data file to use
 				 * @param config to configure the engine with
 				 */
-				ExampleBase(string dataFilePath, ConfigHash *config);
+				ExampleBase(
+					string dataFilePath, 
+					DeviceDetection::Hash::ConfigHash *config);
 
 				/**
 				 * Dispose of anything created with the example.
@@ -144,9 +156,11 @@ namespace FiftyoneDegrees {
 					void processUserAgentsSingle();
 
 					/**
-					 * Calls the #processUserAgentsSingle method with the state,
-					 * then increments the number of threads finished counter.
-					 * @param state pointer to a ExampleBase::SharedState to use
+					 * Calls the #processUserAgentsSingle method with the 
+					 * state, then increments the number of threads finished 
+					 * counter.
+					 * @param state pointer to a ExampleBase::SharedState to 
+					 * use
 					 */
 					static void processUserAgentsMulti(void *state);
 
@@ -184,7 +198,23 @@ namespace FiftyoneDegrees {
 				 * @param results instance to hash
 				 * @return hash code for the results values
 				 */
-				static unsigned long getHashCode(ResultsHash *results);
+				static unsigned long getHashCode(
+					DeviceDetection::Hash::ResultsHash* results) {
+					unsigned long hashCode = 0;
+					uint32_t requiredPropertyIndex;
+					Common::Value<string> value;
+
+					for (requiredPropertyIndex = 0;
+						requiredPropertyIndex < (uint32_t)results->getAvailableProperties();
+						requiredPropertyIndex++) {
+						value = results->getValueAsString(requiredPropertyIndex);
+						if (value.hasValue()) {
+							hashCode ^= generateHash(
+								(unsigned char*)(value.getValue().c_str()));
+						}
+					}
+					return hashCode;
+				}
 
 				/**
 				 * Processes a User-Agent string and hashes the results, adding
@@ -194,9 +224,8 @@ namespace FiftyoneDegrees {
 				 */
 				static void processUserAgent(const char *userAgent, void *state);
 
-
 				/** Configuration for the Engine */
-				ConfigHash *config;
+				DeviceDetection::Hash::ConfigHash *config;
 				/** Properties to initialise the Engine with */
 				RequiredPropertiesConfig *properties;
 				/** Hash Engine used for the example */
@@ -213,3 +242,5 @@ namespace FiftyoneDegrees {
 		}
 	}
 }
+
+#endif
