@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(SolutionDir)\Example.Build.props" />
+  <Import Project="$(SolutionDir)..\src\common-cxx\VisualStudio\Application.Build.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{890B74F4-D72A-4F93-A500-4EF2196CB3EB}</ProjectGuid>
     <RootNamespace>ReloadFromMemoryTrie</RootNamespace>

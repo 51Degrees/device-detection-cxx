@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(SolutionDir)\Example.Build.props" />
+  <Import Project="$(SolutionDir)..\src\common-cxx\VisualStudio\Application.Build.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B3E9FE89-CD37-4E20-973B-B091EA079076}</ProjectGuid>
     <RootNamespace>GettingStarted</RootNamespace>

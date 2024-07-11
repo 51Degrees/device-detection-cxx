@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(SolutionDir)\Example.Build.props" />
+  <Import Project="$(SolutionDir)..\src\common-cxx\VisualStudio\Application.Build.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{40CEEF4C-8CF9-48D7-8E86-47F3D9FEE848}</ProjectGuid>
     <RootNamespace>ProcTrie</RootNamespace>
