@@ -163,5 +163,5 @@ void fiftyoneDegreesExampleCheckDataFile(fiftyoneDegreesDataSetHash* dataset) {
 			"out about the Enterprise data file on our "
 			"pricing page: https://51degrees.com/pricing\n"));
 	}
-	EXAMPLE_COLLECTION_RELEASE(item);
+	EXAMPLE_COLLECTION_RELEASE(dataset->strings, item);
 }

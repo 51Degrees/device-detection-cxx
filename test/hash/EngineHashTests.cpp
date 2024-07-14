@@ -621,7 +621,7 @@ public:
 							indexes.push_back((int)componentIndex);
 						}
 					}
-					TEST_COLLECTION_RELEASE(item);
+					TEST_COLLECTION_RELEASE(dataSet->strings, item);
 				}
 			}
 		}
