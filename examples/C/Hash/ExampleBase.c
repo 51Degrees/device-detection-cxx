@@ -163,12 +163,5 @@ void fiftyoneDegreesExampleCheckDataFile(fiftyoneDegreesDataSetHash* dataset) {
 			"out about the Enterprise data file on our "
 			"pricing page: https://51degrees.com/pricing\n"));
 	}
-
-	// When used with the tests and configurations others than DEBUG and 
-	// RELEASE the example might be compiled differently to the underlying
-	// library where NO_THREADING and MEMORY_ONLY might have been used. This
-	// check is needed to ensure that the macro will not fail.
-	if (item.collection->release != NULL) {
-		COLLECTION_RELEASE(dataset->strings, &item);
-	}
+	EXAMPLE_COLLECTION_RELEASE(item);
 }

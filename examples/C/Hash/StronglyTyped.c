@@ -136,7 +136,7 @@ static bool getPropertyIsBool(
 		exception);
 	EXCEPTION_THROW;
 	bool isBool = property->valueType == FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_BOOLEAN;
-	COLLECTION_RELEASE(item.collection, &item);
+	EXAMPLE_COLLECTION_RELEASE(item);
 	return isBool;
 }
 

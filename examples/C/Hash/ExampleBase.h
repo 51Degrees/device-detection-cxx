@@ -44,6 +44,18 @@
 (end.tv_nsec - start.tv_nsec) / 1.0e9) * 1000.0)
 #endif
 
+/**
+ * When used with the tests and configurations other than DEBUG and RELEASE the
+ * example might be compiled differently to the underlying library where
+ * NO_THREADING and MEMORY_ONLY might have been used. This check is needed to
+ * ensure that the macro will not fail if there is no release method in the 
+ * library that created the item being released.
+ */
+#define EXAMPLE_COLLECTION_RELEASE(i) \
+if (i.collection->release != NULL) {\
+    FIFTYONE_DEGREES_COLLECTION_RELEASE(i.collection, &i);\
+}
+
 /*
 * Structure that contains the parameters that might be required by an example.
 */
