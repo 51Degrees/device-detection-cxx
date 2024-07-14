@@ -22,6 +22,12 @@
 
 #include "ExampleBase.h"
 
+// If the data file is older than this value in days then show a warning to
+// suggest to the developer that a newer data file is available. This is
+// important for accuracy tests where the test evidence may be newer than the
+// data file being used in the evaluation.
+#define DATA_FILE_AGE_WARNING 30
+
 const char* fiftyoneDegreesExampleGetConfigName(
 	fiftyoneDegreesConfigHash config) {
 	if (memcmp(
@@ -151,12 +157,20 @@ void fiftyoneDegreesExampleCheckDataFile(
 		printf("\033[0m");
 	}
 
-	if (strncmp(dataTier, "Lite", strlen("Lite")) == 0) {
+	if (dataTier != NULL &&
+		strncmp(dataTier, "Lite", strlen("Lite")) == 0) {
 		printf(("This example is using the \"Lite\" "
 			"data file. This is used for illustration, and "
 			"has limited accuracy and capabilities. Find "
 			"out about the Enterprise data file on our "
 			"pricing page: https://51degrees.com/pricing\n"));
 	}
-	COLLECTION_RELEASE(dataset->strings, &item);
+
+	// When used with the tests and configurations others than DEBUG and 
+	// RELEASE the example might be compiled differently to the underlying
+	// library where NO_THREADING and MEMORY_ONLY might have been used. This
+	// check is needed to ensure that the macro will not fail.
+	if (item.collection->release != NULL) {
+		COLLECTION_RELEASE(dataset->strings, &item);
+	}
 }
