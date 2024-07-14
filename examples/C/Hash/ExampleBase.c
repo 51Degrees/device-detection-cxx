@@ -103,8 +103,7 @@ void fiftyoneDegreesExampleMemCheck(
 #endif
 }
 
-void fiftyoneDegreesExampleCheckDataFile(
-	fiftyoneDegreesDataSetHash *dataset) {
+void fiftyoneDegreesExampleCheckDataFile(fiftyoneDegreesDataSetHash* dataset) {
 	Item item;
 	DataReset(&item.data);
 
@@ -141,7 +140,6 @@ void fiftyoneDegreesExampleCheckDataFile(
 	printf("Using a %s data file created %s from location %s\n",
 		dataTier, timeStr, dataset->b.b.fileName);
 
-#define DATA_FILE_AGE_WARNING 30
 	if ((now - published) / (24 * 60 * 60) > DATA_FILE_AGE_WARNING) {
 		printf("\033[0;33m");
 		printf(("This example is using a data file "
