@@ -8,11 +8,8 @@
     <ClInclude Include="..\..\..\..\..\examples\C\Hash\ExampleBase.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{66F0AA5B-6E82-40D4-8165-C2328561CAB0}</ProjectGuid>
     <RootNamespace>ExampleBase</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>ExampleBase.C</ProjectName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\FiftyOne.DeviceDetection.Hash.C\FiftyOne.DeviceDetection.Hash.C.vcxproj">
