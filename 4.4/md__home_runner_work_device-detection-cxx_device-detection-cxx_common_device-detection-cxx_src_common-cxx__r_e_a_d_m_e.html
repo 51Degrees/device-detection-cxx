@@ -100,10 +100,11 @@ $(document).ready(function(){initNavTree('md__home_runner_work_device-detection-
 </div><p>e.g. the <code>fiftyoneDegreesDataSetGet</code> returns a pointer to a data set which will need to be released with the <code>fiftyoneDegreesDataSetRelease</code> method.</p>
 <p>Finally, the optional last part completes the description of the method's use, e.g. <code>fiftyoneDegreesDataSetInitFromMemory</code> or <code>fiftyoneDegreesDataSetInitFromFile</code>.</p>
 <h1 class="g-docs__section-heading">Installing</h1>
-<h2>Dependecies</h2>
-<p>When compiling on Linux, there is a dependency on <code>libatomic</code>. This is usually already present as part of the C libraries, and is included as part of GCC 5 and abover. On other systems, can be installed with: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">sudo apt-get install libatomic1</div></div><h2>Using CMake</h2>
+<h2>Dependencies</h2>
+<p>When compiling on Linux, there is a dependency on <code>libatomic</code>. This is usually already present as part of the C libraries, and is included as part of GCC 5 and above. On other systems, can be installed with:</p>
+<div class="c-code__block c-code__block--outline"><div class="c-code__line">sudo apt-get install libatomic1</div></div><h2>Using CMake</h2>
 <p>To build the make files required to build, open a <code>bash</code> or <code>Visual Studio Developer Command Prompt</code> terminal and run</p>
-<div class="c-code__block c-code__block--outline"><div class="c-code__line">mkdir build</div><div class="c-code__line">cd build</div><div class="c-code__line">cmake .. </div></div><p> Note: on an x64 Windows system, it is neccessary to add <code>-A x64</code> as CMake will build a Win32 Solution by default.</p>
+<div class="c-code__block c-code__block--outline"><div class="c-code__line">mkdir build</div><div class="c-code__line">cd build</div><div class="c-code__line">cmake .. </div></div><p>Note: on an x64 Windows system, it is necessary to add <code>-A x64</code> as CMake will build a Win32 Solution by default.</p>
 <p>Then build the whole solution with</p>
 <div class="c-code__block c-code__block--outline"><div class="c-code__line">cmake --build . --config Release</div></div><p>Libraries are output to the <code>lib/</code> directory, and executables like examples and tests are output to the <code>bin/</code> directory.</p>
 <h2>Using Visual Studio</h2>
