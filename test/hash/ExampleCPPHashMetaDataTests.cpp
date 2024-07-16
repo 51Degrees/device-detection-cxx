@@ -30,7 +30,8 @@ public:
 		// Capture stdout for the test.
 		testing::internal::CaptureStdout();
 
-		ConfigHash* config = new ConfigHash(&configHash);
+		DeviceDetection::Hash::ConfigHash* config = 
+			new DeviceDetection::Hash::ConfigHash(&configHash);
 		MetaDataExample* metaData = new MetaDataExample(dataFilePath, config);
 		metaData->run();
 		delete metaData;

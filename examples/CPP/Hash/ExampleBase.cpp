@@ -20,9 +20,8 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
  
- #include "ExampleBase.hpp"
+#include "ExampleBase.hpp"
 
-using namespace FiftyoneDegrees;
 using namespace FiftyoneDegrees::Examples::Hash;
 
 const char *RequiredProperties = 
@@ -46,7 +45,10 @@ const char* ExampleBase::uachPlatform = ("\"Windows\"");
 
 const char* ExampleBase::uachPlatformVersion = ("\"14.0.0\"");
 
-ExampleBase::ExampleBase(byte *data, long length, ConfigHash *config) {
+ExampleBase::ExampleBase(
+	byte *data, 
+	long length, 
+	DeviceDetection::Hash::ConfigHash *config) {
 	this->config = config;
 
 	// Set the properties to be returned for each User-Agent.
@@ -60,7 +62,9 @@ ExampleBase::ExampleBase(byte *data, long length, ConfigHash *config) {
 		properties);
 }
 
-ExampleBase::ExampleBase(string dataFilePath, ConfigHash *config) {
+ExampleBase::ExampleBase(
+	string dataFilePath, 
+	DeviceDetection::Hash::ConfigHash *config) {
 	this->config = config;
 
 	// Set the properties to be returned for each User-Agent.
@@ -74,7 +78,7 @@ ExampleBase::ExampleBase(string dataFilePath, ConfigHash *config) {
 }
 
 ExampleBase::ExampleBase(string dataFilePath)
-	: ExampleBase(dataFilePath, new ConfigHash()) { }
+	: ExampleBase(dataFilePath, new DeviceDetection::Hash::ConfigHash()) { }
 
 ExampleBase::~ExampleBase() {
 	delete engine;
@@ -100,29 +104,13 @@ unsigned long ExampleBase::generateHash(unsigned char *value) {
 	return hashCode;
 }
 
-unsigned long ExampleBase::getHashCode(ResultsHash *results) {
-	unsigned long hashCode = 0;
-	uint32_t requiredPropertyIndex;
-	Value<string> value;
-
-	for (requiredPropertyIndex = 0;
-		requiredPropertyIndex < (uint32_t)results->getAvailableProperties();
-		requiredPropertyIndex++) {
-		value = results->getValueAsString(requiredPropertyIndex);
-		if (value.hasValue()) {
-			hashCode ^= generateHash(
-				(unsigned char*)(value.getValue().c_str()));
-		}
-	}
-	return hashCode;
-}
-
 void ExampleBase::processUserAgent(
 	const char *userAgent,
 	void *state) {
 	ThreadState *thread = (ThreadState*)state;
 
-	ResultsHash *results = thread->engine->process(userAgent);
+	DeviceDetection::Hash::ResultsHash *results = 
+		thread->engine->process(userAgent);
 
 	thread->hashCode ^= getHashCode(results);
 

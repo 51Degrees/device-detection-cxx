@@ -19,19 +19,12 @@
  * in the end user terms of the application under an appropriate heading,
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
- 
-#include <string>
-#include <iostream>
+
 // Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
 // which requires to be included before 'malloc.h'.
 #include "../../C/Hash/ExampleBase.h"
-#include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
-using namespace std;
-using namespace FiftyoneDegrees::Common;
-using namespace FiftyoneDegrees::DeviceDetection;
-using namespace FiftyoneDegrees::DeviceDetection::Hash;
 using namespace FiftyoneDegrees::Examples::Hash;
 
 /**
@@ -49,8 +42,8 @@ string fileName = "51Degrees-V4.1.hash";
 string propertiesString = "ScreenPixelsWidth,HardwareModel,IsMobile,BrowserName";
 Common::RequiredPropertiesConfig *properties =
 	new Common::RequiredPropertiesConfig(&propertiesString);
-DeviceDetection::Hash::ConfigHash *config =
-	new DeviceDetection::Hash::ConfigHash();
+DeviceDetection::Hash::DeviceDetection::Hash::ConfigHash *config =
+	new DeviceDetection::Hash::DeviceDetection::Hash::ConfigHash();
 ```
 
 2. Construct a new engine from the specified data file with the required
@@ -111,7 +104,7 @@ namespace FiftyoneDegrees {
 				/**
 				 * @copydoc ExampleBase::ExampleBase(string)
 				 */
-				MetaDataExample(string dataFilePath, ConfigHash *config)
+				MetaDataExample(string dataFilePath, DeviceDetection::Hash::ConfigHash *config)
 					: ExampleBase(dataFilePath, config)
 				{};
 
@@ -143,7 +136,7 @@ namespace FiftyoneDegrees {
 extern "C" void fiftyoneDegreesExampleCPPMetaDataRun(ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
-	ConfigHash* cppConfig = new ConfigHash(&configHash);
+	DeviceDetection::Hash::ConfigHash* cppConfig = new DeviceDetection::Hash::ConfigHash(&configHash);
 
 	MetaDataExample *metaData = new MetaDataExample(params->dataFilePath, cppConfig);
 	metaData->run();

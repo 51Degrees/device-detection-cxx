@@ -20,17 +20,8 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
  
-#include <string>
-#include <iostream>
-// Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
-// which requires to be included before 'malloc.h'.
-#include "../../C/Hash/ExampleBase.h"
-#include "../../../src/hash/EngineHash.hpp"
 #include "ExampleBase.hpp"
 
-using namespace FiftyoneDegrees::Common;
-using namespace FiftyoneDegrees::DeviceDetection;
-using namespace FiftyoneDegrees::DeviceDetection::Hash;
 using namespace FiftyoneDegrees::Examples::Hash;
 
 /**
@@ -51,8 +42,8 @@ string propertiesString =
 	"SetHeaderPlatformAccept-CH";
 Common::RequiredPropertiesConfig *properties =
 	new Common::RequiredPropertiesConfig(&propertiesString);
-DeviceDetection::Hash::ConfigHash *config =
-	new DeviceDetection::Hash::ConfigHash();
+DeviceDetection::Hash::DeviceDetection::Hash::ConfigHash *config =
+	new DeviceDetection::Hash::DeviceDetection::Hash::ConfigHash();
 ```
 
 2. Construct a new engine from the specified data file with the required
@@ -94,7 +85,7 @@ with the User-Agent for the selected properties.
 ```
 using namespace FiftyoneDegrees;
 
-DeviceDetection::Hash::ResultsHash *results = engine->process(evidence);
+DeviceDetection::Hash::DeviceDetection::Hash::ResultsHash *results = engine->process(evidence);
 ```
 
 5a. Extract the value of the IsMobile property as a string from the results.
@@ -138,11 +129,11 @@ namespace FiftyoneDegrees {
 				/**
 				 * @copydoc ExampleBase::ExampleBase(string)
 				 */
-				GettingStarted(string dataFilePath, ConfigHash *config)
+				GettingStarted(string dataFilePath, DeviceDetection::Hash::ConfigHash *config)
 					: ExampleBase(dataFilePath, config) {
 				};
 
-				void printResults(ResultsHash* results) {
+				void printResults(DeviceDetection::Hash::ResultsHash* results) {
 					cout << "   PlatformName: " <<
 						(*results->getValueAsString("PlatformName")).c_str()
 						<< "\n";
@@ -151,7 +142,7 @@ namespace FiftyoneDegrees {
 						<< "\n";
 					cout << "   IsMobile: " <<
 						(*results->getValueAsString("IsMobile")).c_str() << "\n";
-					cout << "   Devide ID: " <<
+					cout << "   Device ID: " <<
 						results->getDeviceId() << "\n";
 				}
 
@@ -175,7 +166,7 @@ namespace FiftyoneDegrees {
 						evidence->operator[]("header.user-agent")
 							= mobileUserAgent;
 
-						ResultsHash* results = engine->process(evidence);
+						DeviceDetection::Hash::ResultsHash* results = engine->process(evidence);
 						printResults(results);
 						deviceId_mobile = results->getDeviceId();
 						delete results;
@@ -188,7 +179,7 @@ namespace FiftyoneDegrees {
 						evidence->operator[]("header.user-agent")
 							= desktopUserAgent;
 
-						ResultsHash* results = engine->process(evidence);
+						DeviceDetection::Hash::ResultsHash* results = engine->process(evidence);
 						printResults(results);
 						delete results;
 					};
@@ -200,7 +191,7 @@ namespace FiftyoneDegrees {
 						evidence->operator[]("header.user-agent")
 							= mediaHubUserAgent;
 
-						ResultsHash* results = engine->process(evidence);
+						DeviceDetection::Hash::ResultsHash* results = engine->process(evidence);
 						printResults(results);
 						delete results;
 					};
@@ -217,7 +208,7 @@ namespace FiftyoneDegrees {
 						evidence->operator[]("header.Sec-CH-UA-Platform-Version")
 							= uachPlatformVersion;
 
-						ResultsHash* results = engine->process(evidence);
+						DeviceDetection::Hash::ResultsHash* results = engine->process(evidence);
 						printResults(results);
 						deviceId_hintedHub = results->getDeviceId();
 						delete results;
@@ -230,7 +221,7 @@ namespace FiftyoneDegrees {
 						evidence->operator[]("query.51D_deviceId")
 							= deviceId_mobile.c_str();
 
-						ResultsHash* results = engine->process(evidence);
+						DeviceDetection::Hash::ResultsHash* results = engine->process(evidence);
 						printResults(results);
 						cout << "  [control platform ID: " << deviceId_hintedHub << " -- MediaHub (hinted, no-deviceId)]\n";
 						delete results;
@@ -244,7 +235,7 @@ namespace FiftyoneDegrees {
 						evidence->operator[]("query.51D_deviceId")
 							= deviceId_dummy;
 
-						ResultsHash* results = engine->process(evidence);
+						DeviceDetection::Hash::ResultsHash* results = engine->process(evidence);
 						printResults(results);
 						cout << "  [control platform ID: " << deviceId_hintedHub << " -- MediaHub (hinted, no-deviceId)]\n";
 						delete results;
@@ -266,7 +257,7 @@ namespace FiftyoneDegrees {
 						evidence2->operator[]("query.51d_dEVIcEiD")
 							= deviceId_hintedHub.c_str();
 
-						ResultsHash* results = engine->process(evidence2);
+						DeviceDetection::Hash::ResultsHash* results = engine->process(evidence2);
 						printResults(results);
 
 						cout << "  [control platform ID: " << deviceId_mobile << " -- Mobile (no-deviceId)]\n";
@@ -292,7 +283,8 @@ extern "C" void fiftyoneDegreesExampleCPPGettingStartedRun(
 	ExampleParameters *params) {
 	// Call the actual function.
 	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
-	ConfigHash* cppConfig = new ConfigHash(&configHash);
+	DeviceDetection::Hash::ConfigHash* cppConfig = 
+		new DeviceDetection::Hash::ConfigHash(&configHash);
 
 	GettingStarted *gettingStarted = new GettingStarted(
 		params->dataFilePath, cppConfig);

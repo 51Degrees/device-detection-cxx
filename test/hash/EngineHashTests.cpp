@@ -258,134 +258,7 @@ public:
 		delete results;
 	}
 
-	/**
-	 * This replaces the graph roots collection in the data set so that
-	 * -1 is always returned for the predictive root.
-	 */
-	static void* collectionMockGetPerf(
-		fiftyoneDegreesCollection* collection,
-		uint32_t indexOrOffset,
-		fiftyoneDegreesCollectionItem* item,
-		fiftyoneDegreesException* exception) {
-		// Get the original item to an internal item.
-		fiftyoneDegreesCollectionItem internalItem;
-		fiftyoneDegreesDataReset(&internalItem.data);
-		fiftyoneDegreesCollection* original =
-			(fiftyoneDegreesCollection*)collection->state;
-		fiftyoneDegreesHashRootNodes* originalRoots =
-			(fiftyoneDegreesHashRootNodes*)original->get(
-				original,
-				indexOrOffset,
-				&internalItem,
-				exception);
-		if (originalRoots == nullptr) {
-			return nullptr;
-		}
-		// Create a new roots to return, we don't want to edit the ones
-		// returned by the real collection in case it is in memory (in which
-		// case we would be breaking the data set).
-		fiftyoneDegreesHashRootNodes* roots =
-			(fiftyoneDegreesHashRootNodes*)fiftyoneDegreesDataMalloc(
-				&item->data,
-				sizeof(fiftyoneDegreesGraphNode));
-		// Set the new roots.
-		roots->performanceNodeOffset = originalRoots->performanceNodeOffset;
-		roots->predictiveNodeOffset = (uint32_t)-1;
-		// Release the original roots.
-		FIFTYONE_DEGREES_COLLECTION_RELEASE(original, &internalItem);
-		item->collection = collection;
-		return item->data.ptr;
-	}
-
-	/**
-	 * This replaces the graph roots collection in the data set so that
-	 * -1 is always returned for the performance root.
-	 */
-	static void* collectionMockGetPred(
-		fiftyoneDegreesCollection* collection,
-		uint32_t indexOrOffset,
-		fiftyoneDegreesCollectionItem* item,
-		fiftyoneDegreesException* exception) {
-		// Get the original item to an internal item.
-		fiftyoneDegreesCollectionItem internalItem;
-		fiftyoneDegreesDataReset(&internalItem.data);
-		fiftyoneDegreesCollection* original =
-			(fiftyoneDegreesCollection*)collection->state;
-		fiftyoneDegreesHashRootNodes* originalRoots =
-			(fiftyoneDegreesHashRootNodes*)original->get(
-				original,
-				indexOrOffset,
-				&internalItem,
-				exception);
-		if (originalRoots == nullptr) {
-			return nullptr;
-		}
-		// Create a new roots to return, we don't want to edit the ones
-		// returned by the real collection in case it is in memory (in which
-		// case we would be breaking the data set).
-		fiftyoneDegreesHashRootNodes* roots =
-			(fiftyoneDegreesHashRootNodes*)fiftyoneDegreesDataMalloc(
-				&item->data,
-				sizeof(fiftyoneDegreesGraphNode));
-		// Set the new roots.
-		roots->performanceNodeOffset = (uint32_t)-1;
-		roots->predictiveNodeOffset = originalRoots->predictiveNodeOffset;
-		// Release the original roots.
-		FIFTYONE_DEGREES_COLLECTION_RELEASE(original, &internalItem);
-		item->collection = collection;
-		return item->data.ptr;
-	}
-
-	/**
-	 * Release method for the mocked roots collection. The items are always
-	 * allocated by the get method, so this just freed them.
-	 */
-	static void collectionMockRelease(fiftyoneDegreesCollectionItem* item) {
-		fiftyoneDegreesFree(item->data.ptr);
-		fiftyoneDegreesDataReset(&item->data);
-		item->collection = nullptr;
-	}
-
-	/**
-	 * Mock the graph roots collection to return a modified version of the
-	 * graph roots.
-	 */
-	void mockRootsCollection(fiftyoneDegreesCollectionGetMethod get) {
-		fiftyoneDegreesDataSetHash* dataSet =
-			fiftyoneDegreesDataSetHashGet(&*engine->manager);
-		fiftyoneDegreesCollection* original = dataSet->rootNodes;
-		fiftyoneDegreesCollection* collection =
-			(fiftyoneDegreesCollection*)fiftyoneDegreesMalloc(
-				sizeof(fiftyoneDegreesCollection));
-		collection->count = fiftyoneDegreesCollectionGetCount(original);
-		collection->elementSize = original->elementSize;
-		collection->freeCollection = nullptr; // won't be used, so no need to set.
-		collection->get = get;
-		collection->release = EngineHashTests::collectionMockRelease;
-		collection->size = original->size;
-		collection->next = nullptr;
-		collection->state = original;
-		dataSet->rootNodes = collection;
-		fiftyoneDegreesDataSetHashRelease(dataSet);
-	}
-
-	/**
-	 * Reverts the graph roots collection to the original collection.
-	 * The collection was stored as a state by the mock collection.
-	 */
-	void revertMockRootsCollection() {
-		fiftyoneDegreesDataSetHash* dataSet =
-			fiftyoneDegreesDataSetHashGet(&*engine->manager);
-		fiftyoneDegreesCollection* mock = dataSet->rootNodes;
-		dataSet->rootNodes = (fiftyoneDegreesCollection*)mock->state;
-		fiftyoneDegreesFree(mock);
-		fiftyoneDegreesDataSetHashRelease(dataSet);
-	}
-
 	void verifyPerformanceGraph() {
-		// Set the graph roots collection to return invalid offsets for
-		// predictive.
-		mockRootsCollection(EngineHashTests::collectionMockGetPerf);
 		
 		// Enable only performance graph.
 		fiftyoneDegreesDataSetHash* dataSet =
@@ -436,15 +309,11 @@ public:
 		// Clean up
 		delete goodResults;
 		delete badResults;
-		revertMockRootsCollection();
 		editableConfig->usePerformanceGraph = originalPerf;
 		editableConfig->usePredictiveGraph = originalPred;
 	}
 
 	void verifyPredictiveGraph() {
-		// Set the graph roots collection to return invalid offsets for
-		// predictive.
-		mockRootsCollection(EngineHashTests::collectionMockGetPred);
 
 		// Enable only predictive graph.
 		fiftyoneDegreesDataSetHash* dataSet =
@@ -495,7 +364,6 @@ public:
 		// Clean up
 		delete goodResults;
 		delete badResults;
-		revertMockRootsCollection();
 		editableConfig->usePerformanceGraph = originalPerf;
 		editableConfig->usePredictiveGraph = originalPred;
 	}
@@ -753,7 +621,7 @@ public:
 							indexes.push_back((int)componentIndex);
 						}
 					}
-					FIFTYONE_DEGREES_COLLECTION_RELEASE(item.collection, &item);
+					TEST_COLLECTION_RELEASE(dataSet->strings, item);
 				}
 			}
 		}

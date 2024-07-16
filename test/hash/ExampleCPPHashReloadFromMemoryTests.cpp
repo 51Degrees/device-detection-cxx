@@ -30,7 +30,8 @@ public:
 		// Capture stdout for the test.
 		testing::internal::CaptureStdout();
 
-		ConfigHash* config = new ConfigHash(&configHash);
+		DeviceDetection::Hash::ConfigHash* config = 
+			new DeviceDetection::Hash::ConfigHash(&configHash);
 
 		// Read the data file into memory for the initialise and reload operations.
 		fiftyoneDegreesMemoryReader reader;

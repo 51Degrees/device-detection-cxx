@@ -22,15 +22,14 @@
 
 #ifndef FIFTYONE_DEGREES_EXAMPLE_BASE_C_INCLUDED
 #define FIFTYONE_DEGREES_EXAMPLE_BASE_C_INCLUDED
-// Windows 'crtdbg.h' needs to be included
-// before 'malloc.h'
+
+// Windows 'crtdbg.h' needs to be included before 'malloc.h'
 #if defined(_DEBUG) && defined(_MSC_VER)
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
 #endif
-#include "../../../src/hash/hash.h"
-
+#include "../../../src/hash/fiftyone.h"
 
 #ifdef _MSC_VER
 #define TIMER_CREATE double start, end
@@ -44,6 +43,18 @@
 #define TIMER_ELAPSED (((end.tv_sec - start.tv_sec) + \
 (end.tv_nsec - start.tv_nsec) / 1.0e9) * 1000.0)
 #endif
+
+/**
+ * When used with the tests and configurations other than DEBUG and RELEASE the
+ * example might be compiled differently to the underlying library where
+ * NO_THREADING and MEMORY_ONLY might have been used. This check is needed to
+ * ensure that the macro will not fail if there is no release method in the 
+ * library that created the item being released.
+ */
+#define EXAMPLE_COLLECTION_RELEASE(c,i) \
+if (c->release != NULL) {\
+    FIFTYONE_DEGREES_COLLECTION_RELEASE(c, &i);\
+}
 
 /*
 * Structure that contains the parameters that might be required by an example.
@@ -69,6 +80,10 @@ typedef fiftyoneDegreesExampleParameters ExampleParameters;
 typedef void (*fiftyoneDegreesExampleRunPtr)(
     fiftyoneDegreesExampleParameters *);
 
+/**
+ * Gets the common name of the configuration as a string.
+ * @param config configuration
+ */
 EXTERNAL const char* fiftyoneDegreesExampleGetConfigName(
     fiftyoneDegreesConfigHash config);
 

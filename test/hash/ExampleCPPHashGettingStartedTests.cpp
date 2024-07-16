@@ -23,15 +23,17 @@
 #include "ExampleHashTests.hpp"
 #include "../../examples/CPP/Hash/GettingStarted.cpp"
 
-
 class ExampleCPPHashTestGettingStarted : public ExampleHashTest {
 public:
 	void run(fiftyoneDegreesConfigHash configHash) {
 		// Capture stdout for the test.
 		testing::internal::CaptureStdout();
 
-		ConfigHash* config = new ConfigHash(&configHash);
-		GettingStarted* gettingStarted = new GettingStarted(dataFilePath, config);
+		DeviceDetection::Hash::ConfigHash* config = 
+			new DeviceDetection::Hash::ConfigHash(&configHash);
+		GettingStarted* gettingStarted = new GettingStarted(
+			dataFilePath, 
+			config);
 		gettingStarted->run();
 		delete gettingStarted;
 

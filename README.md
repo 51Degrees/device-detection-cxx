@@ -76,9 +76,18 @@ mkdir build
 cd build
 cmake .. 
 ```
-Note: on an x64 Windows system, it is neccessary to add `-A x64` as CMake will build a Win32 Solution by default.
 
-Note: when building arm64 binaries on x64 Mac system, it is neccessary to add `-DBUILD_TESTING=OFF` as CTest ([ref](https://cmake.org/cmake/help/latest/module/CTest.html)) will otherwise fail the build due to inability to run test executables designated for different CPU.
+Note: on an x64 Windows system, it is necessary to add `-A x64` as CMake will build a Win32 Solution by default.
+
+Note: when building arm64 binaries on x64 Mac system, it is necessary to add `-DBUILD_TESTING=OFF` as CTest ([ref](https://cmake.org/cmake/help/latest/module/CTest.html)) will otherwise fail the build due to inability to run test executables designated for different CPU.
+
+Note: for maximum possible performance file based operation can be disabled by adding `-DMemoryOnly=YES` to the `cmake ..` command.
+
+```
+mkdir build
+cd build
+cmake .. -DMemoryOnly=YES
+```
 
 Then build the whole solution with
 
