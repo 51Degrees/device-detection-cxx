@@ -9,7 +9,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{66F0AA5B-6E82-40D4-8165-C2328561CAB0}</ProjectGuid>
-    <RootNamespace>ExampleBase</RootNamespace>
+    <ProjectName>ExampleBase.C</ProjectName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\FiftyOne.DeviceDetection.Hash.C\FiftyOne.DeviceDetection.Hash.C.vcxproj">

@@ -9,7 +9,7 @@
     <ClCompile Include="..\..\..\..\..\examples\C\Hash\MemHash.c" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ExampleBase\ExampleBase.vcxproj">
+    <ProjectReference Include="..\ExampleBase\ExampleBaseC.vcxproj">
       <Project>{66f0aa5b-6e82-40d4-8165-c2328561cab0}</Project>
     </ProjectReference>
   </ItemGroup>

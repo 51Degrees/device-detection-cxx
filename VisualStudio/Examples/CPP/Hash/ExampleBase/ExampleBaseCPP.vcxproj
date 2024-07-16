@@ -11,12 +11,12 @@
     <ProjectReference Include="..\..\..\..\FiftyOne.DeviceDetection.Hash.Cpp\FiftyOne.DeviceDetection.Hash.Cpp.vcxproj">
       <Project>{401c012a-e5d9-4c00-9c5e-3fe078ced61b}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\C\Hash\ExampleBase\ExampleBase.vcxproj">
+    <ProjectReference Include="..\..\..\C\Hash\ExampleBase\ExampleBaseCPP.vcxproj">
       <Project>{66f0aa5b-6e82-40d4-8165-c2328561cab0}</Project>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CAB43E83-8775-4477-964F-364D79F860B7}</ProjectGuid>
-    <RootNamespace>ExampleBase</RootNamespace>
+    <ProjectName>ExampleBase.CPP</ProjectName>
   </PropertyGroup>
 </Project>

@@ -5,7 +5,7 @@
     <ClCompile Include="..\..\..\..\..\examples\CPP\Hash\StronglyTyped.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ExampleBase\ExampleBase.vcxproj">
+    <ProjectReference Include="..\ExampleBase\ExampleBaseCPP.vcxproj">
       <Project>{cab43e83-8775-4477-964f-364d79f860b7}</Project>
     </ProjectReference>
   </ItemGroup>

@@ -31,7 +31,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hash", "Hash", "{396ABBC1-D
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Getting Started", "Examples\CPP\Hash\Getting Started\Getting Started.vcxproj", "{B6CE7480-53BA-44C7-A262-6FA94B784C3E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExampleBase", "Examples\CPP\Hash\ExampleBase\ExampleBase.vcxproj", "{CAB43E83-8775-4477-964F-364D79F860B7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExampleBase", "Examples\CPP\Hash\ExampleBase\ExampleBaseCPP.vcxproj", "{CAB43E83-8775-4477-964F-364D79F860B7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Meta Data", "Examples\CPP\Hash\Meta Data\Meta Data.vcxproj", "{2B02F26B-EC29-48C2-9807-6965153051A8}"
 EndProject
@@ -67,7 +67,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Find Profiles", "Examples\C
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Match For Device Id", "Examples\C\Hash\Match For Device Id\Match For Device Id.vcxproj", "{C11D3CCB-F720-400B-89F7-A3C60B7079CC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExampleBase", "Examples\C\Hash\ExampleBase\ExampleBase.vcxproj", "{66F0AA5B-6E82-40D4-8165-C2328561CAB0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExampleBase", "Examples\C\Hash\ExampleBase\ExampleBaseC.vcxproj", "{66F0AA5B-6E82-40D4-8165-C2328561CAB0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Performance", "Examples\C\Hash\Performance\Performance.vcxproj", "{0529A9DE-2ACE-45D9-9BCF-2C387C0CB521}"
 EndProject
