@@ -323,7 +323,7 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 
 		// Set the length of the parsed value.
 		evidence->items[i].parsedLength = strlen(
-			evidence->items[i].parsedValue);
+			(char*)evidence->items[i].parsedValue);
 	}
 	evidence->count = size;
 
