@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(SolutionDir)..\src\common-cxx\VisualStudio\Library.Build.props" />
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\examples\C\Hash\ExampleBase.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\examples\C\Hash\ExampleBase.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{66F0AA5B-6E82-40D4-8165-C2328561CAB0}</ProjectGuid>
+    <ProjectName>ExampleBase.C</ProjectName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\FiftyOne.DeviceDetection.Hash.C\FiftyOne.DeviceDetection.Hash.C.vcxproj">
+      <Project>{1d1fb480-9e69-4c1d-a120-1601b00b2457}</Project>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

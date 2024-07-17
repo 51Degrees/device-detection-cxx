@@ -19,19 +19,12 @@
  * in the end user terms of the application under an appropriate heading,
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
- 
-#include <string>
-#include <iostream>
-#include <thread>
+
 // Include ExmapleBase.h before others as it includes Windows 'crtdbg.h'
 // which requires to be included before 'malloc.h'.
-#include "../../C/Hash/ExampleBase.h"
-#include "../../../src/hash/EngineHash.hpp"
+#include "../../C/Hash/ExampleBase.h" 
 #include "ExampleBase.hpp"
 
-using namespace FiftyoneDegrees::Common;
-using namespace FiftyoneDegrees::DeviceDetection;
-using namespace FiftyoneDegrees::DeviceDetection::Hash;
 using namespace FiftyoneDegrees::Examples::Hash;
 
 /**
@@ -96,7 +89,7 @@ namespace FiftyoneDegrees {
 			class ReloadFromMemory : public ExampleBase {
 			public:
 				/**
-				 * @copydoc ExampleBase::ExampleBase(byte*, long, DeviceDetection::Hash::ConfigHash*)
+				 * @copydoc ExampleBase::ExampleBase(byte*, long, DeviceDetection::Hash::DeviceDetection::Hash::ConfigHash*)
 				 * @param userAgentFilePath path to the CSV file containing the
 				 * User-Agents to process
 				 */
@@ -104,7 +97,7 @@ namespace FiftyoneDegrees {
 					byte* data,
 					long length,
 					string userAgentFilePath,
-					ConfigHash *config)
+					DeviceDetection::Hash::ConfigHash *config)
 					: ExampleBase(data, length, config) {
 					this->data = data;
 					this->length = length;
@@ -172,7 +165,7 @@ namespace FiftyoneDegrees {
  */
 extern "C" void fiftyoneDegreesExampleCPPReloadFromMemoryRun(ExampleParameters *params) {
 	// Call the actual function.
-	ConfigHash *cppConfig = new ConfigHash();
+	DeviceDetection::Hash::ConfigHash *cppConfig = new DeviceDetection::Hash::ConfigHash();
 	cppConfig->setConcurrency(THREAD_COUNT);
 	// Read the data file into memory for the initialise and reload operations.
 	fiftyoneDegreesMemoryReader reader;

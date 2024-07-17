@@ -29,7 +29,6 @@
     <ClCompile Include="..\..\test\hash\ExampleCPPHashReloadFromFileTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleCPPHashReloadFromMemoryTests.cpp" />
     <ClCompile Include="..\..\test\hash\ExampleCPPHashStronglyTypedTests.cpp" />
-    <ClCompile Include="..\..\examples\CPP\Hash\ExampleBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\common-cxx\tests\Base.hpp" />
@@ -37,12 +36,9 @@
     <ClInclude Include="..\..\src\common-cxx\tests\ExampleTests.hpp" />
     <ClInclude Include="..\..\src\common-cxx\tests\pch.h" />
     <ClInclude Include="..\..\src\common-cxx\textfile.h" />
-    <ClInclude Include="..\..\src\hash\EngineHash.hpp" />
-    <ClInclude Include="..\..\src\hash\hash.h" />
     <ClInclude Include="..\..\test\Constants.hpp" />
     <ClInclude Include="..\..\test\EngineDeviceDetectionTests.hpp" />
     <ClInclude Include="..\..\test\ExampleDeviceDetectionTests.hpp" />
-    <ClInclude Include="..\..\examples\CPP\Hash\ExampleBase.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
