@@ -280,10 +280,12 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 			if (evidence->items[i].field == NULL) {
 				EXCEPTION_THROW
 			}
+			evidence->items[i].fieldLength = strlen(evidence->items[i].field);
 		}
 		else {
 			evidence->items[i].prefix = FIFTYONE_DEGREES_EVIDENCE_IGNORE;
 			evidence->items[i].field = NULL;
+			evidence->items[i].fieldLength = 0;
 		}
 
 		// If the field is User-Agent or NULL then create new memory for the 
@@ -318,6 +320,10 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 			}
 			evidence->items[i].originalValue = NULL;
 		}
+
+		// Set the length of the parsed value.
+		evidence->items[i].parsedLength = strlen(
+			evidence->items[i].parsedValue);
 	}
 	evidence->count = size;
 
@@ -351,6 +357,9 @@ void runPerformanceThread(void* state) {
 	// Thread specific evidence instance.
 	EvidenceKeyValuePairArray* evidence = EvidenceCreate(
 		thisState->mainState->maxEvidence);
+	for (uint32_t i = 0; i < evidence->capacity; i++) {
+		evidence->items[i].header = NULL;
+	}
 
     TIMER_CREATE;
     TIMER_START;
