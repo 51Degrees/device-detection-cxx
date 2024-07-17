@@ -174,7 +174,8 @@ public:
 	}
 
 	void headers() {
-		int count = 0;
+		uint32_t count = 0;
+		fiftyoneDegreesHeader* header;
 		EngineHash* localEngine = (EngineHash*)getEngine();
 		fiftyoneDegreesDataSetHash* dataSet =
 			fiftyoneDegreesDataSetHashGet(&*localEngine->manager);
@@ -188,8 +189,9 @@ public:
 		for (uint32_t i = 0; i < dataSet->b.b.uniqueHeaders->count; i++) {
 			// There is always one segment per header so only add when there
 			// are more than one.
-			if (dataSet->b.b.uniqueHeaders->items[i].segments->count > 1) {
-				count += dataSet->b.b.uniqueHeaders->items[i].segments->count;
+			header = &dataSet->b.b.uniqueHeaders->items[i];
+			if (header->segmentHeaders->count > 1) {
+				count += header->segmentHeaders->count;
 			}
 		}
 
