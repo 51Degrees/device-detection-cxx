@@ -1,10 +1,12 @@
 <map id="threadState" name="threadState">
-<area shape="rect" id="node1" title="State specific to a single thread." alt="" coords="183,288,281,315"/>
-<area shape="rect" id="node2" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="331,102,573,129"/>
-<area shape="rect" id="node3" href="$structfiftyone_degrees_resource_handle.html" title="Handle for a shared resource." alt="" coords="497,199,727,225"/>
-<area shape="rect" id="node6" href="$structperformance_state.html" title="Single state containing everything needed for running and then reporting the performance tests." alt="" coords="163,199,301,225"/>
-<area shape="rect" id="node4" href="$structfiftyone_degrees_interlock_double_width.html" title="Double width (64 or 128 depending on the architecture) compare and exchange." alt="" coords="598,95,781,136"/>
-<area shape="rect" id="node5" href="$structbenchmark_result.html" title="Result of benchmarking from a single thread." alt="" coords="5,102,141,129"/>
-<area shape="rect" id="node7" href="$structkey_value_pair_array.html" title="Contains one or more piece of evidence." alt="" coords="166,102,306,129"/>
-<area shape="rect" id="node8" href="$structfiftyone_degrees_key_value_pair.html" title=" " alt="" coords="131,5,341,32"/>
+<area shape="rect" id="node1" title="State specific to a single thread." alt="" coords="498,421,597,448"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="213,221,455,247"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_resource_handle.html" title="Handle for a shared resource." alt="" coords="141,332,372,359"/>
+<area shape="rect" id="node6" href="$structperformance_state.html" title="Single state containing everything needed for running and then reporting the performance tests." alt="" coords="613,332,751,359"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_interlock_double_width.html" title="Double width (64 or 128 depending on the architecture) compare and exchange." alt="" coords="5,213,188,255"/>
+<area shape="rect" id="node5" href="$structbenchmark_result.html" title="Result of benchmarking from a single thread." alt="" coords="479,221,615,247"/>
+<area shape="rect" id="node7" href="$structshared_string_node.html" title=" " alt="" coords="639,221,778,247"/>
+<area shape="rect" id="node8" href="$structevidence_node.html" title=" " alt="" coords="859,221,974,247"/>
+<area shape="rect" id="node9" href="$structfiftyone_degrees_evidence_key_value_pair_array.html" title="Array of items of type fiftyoneDegreesEvidenceKeyValuePair used to easily access and track the size o..." alt="" coords="813,109,1021,151"/>
+<area shape="rect" id="node10" href="$structfiftyone_degrees_evidence_key_value_pair.html" title="Evidence key value pair structure which combines the prefix, key and value." alt="" coords="813,5,1021,47"/>
 </map>

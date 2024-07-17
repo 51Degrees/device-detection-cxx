@@ -1,9 +1,11 @@
 <map id="performanceState" name="performanceState">
-<area shape="rect" id="node1" title="Single state containing everything needed for running and then reporting the performance tests." alt="" coords="478,199,617,225"/>
-<area shape="rect" id="node2" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="213,102,455,129"/>
-<area shape="rect" id="node3" href="$structfiftyone_degrees_resource_handle.html" title="Handle for a shared resource." alt="" coords="143,199,373,225"/>
-<area shape="rect" id="node4" href="$structfiftyone_degrees_interlock_double_width.html" title="Double width (64 or 128 depending on the architecture) compare and exchange." alt="" coords="5,95,188,136"/>
-<area shape="rect" id="node5" href="$structbenchmark_result.html" title="Result of benchmarking from a single thread." alt="" coords="479,102,615,129"/>
-<area shape="rect" id="node6" href="$structkey_value_pair_array.html" title="Contains one or more piece of evidence." alt="" coords="640,102,780,129"/>
-<area shape="rect" id="node7" href="$structfiftyone_degrees_key_value_pair.html" title=" " alt="" coords="605,5,815,32"/>
+<area shape="rect" id="node1" title="Single state containing everything needed for running and then reporting the performance tests." alt="" coords="269,332,408,359"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="581,221,824,247"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_resource_handle.html" title="Handle for a shared resource." alt="" coords="681,332,911,359"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_interlock_double_width.html" title="Double width (64 or 128 depending on the architecture) compare and exchange." alt="" coords="849,213,1031,255"/>
+<area shape="rect" id="node5" href="$structbenchmark_result.html" title="Result of benchmarking from a single thread." alt="" coords="5,221,141,247"/>
+<area shape="rect" id="node6" href="$structshared_string_node.html" title=" " alt="" coords="165,221,304,247"/>
+<area shape="rect" id="node7" href="$structevidence_node.html" title=" " alt="" coords="385,221,500,247"/>
+<area shape="rect" id="node8" href="$structfiftyone_degrees_evidence_key_value_pair_array.html" title="Array of items of type fiftyoneDegreesEvidenceKeyValuePair used to easily access and track the size o..." alt="" coords="339,109,547,151"/>
+<area shape="rect" id="node9" href="$structfiftyone_degrees_evidence_key_value_pair.html" title="Evidence key value pair structure which combines the prefix, key and value." alt="" coords="339,5,547,47"/>
 </map>

@@ -95,9 +95,10 @@ $(document).ready(function(){initNavTree('md__home_runner_work_device-detection-
 <h1 class="g-docs__section-heading">Installing</h1>
 <h2>Using CMake</h2>
 <p>To build the make files required to build, open a <code>bash</code> or <code>Visual Studio Developer Command Prompt</code> terminal and run</p>
-<div class="c-code__block c-code__block--outline"><div class="c-code__line">mkdir build</div><div class="c-code__line">cd build</div><div class="c-code__line">cmake .. </div></div><p> Note: on an x64 Windows system, it is neccessary to add <code>-A x64</code> as CMake will build a Win32 Solution by default.</p>
-<p>Note: when building arm64 binaries on x64 Mac system, it is neccessary to add <code>-DBUILD_TESTING=OFF</code> as CTest (<a href="https://cmake.org/cmake/help/latest/module/CTest.html">ref</a>) will otherwise fail the build due to inability to run test executables designated for different CPU.</p>
-<p>Then build the whole solution with</p>
+<div class="c-code__block c-code__block--outline"><div class="c-code__line">mkdir build</div><div class="c-code__line">cd build</div><div class="c-code__line">cmake .. </div></div><p>Note: on an x64 Windows system, it is necessary to add <code>-A x64</code> as CMake will build a Win32 Solution by default.</p>
+<p>Note: when building arm64 binaries on x64 Mac system, it is necessary to add <code>-DBUILD_TESTING=OFF</code> as CTest (<a href="https://cmake.org/cmake/help/latest/module/CTest.html">ref</a>) will otherwise fail the build due to inability to run test executables designated for different CPU.</p>
+<p>Note: for maximum possible performance file based operation can be disabled by adding <code>-DMemoryOnly=YES</code> to the <code>cmake ..</code> command.</p>
+<div class="c-code__block c-code__block--outline"><div class="c-code__line">mkdir build</div><div class="c-code__line">cd build</div><div class="c-code__line">cmake .. -DMemoryOnly=YES</div></div><p>Then build the whole solution with</p>
 <div class="c-code__block c-code__block--outline"><div class="c-code__line">cmake --build . --config Release</div></div><p>Libraries are output to the <code>lib/</code> directory, and executables like examples and tests are output to the <code>bin/</code> directory.</p>
 <h2>Using Visual Studio</h2>
 <p>Calling <code>CMake</code> in an MSVC environment (as described in the <a href="#Using-CMake">Using CMake</a> section) will produce a Visual Studio solution with projects for all libraries, examples, and tests. However, it is preferable to use the dedicated Visual Studio solution in the <code>VisualStudio/</code> directory.</p>
