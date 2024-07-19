@@ -218,7 +218,7 @@ void fiftyoneDegreesHashMatchMetrics(
 	}
 
 	// Create a results instance to store and process User-Agents.
-	ResultsHash *results = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash *results = ResultsHashCreate(&manager, 0);
 
 	// User-Agent string of an iPhone mobile device.
 	const char* mobileUserAgent = ("Mozilla/5.0 (iPhone; CPU iPhone OS 7_1 "

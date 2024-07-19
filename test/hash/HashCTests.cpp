@@ -134,8 +134,8 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 	char deviceId[40] = "";
 	char isMobile[40] = "";
 
-	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
-	resultsDeviceId = ResultsHashCreate(&manager, 1, 0);
+	resultsUserAgents = ResultsHashCreate(&manager, 0);
+	resultsDeviceId = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE
 	// Obtain results from user agent
@@ -209,8 +209,8 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 	char deviceId[40] = "";
 	char isMobile[40] = "";
 
-	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
-	resultsDeviceId = ResultsHashCreate(&manager, 1, 0);
+	resultsUserAgents = ResultsHashCreate(&manager, 0);
+	resultsDeviceId = ResultsHashCreate(&manager, 0);
 
 	// Obtain result again from device ID
 	// with invalid uniqueHttpHeaderIndex
@@ -260,7 +260,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
  * does not have enough space.
  */
 TEST_F(HashCTests, GraphTraceGetTests) {
-	ResultsHash* resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* resultsUserAgents = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE;
 	// Obtain results from user agent
@@ -330,7 +330,7 @@ TEST_F(HashCTests, GraphTraceGetTests) {
 //	// if Client Hints are enabled and pseudo headers
 //	// are present.
 //	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 2;
-//	testResults1 = ResultsHashCreate(&manager, 1, 0);
+//	testResults1 = ResultsHashCreate(&manager, 0);
 //	EXPECT_TRUE(testResults1->pseudoEvidence != NULL);
 //	EXPECT_EQ(2, testResults1->pseudoEvidence->capacity);
 //	EXPECT_EQ(3, testResults1->capacity);
@@ -338,7 +338,7 @@ TEST_F(HashCTests, GraphTraceGetTests) {
 //	// Don't create addtional results and pseudo evidence
 //	// if pseudo headers are not present.
 //	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
-//	testResults2 = ResultsHashCreate(&manager, 1, 0);
+//	testResults2 = ResultsHashCreate(&manager, 0);
 //	EXPECT_TRUE(testResults2->pseudoEvidence == NULL);
 //	EXPECT_EQ(1, testResults2->capacity);
 //
@@ -366,7 +366,7 @@ TEST_F(HashCTests, GraphTraceGetTests) {
 //	// Set the pseudo header count to mock scenarios
 //	// where data file does not support pseudo headers
 //	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
-//	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
+//	resultsUserAgents = ResultsHashCreate(&manager, 0);
 //	EXPECT_TRUE(resultsUserAgents->pseudoEvidence == NULL);
 //
 //	fiftyoneDegreesEvidenceKeyValuePairArray* evidence =
@@ -405,7 +405,7 @@ TEST_F(HashCTests, GraphTraceGetTests) {
  * if there is next value.
  */
 TEST_F(HashCTests, ResultsHashGetValuesStringNoTrailingSeparator) {
-	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* results = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE;
 	// Obtain results from user agent
@@ -457,7 +457,7 @@ TEST_F(HashCTests, HashSizeManagerFromFileException) {
  * an approriate error is set, and there is no segfault.
  */
 TEST_F(HashCTests, HashResultsGetValuesNoPropertyIndex) {
-	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* results = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE;
 	// Obtain results from user agent
@@ -481,7 +481,7 @@ TEST_F(HashCTests, HashResultsGetValuesNoPropertyIndex) {
  * an approriate error is set, and there is no segfault.
  */
 TEST_F(HashCTests, HashResultsGetValuesOutOfRangePropertyIndex) {
-	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* results = ResultsHashCreate(&manager, 0);
 	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
 
 	EXCEPTION_CREATE;
@@ -526,7 +526,7 @@ static void* getFail(
  * an approriate error is set, and there is no segfault.
  */
 TEST_F(HashCTests, HashResultsGetValuesNoProfileValues) {
-	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* results = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE;
 	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);

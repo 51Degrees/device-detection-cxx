@@ -273,7 +273,7 @@ void fiftyoneDegreesHashGettingStarted(
 	// Create a results instance to store and process evidence.
 	// The capacity of the results should be the same as the maximum potential
 	// evidence that can be provided.
-	ResultsHash *results = ResultsHashCreate(&manager, MAX_EVIDENCE, MAX_EVIDENCE);
+	ResultsHash *results = ResultsHashCreate(&manager, 0);
 
 	for (int i = 0; i < (int)(sizeof(evidenceValues)/sizeof(evidence *)); i++) {
 		// Create an evidence collection and add the evidence to the collection

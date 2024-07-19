@@ -180,10 +180,7 @@ static void runMemoryThread(void* mainState) {
 	threadState.count = 0;
 
 	// Create an instance of results to access the returned values.
-	threadState.results = ResultsHashCreate(
-		threadState.main->manager,
-		1,
-		0);
+	threadState.results = ResultsHashCreate(threadState.main->manager, 0);
 
 	// Execute the device detection test.
 	TextFileIterate(
