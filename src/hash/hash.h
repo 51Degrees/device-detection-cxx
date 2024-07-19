@@ -306,6 +306,8 @@ typedef struct fiftyone_degrees_dataset_hash_t {
 	bool *componentsAvailable; /**< Array of flags indicating if there are
 							   any properties available for the component with
 							   the matching index in componentsList */
+	uint32_t componentsAvailableCount; /**< Number of components with 
+									   properties */
 	fiftyoneDegreesCollection *maps; /**< Collection data file maps */
 	fiftyoneDegreesCollection *properties; /**< Collection of all properties */
 	fiftyoneDegreesCollection *values; /**< Collection of all values */
@@ -616,14 +618,12 @@ EXTERNAL void fiftyoneDegreesResultsHashFromDeviceId(
  * process. e.g. Client Hints support.
  * @param manager pointer to the resource manager which manages a Hash data
  * set
- * @param userAgentCapacity number of User-Agents to be able to handle
  * @param overridesCapacity number of properties that can be overridden,
  * 0 to disable overrides
  * @return newly created results structure
  */
 EXTERNAL fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 	fiftyoneDegreesResourceManager *manager,
-	uint32_t userAgentCapacity,
 	uint32_t overridesCapacity);
 
 /**
