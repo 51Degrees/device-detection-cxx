@@ -224,7 +224,6 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	uint32_t size = evidence == nullptr ? 0 : (uint32_t)evidence->size();
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
-		size,
 		size);
 	ResultsHashFromEvidence(
 		results, 
@@ -240,7 +239,6 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	EXCEPTION_CREATE;
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
-		1,
 		0);
 	ResultsHashFromUserAgent(
 		results,
@@ -257,7 +255,6 @@ Common::ResultsBase* EngineHash::processBase(
 	uint32_t size = evidence == nullptr ? 0 : (uint32_t)evidence->size();
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
-		size,
 		size);
 	ResultsHashFromEvidence(
 		results, 

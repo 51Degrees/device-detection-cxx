@@ -348,8 +348,7 @@ void runPerformanceThread(void* state) {
 	// Create an instance of results to access the returned values.
 	ResultsHash *results = ResultsHashCreate(
 		&thisState->mainState->manager,
-		thisState->mainState->maxEvidence,
-		thisState->mainState->maxEvidence);
+		0);
 
 	// Reference to the dataset.
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;

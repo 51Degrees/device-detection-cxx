@@ -1265,9 +1265,9 @@ static StatusCode initComponentsAvailable(
 	Item item;
 	DataReset(&item.data);
 
-	for (i = 0;
-		i < dataSet->b.b.available->count;
-		i++) {
+	// Set the componentsAvailable flag to avoid performing device detection
+	// for components that have no required properties.
+	for (i = 0; i < dataSet->b.b.available->count; i++) {
 		property = PropertyGet(
 			dataSet->properties,
 			dataSet->b.b.available->items[i].propertyIndex,
@@ -1279,6 +1279,16 @@ static StatusCode initComponentsAvailable(
 		dataSet->componentsAvailable[property->componentIndex] = true;
 		COLLECTION_RELEASE(dataSet->properties, &item);
 	}
+
+	// Count the number of components with available properties. Needed when
+	// creating results to allocate sufficient capacity for all the components.
+	dataSet->componentsAvailableCount = 0;
+	for (i = 0; i < dataSet->b.b.available->count; i++) {
+		if (dataSet->componentsAvailable[i]) {
+			dataSet->componentsAvailableCount++;
+		}
+	}
+
 	return SUCCESS;
 }
 
@@ -2744,7 +2754,6 @@ void fiftyoneDegreesResultsHashFree(
 
 fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 	fiftyoneDegreesResourceManager *manager,
-	uint32_t userAgentCapacity,
 	uint32_t overridesCapacity) {
 	uint32_t i;
 	ResultsHash *results;
@@ -2753,8 +2762,12 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 	// track any results that are created.
 	DataSetHash* dataSet = (DataSetHash*)DataSetGet(manager);
 
-	// Create a new instance of results.
-	FIFTYONE_DEGREES_ARRAY_CREATE(ResultHash, results, userAgentCapacity);
+	// Create a new instance of results with a result for each component in the
+	// dataset.
+	FIFTYONE_DEGREES_ARRAY_CREATE(
+		ResultHash, 
+		results, 
+		dataSet->componentsAvailableCount);
 
 	if (results != NULL) {
 
