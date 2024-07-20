@@ -2086,6 +2086,26 @@ static StatusCode initDataSetFromMemory(
 	// properties which are to be returned (i.e. available properties).
 	status = initComponentsAvailable(dataSet, exception);
 	
+	// Initialise the index for properties and profiles to values.
+	initIndexPropertyProfile(dataSet, exception);
+	if (status != SUCCESS || EXCEPTION_FAILED) {
+		freeDataSet(dataSet);
+		if (config->b.b.useTempFile == true) {
+			FileDelete(dataSet->b.b.fileName);
+		}
+		return status;
+	}
+
+	// Initialise the headers for each component.
+	initComponentHeaders(dataSet, exception);
+	if (status != SUCCESS || EXCEPTION_FAILED) {
+		freeDataSet(dataSet);
+		if (config->b.b.useTempFile == true) {
+			FileDelete(dataSet->b.b.fileName);
+		}
+		return status;
+	}
+
 	return status;
 }
 
