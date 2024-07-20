@@ -2345,12 +2345,15 @@ static void completeResult(
 		result->method = FIFTYONE_DEGREES_HASH_MATCH_METHOD_PREDICTIVE;
 	}
 
-	// Add the profile to the result for the component index.
-	addProfile(
-		result,
-		componentIndex,
-		state->profileOffset,
-		false);
+	// Add the profile to the result for the component index and set all other
+	// profile offsets to null indicating that the result does not relate to
+	// those components.
+	for (uint32_t i = 0; i < state->dataSet->components->count; i++) {
+		result->profileOffsets[i] = 
+			componentIndex == i ? 
+			state->profileOffset : 
+			NULL_PROFILE_OFFSET;
+	}
 }
 
 // For the value, component, and header performs device detection using the 
@@ -2637,6 +2640,9 @@ static void resultsHashFromEvidence_handleAllEvidence(
 			state->componentIndex = (byte)i;
 			resultsHashFromEvidence_handleComponentEvidence(state);
 		}
+	}
+	if (state->results->count == 0) {
+		state->headerUniqueId = 0;
 	}
 }
 
