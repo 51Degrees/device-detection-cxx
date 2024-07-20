@@ -174,32 +174,39 @@ public:
 	}
 
 	void headers() {
-		uint32_t count = 0;
-		fiftyoneDegreesHeader* header;
+		FIFTYONE_DEGREES_EXCEPTION_CREATE
+		bool found;
+		fiftyoneDegreesHeaderPtrs* headers;
+		fiftyoneDegreesHeaders* uniques;
+		
+		// Get the dataset.
 		EngineHash* localEngine = (EngineHash*)getEngine();
 		fiftyoneDegreesDataSetHash* dataSet =
 			fiftyoneDegreesDataSetHashGet(&*localEngine->manager);
-		for (uint32_t i = 0; i < dataSet->componentsList.count; i++) {
-			fiftyoneDegreesComponent* component =
-				(fiftyoneDegreesComponent*)
-				dataSet->componentsList.items[i].data.ptr;
-			count += component->keyValuesCount;
-		}
 
-		for (uint32_t i = 0; i < dataSet->b.b.uniqueHeaders->count; i++) {
-			// There is always one segment per header so only add when there
-			// are more than one.
-			header = &dataSet->b.b.uniqueHeaders->items[i];
-			if (header->segmentHeaders->count > 1) {
-				count += header->segmentHeaders->count;
+		// Get the unique headers.
+		uniques = dataSet->b.b.uniqueHeaders;
+
+		// For each of the headers related to the component check that are
+		// unique headers in the data set.
+		for (uint32_t i = 0; i < dataSet->componentsList.count; i++) {
+			headers = dataSet->componentHeaders[i];
+			for (uint32_t j = 0; j < headers->count; j++) {
+				found = false;
+				for (uint32_t k = 0; k < uniques->count; k++) {
+					if (strcmp(
+						uniques->items[k].name,
+						headers->items[j]->name) == 0) {
+						found = true;
+						break;
+					}
+				}
+				ASSERT_TRUE(found) <<
+					"Component headers must also be present in the unique " <<
+					"headers for the dataset.";
 			}
 		}
 
-		ASSERT_EQ(dataSet->b.b.uniqueHeaders->capacity, count) <<
-			L"The HTTP headers counted when initialising the headers was not " <<
-			L"equal to the total headers from all components plus any headers " <<
-			L"which could potentially be created from the pseudo headers if " <<
-			L"they have not already existed.";
 		fiftyoneDegreesDataSetHashRelease(dataSet);
 	}
 
