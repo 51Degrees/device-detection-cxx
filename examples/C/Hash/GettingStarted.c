@@ -167,7 +167,7 @@ static void outputValue(
 			propertyName,
 			valueBuffer,
 			valueBufferLength,
-			",",
+			(char* const)",",
 			exception);
 		EXCEPTION_THROW;
 	}
@@ -175,10 +175,17 @@ static void outputValue(
 		// A no value message can also be obtained. This message describes why
 		// the value has not been set.
 		fiftyoneDegreesResultsNoValueReason reason =
-			ResultsHashGetNoValueReason(results, requiredPropertyIndex, exception);
+			ResultsHashGetNoValueReason(
+				results, 
+				requiredPropertyIndex, 
+				exception);
 		EXCEPTION_THROW;
 
-		snprintf(valueBuffer, valueBufferLength, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
+		snprintf(
+			valueBuffer, 
+			valueBufferLength, 
+			"Unknown (%s)", 
+			ResultsHashGetNoValueReasonMessage(reason));
 	}
 	fprintf(output, "\n\t%s: %s", name, valueBuffer);
 }

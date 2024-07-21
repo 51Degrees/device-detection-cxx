@@ -30,8 +30,6 @@ using namespace FiftyoneDegrees::Common;
 using namespace FiftyoneDegrees::DeviceDetection;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
 
-inline static void verifyProcessDeviceIdQuery(EngineHash* const hashEngine);
-
 class EngineHashTests : public EngineDeviceDetectionTests {
 public:
 	EngineHashTests(
@@ -217,13 +215,13 @@ public:
 		verifyProfileOverrideNoUserAgent();
 		verifyWithLongPseudoHeader();
 		verifyProcessDeviceId();
-		verifyProcessDeviceIdQuery((EngineHash*)getEngine());
+		verifyProcessDeviceIdQuery();
 		verifyProfileOverridePartial();
 		verifyProfileOverrideZero();
 		verifyNoMatchedNodes();
 		verifyPerformanceGraph();
 		verifyPredictiveGraph();
-		verifyMatchForLowerPrecidence();
+		verifyMatchForLowerPrecedence();
 	}
 	bool setResultsMatchedNodes(
 		ResultsHash *results,
@@ -555,6 +553,117 @@ public:
 		delete results;
 	}
 
+	std::string getDeviceId(const char* ua) {
+		EvidenceDeviceDetection evidence;
+		evidence["header.user-agent"] = ua;
+		return engine->process(&evidence)->getDeviceId();
+	}
+
+	void verifyProcessDeviceIdQuery() {
+
+		// Set the allow unmatched configuration to false to ensure 0 profile id is
+		// returned when missed from the device id.
+		bool originalAllowUnmatched = setAllowUnmatched(engine, false);
+
+		// Collect control device IDs
+		
+		auto const deviceId_mobile = getDeviceId(mobileUserAgent);
+		auto const deviceId_mediaHub = getDeviceId(mediaHubUserAgent);
+
+		std::vector<std::string> const knownIds = {
+			deviceId_mobile,
+			deviceId_mediaHub,
+		};
+
+		// Build evidence, check expectations
+
+		{
+			// Use device ID as the only evidence
+			for (auto it = knownIds.begin(); it != knownIds.end(); ++it) {
+				std::string const& nextID = *it;
+
+				EvidenceDeviceDetection evidence;
+				evidence["query.51D_deviceId"] = nextID;
+
+				std::unique_ptr<ResultsHash> const results(engine->process(&evidence));
+				EXPECT_STREQ(nextID.c_str(), results->getDeviceId().c_str());
+			};
+		};
+
+		{
+			// Device ID takes precedence over 'normal' evidence, i.e. user-agent
+			{
+				// MediaHub agent + Mobile deviceID
+				EvidenceDeviceDetection evidence;
+				evidence["header.user-agent"] = mediaHubUserAgent;
+				evidence["query.51D_deviceId"] = deviceId_mobile;
+
+				std::unique_ptr<ResultsHash> const results(engine->process(&evidence));
+				EXPECT_STREQ(deviceId_mobile.c_str(), results->getDeviceId().c_str());
+			};
+			{
+				// Mobile agent + MediaHub deviceID
+				// + key case-insensitivity check
+				EvidenceDeviceDetection evidence;
+				evidence["header.user-agent"] = mobileUserAgent;
+				evidence["query.51d_dEVIcEiD"] = deviceId_mediaHub.c_str();
+
+				std::unique_ptr<ResultsHash> const results(engine->process(&evidence));
+				EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
+			};
+		};
+
+		{
+			// Profile ID overrides are applied over detected device ID.
+			const char* const expectedDeviceId = "12280-17779-17470-18092";
+			const char* const evidenceValue = "12280|17779|17470|18092";
+
+			for (auto it = knownIds.begin(); it != knownIds.end(); ++it) {
+				std::string const& nextID = *it;
+
+				EvidenceDeviceDetection evidence;
+				evidence["query.ProfileIds"] = evidenceValue;
+				evidence["query.51D_deviceId"] = nextID;
+
+				std::unique_ptr<ResultsHash> const results(engine->process(&evidence));
+				EXPECT_STREQ(expectedDeviceId, results->getDeviceId().c_str());
+			};
+		};
+
+		{
+			// Invalid device ID.
+			std::vector<std::string> const deviceId_dummies = {
+				"190706-2244-1242-2412",
+				"190706~2244~1242~2412",
+				"aksjfb~ks98-7sd9#83ru",
+				"z",
+				"42",
+			};
+			for (size_t i = 0; i < deviceId_dummies.size(); ++i) {
+				{
+					// no match
+					EvidenceDeviceDetection evidence;
+					evidence["query.51D_deviceId"] = deviceId_dummies[i];
+
+					std::unique_ptr<ResultsHash> const results(engine->process(&evidence));
+					EXPECT_STREQ("0-0-0-0", results->getDeviceId().c_str());
+				};
+				{
+					// fallback
+					EvidenceDeviceDetection evidence;
+					evidence["header.user-agent"] = mediaHubUserAgent;
+					evidence["query.51D_deviceId"] = deviceId_dummies[i];
+
+					std::unique_ptr<ResultsHash> const results(engine->process(&evidence));
+					EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
+				};
+			}
+		};
+
+		// Reset the allow unmatched configuration value.
+		setAllowUnmatched(engine, originalAllowUnmatched);
+	}
+
 	void verifyProfileOverrideBad() {
 		EvidenceDeviceDetection evidence;
 		evidence["header.user-agent"] = mobileUserAgent;
@@ -640,61 +749,79 @@ public:
 		return indexes;
 	}
 
-	void verifyMatchForLowerPrecidence() {
+	void verifyMatchForLowerPrecedence() {
 		EvidenceDeviceDetection evidence;
 		bool originalAllowUnmatched = setAllowUnmatched(engine, false);
 
-		// todo check that header is higher precedence than ua.
-		const char *xDeviceName = "header.x-device-user-agent",
-			*uaName = "header.user-agent";
-		int xDeviceIndex, uaIndex;
+		// Test high and low precedence headers.
+		const char 
+			*high = "header.x-device-user-agent", // more important
+			*low = "header.user-agent"; // less important
+		
+		// Check that the engine data aligns to the tests high low 
+		// expectations.
+		int highIndex, lowIndex;
 		const vector<string> *keys = engine->getKeys();
 		for (size_t i = 0; i < keys->size(); i++) {
 			string key = keys->operator[](i);
-			if (fiftyoneDegreesStringCompare(key.c_str(), xDeviceName) == 0) {
-				xDeviceIndex = (int)i;
+			if (fiftyoneDegreesStringCompare(key.c_str(), high) == 0) {
+				highIndex = (int)i;
 			}
-			if (fiftyoneDegreesStringCompare(key.c_str(), uaName) == 0) {
-				uaIndex = (int)i;
+			if (fiftyoneDegreesStringCompare(key.c_str(), low) == 0) {
+				lowIndex = (int)i;
 			}
 		}
-
-		EXPECT_GT(uaIndex, xDeviceIndex) <<
-			L"The '" << xDeviceName << L"' evidence key does not have a " <<
-			L"higher precedence than '" << uaName << L"' so the test is not " <<
+		EXPECT_GT(lowIndex, highIndex) <<
+			L"The '" << high << L"' evidence key does not have a " <<
+			L"higher precedence than '" << low << L"' so the test is not " <<
 			L"useful. Update the test to use a different key.";
-		vector<int> xDeviceComponents = getAvailableComponentsForHeader(
-			xDeviceName + strlen("header."));
-		EXPECT_GT((int)xDeviceComponents.size(), 0) <<
-			L"The '" << xDeviceName << L"' evidence key does not have any " <<
+
+		// Check that the high header has components associated with it.
+		vector<int> highComponents = getAvailableComponentsForHeader(
+			high + strlen("header."));
+		EXPECT_GT((int)highComponents.size(), 0) <<
+			L"The '" << high << L"' evidence key does not have any " <<
 			L"components associated with it, so is not useful for this test.";
 
-		evidence[xDeviceName] = "";
+		// Check that the low header has components associated with it.
+		vector<int> lowComponents = getAvailableComponentsForHeader(
+			low + strlen("header."));
+		EXPECT_GT((int)lowComponents.size(), 0) <<
+			L"The '" << low << L"' evidence key does not have any " <<
+			L"components associated with it, so is not useful for this test.";
+
+		// Set the high order precedent evidence to an empty string and then
+		// verify that a property has no value, and that the device id is 
+		// all zeros.
+		evidence[high] = "";
 		ResultsHash* results =
 			((EngineHash*)getEngine())->process(&evidence);
 		EXPECT_FALSE(results->getValueAsString("IsMobile").hasValue());
 		EXPECT_STREQ(results->getDeviceId().c_str(), "0-0-0-0");
-
 		delete results;
-		evidence[uaName] = mobileUserAgent;
+
+		// Add a valid evidence value for the low precedence header and verify
+		// that this is now used over the empty high precedence header.
+		evidence[low] = mobileUserAgent;
 		results =
 			((EngineHash*)getEngine())->process(&evidence);
 		EXPECT_TRUE(results->getValueAsString("IsMobile").hasValue()) <<
-			L"There was no value for a hardware property. The lower precedence " <<
-			L"evidence should have been used instead.";
-		EXPECT_STREQ(results->getValueAsString("IsMobile").getValue().c_str(), "True") <<
-			L"The value for a hardware propertywa incorrect. The lower precedence " <<
-			L"evidence should have been used instead.";
+			L"There was no value for a hardware property. The lower " 
+			L"precedence evidence should have been used instead.";
+		EXPECT_STREQ(
+			results->getValueAsString("IsMobile").getValue().c_str(), 
+			"True") <<
+			L"The value for a hardware property was incorrect. The lower "
+			L"precedence evidence should have been used instead.";
 		vector<string> profileIds = splitDeviceId(results->getDeviceId());
-		for (size_t i = 0; i < xDeviceComponents.size(); i++) {
-			EXPECT_STRNE(profileIds[xDeviceComponents[i]].c_str(), "0") <<
-				L"There was no profile for component '" << xDeviceComponents[i] <<
+		for (size_t i = 0; i < highComponents.size(); i++) {
+			EXPECT_STRNE(profileIds[highComponents[i]].c_str(), "0") <<
+				L"There was no profile for component '" << highComponents[i] <<
 				L"'. The lower precedence evidence should have been used instead.";
 		}
-		setAllowUnmatched(engine, originalAllowUnmatched);
-
 		delete results;
-
+		
+		setAllowUnmatched(engine, originalAllowUnmatched);
 	}
 	EngineHash *engine;
 	ConfigHash *config;
@@ -799,109 +926,3 @@ public:
 };
 
 ENGINE_TESTS(Hash)
-
-inline static void verifyProcessDeviceIdQuery(EngineHash* const hashEngine) {
-
-	// Collect control device IDs
-
-	std::function<std::string(const char*)> const deviceIdFromUserAgent = [hashEngine](const char* ua) {
-		EvidenceDeviceDetection evidence;
-		evidence["header.user-agent"] = ua;
-
-		std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
-		return results->getDeviceId();
-	};
-
-	auto const deviceId_mobile = deviceIdFromUserAgent(mobileUserAgent);
-	auto const deviceId_mediaHub = deviceIdFromUserAgent(mediaHubUserAgent);
-
-	std::vector<std::string> const knownIDs = {
-		deviceId_mobile,
-		deviceId_mediaHub,
-	};
-
-	// Build evidence, check expectations
-
-	{
-		// Use device ID as the only evidence
-		for (auto it = knownIDs.begin(); it != knownIDs.end(); ++it) {
-			std::string const& nextID = *it;
-
-			EvidenceDeviceDetection evidence;
-			evidence["query.51D_deviceId"] = nextID;
-
-			std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
-			EXPECT_STREQ(nextID.c_str(), results->getDeviceId().c_str());
-		};
-	};
-
-	{
-		// Device ID takes precedence over 'normal' evidence, i.e. user-agent
-		{
-			// MediaHub agent + Mobile deviceID
-			EvidenceDeviceDetection evidence;
-			evidence["header.user-agent"] = mediaHubUserAgent;
-			evidence["query.51D_deviceId"] = deviceId_mobile;
-
-			std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
-			EXPECT_STREQ(deviceId_mobile.c_str(), results->getDeviceId().c_str());
-		};
-		{
-			// Mobile agent + MediaHub deviceID
-			// + key case-insensitivity check
-			EvidenceDeviceDetection evidence;
-			evidence["header.user-agent"] = mobileUserAgent;
-			evidence["query.51d_dEVIcEiD"] = deviceId_mediaHub.c_str();
-
-			std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
-			EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
-		};
-	};
-
-	{
-		// Profile ID overrides are applied over detected device ID.
-		const char* const expectedDeviceId = "12280-17779-17470-18092";
-		const char* const evidenceValue = "12280|17779|17470|18092";
-
-		for (auto it = knownIDs.begin(); it != knownIDs.end(); ++it) {
-			std::string const& nextID = *it;
-
-			EvidenceDeviceDetection evidence;
-			evidence["query.ProfileIds"] = evidenceValue;
-			evidence["query.51D_deviceId"] = nextID;
-
-			std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
-			EXPECT_STREQ(expectedDeviceId, results->getDeviceId().c_str());
-		};
-	};
-
-	{
-		// Invalid device ID.
-		std::vector<std::string> const deviceId_dummies = {
-			"190706-2244-1242-2412",
-			"190706~2244~1242~2412",
-			"aksjfb~ks98-7sd9#83ru",
-			"z",
-			"42",
-		};
-		for (size_t i = 0; i < deviceId_dummies.size(); ++i) {
-			{
-				// no match
-				EvidenceDeviceDetection evidence;
-				evidence["query.51D_deviceId"] = deviceId_dummies[i];
-
-				std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
-				EXPECT_STREQ("0-0-0-0", results->getDeviceId().c_str());
-			};
-			{
-				// fallback
-				EvidenceDeviceDetection evidence;
-				evidence["header.user-agent"] = mediaHubUserAgent;
-				evidence["query.51D_deviceId"] = deviceId_dummies[i];
-
-				std::unique_ptr<ResultsHash> const results(hashEngine->process(&evidence));
-				EXPECT_STREQ(deviceId_mediaHub.c_str(), results->getDeviceId().c_str());
-			};
-		}
-	};
-}

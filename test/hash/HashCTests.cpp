@@ -116,7 +116,7 @@ static char* getPropertyValueAsString(
 		propertyName,
 		buffer,
 		bufferSize,
-		",",
+		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
 	return buffer;
@@ -222,7 +222,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 		"isMobile",
 		isMobile,
 		sizeof(isMobile),
-		",",
+		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
 	EXPECT_EQ(0, charsAdded) << "No result should have been found where "
@@ -241,7 +241,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 		"isMobile",
 		isMobile,
 		sizeof(isMobile),
-		",",
+		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
 	EXPECT_EQ(0, charsAdded) << "No result should have been found where "
@@ -418,7 +418,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringNoTrailingSeparator) {
 
 	char buffer[100] = "";
 	ResultsHashGetValuesString(
-		results, "IsMobile", buffer, 100, ",", exception);
+		results, "IsMobile", buffer, 100, (char* const)",", exception);
 	ResultsHashFree(results);
 
 	EXPECT_STREQ("True", buffer) <<
