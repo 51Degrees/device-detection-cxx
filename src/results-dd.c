@@ -33,6 +33,7 @@ void fiftyoneDegreesResultsDeviceDetectionInit(
 	uint32_t overridesCapacity) {
 	ResultsInit(&results->b, (void*)dataSet);
 	results->overrides = OverrideValuesCreate(overridesCapacity);
+
 	// Allocate memory for a buffer that might be used when combining header
 	// values.
 	results->bufferLength = (int)CONFIG(dataSet)->maxMatchedUserAgentLength + 1;

@@ -57,12 +57,12 @@ typedef struct fiftyone_degrees_result_user_agent_t {
 							ConfigDeviceDetection structure. The final
 							character will always be a null terminator once
 							initialized by the ResultsUserAgentInit method */
-	int matchedUserAgentLength; /**< Number of characters in the matched
-								User-Agent */
+	size_t matchedUserAgentLength; /**< Number of characters in the matched
+								   User-Agent */
 	const char *targetUserAgent; /**< Pointer to the string containing the
 								 User-Agent for processing */
-	int targetUserAgentLength; /**< Number of characters in the target
-							   User-Agent */
+	size_t targetUserAgentLength; /**< Number of characters in the target
+								  User-Agent */
 } fiftyoneDegreesResultUserAgent;
 
 /**
