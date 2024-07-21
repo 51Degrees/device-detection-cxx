@@ -129,7 +129,7 @@ static void outputValue(
 			propertyName,
 			valueBuffer,
 			valueBufferLength,
-			",",
+			(char* const)",",
 			exception);
 		EXCEPTION_THROW;
 	}
