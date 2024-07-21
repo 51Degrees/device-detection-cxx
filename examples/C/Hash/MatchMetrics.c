@@ -138,7 +138,7 @@ static const char* getPropertyValueAsString(
 		propertyName,
 		valueBuffer,
 		sizeof(valueBuffer),
-		",",
+		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
 	return valueBuffer;
