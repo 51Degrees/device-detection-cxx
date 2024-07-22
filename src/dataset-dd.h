@@ -51,8 +51,8 @@
  */
 typedef struct fiftyone_degrees_dataset_device_detection_t {
 	fiftyoneDegreesDataSetBase b; /**< Base structure members */
-	int uniqueUserAgentHeaderIndex; /**< The unique HTTP header for the field
-									name "User-Agent" */
+	uint32_t uniqueUserAgentHeaderIndex; /**< The unique HTTP header for the 
+										 field name "User-Agent" */
 } fiftyoneDegreesDataSetDeviceDetection;
 
 /**
