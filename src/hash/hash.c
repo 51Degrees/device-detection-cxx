@@ -2701,9 +2701,29 @@ static void resultsHashReset(ResultsHash* results) {
 void fiftyoneDegreesResultsHashFromEvidence(
 	fiftyoneDegreesResultsHash *results,
 	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
-	fiftyoneDegreesException *exception) 
-{
+	fiftyoneDegreesException *exception) {
+	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
+
 	if (evidence == (EvidenceKeyValuePairArray*)NULL) {
+		return;
+	}
+
+	// If there is only one item of evidence and it's the User-Agent then use
+	// the simpler method that does not consider other headers, or the 
+	// possibility of profile id and device id overrides.
+	Header* ua = &dataSet->b.b.uniqueHeaders->items[
+		dataSet->b.uniqueUserAgentHeaderIndex];
+	if (evidence->count == 1 &&
+		evidence->items->fieldLength == ua->length &&
+		StringCompareLength(
+			evidence->items->field,
+			ua->name,
+			ua->length) == 0) {
+		ResultsHashFromUserAgent(
+			results, 
+			evidence->items->originalValue, 
+			strlen(evidence->items->originalValue), 
+			exception);
 		return;
 	}
 
