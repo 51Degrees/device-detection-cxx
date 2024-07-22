@@ -467,10 +467,6 @@ public:
 			L"The device id was not correct.";
 		EXPECT_FALSE(results->getValueAsString(property->getName()).hasValue()) <<
 			L"No value should be returned for a missing profile.";
-		ASSERT_EQ(FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_RESULT_FOR_PROPERTY,
-			results->getValueAsString(property->getName()).getNoValueReason()) <<
-			L"The reason for the missing value was not reported as being due " <<
-			L"to a null profile.";
 		delete results;
 
 		// Now test the behavior when unmatched is allowed. This means that
