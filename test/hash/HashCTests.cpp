@@ -116,7 +116,7 @@ static char* getPropertyValueAsString(
 		propertyName,
 		buffer,
 		bufferSize,
-		",",
+		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
 	return buffer;
@@ -134,8 +134,8 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 	char deviceId[40] = "";
 	char isMobile[40] = "";
 
-	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
-	resultsDeviceId = ResultsHashCreate(&manager, 1, 0);
+	resultsUserAgents = ResultsHashCreate(&manager, 0);
+	resultsDeviceId = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE
 	// Obtain results from user agent
@@ -209,8 +209,8 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 	char deviceId[40] = "";
 	char isMobile[40] = "";
 
-	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
-	resultsDeviceId = ResultsHashCreate(&manager, 1, 0);
+	resultsUserAgents = ResultsHashCreate(&manager, 0);
+	resultsDeviceId = ResultsHashCreate(&manager, 0);
 
 	// Obtain result again from device ID
 	// with invalid uniqueHttpHeaderIndex
@@ -222,7 +222,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 		"isMobile",
 		isMobile,
 		sizeof(isMobile),
-		",",
+		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
 	EXPECT_EQ(0, charsAdded) << "No result should have been found where "
@@ -241,7 +241,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 		"isMobile",
 		isMobile,
 		sizeof(isMobile),
-		",",
+		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
 	EXPECT_EQ(0, charsAdded) << "No result should have been found where "
@@ -260,7 +260,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
  * does not have enough space.
  */
 TEST_F(HashCTests, GraphTraceGetTests) {
-	ResultsHash* resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* resultsUserAgents = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE;
 	// Obtain results from user agent
@@ -314,96 +314,98 @@ TEST_F(HashCTests, GraphTraceGetTests) {
 	ResultsHashFree(resultsUserAgents);
 }
 
+// TODO - Remove after refactor.
 /*
  * Check that the creation of ResultsHash create evidence array correctly
  * with and without pseudo headers.
  */
-TEST_F(HashCTests, ResultsHashCreation) {
-	ResultsHash *testResults1, *testResults2;
+//TEST_F(HashCTests, ResultsHashCreation) {
+//	ResultsHash *testResults1, *testResults2;
+//
+//	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+//	uint32_t savePseudoHeaderCount =
+//		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
+//
+//	// Create addtional results and pseudo evidence
+//	// if Client Hints are enabled and pseudo headers
+//	// are present.
+//	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 2;
+//	testResults1 = ResultsHashCreate(&manager, 0);
+//	EXPECT_TRUE(testResults1->pseudoEvidence != NULL);
+//	EXPECT_EQ(2, testResults1->pseudoEvidence->capacity);
+//	EXPECT_EQ(3, testResults1->capacity);
+//
+//	// Don't create addtional results and pseudo evidence
+//	// if pseudo headers are not present.
+//	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
+//	testResults2 = ResultsHashCreate(&manager, 0);
+//	EXPECT_TRUE(testResults2->pseudoEvidence == NULL);
+//	EXPECT_EQ(1, testResults2->capacity);
+//
+//	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
+//	DataSetRelease((DataSetBase *)dataSet);
+//	// Free allocated resource
+//	ResultsHashFree(testResults1);
+//	ResultsHashFree(testResults2);
+//}
 
-	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
-	uint32_t savePseudoHeaderCount =
-		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
-
-	// Create addtional results and pseudo evidence
-	// if Client Hints are enabled and pseudo headers
-	// are present.
-	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 2;
-	testResults1 = ResultsHashCreate(&manager, 1, 0);
-	EXPECT_TRUE(testResults1->pseudoEvidence != NULL);
-	EXPECT_EQ(2, testResults1->pseudoEvidence->capacity);
-	EXPECT_EQ(3, testResults1->capacity);
-
-	// Don't create addtional results and pseudo evidence
-	// if pseudo headers are not present.
-	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
-	testResults2 = ResultsHashCreate(&manager, 1, 0);
-	EXPECT_TRUE(testResults2->pseudoEvidence == NULL);
-	EXPECT_EQ(1, testResults2->capacity);
-
-	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
-	DataSetRelease((DataSetBase *)dataSet);
-	// Free allocated resource
-	ResultsHashFree(testResults1);
-	ResultsHashFree(testResults2);
-}
-
+// TODO - Remove after refactor.
 /*
  * This test check that the detection will still work when there is no
  * pseudo header count
  */
-TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
-	ResultsHash* resultsUserAgents;
-
-	char isMobile[40] = "";
-
-	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
-	uint32_t savePseudoHeaderCount =
-		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
-
-	// Set the pseudo header count to mock scenarios
-	// where data file does not support pseudo headers
-	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
-	resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
-	EXPECT_TRUE(resultsUserAgents->pseudoEvidence == NULL);
-
-	fiftyoneDegreesEvidenceKeyValuePairArray* evidence =
-		EvidenceCreate(1);
-	const char* evidenceField = "User-Agent";
-	const char* evidenceValue = mobileUserAgent;
-	EvidenceAddString(
-		evidence,
-		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
-		evidenceField,
-		evidenceValue);
-
-	// Obtain results from user agent
-	EXCEPTION_CREATE
-	ResultsHashFromEvidence(resultsUserAgents, evidence, exception);
-	EXCEPTION_THROW;
-	EXPECT_EQ(1, resultsUserAgents->count) << "Only one results should be "
-		<< "returned.\n";
-	EXPECT_EQ(0, strcmp(
-		"True",
-		getPropertyValueAsString(
-			resultsUserAgents,
-			"isMobile",
-			isMobile,
-			sizeof(isMobile)))) << "Property isMobile should be true.\n";
-
-	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
-	EvidenceFree(evidence);
-	DataSetRelease((DataSetBase*)dataSet);
-	// Free allocated resource
-	ResultsHashFree(resultsUserAgents);
-}
+//TEST_F(HashCTests, ResultsHashFromEvidencePseudoEvidenceCreation) {
+//	ResultsHash* resultsUserAgents;
+//
+//	char isMobile[40] = "";
+//
+//	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+//	uint32_t savePseudoHeaderCount =
+//		dataSet->b.b.uniqueHeaders->pseudoHeadersCount;
+//
+//	// Set the pseudo header count to mock scenarios
+//	// where data file does not support pseudo headers
+//	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = 0;
+//	resultsUserAgents = ResultsHashCreate(&manager, 0);
+//	EXPECT_TRUE(resultsUserAgents->pseudoEvidence == NULL);
+//
+//	fiftyoneDegreesEvidenceKeyValuePairArray* evidence =
+//		EvidenceCreate(1);
+//	const char* evidenceField = "User-Agent";
+//	const char* evidenceValue = mobileUserAgent;
+//	EvidenceAddString(
+//		evidence,
+//		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+//		evidenceField,
+//		evidenceValue);
+//
+//	// Obtain results from user agent
+//	EXCEPTION_CREATE
+//	ResultsHashFromEvidence(resultsUserAgents, evidence, exception);
+//	EXCEPTION_THROW;
+//	EXPECT_EQ(1, resultsUserAgents->count) << "Only one results should be "
+//		<< "returned.\n";
+//	EXPECT_EQ(0, strcmp(
+//		"True",
+//		getPropertyValueAsString(
+//			resultsUserAgents,
+//			"isMobile",
+//			isMobile,
+//			sizeof(isMobile)))) << "Property isMobile should be true.\n";
+//
+//	dataSet->b.b.uniqueHeaders->pseudoHeadersCount = savePseudoHeaderCount;
+//	EvidenceFree(evidence);
+//	DataSetRelease((DataSetBase*)dataSet);
+//	// Free allocated resource
+//	ResultsHashFree(resultsUserAgents);
+//}
 
 /*
  * This test check that the ResultsHashGetValuesString will only add separator
  * if there is next value.
  */
 TEST_F(HashCTests, ResultsHashGetValuesStringNoTrailingSeparator) {
-	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* results = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE;
 	// Obtain results from user agent
@@ -416,7 +418,7 @@ TEST_F(HashCTests, ResultsHashGetValuesStringNoTrailingSeparator) {
 
 	char buffer[100] = "";
 	ResultsHashGetValuesString(
-		results, "IsMobile", buffer, 100, ",", exception);
+		results, "IsMobile", buffer, 100, (char* const)",", exception);
 	ResultsHashFree(results);
 
 	EXPECT_STREQ("True", buffer) <<
@@ -455,7 +457,7 @@ TEST_F(HashCTests, HashSizeManagerFromFileException) {
  * an approriate error is set, and there is no segfault.
  */
 TEST_F(HashCTests, HashResultsGetValuesNoPropertyIndex) {
-	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* results = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE;
 	// Obtain results from user agent
@@ -479,7 +481,7 @@ TEST_F(HashCTests, HashResultsGetValuesNoPropertyIndex) {
  * an approriate error is set, and there is no segfault.
  */
 TEST_F(HashCTests, HashResultsGetValuesOutOfRangePropertyIndex) {
-	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* results = ResultsHashCreate(&manager, 0);
 	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
 
 	EXCEPTION_CREATE;
@@ -524,7 +526,7 @@ static void* getFail(
  * an approriate error is set, and there is no segfault.
  */
 TEST_F(HashCTests, HashResultsGetValuesNoProfileValues) {
-	ResultsHash* results = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash* results = ResultsHashCreate(&manager, 0);
 
 	EXCEPTION_CREATE;
 	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);

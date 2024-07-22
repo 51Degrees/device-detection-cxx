@@ -133,17 +133,24 @@ namespace FiftyoneDegrees {
 					: ExampleBase(dataFilePath, config) {
 				};
 
+				/**
+				 * Check that the value is populated before using the result.
+				 */
 				void printResults(DeviceDetection::Hash::ResultsHash* results) {
-					cout << "   PlatformName: " <<
-						(*results->getValueAsString("PlatformName")).c_str()
-						<< "\n";
-					cout << "   PlatformVersion: " <<
-						(*results->getValueAsString("PlatformVersion")).c_str()
-						<< "\n";
-					cout << "   IsMobile: " <<
-						(*results->getValueAsString("IsMobile")).c_str() << "\n";
-					cout << "   Device ID: " <<
-						results->getDeviceId() << "\n";
+					Common::Value<string> value;
+					value = results->getValueAsString("PlatformName");
+					cout << "\tPlatformName: " << (value.hasValue() ? 
+						value.getValue() : 
+						value.getNoValueMessage()) << "\n";
+					value = results->getValueAsString("PlatformVersion");
+					cout << "\tPlatformVersion: " << (value.hasValue() ?
+						value.getValue() :
+						value.getNoValueMessage()) << "\n";
+					value = results->getValueAsString("IsMobile");
+					cout << "\tIsMobile: " << (value.hasValue() ?
+						value.getValue() :
+						value.getNoValueMessage()) << "\n";
+					cout << "\tDevice ID: " << results->getDeviceId() << "\n";
 				}
 
 				/**

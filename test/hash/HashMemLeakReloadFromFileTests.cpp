@@ -64,10 +64,7 @@ typedef struct thread_state_t {
  */
 static void executeTest(const char *userAgent, void *state) {
 	threadState *thread = (threadState*)state;
-	ResultsHash *results = ResultsHashCreate(
-		thread->manager,
-		1,
-		0);
+	ResultsHash *results = ResultsHashCreate(thread->manager, 0);
 	EvidenceKeyValuePairArray *evidence = EvidenceCreate(1);
 	EvidenceAddString(
 		evidence,

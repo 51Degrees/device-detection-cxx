@@ -129,7 +129,7 @@ static void outputValue(
 			propertyName,
 			valueBuffer,
 			valueBufferLength,
-			",",
+			(char* const)",",
 			exception);
 		EXCEPTION_THROW;
 	}
@@ -240,7 +240,7 @@ void run(
 	// number of signatures than the default because performance is less 
 	// important for offline processing and expanding the number of 
 	// alternatives evaluated can lead to a better result.
-	state.results = ResultsHashCreate(manager, 10, 10);
+	state.results = ResultsHashCreate(manager, 10);
 
 	KeyValuePair pair[10];
 	char key[10][500];

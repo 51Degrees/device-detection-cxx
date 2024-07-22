@@ -73,6 +73,7 @@
 #include "../common-cxx/value.h"
 #include "../common-cxx/profile.h"
 #include "../common-cxx/overrides.h"
+#include "../common-cxx/json.h"
 #include "../config-dd.h"
 #include "../dataset-dd.h"
 #include "../results-dd.h"
@@ -300,9 +301,13 @@ typedef struct fiftyone_degrees_dataset_hash_t {
 	fiftyoneDegreesCollection *components; /**< Collection of all components */
 	fiftyoneDegreesList componentsList; /**< List of component items from the
 										components collection */
+	fiftyoneDegreesHeaderPtrs** componentHeaders; /**< Array of headers for 
+												  each component index */
 	bool *componentsAvailable; /**< Array of flags indicating if there are
 							   any properties available for the component with
 							   the matching index in componentsList */
+	uint32_t componentsAvailableCount; /**< Number of components with 
+									   properties */
 	fiftyoneDegreesCollection *maps; /**< Collection data file maps */
 	fiftyoneDegreesCollection *properties; /**< Collection of all properties */
 	fiftyoneDegreesCollection *values; /**< Collection of all values */
@@ -355,9 +360,7 @@ typedef struct fiftyone_degrees_result_hash_t {
 	fiftyoneDegreesCollectionItem propertyItem; /**< Property for the current
 												request */ \
 	fiftyoneDegreesList values; /**< List of value items when results are
-								fetched */ \
-	fiftyoneDegreesEvidenceKeyValuePairArray* pseudoEvidence; /**< Array of
-															pseudo evidence */
+								fetched */
 
 FIFTYONE_DEGREES_ARRAY_TYPE(
 	fiftyoneDegreesResultHash,
@@ -615,14 +618,12 @@ EXTERNAL void fiftyoneDegreesResultsHashFromDeviceId(
  * process. e.g. Client Hints support.
  * @param manager pointer to the resource manager which manages a Hash data
  * set
- * @param userAgentCapacity number of User-Agents to be able to handle
  * @param overridesCapacity number of properties that can be overridden,
  * 0 to disable overrides
  * @return newly created results structure
  */
 EXTERNAL fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 	fiftyoneDegreesResourceManager *manager,
-	uint32_t userAgentCapacity,
 	uint32_t overridesCapacity);
 
 /**
@@ -697,7 +698,7 @@ EXTERNAL fiftyoneDegreesCollectionItem* fiftyoneDegreesResultsHashGetValues(
  * @param results pointer to the results structure to release
  * @param propertyName name of the property to be used with the values
  * @param buffer character buffer allocated by the caller
- * @param bufferLength of the character buffer
+ * @param length of the character buffer
  * @param separator string to be used to separate multiple values if available
  * @param exception pointer to an exception data structure to be used if an
  * exception occurs. See exceptions.h.
@@ -707,17 +708,34 @@ EXTERNAL fiftyoneDegreesCollectionItem* fiftyoneDegreesResultsHashGetValues(
 EXTERNAL size_t fiftyoneDegreesResultsHashGetValuesString(
 	fiftyoneDegreesResultsHash* results,
 	const char *propertyName,
-	char *buffer,
-	size_t bufferLength,
-	const char *separator,
+	char* const buffer,
+	size_t const length,
+	char* const separator,
 	fiftyoneDegreesException *exception);
+
+/**
+ * Sets the buffer to a JSON string that represents all the available 
+ * properties and values in the results.
+ * @param results pointer to the results structure to release
+ * @param buffer character buffer allocated by the caller
+ * @param length of the character buffer
+ * @param exception pointer to an exception data structure to be used if an
+ * exception occurs. See exceptions.h.
+ * @return the number of characters available for values. May be larger than
+ * bufferLength if the buffer is not long enough to return the result.
+ */
+EXTERNAL size_t fiftyoneDegreesResultsHashGetValuesJson(
+	fiftyoneDegreesResultsHash* results,
+	char* const buffer,
+	size_t const length,
+	fiftyoneDegreesException* exception);
 
 /**
  * Sets the buffer the values associated in the results for the property name.
  * @param results pointer to the results structure to release
  * @param requiredPropertyIndex required property index of for the values
  * @param buffer character buffer allocated by the caller
- * @param bufferLength of the character buffer
+ * @param length of the character buffer
  * @param separator string to be used to separate multiple values if available
  * @param exception pointer to an exception data structure to be used if an
  * exception occurs. See exceptions.h.
@@ -728,10 +746,30 @@ EXTERNAL size_t
 fiftyoneDegreesResultsHashGetValuesStringByRequiredPropertyIndex(
 	fiftyoneDegreesResultsHash* results,
 	const int requiredPropertyIndex,
-	char *buffer,
-	size_t bufferLength,
-	const char *separator,
+	char* const buffer,
+	size_t const length,
+	char* const separator,
 	fiftyoneDegreesException *exception);
+
+/**
+ * Sets the buffer the values associated in the results for all the available
+ * properties where each line is the properties for the property at the 
+ * corresponding index.
+ * @param results pointer to the results structure to release
+ * @param buffer character buffer allocated by the caller
+ * @param length of the character buffer
+ * @param separator string to be used to separate multiple values if available
+ * @param exception pointer to an exception data structure to be used if an
+ * exception occurs. See exceptions.h.
+ * @return the number of characters available for values. May be larger than
+ * length if the buffer is not long enough to return the result.
+ */
+EXTERNAL size_t fiftyoneDegreesResultsHashGetValuesStringAllProperties(
+	fiftyoneDegreesResultsHash* results,
+	char* const buffer,
+	size_t const length,
+	char* const separator,
+	fiftyoneDegreesException* exception);
 
 /**
  * Reload the data set being used by the resource manager using the data file
@@ -856,8 +894,8 @@ EXTERNAL uint32_t fiftyoneDegreesHashIterateProfilesForPropertyAndValue(
  * '-'.
  * @param dataSet pointer to the data set used to get the result
  * @param result pointer to the result to get the device id of
- * @param destination pointer to the memory to write the characters to
- * @param size amount of memory allocated to destination
+ * @param buffer pointer to the memory to write the characters to
+ * @param length amount of memory allocated to buffer
  * @param exception pointer to an exception data structure to be used if an
  * exception occurs. See exceptions.h
  * @return the destination pointer
@@ -865,24 +903,24 @@ EXTERNAL uint32_t fiftyoneDegreesHashIterateProfilesForPropertyAndValue(
 EXTERNAL char* fiftyoneDegreesHashGetDeviceIdFromResult(
 	fiftyoneDegreesDataSetHash *dataSet,
 	fiftyoneDegreesResultHash *result,
-	char *destination,
-	size_t size,
+	char* const buffer,
+	size_t const length,
 	fiftyoneDegreesException *exception);
 
 /**
  * Get the device id string from the results provided. This contains profile
  * ids for all components, concatenated with the separator character '-'.
  * @param results pointer to the results to get the device id of
- * @param destination pointer to the memory to write the characters to
- * @param size amount of memory allocated to destination
+ * @param buffer pointer to the memory to write the characters to
+ * @param length amount of memory allocated to buffer
  * @param exception pointer to an exception data structure to be used if an
  * exception occurs. See exceptions.h
  * @return the destination pointer
  */
 EXTERNAL char* fiftyoneDegreesHashGetDeviceIdFromResults(
 	fiftyoneDegreesResultsHash *results,
-	char *destination,
-	size_t size,
+	char* const buffer,
+	size_t const length,
 	fiftyoneDegreesException *exception);
 
 /**

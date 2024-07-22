@@ -43,7 +43,7 @@ This example is available in full on [GitHub](https://github.com/51Degrees/devic
 // which requires to be included before 'malloc.h'.
 #include "ExampleBase.h"
 
-#define MAX_EVIDENCE 6
+#define MAX_EVIDENCE 7
 
 static const char *dataDir = "device-detection-data";
 
@@ -72,46 +72,69 @@ typedef struct {
 // A User-Agent from a mobile device.
 static evidence mobileDevice = { 
 	1, 
-	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", ("Mozilla/5.0 (Linux; Android 9; SAMSUNG SM-G960U) "
-	  "AppleWebKit/537.36 (KHTML, like Gecko) "
-	  "SamsungBrowser/10.1 Chrome/71.0.3578.99 Mobile "
-	  "Safari/537.36") } } 
+	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", (
+		"Mozilla/5.0 (Linux; Android 9; SAMSUNG SM-G960U) "
+		"AppleWebKit/537.36 (KHTML, like Gecko) "
+		"SamsungBrowser/10.1 Chrome/71.0.3578.99 Mobile "
+		"Safari/537.36") } } 
 };
 
 // A User-Agent from a desktop device.
 static evidence desktopDevice = { 
 	1, 
-	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", ("Mozilla / 5.0 (Windows NT 10.0; Win64; x64) "
-	  "AppleWebKit/537.36 (KHTML, like Gecko) "
-	  "Chrome/78.0.3904.108 Safari/537.36") } } 
+	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", (
+		"Mozilla / 5.0 (Windows NT 10.0; Win64; x64) "
+		"AppleWebKit/537.36 (KHTML, like Gecko) "
+		"Chrome/78.0.3904.108 Safari/537.36") } } 
 };
 
 // Evidence values from a windows 11 device using a browser
 // that supports User-Agent Client Hints.
 static evidence userAgentClientHints = { 
 	5,
-	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-	  "AppleWebKit/537.36 (KHTML, like Gecko) "
-	  "Chrome/98.0.4758.102 Safari/537.36"},
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", (
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+		"AppleWebKit/537.36 (KHTML, like Gecko) "
+		"Chrome/98.0.4758.102 Safari/537.36")},
 	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-mobile", "?0"},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", ("\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
-	  "\"Google Chrome\";v=\"98\"")},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", "Windows"},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"14.0.0\""} }
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", (
+		"\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
+		"\"Google Chrome\";v=\"98\"")},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", 
+		"Windows"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, 
+		"sec-ch-ua-platform-version", 
+		"\"14.0.0\""} }
 };
 
 static char modileDeviceIDBuffer[50] = ""; // Evaluated at run time
 static evidence userAgentWithMobileID = {
 	6,
-	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-	  "AppleWebKit/537.36 (KHTML, like Gecko) "
-	  "Chrome/98.0.4758.102 Safari/537.36"},
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", (
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+		"AppleWebKit/537.36 (KHTML, like Gecko) "
+		"Chrome/98.0.4758.102 Safari/537.36")},
 	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-mobile", "?0"},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", ("\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
-	  "\"Google Chrome\";v=\"98\"")},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", "Windows"},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"14.0.0\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", (
+		"\" Not A; Brand\";v=\"99\", \"Chromium\";v=\"98\", "
+		"\"Google Chrome\";v=\"98\"")},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", 
+		"Windows"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, 
+		"sec-ch-ua-platform-version", 
+		"\"14.0.0\""},
 	{FIFTYONE_DEGREES_EVIDENCE_QUERY, "51D_deviceId", modileDeviceIDBuffer} }
+};
+
+static evidence headersWithWebView = {
+	7,
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Linux; Android 13; RMX3762 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/122.0.6261.106 Mobile Safari/537.36 TwitterAndroid"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-mobile", "?1"},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Android WebView\";v=\"122\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", "\"Android\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"13.0.0\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-model", "\"RMX3762\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-full-version", "\"122.0.6261.106\""} }
 };
 
 // This collection contains the various input values that will
@@ -121,6 +144,7 @@ static evidence* evidenceValues[] = {
 	&desktopDevice,
 	&userAgentClientHints,
 	&userAgentWithMobileID,
+	&headersWithWebView,
 };
 
 static void outputValue(
@@ -143,7 +167,7 @@ static void outputValue(
 			propertyName,
 			valueBuffer,
 			valueBufferLength,
-			",",
+			(char* const)",",
 			exception);
 		EXCEPTION_THROW;
 	}
@@ -151,10 +175,17 @@ static void outputValue(
 		// A no value message can also be obtained. This message describes why
 		// the value has not been set.
 		fiftyoneDegreesResultsNoValueReason reason =
-			ResultsHashGetNoValueReason(results, requiredPropertyIndex, exception);
+			ResultsHashGetNoValueReason(
+				results, 
+				requiredPropertyIndex, 
+				exception);
 		EXCEPTION_THROW;
 
-		snprintf(valueBuffer, valueBufferLength, "Unknown (%s)", ResultsHashGetNoValueReasonMessage(reason));
+		snprintf(
+			valueBuffer, 
+			valueBufferLength, 
+			"Unknown (%s)", 
+			ResultsHashGetNoValueReasonMessage(reason));
 	}
 	fprintf(output, "\n\t%s: %s", name, valueBuffer);
 }
@@ -199,14 +230,19 @@ static void analyse(
 	outputValue(results, "Browser Name", "BrowserName", output);
 	outputValue(results, "Browser Version", "BrowserVersion", output);
 
-	char deviceIdBuffer[50] = "";
 	HashGetDeviceIdFromResults(
 		results,
-		deviceIdBuffer,
-		sizeof(deviceIdBuffer),
+		valueBuffer,
+		sizeof(valueBuffer),
 		exception);
 	EXCEPTION_THROW;
-	fprintf(output, "\n\tDevice ID: %s\n", deviceIdBuffer);
+	fprintf(output, "\n\tDevice ID: %s\n", valueBuffer);
+
+	ResultsHashGetValuesJson(results,
+		valueBuffer,
+		sizeof(valueBuffer),
+		exception);
+	fprintf(output, "\n\tJSON: %s\n", valueBuffer);
 
 	fprintf(output, "\n\n");
 }
@@ -218,8 +254,14 @@ void fiftyoneDegreesHashGettingStarted(
 	ResourceManager manager;
 	EXCEPTION_CREATE;
 
-	// Set the properties to be returned for each User-Agent.
-	PropertiesRequired properties = PropertiesDefault;
+	// Set the properties to be returned for each User-Agent. Specifying the
+	// properties that will later be retrieved at initialisation time improves
+	// performance.
+	PropertiesRequired properties = { 
+		NULL,
+		0,
+		"IsMobile,PlatformName,PlatformVersion,BrowserName,BrowserVersion,HardwareImages",
+		NULL };
 
 	// Initialise the manager for device detection.
 	StatusCode status = HashInitManagerFromFile(
@@ -238,7 +280,7 @@ void fiftyoneDegreesHashGettingStarted(
 	// Create a results instance to store and process evidence.
 	// The capacity of the results should be the same as the maximum potential
 	// evidence that can be provided.
-	ResultsHash *results = ResultsHashCreate(&manager, MAX_EVIDENCE, MAX_EVIDENCE);
+	ResultsHash *results = ResultsHashCreate(&manager, 0);
 
 	for (int i = 0; i < (int)(sizeof(evidenceValues)/sizeof(evidence *)); i++) {
 		// Create an evidence collection and add the evidence to the collection
@@ -300,7 +342,7 @@ int main(int argc, char* argv[]) {
 	// http://51degrees.com/documentation/_device_detection__features__performance_options.html
 	// http://51degrees.com/documentation/_features__automatic_datafile_updates.html
 	// http://51degrees.com/documentation/_features__usage_sharing.html
-	ConfigHash config = HashLowMemoryConfig;
+	ConfigHash config = HashInMemoryConfig;
 	char dataFilePath[FILE_MAX_PATH];
 
 	// Use the supplied path for the data file or find the lite data that
@@ -347,3 +389,4 @@ int main(int argc, char* argv[]) {
 }
 
 #endif
+

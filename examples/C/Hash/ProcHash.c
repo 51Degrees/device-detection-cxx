@@ -85,10 +85,7 @@ static int run(fiftyoneDegreesResourceManager *manager) {
  	const size_t outputLength = sizeof(output) / sizeof(output[0]);
 
 	int count = 0;
-	ResultsHash *results = ResultsHashCreate(
-		manager,
-		1,
-		0);
+	ResultsHash *results = ResultsHashCreate(manager, 0);
 	while (fgets(userAgent, sizeof(userAgent), stdin) != 0) {
 
 		// Set the results from the User-Agent provided from standard in.

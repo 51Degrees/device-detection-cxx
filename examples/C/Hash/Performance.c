@@ -94,11 +94,26 @@ typedef struct performanceConfig_t {
 } performanceConfig;
 
 /**
- * Dataset configurations to run benchmarking against.
+ * Dataset configurations to run benchmarking against. Only InMemory is used
+ * in default performance example.
+ * 
+ * The compiler directive FIFTYONE_DEGREES_MEMORY_ONLY (which is not part of 
+ * configuration) to compile out considerations for file based operation and 
+ * thus provide maximum performance can be used to further improve performance.
+ * 
+ * InMemory - all the data is loaded into memory and file closed. Fast.
+ * Balanced - popular data is loaded into memory, other cached and loaded from 
+ *   data file. Quite slow, but okay for web sites.
+ * LowMemory - all data loaded from data file when needed. Slow.
  */
 performanceConfig performanceConfigs[] = {
 	{ &HashInMemoryConfig, false },
-	{ &HashInMemoryConfig, true } };
+	{ &HashInMemoryConfig, true },
+	//{ &HashBalancedConfig, false },
+	//{ &HashBalancedConfig, true },
+	//{ &HashLowMemoryConfig, false },
+	//{ &HashLowMemoryConfig, true }
+};
 
 /**
  * Result of benchmarking from a single thread.
@@ -265,10 +280,12 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 			if (evidence->items[i].field == NULL) {
 				EXCEPTION_THROW
 			}
+			evidence->items[i].fieldLength = strlen(evidence->items[i].field);
 		}
 		else {
 			evidence->items[i].prefix = FIFTYONE_DEGREES_EVIDENCE_IGNORE;
 			evidence->items[i].field = NULL;
+			evidence->items[i].fieldLength = 0;
 		}
 
 		// If the field is User-Agent or NULL then create new memory for the 
@@ -303,6 +320,10 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 			}
 			evidence->items[i].originalValue = NULL;
 		}
+
+		// Set the length of the parsed value.
+		evidence->items[i].parsedLength = strlen(
+			(char*)evidence->items[i].parsedValue);
 	}
 	evidence->count = size;
 
@@ -327,8 +348,7 @@ void runPerformanceThread(void* state) {
 	// Create an instance of results to access the returned values.
 	ResultsHash *results = ResultsHashCreate(
 		&thisState->mainState->manager,
-		thisState->mainState->maxEvidence,
-		thisState->mainState->maxEvidence);
+		0);
 
 	// Reference to the dataset.
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
@@ -336,6 +356,9 @@ void runPerformanceThread(void* state) {
 	// Thread specific evidence instance.
 	EvidenceKeyValuePairArray* evidence = EvidenceCreate(
 		thisState->mainState->maxEvidence);
+	for (uint32_t i = 0; i < evidence->capacity; i++) {
+		evidence->items[i].header = NULL;
+	}
 
     TIMER_CREATE;
     TIMER_START;
@@ -490,11 +513,17 @@ void executeBenchmark(
 	performanceConfig config) {
 	// Make a local copy of the config as we're going to alter it a bit.
 	ConfigHash dataSetConfig = *config.config;
+
+	// Output the name of the stock configuration before changing parameters.
 	fprintf(state->output, 
 		"Benchmarking with profile: %s AllProperties: %s\n",
 		fiftyoneDegreesExampleGetConfigName(dataSetConfig),
 		config.allProperties ? "True" : "False");
-	
+
+	// Ensure that for performance tests the updating of the matched user-agent
+	// is disabled to reduce processing overhead.
+	dataSetConfig.b.updateMatchedUserAgent = false;
+
 	EXCEPTION_CREATE;
 
 	PropertiesRequired properties = PropertiesDefault;
@@ -518,7 +547,7 @@ void executeBenchmark(
 	state->threads = (FIFTYONE_DEGREES_THREAD*)
 		Malloc(sizeof(FIFTYONE_DEGREES_THREAD) * state->numberOfThreads);
 
-	fprintf(state->output, "Load from disk\n");
+	fprintf(state->output, "Initialize device detection\n");
 	
 	TIMER_CREATE;
 	TIMER_START;
@@ -692,7 +721,7 @@ void fiftyoneDegreesHashPerformance(
 		i < (int)(sizeof(performanceConfigs) / sizeof(performanceConfig));
 		i++) {
 		
-		if (fiftyoneDegreesCollectionGetIsMemoryOnly() == false ||
+		if (CollectionGetIsMemoryOnly() == false ||
 			performanceConfigs[i].config->b.b.allInMemory == true) {
 			
 			if (state.resultsOutput != NULL) {

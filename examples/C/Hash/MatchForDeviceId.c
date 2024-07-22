@@ -131,7 +131,7 @@ static char* getPropertyValueAsString(
 		propertyName,
 		valueBuffer,
 		sizeof(valueBuffer),
-		",",
+		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
 	return valueBuffer;
@@ -172,10 +172,10 @@ void fiftyoneDegreesHashMatchForDeviceId(
 	}
 
 	// Create a resultsUserAgents instance to store and process User-Agents.
-	ResultsHash *resultsUserAgents = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash *resultsUserAgents = ResultsHashCreate(&manager, 0);
 
 	// Create a resultsUserAgents instance to store and process DeviceId.
-	ResultsHash *resultsDeviceId = ResultsHashCreate(&manager, 1, 0);
+	ResultsHash *resultsDeviceId = ResultsHashCreate(&manager, 0);
 
 	// User-Agent string of an iPhone mobile device.
 	const char* mobileUserAgent = (
