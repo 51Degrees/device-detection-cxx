@@ -15,6 +15,14 @@ set(DD ${CMAKE_CURRENT_LIST_DIR}/src)
 set(HASH ${CMAKE_CURRENT_LIST_DIR}/src/hash)
 
 # Device Detection libraries
+#Compute is test coverage enabled
+string(TOLOWER "${CMAKE_BUILD_TYPE}" lower_CMAKE_BUILD_TYPE)
+if (NOT MSVC AND "${lower_CMAKE_BUILD_TYPE}" STREQUAL "debug")
+	set(TESTCOVERAGE_ENABLED TRUE)
+else()
+	set(TESTCOVERAGE_ENABLED FALSE)
+endif()
+message("-- TESTCOVERAGE_ENABLED=${TESTCOVERAGE_ENABLED}")
 
 FILE(GLOB DDC_SRC ${DD}/*.c)
 FILE(GLOB DDC_H ${DD}/*.h)
@@ -54,13 +62,24 @@ endif()
 FILE(GLOB HASHCPP_SRC ${HASH}/*.cpp)
 FILE(GLOB HASHCPP_H ${HASH}/*.hpp)
 add_library(fiftyone-hash-cxx ${HASHCPP_SRC} ${HASHCPP_H})
-target_link_libraries(fiftyone-hash-cxx
-	fiftyone-hash-c
-	fiftyone-device-detection-cxx)
+target_link_libraries(fiftyone-hash-cxx fiftyone-hash-c fiftyone-device-detection-cxx)
 if (MSVC)
 	target_compile_options(fiftyone-hash-cxx PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/W4" "/WX")
 else()
 	target_compile_options(fiftyone-hash-cxx PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror")
+	# Test coverage instrumentation
+	if (TESTCOVERAGE_ENABLED)
+		add_library(fiftyone-device-detection-c-cov ${DDC_SRC} ${DDC_H})
+		target_link_libraries(fiftyone-device-detection-c-cov fiftyone-common-c m)
+		add_library(fiftyone-device-detection-cxx-cov ${DDCPP_SRC} ${DDCPP_H})
+		target_link_libraries(fiftyone-device-detection-cxx-cov fiftyone-device-detection-c-cov fiftyone-common-cxx)
+		add_library(fiftyone-hash-c-cov ${HASHC_SRC} ${HASHC_H})
+		target_link_libraries(fiftyone-hash-c-cov fiftyone-device-detection-c-cov)
+		target_compile_options(fiftyone-hash-c-cov PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror" "--coverage")
+		add_library(fiftyone-hash-cxx-cov ${HASHCPP_SRC} ${HASHCPP_H})
+		target_link_libraries(fiftyone-hash-cxx-cov fiftyone-hash-c-cov fiftyone-device-detection-cxx-cov)
+		target_compile_options(fiftyone-hash-cxx-cov PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror" "--coverage")
+	endif()
 endif()
 
 set_target_properties(fiftyone-hash-c fiftyone-hash-cxx
@@ -174,9 +193,13 @@ if(BUILD_TESTING)
 		${HASH_TEST_SRC} ${HASH_TEST_H}
 		${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.cpp
 		${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.hpp)
-	target_link_libraries(HashTests
-		fiftyone-device-detection-test-base
-		fiftyone-hash-cxx)
+
+	if (TESTCOVERAGE_ENABLED)
+		target_link_libraries(HashTests fiftyone-device-detection-test-base fiftyone-hash-cxx-cov)
+		target_link_options(HashTests PRIVATE "-fprofile-arcs" "-ftest-coverage")
+	else()
+		target_link_libraries(HashTests fiftyone-device-detection-test-base fiftyone-hash-cxx)
+	endif()
 
 	gtest_discover_tests(HashTests)
 
