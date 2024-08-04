@@ -106,7 +106,11 @@ $(document).ready(function(){initNavTree('md__home_runner_work_device-detection-
 <p>For build options, see Common API</p>
 <h1 class="g-docs__section-heading">Tests</h1>
 <p>All unit, integration, and performance tests are built using the <a href="https://github.com/google/googletest">Google test framework</a>.</p>
-<h2>CMake</h2>
+<h2>Code Coverage</h2>
+<p>When the project files are generated for a non-MSVC compiler (gcc/clang) with <code>CMAKE_BUILD_TYPE=Debug</code> f.e. by running: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">cmake . -DCMAKE_BUILD_TYPE=Debug</div></div><p>the generated targets will contain code coverage instrumentation instructions to be added to the libraries with <code>-cov</code> suffix and <code>HashTests</code> target will be linked with them. During build time <code>*.gcno</code> and empty <code>*.gcda</code> files are generated.</p>
+<p>During the test run <code>*.gcda</code> files will be filled with coverage data.</p>
+<p>Install gcovr tool by running: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">pip3 install gcovr</div></div><p>For best results make sure you have at least version 7.2.</p>
+<p>The following command will generate <code>coverage.html</code> report (filtering out common-cxx as it is not the primary test target): </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">gcovr `ls src/common-cxx/*.cpp src/common-cxx/*.c src/common-cxx/*.hpp | sed &#39;s|src/common-cxx/|--gcov-exclude |g&#39; | tr &#39;\n&#39; &#39; &#39;` --html coverage.html; open coverage.html</div></div><p>To get the full report run: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">gcovr --html coverage.html; open coverage.html</div></div><p>To check the summary run: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">gcovr -r . --print-summary</div></div><h2>CMake</h2>
 <p>CMake automatically pulls in the latest Google Test from GitHub.</p>
 <p>Building the project builds multiple test executables to the <code>bin/</code> directory: <code>HashTests</code> and any common testing included in the common-cxx library.</p>
 <p>These can be run by calling </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">ctest</div></div><p>If CMake has been used in an MSVC environment, then the tests will be set up and discoverable in the Visual Studio solution <code>51DegreesDeviceDetection</code> created by CMake.</p>
