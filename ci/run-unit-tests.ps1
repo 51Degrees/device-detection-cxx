@@ -8,6 +8,6 @@ param(
 )
 
 ./cxx/run-unit-tests.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -Configuration $Configuration -Arch $Arch -BuildMethod $BuildMethod -ExcludeRegex ".*Example.*" `
-    -Coverages "device-detection", "hash"
+    -CoverageRegex "^fiftyone-(hash|device-detection)-c(xx)?-cov\.dir$"
 
 exit $LASTEXITCODE
