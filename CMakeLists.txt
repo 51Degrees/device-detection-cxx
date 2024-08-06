@@ -71,11 +71,16 @@ else()
 	if (TESTCOVERAGE_ENABLED)
 		add_library(fiftyone-device-detection-c-cov ${DDC_SRC} ${DDC_H})
 		target_link_libraries(fiftyone-device-detection-c-cov fiftyone-common-c m)
+		target_compile_options(fiftyone-device-detection-c-cov PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror" "--coverage")
+
 		add_library(fiftyone-device-detection-cxx-cov ${DDCPP_SRC} ${DDCPP_H})
 		target_link_libraries(fiftyone-device-detection-cxx-cov fiftyone-device-detection-c-cov fiftyone-common-cxx)
+		target_compile_options(fiftyone-device-detection-cxx-cov PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror" "--coverage")
+
 		add_library(fiftyone-hash-c-cov ${HASHC_SRC} ${HASHC_H})
 		target_link_libraries(fiftyone-hash-c-cov fiftyone-device-detection-c-cov)
 		target_compile_options(fiftyone-hash-c-cov PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror" "--coverage")
+
 		add_library(fiftyone-hash-cxx-cov ${HASHCPP_SRC} ${HASHCPP_H})
 		target_link_libraries(fiftyone-hash-cxx-cov fiftyone-hash-c-cov fiftyone-device-detection-cxx-cov)
 		target_compile_options(fiftyone-hash-cxx-cov PRIVATE ${COMPILE_OPTION_DEBUG} "-Werror" "--coverage")
