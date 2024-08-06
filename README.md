@@ -109,39 +109,6 @@ For build options, see [Common API](https://github.com/51Degrees/common-cxx/blob
 
 All unit, integration, and performance tests are built using the [Google test framework](https://github.com/google/googletest).
 
-## Code Coverage
-
-When the project files are generated for a non-MSVC compiler (gcc/clang) with `CMAKE_BUILD_TYPE=Debug` f.e. by running: 
-```
-cmake . -DCMAKE_BUILD_TYPE=Debug
-```
-
-the generated targets will contain code coverage instrumentation instructions to be added to the libraries with `-cov` suffix and `HashTests` target will be linked with them. During build time `*.gcno` and empty `*.gcda` files are generated.  
-
-During the test run  `*.gcda` files will be filled with coverage data.  
-
-Install gcovr tool by running:
-```
-pip3 install gcovr
-```
-
-For best results make sure you have at least version 7.2.
-
-The following command will generate `coverage.html` report (filtering out common-cxx as it is not the primary test target): 
-```
-gcovr `ls src/common-cxx/*.cpp src/common-cxx/*.c src/common-cxx/*.hpp | sed 's|src/common-cxx/|--gcov-exclude |g' | tr '\n' ' '` --html coverage.html; open coverage.html
-```
-
-To get the full report run: 
-```
-gcovr --html coverage.html; open coverage.html
-```
-
-To check the summary run:
-```
-gcovr -r . --print-summary
-```
-
 ## CMake
 
 CMake automatically pulls in the latest Google Test from GitHub.
@@ -160,6 +127,34 @@ If CMake has been used in an MSVC environment, then the tests will be set up and
 Tests in the Visual Studio solution automatically install the GTest dependency via a NuGet package. However, in order for the tests to show up in the Visual Studio test explorer, the [Test Adapter for Google Test](https://marketplace.visualstudio.com/items?itemName=VisualCPPTeam.TestAdapterforGoogleTest) extension must be installed.
 
 The VisualStudio solution includes `FiftyOne.DeviceDetection.Hash.Tests`, which can be run through the standard Visual Studio test runner. 
+
+## Code Coverage
+
+When the project files are generated for a non-MSVC compiler (gcc/clang) with `CMAKE_BUILD_TYPE=Debug` f.e. by running: 
+```
+cmake . -DCMAKE_BUILD_TYPE=Debug
+```
+
+the generated targets will contain code coverage instrumentation instructions to be added to the libraries with `-cov` suffix and `HashTests` target will be linked with them. During build time `*.gcno` and empty `*.gcda` files are generated.  
+
+During the test run  `*.gcda` files will be filled with coverage data.  
+
+Install gcovr tool by running:
+```
+pip3 install gcovr
+```
+
+For best results make sure you have at least version 7.2.
+
+The following command will generate a full coverage report: 
+```
+mkdir -p coverage; gcovr --html-detail -o coverage/coverage.html; open coverage/coverage.html
+```
+
+To check the summary run:
+```
+gcovr -r . --print-summary
+```
 
 # Referencing the API
 
