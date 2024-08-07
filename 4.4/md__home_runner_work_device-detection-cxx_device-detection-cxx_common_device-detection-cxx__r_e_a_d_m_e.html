@@ -106,18 +106,18 @@ $(document).ready(function(){initNavTree('md__home_runner_work_device-detection-
 <p>For build options, see Common API</p>
 <h1 class="g-docs__section-heading">Tests</h1>
 <p>All unit, integration, and performance tests are built using the <a href="https://github.com/google/googletest">Google test framework</a>.</p>
-<h2>Code Coverage</h2>
-<p>When the project files are generated for a non-MSVC compiler (gcc/clang) with <code>CMAKE_BUILD_TYPE=Debug</code> f.e. by running: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">cmake . -DCMAKE_BUILD_TYPE=Debug</div></div><p>the generated targets will contain code coverage instrumentation instructions to be added to the libraries with <code>-cov</code> suffix and <code>HashTests</code> target will be linked with them. During build time <code>*.gcno</code> and empty <code>*.gcda</code> files are generated.</p>
-<p>During the test run <code>*.gcda</code> files will be filled with coverage data.</p>
-<p>Install gcovr tool by running: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">pip3 install gcovr</div></div><p>For best results make sure you have at least version 7.2.</p>
-<p>The following command will generate <code>coverage.html</code> report (filtering out common-cxx as it is not the primary test target): </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">gcovr `ls src/common-cxx/*.cpp src/common-cxx/*.c src/common-cxx/*.hpp | sed &#39;s|src/common-cxx/|--gcov-exclude |g&#39; | tr &#39;\n&#39; &#39; &#39;` --html coverage.html; open coverage.html</div></div><p>To get the full report run: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">gcovr --html coverage.html; open coverage.html</div></div><p>To check the summary run: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">gcovr -r . --print-summary</div></div><h2>CMake</h2>
+<h2>CMake</h2>
 <p>CMake automatically pulls in the latest Google Test from GitHub.</p>
 <p>Building the project builds multiple test executables to the <code>bin/</code> directory: <code>HashTests</code> and any common testing included in the common-cxx library.</p>
 <p>These can be run by calling </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">ctest</div></div><p>If CMake has been used in an MSVC environment, then the tests will be set up and discoverable in the Visual Studio solution <code>51DegreesDeviceDetection</code> created by CMake.</p>
 <h2>Visual Studio</h2>
 <p>Tests in the Visual Studio solution automatically install the GTest dependency via a NuGet package. However, in order for the tests to show up in the Visual Studio test explorer, the <a href="https://marketplace.visualstudio.com/items?itemName=VisualCPPTeam.TestAdapterforGoogleTest">Test Adapter for Google Test</a> extension must be installed.</p>
 <p>The VisualStudio solution includes <code>FiftyOne.DeviceDetection.Hash.Tests</code>, which can be run through the standard Visual Studio test runner.</p>
-<h1 class="g-docs__section-heading">Referencing the API</h1>
+<h2>Code Coverage</h2>
+<p>When the project files are generated for a non-MSVC compiler (gcc/clang) with <code>CMAKE_BUILD_TYPE=Debug</code> f.e. by running: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">cmake . -DCMAKE_BUILD_TYPE=Debug</div></div><p>the generated targets will contain code coverage instrumentation instructions to be added to the libraries with <code>-cov</code> suffix and <code>HashTests</code> target will be linked with them. During build time <code>*.gcno</code> and empty <code>*.gcda</code> files are generated.</p>
+<p>During the test run <code>*.gcda</code> files will be filled with coverage data.</p>
+<p>Install gcovr tool by running: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">pip3 install gcovr</div></div><p>For best results make sure you have at least version 7.2.</p>
+<p>The following command will generate a full coverage report: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">mkdir -p coverage; gcovr --html-detail -o coverage/coverage.html; open coverage/coverage.html</div></div><p>To check the summary run: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">gcovr -r . --print-summary</div></div><h1 class="g-docs__section-heading">Referencing the API</h1>
 <h2>CMake</h2>
 <p>When building using CMake, static libraries are built in stages. These can be included in an executable just as they are in the examples. If these are included through a CMake file, the dependencies will be resolved automatically. However, if linking another way, all dependencies will need to be included from the <code>lib/</code> directory. For example, to use the Hash C API, the following static libraries would need to be included:</p><ul>
 <li><code>fiftyone-common-c</code></li>

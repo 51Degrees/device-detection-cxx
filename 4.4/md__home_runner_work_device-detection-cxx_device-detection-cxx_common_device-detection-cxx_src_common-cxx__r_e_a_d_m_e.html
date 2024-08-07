@@ -141,8 +141,12 @@ $(document).ready(function(){initNavTree('md__home_runner_work_device-detection-
 <h2>CMake</h2>
 <p>When building using CMake, static libraries are built in stages. These can be included in an executable just as they are in the examples. If these are included through a CMake file, the dependencies will be resolved automatically. However, if linking another way, all dependencies will need to be included from the <code>lib/</code> directory. For example, to use the Common C library, the <code>fiftyone-common-c</code> static library would need to be included, and for C++, <code>fiftyone-common-cxx</code> is needed in addition.</p>
 <h2>Visual Studio</h2>
-<p>The Visual Studio solution contains static libraries which have all the dependencies set up correctly, so referencing these in a Visual Studio solution should be fairly self explanatory. </p>
-</section></div><!-- PageDoc -->
+<p>The Visual Studio solution contains static libraries which have all the dependencies set up correctly, so referencing these in a Visual Studio solution should be fairly self explanatory.</p>
+<h2>Code Coverage</h2>
+<p>When the project files are generated for a non-MSVC compiler (gcc/clang) with <code>CMAKE_BUILD_TYPE=Debug</code> f.e. by running: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">cmake . -DCMAKE_BUILD_TYPE=Debug</div></div><p>the generated targets will contain code coverage instrumentation instructions to be added to the libraries with <code>-cov</code> suffix and <code>CommonTests</code> target will be linked with them. During build time <code>*.gcno</code> and empty <code>*.gcda</code> files are generated.</p>
+<p>During the test run <code>*.gcda</code> files will be filled with coverage data.</p>
+<p>Install gcovr tool by running: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">pip3 install gcovr</div></div><p>For best results make sure you have at least version 7.2.</p>
+<p>The following command will generate a detailed report for each file: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">mkdir -p coverage; gcovr --html-detail -o coverage/coverage.html; open coverage/coverage.html</div></div><p>To check the summary run: </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">gcovr -r . --print-summary</div></div> </section></div><!-- PageDoc -->
 </div><!-- primary -->
 </div><!-- inner-->
 <!-- HTML footer for doxygen 1.8.15-->
