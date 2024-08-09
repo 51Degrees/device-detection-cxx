@@ -1,0 +1,65 @@
+name: Nightly Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        type: boolean
+        default: false
+  schedule:
+    - cron: '35 0 * * *'
+
+jobs:
+  DocumentationUpdate:
+    name: Nightly Documentation Update
+    uses: postindustria-tech/common-ci/.github/workflows/nightly-documentation-update.yml@nightly-pipeline
+    with:
+      common-ci-ref: nightly-pipeline
+      repo-name: ${{ github.event.repository.name }}
+      org-name: ${{ github.event.repository.owner.login }}
+      dryrun: ${{ inputs.dryrun || false }}
+    secrets:
+      token: ${{ secrets.ACCESS_TOKEN }}
+
+  SubmoduleUpdate:
+    name: Nightly Submodule Update
+    uses: postindustria-tech/common-ci/.github/workflows/nightly-submodule-update.yml@nightly-pipeline
+    with:
+      common-ci-ref: nightly-pipeline
+      repo-name: ${{ github.event.repository.name }}
+      org-name: ${{ github.event.repository.owner.login }}
+      dryrun: ${{ inputs.dryrun || false }}
+    secrets:
+      token: ${{ secrets.ACCESS_TOKEN }}
+
+  PullRequests:
+    if: ${{ !cancelled() }}
+    needs: [DocumentationUpdate, SubmoduleUpdate]
+    name: Nightly Pull Requests
+    uses: postindustria-tech/common-ci/.github/workflows/nightly-pull-requests.yml@nightly-pipeline
+    with:
+      common-ci-ref: nightly-pipeline
+      repo-name: ${{ github.event.repository.name }}
+      org-name: ${{ github.event.repository.owner.login }}
+      dryrun: ${{ inputs.dryrun || false }}
+      cache-assets: true
+    secrets:
+      token: ${{ secrets.ACCESS_TOKEN }}
+      DeviceDetection: ${{ secrets.DEVICE_DETECTION_KEY }}
+      DeviceDetectionUrl: ${{ secrets.DEVICE_DETECTION_URL }}
+
+  Publish:
+    if: ${{ !cancelled() }}
+    needs: PullRequests
+    name: Nightly Publish
+    uses: postindustria-tech/common-ci/.github/workflows/nightly-publish.yml@nightly-pipeline
+    with:
+      common-ci-ref: nightly-pipeline
+      repo-name: ${{ github.event.repository.name }}
+      org-name: ${{ github.event.repository.owner.login }}
+      dryrun: ${{ inputs.dryrun || false }}
+      cache-assets: true
+    secrets:
+      token: ${{ secrets.ACCESS_TOKEN }}
+      DeviceDetection: ${{ secrets.DEVICE_DETECTION_KEY }}
+      DeviceDetectionUrl: ${{ secrets.DEVICE_DETECTION_URL }}
