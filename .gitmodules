@@ -1,6 +1,7 @@
 [submodule "src/common-cxx"]
 	path = src/common-cxx
 	url = ../common-cxx
+	branch = version/4.5
 [submodule "device-detection-data"]
 	path = device-detection-data
 	url = ../device-detection-data
