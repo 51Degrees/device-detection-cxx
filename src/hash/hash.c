@@ -3802,5 +3802,5 @@ size_t fiftyoneDegreesResultsHashGetValuesJson(
 	// Add the end character.
 	JsonDocumentEnd(&s);
 
-	return s.buffer.added;
+	return s.builder.added;
 }
