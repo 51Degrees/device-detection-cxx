@@ -48,10 +48,10 @@ std::string ResultsHashSerializer::allValuesJson(ResultsHash *results) {
             return string(buffer.get(), written - 1);
         } else {
             // increase the buffer size and retry on the next iteration of the loop
-            bufferSize = std::max(bufferSize * 2, written);
+            bufferSize = std::max<size_t>(bufferSize * 2, written);
             try {
                 realloc();
-            } catch (const std::bad_alloc &e) { 
+            } catch (const std::bad_alloc &) { 
                 // reallocation failed - we just exit this loop
                 break;
             }
