@@ -63,6 +63,7 @@ namespace FiftyoneDegrees {
 			 */
 			class ResultsHash : public ResultsDeviceDetection {
 				friend class ::EngineHashTests;
+                friend class ResultsHashSerializer;
 			public:
 				/**
 				 * @name Constructors and Destructors
