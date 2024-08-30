@@ -3,12 +3,6 @@
  * Copyright 2023 51 Degrees Mobile Experts Limited, Davidson House,
  * Forbury Square, Reading, Berkshire, United Kingdom RG1 3EU.
  *
- * This Original Work is the subject of the following patents and patent
- * applications, owned by 51 Degrees Mobile Experts Limited of 5 Charlotte
- * Close, Caversham, Reading, Berkshire, United Kingdom RG4 7BY:
- * European Patent No. 3438848; and
- * United States Patent No. 10,482,175.
- *
  * This Original Work is licensed under the European Union Public Licence
  * (EUPL) v.1.2 and is subject to its terms as set out below.
  *
@@ -26,19 +20,12 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-%module "DeviceDetectionHashEngineModule"
+%include std_string.i
+%include "ResultsHash.i"
 
-%{
-#include "device-detection-cxx/src/hash/EngineHash.hpp"
-#include "device-detection-cxx/src/hash/ResultsHashSerializer.hpp"
-
-using namespace FiftyoneDegrees::Common;
-using namespace FiftyoneDegrees::DeviceDetection;
-using namespace FiftyoneDegrees::DeviceDetection::Hash;
-%}
-
-%include "../common-cxx/Types.i"
-%include "../common-cxx/Exceptions.i"
-
-%include "EngineHash.i"
-%include "ResultsHashSerializer.i"
+class ResultsHashSerializer {
+public:
+	ResultsHashSerializer();
+	ResultsHashSerializer(std::size_t bufferSize);
+	std::string allValuesJson(ResultsHash *results);
+};
