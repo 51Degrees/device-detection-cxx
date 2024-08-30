@@ -225,7 +225,9 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
-	EXPECT_EQ(0, charsAdded) << "No result should have been found where "
+    
+    //StringBuilder adds 1 char which is a null-terminator
+	EXPECT_EQ(1, charsAdded) << "No result should have been found where "
 		<< "uniqueHttpHeaderIndex is "
 		<< resultsDeviceId->items[0].b.uniqueHttpHeaderIndex
 		<< "\n";
@@ -244,7 +246,8 @@ TEST_F(HashCTests, ResultsHashGetValuesStringTest) {
 		(char* const)",",
 		exception);
 	EXCEPTION_THROW;
-	EXPECT_EQ(0, charsAdded) << "No result should have been found where "
+    //StringBuilder adds 1 char which is a null-terminator
+	EXPECT_EQ(1, charsAdded) << "No result should have been found where "
 		<< "uniqueHttpHeaderIndex is "
 		<< resultsDeviceId->items[0].b.uniqueHttpHeaderIndex
 		<< "\n";
