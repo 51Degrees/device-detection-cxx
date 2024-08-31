@@ -108,3 +108,13 @@ TEST_F(ResultsHashSerializerTests, unhappyCases) {
     
     EXPECT_EQ(serializer2.allValuesJson(nullptr), "");
 }
+
+TEST_F(ResultsHashSerializerTests, processEmpty) {
+    ResultsHashSerializer serializer;
+    
+    auto evidence = make_unique<EvidenceDeviceDetection>();
+    evidence->operator[]("nonevidence") = "test";
+    auto results = unique_ptr<ResultsHash>(engine->process(evidence.get()));
+    
+    EXPECT_EQ(serializer.allValuesJson(results.get()), "{}");
+}
