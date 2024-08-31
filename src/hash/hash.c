@@ -3758,44 +3758,48 @@ size_t fiftyoneDegreesResultsHashGetValuesJson(
 	// Add the start character.
 	JsonDocumentStart(&s);
 
+    bool firstProperty = true;
+    
 	// For each of the available properties and values.
 	for (uint32_t i = 0; i < dataSet->b.b.available->count; i++) {
-
-		// Write the property separator if not the first property.
-		if (s.property != NULL) {
-			JsonPropertySeparator(&s);
-		}
-
 		// Get the data set property index.
 		propertyIndex = PropertiesGetPropertyIndexFromRequiredIndex(
 			dataSet->b.b.available, 
 			i);
 		if (propertyIndex >= 0) {
+            // Write the property and values only if we have them
+            // Otherwise we could have ended up with {"key1":,"key2":} invalid json
+            if (ResultsHashGetValues(results, i, exception) != NULL &&
+                EXCEPTION_OKAY) {
+                // Get the property.
+                s.property = (Property*)dataSet->properties->get(
+                    dataSet->properties,
+                    propertyIndex,
+                    &propertyItem,
+                    exception);
 
-			// Get the property.
-			s.property = (Property*)dataSet->properties->get(
-				dataSet->properties,
-				propertyIndex,
-				&propertyItem, 
-				exception);
-			if (s.property != NULL && EXCEPTION_OKAY) {
+                if (s.property != NULL && EXCEPTION_OKAY){
+                    // Write the property separator if not the first property.
+                    if (!firstProperty) {
+                        JsonPropertySeparator(&s);
+                    }
+                    
+                    // Write the start of the property.
+                    JsonPropertyStart(&s);
+                    
+                    // Write values
+                    s.values = &results->values;
+                    JsonPropertyValues(&s);
 
-				// Write the start of the property.
-				JsonPropertyStart(&s);
-
-				// Write the values.
-				if (ResultsHashGetValues(results, i, exception) != NULL && 
-					EXCEPTION_OKAY) {
-					s.values = &results->values;
-					JsonPropertyValues(&s);
-				}
-
-				// Write the end of the property.
-				JsonPropertyEnd(&s);
-			}
-
-			// Release the property.
-			COLLECTION_RELEASE(dataSet->properties, &propertyItem);
+                    // Write the end of the property.
+                    JsonPropertyEnd(&s);
+                    
+                    // Release the property.
+                    COLLECTION_RELEASE(dataSet->properties, &propertyItem);
+                    
+                    firstProperty = false;
+                }
+            }
 		}
 	}
 
