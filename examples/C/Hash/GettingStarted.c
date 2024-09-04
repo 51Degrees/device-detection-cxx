@@ -137,6 +137,20 @@ static evidence headersWithWebView = {
 	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-full-version", "\"122.0.6261.106\""} }
 };
 
+// Base 64 string for the JSON returned from a call to getHighEntropyValues
+// in JavaScript code.
+static evidence getHighEntropyValues = {
+	10,
+	{ {FIFTYONE_DEGREES_EVIDENCE_QUERY, "GHEV", 
+	"eyJicmFuZHMiOlt7ImJyYW5kIjoiTm90L0EpQnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJh"
+	"bmQiOiJDaHJvbWl1bSIsInZlcnNpb24iOiIxMjYifSx7ImJyYW5kIjoiR29vZ2xlIENocm9t"
+	"ZSIsInZlcnNpb24iOiIxMjYifV0sImZ1bGxWZXJzaW9uTGlzdCI6W3siYnJhbmQiOiJOb3Qv"
+	"QSlCcmFuZCIsInZlcnNpb24iOiI4LjAuMC4wIn0seyJicmFuZCI6IkNocm9taXVtIiwidmVy"
+	"c2lvbiI6IjEyNi4wLjY0NzguMTI3In0seyJicmFuZCI6Ikdvb2dsZSBDaHJvbWUiLCJ2ZXJz"
+	"aW9uIjoiMTI2LjAuNjQ3OC4xMjcifV0sIm1vYmlsZSI6ZmFsc2UsIm1vZGVsIjoiIiwicGxh"
+	"dGZvcm0iOiJtYWNPUyIsInBsYXRmb3JtVmVyc2lvbiI6IjE0LjUuMCJ9"} }
+};
+
 // This collection contains the various input values that will
 // be passed to the device detection algorithm.
 static evidence* evidenceValues[] = {
@@ -145,6 +159,7 @@ static evidence* evidenceValues[] = {
 	&userAgentClientHints,
 	&userAgentWithMobileID,
 	&headersWithWebView,
+	&getHighEntropyValues
 };
 
 static void outputValue(
