@@ -140,7 +140,7 @@ static evidence headersWithWebView = {
 // Base 64 string for the JSON returned from a call to getHighEntropyValues
 // in JavaScript code.
 static evidence getHighEntropyValues = {
-	10,
+	1,
 	{ {FIFTYONE_DEGREES_EVIDENCE_QUERY, "GHEV", 
 	"eyJicmFuZHMiOlt7ImJyYW5kIjoiTm90L0EpQnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJh"
 	"bmQiOiJDaHJvbWl1bSIsInZlcnNpb24iOiIxMjYifSx7ImJyYW5kIjoiR29vZ2xlIENocm9t"
