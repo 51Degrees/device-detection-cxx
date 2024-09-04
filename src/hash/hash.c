@@ -2496,8 +2496,6 @@ static bool setResultFromEvidenceForComponentCallback(
 // Adds the header to the evidence in the array if there is capacity left.
 static bool setSpecialHeadersCallback(void *state, KeyValuePair header) {
 	EvidenceKeyValuePairArray* evidence = (EvidenceKeyValuePairArray*)state;
-	printf("%s\n", header.key);
-	printf("%s\n", header.value);
 	if (evidence->count < evidence->capacity) {
 		EvidenceKeyValuePair* pair = &evidence->items[evidence->count];
 		pair->field = header.key;
@@ -2523,12 +2521,12 @@ static bool setGetHighEntropyValuesHeader(
 	return IS_HEADER_MATCH("GHEV", pair) &&
 		fiftyoneDegreesTransformIterateGhevFromBase64(
 			pair->parsedValue,
-			state->results->b.buffer,
-			state->results->b.bufferLength,
+			state->results->b.bufferTransform,
+			state->results->b.bufferTransformLength,
 			setSpecialHeadersCallback,
 			state->evidence,
 			exception) > 0 && 
-		EXCEPTION_OKAY;
+		(EXCEPTION_OKAY || exception->status == SUCCESS);
 }
 
 // True if the header is SUA, the transform results in at least one additional 
@@ -2540,12 +2538,12 @@ static bool setStructuredUserAgentHeader(
 	return IS_HEADER_MATCH("SUA", pair) &&
 		fiftyoneDegreesTransformIterateSua(
 			pair->parsedValue,
-			state->results->b.buffer,
-			state->results->b.bufferLength,
+			state->results->b.bufferTransform,
+			state->results->b.bufferTransformLength,
 			setSpecialHeadersCallback,
 			state->evidence,
 			exception) > 0 && 
-		EXCEPTION_OKAY;
+		(EXCEPTION_OKAY || exception->status == SUCCESS);
 }
 
 // Checks for special evidence headers and tries to add additional headers to
@@ -2701,8 +2699,8 @@ static void resultsHashFromEvidence_handleComponentEvidence(
 			state->evidence,
 			prefixOrderOfPrecedence[i],
 			state->dataSet->componentHeaders[state->componentIndex],
-			state->results->b.buffer,
-			state->results->b.bufferLength,
+			state->results->b.bufferPseudo,
+			state->results->b.bufferPseudoLength,
 			state,
 			setResultFromEvidenceForComponentCallback)) {
 			return;
