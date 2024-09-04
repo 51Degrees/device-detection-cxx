@@ -128,7 +128,16 @@ if (dataSet->t == NULL) { \
  */
 #define ISUNMATCHED(d,r) (d->config.b.allowUnmatched == false && \
 	r->matchedNodes == 0)
-	
+
+/**
+ * Checks if the pair (p) have a field name that matches the target (t).
+ * The last byte of t is null where as fieldLength is the length of printable 
+ * characters. Take 1 from the t to compare length.
+ */
+#define IS_HEADER_MATCH(t,p) \
+	(sizeof(t) - 1 == p->fieldLength && \
+	StringCompareLength(p->field, t, sizeof(t)) == 0)
+
 /**
  * PRIVATE DATA STRUCTURES
  */
@@ -2484,15 +2493,76 @@ static bool setResultFromEvidenceForComponentCallback(
 	return !complete;
 }
 
+// Adds the header to the evidence in the array if there is capacity left.
+static bool setSpecialHeadersCallback(void *state, KeyValuePair header) {
+	EvidenceKeyValuePairArray* evidence = (EvidenceKeyValuePairArray*)state;
+	printf("%s\n", header.key);
+	printf("%s\n", header.value);
+	if (evidence->count < evidence->capacity) {
+		EvidenceKeyValuePair* pair = &evidence->items[evidence->count];
+		pair->field = header.key;
+		pair->fieldLength = header.keyLength;
+		pair->parsedValue = header.value;
+		pair->parsedLength = header.valueLength;
+		pair->prefix = FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING;
+		evidence->count++;
+	}
+}
+
+// True if the header is GHEV, the transform results in at least one additional 
+// header, and there is no exception. Otherwise false.
+static bool setGetHighEntropyValuesHeader(
+	detectionComponentState* state,
+	EvidenceKeyValuePair* pair) {
+	EXCEPTION_CREATE
+	return IS_HEADER_MATCH("GHEV", pair) &&
+		fiftyoneDegreesTransformIterateGhevFromBase64(
+			pair->parsedValue,
+			state->results->b.buffer,
+			state->results->b.bufferLength,
+			setSpecialHeadersCallback,
+			state->evidence,
+			exception) > 0 && 
+		EXCEPTION_OKAY;
+}
+
+
+
+// True if the header is SUA, the transform results in at least one additional 
+// header, and there is no exception. Otherwise false.
+static bool setStructuredUserAgentHeader(
+	detectionComponentState* state,
+	EvidenceKeyValuePair* pair) {
+	EXCEPTION_CREATE
+	return IS_HEADER_MATCH("SUA", pair) &&
+		fiftyoneDegreesTransformIterateSua(
+			pair->parsedValue,
+			state->results->b.buffer,
+			state->results->b.bufferLength,
+			setSpecialHeadersCallback,
+			state->evidence,
+			exception) > 0 && 
+		EXCEPTION_OKAY;
+}
+
+// Checks for special evidence headers and tries to add additional headers to
+// the headers array.
+static bool setSpecialHeaders(
+	void* state,
+	EvidenceKeyValuePair* pair) {
+	detectionComponentState* s = (detectionComponentState*)state;
+	if(setGetHighEntropyValuesHeader(s, pair) || 
+		setStructuredUserAgentHeader(s, pair)) {
+		return false; // stop iterating
+	}
+	return true; // continue iterating
+}
+
 static bool setResultFromDeviceId(
 	void* state,
 	EvidenceKeyValuePair* pair) {
-	static const char DEVICEID[] = "51D_deviceId";
 
-	// The last byte is null in the DEVICEID where as fieldLength is the length
-	// of printable characters. Take 1 from the DEVICEID to compare length.
-	if (sizeof(DEVICEID) - 1 != pair->fieldLength ||
-		StringCompareLength(pair->field, DEVICEID, sizeof(DEVICEID)) != 0) {
+	if (!IS_HEADER_MATCH("51D_deviceId", pair)) {
 		return true; // not a match, skip
 	}
 
@@ -2534,8 +2604,8 @@ static void overrideProfileId(void *state, const uint32_t profileId) {
 
 static void resultsHashFromEvidence_extractOverrides(
 	detectionComponentState* state,
-	Exception* const exception)
-{
+	Exception* const exception) {
+
 	// Extract any property value overrides from the evidence.
 	OverridesExtractFromEvidence(
 		state->dataSet->b.b.overridable,
@@ -2583,8 +2653,7 @@ static void resultsHashFromEvidence_extractOverrides(
 // device detection using the graphs.
 static int resultsHashFromEvidence_findAndApplyDeviceIDs(
 	detectionComponentState* state,
-	Exception* const exception)
-{
+	Exception* const exception) {
 	deviceIdLookupState lookupState = { state->results, 0, exception };
 
 	do {
@@ -2636,6 +2705,21 @@ static void resultsHashFromEvidence_handleComponentEvidence(
 			return;
 		}
 	}
+}
+
+// If there are GHEV or SUA headers then these need to be transformed into 
+// additional headers in the evidence array.
+static void resultsHashFromEvidence_setSpecialHeaders(
+	detectionComponentState* state) {
+	Exception* exception = state->exception;
+	do {
+		EvidenceIterate(
+			state->evidence,
+			FIFTYONE_DEGREES_EVIDENCE_QUERY,
+			state,
+			setSpecialHeaders);
+		if (EXCEPTION_FAILED) { break; }
+	} while (false); // once
 }
 
 // Assigns the header field to the evidence pair to avoid needing to lookup the
@@ -2755,6 +2839,12 @@ void fiftyoneDegreesResultsHashFromEvidence(
 
 		if (!deviceIdsFound) {
 
+			// Check for the presence of special evidence and transform these if
+			// present into additional headers.
+			resultsHashFromEvidence_setSpecialHeaders(&state);
+
+			// Sets the index of the header in the data set to improve 
+			// efficiency of subsequent processing.
 			resultsHashFromEvidence_setEvidenceHeader(&state);
 
 			// Evaluate all the available evidence for the components that
@@ -3802,5 +3892,5 @@ size_t fiftyoneDegreesResultsHashGetValuesJson(
 	// Add the end character.
 	JsonDocumentEnd(&s);
 
-	return s.buffer.added;
+	return s.builder.added;
 }
