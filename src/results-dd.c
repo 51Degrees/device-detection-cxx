@@ -34,16 +34,30 @@ void fiftyoneDegreesResultsDeviceDetectionInit(
 	ResultsInit(&results->b, (void*)dataSet);
 	results->overrides = OverrideValuesCreate(overridesCapacity);
 
-	// Allocate memory for a buffer that might be used when combining header
-	// values.
-	results->bufferLength = (int)CONFIG(dataSet)->maxMatchedUserAgentLength + 1;
-	results->buffer = (char*)Malloc(results->bufferLength);
+	// Allocate working memory that might be used when combining header values
+	// to become pseudo headers.
+	results->bufferPseudoLength = 
+		(int)CONFIG(dataSet)->maxMatchedUserAgentLength + 1;
+	results->bufferPseudo = (char*)Malloc(results->bufferPseudoLength);
+
+	// Allocate working memory that might be used to transform evidence.
+	// The size must be controlled via the data set so that the generator of 
+	// the data set can adjust the sizes required without requiring code or
+	// config change. Unlike User-Agent where the maximum length needed for
+	// a pseudo header can be known, the SUA and GHEV transforms may vary in
+	// size based on browser or OpenRTB changes. Therefore a multiplier is 
+	// applied to reduce the risk of insufficient working memory being 
+	// available.
+	results->bufferTransformLength =
+		(int)CONFIG(dataSet)->maxMatchedUserAgentLength * 2;
+	results->bufferTransform = (char*)Malloc(results->bufferTransformLength);
 }
 
 void fiftyoneDegreesResultsDeviceDetectionFree(
 	fiftyoneDegreesResultsDeviceDetection *results) {
 	OverrideValuesFree(results->overrides);
-	Free(results->buffer);
+	Free(results->bufferPseudo);
+	Free(results->bufferTransform);
 }
 
 void fiftyoneDegreesResultsUserAgentReset(

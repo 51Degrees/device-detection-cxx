@@ -74,8 +74,10 @@ typedef struct fiftyone_degrees_results_device_detection_t {
 	fiftyoneDegreesResultsBase b; /**< Base results */
 	fiftyoneDegreesOverrideValueArray *overrides; /**< Any value overrides in
 												  the results */
-	char* buffer; /**< String buffer optionally used for pseudo headers */
-	int bufferLength; /**< Number of bytes in buffer */
+	char* bufferPseudo; /**< Working memory used for pseudo headers */
+	int bufferPseudoLength; /**< Number of bytes in bufferPseudo */
+	char* bufferTransform; /**< Working memory used to transform evidence */
+	int bufferTransformLength; /**< Number of bytes in bufferTransform */
 } fiftyoneDegreesResultsDeviceDetection;
 	
 /**
