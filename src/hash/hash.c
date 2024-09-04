@@ -2506,7 +2506,12 @@ static bool setSpecialHeadersCallback(void *state, KeyValuePair header) {
 		pair->parsedLength = header.valueLength;
 		pair->prefix = FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING;
 		evidence->count++;
+		return true;
 	}
+
+	// Stop iterating as there is insufficient capacity to add any more 
+	// entries.
+	return false;
 }
 
 // True if the header is GHEV, the transform results in at least one additional 
@@ -2525,8 +2530,6 @@ static bool setGetHighEntropyValuesHeader(
 			exception) > 0 && 
 		EXCEPTION_OKAY;
 }
-
-
 
 // True if the header is SUA, the transform results in at least one additional 
 // header, and there is no exception. Otherwise false.
