@@ -2493,17 +2493,49 @@ static bool setResultFromEvidenceForComponentCallback(
 	return !complete;
 }
 
+// Gets the index of the existing evidence for the header, or -1 if not found.
+static int setSpecialHeadersCallbackGetExistingIndex(
+	EvidenceKeyValuePairArray* evidence,
+	KeyValuePair* header) {
+	uint32_t index = 0;
+	while (index < evidence->count) {
+		EvidenceKeyValuePair* pair = &evidence->items[index];
+		if (pair->prefix == FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING &&
+			header->keyLength == pair->fieldLength &&
+			StringCompareLength(
+				header->key,
+				pair->field,
+				pair->fieldLength) == 0) {
+			return (int)index;
+		}
+		index++;
+	}
+	return -1;
+}
+
 // Adds the header to the evidence in the array if there is capacity left.
+// If the header already exists then the current value is replaced.
 static bool setSpecialHeadersCallback(void *state, KeyValuePair header) {
 	EvidenceKeyValuePairArray* evidence = (EvidenceKeyValuePairArray*)state;
-	if (evidence->count < evidence->capacity) {
-		EvidenceKeyValuePair* pair = &evidence->items[evidence->count];
+
+	// Get the existing index for the header if any.
+	int index = setSpecialHeadersCallbackGetExistingIndex(evidence, &header);
+
+	// If there is no existing header then use the next index in the array.
+	if (index < 0 && 
+		evidence->count < evidence->capacity) {
+		index = evidence->count;
+		evidence->count++;
+	}
+
+	// Update the entry at the index identified.
+	if (index > 0) {
+		EvidenceKeyValuePair* pair = &evidence->items[index];
 		pair->field = header.key;
 		pair->fieldLength = header.keyLength;
 		pair->parsedValue = header.value;
 		pair->parsedLength = header.valueLength;
 		pair->prefix = FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING;
-		evidence->count++;
 		return true;
 	}
 
