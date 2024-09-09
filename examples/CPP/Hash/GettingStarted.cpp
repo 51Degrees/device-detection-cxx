@@ -271,6 +271,26 @@ namespace FiftyoneDegrees {
 						delete results;
 						delete evidence2;
 					};
+					{
+						// Carries out a match for a base 64 encoded GetHighEntropyValue JSON result.
+						cout << "\n(+)\n";
+						const char* const ghev_dummy = 
+							"eyJicmFuZHMiOlt7ImJyYW5kIjoiTm90L0EpQnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJh"
+							"bmQiOiJDaHJvbWl1bSIsInZlcnNpb24iOiIxMjYifSx7ImJyYW5kIjoiR29vZ2xlIENocm9t"
+							"ZSIsInZlcnNpb24iOiIxMjYifV0sImZ1bGxWZXJzaW9uTGlzdCI6W3siYnJhbmQiOiJOb3Qv"
+							"QSlCcmFuZCIsInZlcnNpb24iOiI4LjAuMC4wIn0seyJicmFuZCI6IkNocm9taXVtIiwidmVy"
+							"c2lvbiI6IjEyNi4wLjY0NzguMTI3In0seyJicmFuZCI6Ikdvb2dsZSBDaHJvbWUiLCJ2ZXJz"
+							"aW9uIjoiMTI2LjAuNjQ3OC4xMjcifV0sIm1vYmlsZSI6ZmFsc2UsIm1vZGVsIjoiIiwicGxh"
+							"dGZvcm0iOiJtYWNPUyIsInBsYXRmb3JtVmVyc2lvbiI6IjE0LjUuMCJ9";
+						cout << "GetHighEntropyValues: " << ghev_dummy << " -- base64 encoded JSON\n";
+
+						evidence->operator[]("query.51D_gethighentropyvalues")
+							= ghev_dummy;
+
+						DeviceDetection::Hash::ResultsHash* results = engine->process(evidence);
+						printResults(results);
+						delete results;
+					};
 
 					// Free the evidence.
 					delete evidence;
@@ -292,6 +312,10 @@ extern "C" void fiftyoneDegreesExampleCPPGettingStartedRun(
 	fiftyoneDegreesConfigHash configHash = fiftyoneDegreesHashDefaultConfig;
 	DeviceDetection::Hash::ConfigHash* cppConfig = 
 		new DeviceDetection::Hash::ConfigHash(&configHash);
+
+	// Ensure special evidence like deviceId and GetHighEntropyValues are 
+	// enabled.
+	cppConfig->setProcessSpecialEvidence(true);
 
 	GettingStarted *gettingStarted = new GettingStarted(
 		params->dataFilePath, cppConfig);
