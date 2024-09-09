@@ -60,6 +60,12 @@ typedef struct fiftyone_degrees_config_device_detecton_t {
 	bool allowUnmatched; /**< True if there should be at least one matched node
 						 in order for the results to be considered valid. By
 						 default, this is false */
+	bool processSpecialEvidence; /**< Some evidence requires additional 
+									processing that doesn't need to be checked
+									for if being used in an environment that
+									doesn't generate it. For example; GHEV and 
+									SUA query evidence. By default, this is 
+									true. */
 } fiftyoneDegreesConfigDeviceDetection;
 
 /** Default value for the #FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_UPDATE macro. */
@@ -68,6 +74,10 @@ typedef struct fiftyone_degrees_config_device_detecton_t {
 /** Default value for allow unmatched used in the default configuration. */
 #ifndef FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_UNMATCHED
 #define FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_UNMATCHED false
+#endif
+
+#ifndef FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_SPECIAL_EVIDENCE
+#define FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_SPECIAL_EVIDENCE true
 #endif
 
 /**
@@ -85,7 +95,8 @@ FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_UPDATE_DEFAULT
 	FIFTYONE_DEGREES_CONFIG_DEFAULT_WITH_INDEX, \
 	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_UPDATE, \
 	500, /* Default to 500 characters for the matched User-Agent */ \
-	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_UNMATCHED
+	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_UNMATCHED, \
+	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_SPECIAL_EVIDENCE
 
  /**
   * Default value for the #fiftyoneDegreesConfigDeviceDetection structure 
@@ -95,7 +106,8 @@ FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_UPDATE_DEFAULT
 	FIFTYONE_DEGREES_CONFIG_DEFAULT_NO_INDEX, \
 	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_UPDATE, \
 	500, /* Default to 500 characters for the matched User-Agent */ \
-	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_UNMATCHED
+	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_UNMATCHED, \
+	FIFTYONE_DEGREES_CONFIG_DEVICE_DETECTION_DEFAULT_SPECIAL_EVIDENCE
 
 /**
  * @}

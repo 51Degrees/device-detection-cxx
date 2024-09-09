@@ -2550,7 +2550,9 @@ static bool setGetHighEntropyValuesHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
-	return IS_HEADER_MATCH("GHEV", pair) &&
+	return IS_HEADER_MATCH(
+		FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES, 
+		pair) &&
 		fiftyoneDegreesTransformIterateGhevFromBase64(
 			pair->parsedValue,
 			state->results->b.bufferTransform,
@@ -2567,7 +2569,9 @@ static bool setStructuredUserAgentHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
-	return IS_HEADER_MATCH("SUA", pair) &&
+	return IS_HEADER_MATCH(
+		FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT,
+		pair) &&
 		fiftyoneDegreesTransformIterateSua(
 			pair->parsedValue,
 			state->results->b.bufferTransform,
@@ -2849,7 +2853,7 @@ void fiftyoneDegreesResultsHashFromEvidence(
 
 	// Initialise the state.
 	detectionComponentState state = {
-		(DataSetHash*)results->b.b.dataSet,
+		dataSet,
 		results,
 		NULL,
 		evidence,
@@ -2860,21 +2864,25 @@ void fiftyoneDegreesResultsHashFromEvidence(
 
 	do {
 
-		// Extract any overridden values.
-		resultsHashFromEvidence_extractOverrides(&state, exception);
-		if (EXCEPTION_FAILED) { break; };
+		// If enabled, extract any overridden values.
+		if (dataSet->config.b.processSpecialEvidence) {
+			resultsHashFromEvidence_extractOverrides(&state, exception);
+			if (EXCEPTION_FAILED) { break; };
+		}
 
-		// Try and find device ids in the evidence provided.
-		const int deviceIdsFound = resultsHashFromEvidence_findAndApplyDeviceIDs(
-			&state,
-			exception);
+		// If enabled, try and find device ids in the evidence provided.
+		const int deviceIdsFound = dataSet->config.b.processSpecialEvidence ?
+			resultsHashFromEvidence_findAndApplyDeviceIDs(&state, exception) :
+			0;
 		if (EXCEPTION_FAILED) { break; };
 
 		if (!deviceIdsFound) {
 
-			// Check for the presence of special evidence and transform these if
-			// present into additional headers.
-			resultsHashFromEvidence_setSpecialHeaders(&state);
+			// If enabled, check for the presence of special evidence and
+			// transform these if present into additional headers.
+			if (dataSet->config.b.processSpecialEvidence) {
+				resultsHashFromEvidence_setSpecialHeaders(&state);
+			}
 
 			// Sets the index of the header in the data set to improve 
 			// efficiency of subsequent processing.
@@ -2886,8 +2894,10 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		}
 
 		// Check for and process any profile Id overrides.
-		OverrideProfileIds(evidence, &state, overrideProfileId);
-		if (EXCEPTION_FAILED) { break; };
+		if (dataSet->config.b.processSpecialEvidence) {
+			OverrideProfileIds(evidence, &state, overrideProfileId);
+			if (EXCEPTION_FAILED) { break; };
+		}
 
 	} while (false); // once
 }

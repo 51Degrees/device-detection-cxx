@@ -173,6 +173,23 @@
 #ifndef FIFTYONE_DEGREES_PROPERTY_LOADED
 #define FIFTYONE_DEGREES_PROPERTY_LOADED INT_MAX
 #endif
+/**
+ * Evidence key for GetHighEntropyValues base 64 encoded JSON data.
+ */
+#ifndef FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES
+#define FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES \
+	(FIFTYONE_DEGREES_COMMON_COOKIE_PREFIX \
+	"gethighentropyvalues")
+#endif
+
+/**
+ * Evidence key for Structured User Agents (SUA) JSON data.
+ */
+#ifndef FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT
+#define FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT \
+	(FIFTYONE_DEGREES_COMMON_COOKIE_PREFIX \
+	"structureduseragent")
+#endif
 
 /**
  * DATA STRUCTURES
