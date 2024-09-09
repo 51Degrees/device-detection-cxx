@@ -720,18 +720,23 @@ void fiftyoneDegreesHashPerformance(
 	for (int i = 0;
 		i < (int)(sizeof(performanceConfigs) / sizeof(performanceConfig));
 		i++) {
-		
+
+		// Set the special evidence processing to false to optimize 
+		// evaluation for core device detection.
+		performanceConfig config = performanceConfigs[i];
+		config.config->b.processSpecialEvidence = false;
+
 		if (CollectionGetIsMemoryOnly() == false ||
-			performanceConfigs[i].config->b.b.allInMemory == true) {
+			config.config->b.b.allInMemory == true) {
 			
 			if (state.resultsOutput != NULL) {
 				fprintf(state.resultsOutput, "%s\n\"%s%s\": {\n",
 					i > 0 ? "," : "",
-					fiftyoneDegreesExampleGetConfigName(*(performanceConfigs[i].config)),
-					performanceConfigs[i].allProperties ? "_All" : "");
+					fiftyoneDegreesExampleGetConfigName(*(config.config)),
+					config.allProperties ? "_All" : "");
 			}
 
-			executeBenchmark(&state, performanceConfigs[i]);
+			executeBenchmark(&state, config);
 
 			if (state.resultsOutput != NULL) {
 				fprintf(state.resultsOutput, "}");
