@@ -107,6 +107,13 @@ namespace FiftyoneDegrees {
 			void setAllowUnmatched(bool allow);
 
 			/**
+			 * Set whether special evidence like getHighEntropyValues,
+			 * Structured User Agents, or Device Ids, should be checked for
+			 * during evidence processing. By default, this is true.
+			 */
+			void setProcessSpecialEvidence(bool process);
+
+			/**
 			 * Gets whether the characters matched during processing should be
 			 * stored in results.
 			 * @return true if the characters should be available, otherwise
@@ -130,6 +137,14 @@ namespace FiftyoneDegrees {
 			 * considered valid
 			 */
 			bool getAllowUnmatched();
+
+			/**
+			 * Get whether special evidence like getHighEntropyValues, 
+			 * Structured User Agents, or Device Ids, should be checked for 
+			 * during evidence processing. By default, this is true.
+			 * @return true if special evidence will be processed
+			 */
+			bool getProcessSpecialEvidence();
 
 			/**
 			 * @}

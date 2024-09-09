@@ -44,6 +44,11 @@ void ConfigDeviceDetection::setAllowUnmatched(bool allow) {
 	config->allowUnmatched = allow;
 }
 
+void ConfigDeviceDetection::setProcessSpecialEvidence(
+	bool process) {
+	config->processSpecialEvidence = process;
+}
+
 bool ConfigDeviceDetection::getUpdateMatchedUserAgent() {
 	return config->updateMatchedUserAgent;
 }
@@ -54,4 +59,8 @@ int ConfigDeviceDetection::getMaxMatchedUserAgentLength() {
 
 bool ConfigDeviceDetection::getAllowUnmatched() {
 	return config->allowUnmatched;
+}
+
+bool ConfigDeviceDetection::getProcessSpecialEvidence() {
+	return config->processSpecialEvidence;
 }
