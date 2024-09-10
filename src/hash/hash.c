@@ -1522,12 +1522,12 @@ static StatusCode initPropertiesAndHeaders(
 	return status;
 }
 
-static StatusCode initIndexPropertyProfile(
+static StatusCode initIndicesPropertyProfile(
 	DataSetHash* dataSet,
 	Exception* exception) {
 	StatusCode status = FIFTYONE_DEGREES_STATUS_NOT_SET;
 	if (dataSet->config.b.b.propertyValueIndex == true) {
-		dataSet->b.b.indexPropertyProfile = IndexPropertyProfileCreate(
+		dataSet->b.b.indexPropertyProfile = IndicesPropertyProfileCreate(
 			dataSet->profiles,
 			dataSet->profileOffsets,
 			dataSet->b.b.available,
@@ -1962,7 +1962,7 @@ static StatusCode initDataSetFromFile(
 	}
 
 	// Initialise the index for properties and profiles to values.
-	initIndexPropertyProfile(dataSet, exception);
+	initIndicesPropertyProfile(dataSet, exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
 		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
@@ -2113,7 +2113,7 @@ static StatusCode initDataSetFromMemory(
 	status = initComponentsAvailable(dataSet, exception);
 	
 	// Initialise the index for properties and profiles to values.
-	initIndexPropertyProfile(dataSet, exception);
+	initIndicesPropertyProfile(dataSet, exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
 		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
