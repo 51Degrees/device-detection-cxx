@@ -81,20 +81,16 @@ Note: on an x64 Windows system, it is necessary to add `-A x64` as CMake will bu
 
 Note: when building arm64 binaries on x64 Mac system, it is necessary to add `-DBUILD_TESTING=OFF` as CTest ([ref](https://cmake.org/cmake/help/latest/module/CTest.html)) will otherwise fail the build due to inability to run test executables designated for different CPU.
 
-Note: for maximum possible performance file based operation can be disabled by adding `-DMemoryOnly=YES` to the `cmake ..` command.
+Note: for maximum possible performance file based operation the following flags can be passed to the `cmake ..` command.
+
+- `MemoryOnly=YES` removes code and configuration options that consider retaining device data in the file and loading into memory only when it's needed.
+- `NoThreading=YES` removes code that is used to support thread safety such as atomic exchange and compare operations. These are not needed when all data can be guaranteed to be in memory following initialization.
+- `ExceptionsDisabled=YES` removes the checking and setting of exceptions.
 
 ```
 mkdir build
 cd build
-cmake .. -DMemoryOnly=YES
-```
-
-Note: for maximum possible performance file based operation can be disabled by adding `-DMemoryOnly=YES` to the `cmake ..` command.
-
-```
-mkdir build
-cd build
-cmake .. -DMemoryOnly=YES
+cmake .. -DMemoryOnly=YES -DNoThreading=YES -DExceptionsDisabled=YES
 ```
 
 Then build the whole solution with

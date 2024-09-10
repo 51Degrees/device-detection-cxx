@@ -443,7 +443,7 @@ TEST_F(HashCTests, HashSizeManagerFromFileException) {
 		&this->properties,
 		"donotexist",
 		exception);
-	EXPECT_EQ(FIFTYONE_DEGREES_STATUS_FILE_NOT_FOUND, exception->status) <<
+	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_FILE_NOT_FOUND)) <<
 		"Exception status should be set to " <<
 		FIFTYONE_DEGREES_STATUS_FILE_NOT_FOUND << ".\n";
 
@@ -473,7 +473,7 @@ TEST_F(HashCTests, HashResultsGetValuesNoPropertyIndex) {
 	ResultsHashFree(results);
 
 	EXPECT_FALSE(EXCEPTION_OKAY);
-	EXPECT_EQ(COLLECTION_INDEX_OUT_OF_RANGE, exception->status);
+	EXPECT_TRUE(EXCEPTION_CHECK(COLLECTION_INDEX_OUT_OF_RANGE));
 }
 
 /**
@@ -499,7 +499,7 @@ TEST_F(HashCTests, HashResultsGetValuesOutOfRangePropertyIndex) {
 	DataSetHashRelease(dataSet);
 
 	EXPECT_FALSE(EXCEPTION_OKAY);
-	EXPECT_EQ(COLLECTION_INDEX_OUT_OF_RANGE, exception->status);
+	EXPECT_TRUE(EXCEPTION_CHECK(COLLECTION_INDEX_OUT_OF_RANGE));
 }
 
 #ifdef _MSC_VER
@@ -548,5 +548,5 @@ TEST_F(HashCTests, HashResultsGetValuesNoProfileValues) {
 	DataSetHashRelease(dataSet);
 
 	EXPECT_FALSE(EXCEPTION_OKAY);
-	EXPECT_EQ(COLLECTION_INDEX_OUT_OF_RANGE, exception->status);
+	EXPECT_TRUE(EXCEPTION_CHECK(COLLECTION_INDEX_OUT_OF_RANGE));
 }

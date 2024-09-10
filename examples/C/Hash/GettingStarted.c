@@ -389,7 +389,8 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	// Check if the example is compiled for memory usage only
+	// Check if the example is compiled for memory usage only in which case
+	// the in memory configuration must be used.
 	if (CollectionGetIsMemoryOnly()) {
 		config = HashInMemoryConfig;
 	}
