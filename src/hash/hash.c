@@ -1536,9 +1536,12 @@ static StatusCode initIndicesPropertyProfile(
 		if (dataSet->b.b.indexPropertyProfile != NULL && EXCEPTION_OKAY) {
 			status = FIFTYONE_DEGREES_STATUS_SUCCESS;
 		}
+#ifndef FIFTYONE_DEGREES_EXCEPTIONS_DISABLED
+		// The exception will only be available if not disabled.
 		else {
 			status = exception->status;
 		}
+#endif
 	}
 	else {
 		dataSet->b.b.indexPropertyProfile = NULL;
@@ -1547,7 +1550,8 @@ static StatusCode initIndicesPropertyProfile(
 	return status;
 }
 
-static StatusCode initComponentHeaders(
+// Return true if the initialization was successful otherwise false.
+static bool initComponentHeaders(
 	DataSetHash* dataSet,
 	Exception* exception) {
 	
@@ -1556,7 +1560,7 @@ static StatusCode initComponentHeaders(
 		sizeof(HeaderPtrs) * dataSet->componentsList.count);
 	if (dataSet->componentHeaders == NULL) {
 		EXCEPTION_SET(INSUFFICIENT_MEMORY);
-		return exception->status;
+		return false;
 	}
 
 	// For each component get the headers array.
@@ -1566,10 +1570,10 @@ static StatusCode initComponentHeaders(
 			dataSet->b.b.uniqueHeaders, 
 			exception);
 		if (dataSet->componentHeaders[i] == NULL) {
-			return exception->status;
+			return false;
 		}
 	}
-	return SUCCESS;
+	return true;
 }
 
 static StatusCode readHeaderFromMemory(
@@ -1972,8 +1976,7 @@ static StatusCode initDataSetFromFile(
 	}
 
 	// Initialise the headers for each component.
-	initComponentHeaders(dataSet, exception);
-	if (status != SUCCESS || EXCEPTION_FAILED) {
+	if (!initComponentHeaders(dataSet, exception) || EXCEPTION_FAILED) {
 		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
@@ -2047,9 +2050,12 @@ size_t fiftyoneDegreesHashSizeManagerFromFile(
 	if (status == SUCCESS) {
 		ResourceManagerFree(&manager);
 	}
-	else if (exception != NULL) {
+#ifndef FIFTYONE_DEGREES_EXCEPTIONS_DISABLED
+	// Only set the exception status if enabled. 
+	else {
 		exception->status = status;
 	}
+#endif
 
 	// Get the total maximum amount of allocated memory
 	// needed for the manager and associated resources.
@@ -2123,8 +2129,7 @@ static StatusCode initDataSetFromMemory(
 	}
 
 	// Initialise the headers for each component.
-	initComponentHeaders(dataSet, exception);
-	if (status != SUCCESS || EXCEPTION_FAILED) {
+	if (!initComponentHeaders(dataSet, exception) || EXCEPTION_FAILED) {
 		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
@@ -2560,7 +2565,7 @@ static bool setGetHighEntropyValuesHeader(
 			setSpecialHeadersCallback,
 			state->evidence,
 			exception) > 0 && 
-		(EXCEPTION_OKAY || exception->status == SUCCESS);
+		(EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
 }
 
 // True if the header is SUA, the transform results in at least one additional 
@@ -2579,7 +2584,7 @@ static bool setStructuredUserAgentHeader(
 			setSpecialHeadersCallback,
 			state->evidence,
 			exception) > 0 && 
-		(EXCEPTION_OKAY || exception->status == SUCCESS);
+		(EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
 }
 
 // Checks for special evidence headers and tries to add additional headers to
