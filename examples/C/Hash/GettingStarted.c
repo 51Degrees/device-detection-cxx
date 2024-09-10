@@ -364,11 +364,6 @@ int main(int argc, char* argv[]) {
 	// http://51degrees.com/documentation/_features__usage_sharing.html
 	ConfigHash config = HashLowMemoryConfig;
 
-	// The example shows how non HTTP header evidence can be provided. Set
-	// special evidence processing to true to ensure this example returns 
-	// results.
-	config.b.processSpecialEvidence = true;
-	
 	// Path for the data file.
 	char dataFilePath[FILE_MAX_PATH];
 
@@ -399,6 +394,11 @@ int main(int argc, char* argv[]) {
 		config = HashInMemoryConfig;
 	}
 	
+	// The example shows how non HTTP header evidence can be provided. Set
+	// special evidence processing to true to ensure this example returns 
+	// results.
+	config.b.processSpecialEvidence = true;
+
 	ExampleParameters params;
 	params.dataFilePath = dataFilePath;
 	params.config = &config;
@@ -416,4 +416,3 @@ int main(int argc, char* argv[]) {
 }
 
 #endif
-
