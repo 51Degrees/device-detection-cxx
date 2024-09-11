@@ -31,6 +31,7 @@
 %{
 #include "device-detection-cxx/src/hash/EngineHash.hpp"
 #include "device-detection-cxx/src/hash/ResultsHashSerializer.hpp"
+#include "device-detection-cxx/src/Transform.hpp"
 
 using namespace FiftyoneDegrees::Common;
 using namespace FiftyoneDegrees::DeviceDetection;
