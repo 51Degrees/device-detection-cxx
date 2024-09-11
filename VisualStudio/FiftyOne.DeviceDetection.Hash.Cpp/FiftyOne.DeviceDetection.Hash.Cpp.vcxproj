@@ -27,6 +27,7 @@
     <ClCompile Include="..\..\src\hash\ValueMetaDataCollectionForProfileHash.cpp" />
     <ClCompile Include="..\..\src\hash\ValueMetaDataCollectionForPropertyHash.cpp" />
     <ClCompile Include="..\..\src\hash\ValueMetaDataCollectionHash.cpp" />
+    <ClCompile Include="..\..\src\hash\ResultsHashSerializer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\hash\ComponentMetaDataBuilderHash.hpp" />
@@ -46,6 +47,7 @@
     <ClInclude Include="..\..\src\hash\ValueMetaDataCollectionForProfileHash.hpp" />
     <ClInclude Include="..\..\src\hash\ValueMetaDataCollectionForPropertyHash.hpp" />
     <ClInclude Include="..\..\src\hash\ValueMetaDataCollectionHash.hpp" />
+    <ClInclude Include="..\..\src\hash\ResultsHashSerializer.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{401C012A-E5D9-4C00-9C5E-3FE078CED61B}</ProjectGuid>
