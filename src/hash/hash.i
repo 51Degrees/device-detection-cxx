@@ -42,3 +42,4 @@ using namespace FiftyoneDegrees::DeviceDetection::Hash;
 
 %include "EngineHash.i"
 %include "ResultsHashSerializer.i"
+%include "../Transform.i"

@@ -20,7 +20,7 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
-%include Types.i
+%include "common-cxx/Types.i"
 
 class Transform {
 public:
@@ -31,4 +31,3 @@ public:
   std::map<std::string, std::string> fromBase64GHEV(const std::string& json);
   std::map<std::string, std::string> fromSUA(const std::string& json);
 };
-
