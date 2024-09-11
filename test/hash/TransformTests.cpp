@@ -1597,7 +1597,7 @@ TEST_F(Transform, SUAEvidenceLowCapacity) {
 }
 
 TEST_F(Transform, CPPWrapperGHEV) {
-	FiftyoneDegrees::Common::Transform t;
+	FiftyoneDegrees::DeviceDetection::Transform t;
 	
 	auto h = t.fromJsonGHEV
 	(
@@ -1636,7 +1636,7 @@ TEST_F(Transform, CPPWrapperGHEV) {
 }
 
 TEST_F(Transform, CPPWrapperBase64) {
-	FiftyoneDegrees::Common::Transform t;
+	FiftyoneDegrees::DeviceDetection::Transform t;
 	
 	auto h = t.fromBase64GHEV
 	(
@@ -1675,7 +1675,7 @@ TEST_F(Transform, CPPWrapperBase64) {
 }
 
 TEST_F(Transform, CPPWrapperBase64InsufficientMemory) {
-	FiftyoneDegrees::Common::Transform t(128);
+	FiftyoneDegrees::DeviceDetection::Transform t(128);
 	
 	auto h = t.fromBase64GHEV
 	(
@@ -1714,7 +1714,7 @@ TEST_F(Transform, CPPWrapperBase64InsufficientMemory) {
 }
 
 TEST_F(Transform, CPPWrapperSUA) {
-	FiftyoneDegrees::Common::Transform t;
+	FiftyoneDegrees::DeviceDetection::Transform t;
 	
 	auto h = t.fromSUA
 	(
@@ -1751,7 +1751,7 @@ TEST_F(Transform, CPPWrapperSUA) {
 }
 
 TEST_F(Transform, emptycases) {
-	FiftyoneDegrees::Common::Transform t;
+	FiftyoneDegrees::DeviceDetection::Transform t;
 	auto result = t.fromJsonGHEV("{}");
 	EXPECT_EQ(result.size(), 0);
 	bool thrown = false;
@@ -1766,7 +1766,7 @@ TEST_F(Transform, emptycases) {
 }
 
 TEST_F(Transform, CPPWrapperBase64Corrupt) {
-	FiftyoneDegrees::Common::Transform t;
+	FiftyoneDegrees::DeviceDetection::Transform t;
 	bool thrown = false;
 	try {
 		auto result = t.fromBase64GHEV("base64 invalid string");
@@ -1779,7 +1779,7 @@ TEST_F(Transform, CPPWrapperBase64Corrupt) {
 }
 
 TEST_F(Transform, CPPWrapper0Size) {
-	FiftyoneDegrees::Common::Transform t(0);
+	FiftyoneDegrees::DeviceDetection::Transform t(0);
 	bool thrown = false;
 	try {
 		auto result = t.fromJsonGHEV
