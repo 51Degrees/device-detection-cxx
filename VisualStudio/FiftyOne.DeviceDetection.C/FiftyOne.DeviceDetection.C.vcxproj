@@ -12,10 +12,12 @@
     <ClInclude Include="..\..\src\dataset-dd.h" />
     <ClInclude Include="..\..\src\fiftyone.h" />
     <ClInclude Include="..\..\src\results-dd.h" />
+    <ClInclude Include="..\..\src\transform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\dataset-dd.c" />
     <ClCompile Include="..\..\src\results-dd.c" />
+    <ClCompile Include="..\..\src\transform.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\common-cxx\VisualStudio\FiftyOne.Common.C\FiftyOne.Common.C.vcxproj">
