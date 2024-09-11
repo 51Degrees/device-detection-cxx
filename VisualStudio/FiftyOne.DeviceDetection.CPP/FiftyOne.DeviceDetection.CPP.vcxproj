@@ -6,12 +6,14 @@
     <ClCompile Include="..\..\src\EngineDeviceDetection.cpp" />
     <ClCompile Include="..\..\src\EvidenceDeviceDetection.cpp" />
     <ClCompile Include="..\..\src\ResultsDeviceDetection.cpp" />
+    <ClCompile Include="..\..\src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\ConfigDeviceDetection.hpp" />
     <ClInclude Include="..\..\src\EngineDeviceDetection.hpp" />
     <ClInclude Include="..\..\src\EvidenceDeviceDetection.hpp" />
     <ClInclude Include="..\..\src\ResultsDeviceDetection.hpp" />
+    <ClInclude Include="..\..\src\Transform.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\common-cxx\VisualStudio\FiftyOne.Common.CPP\FiftyOne.Common.CPP.vcxproj">
