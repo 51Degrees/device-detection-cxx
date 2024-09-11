@@ -26,7 +26,7 @@
 #include "Transform.hpp"
 #include "fiftyone.h"
 
-using namespace FiftyoneDegrees::Common;
+using namespace FiftyoneDegrees::DeviceDetection;
 
 Transform::Transform(size_t capacity) : buffer(capacity) {}
 

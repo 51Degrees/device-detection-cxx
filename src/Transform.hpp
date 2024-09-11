@@ -46,7 +46,7 @@
  */
 
 namespace FiftyoneDegrees {
-	namespace Common {
+	namespace DeviceDetection {
 		class Transform {
 			using Headers = std::map<std::string, std::string>;
 			
