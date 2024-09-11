@@ -49,6 +49,7 @@
     <ClCompile Include="..\..\test\hash\HashCTests.cpp" />
     <ClCompile Include="..\..\test\hash\HashMemLeakReloadFromFileTests.cpp" />
     <ClCompile Include="..\..\test\hash\TransformTests.cpp" />
+    <ClCompile Include="..\..\test\hash\ResultsHashSerializerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
