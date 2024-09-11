@@ -45,12 +45,14 @@
 #include "dataset-dd.h"
 #include "config-dd.h"
 #include "results-dd.h"
+#include "transform.h"
 
 MAP_TYPE(ConfigDeviceDetection)
 MAP_TYPE(ResultsDeviceDetection)
 MAP_TYPE(DataSetDeviceDetection)
 MAP_TYPE(ResultUserAgent)
 MAP_TYPE(ConfigDeviceDetection)
+MAP_TYPE(TransformIterateResult)
 
 #define OverrideValuesCreate fiftyoneDegreesOverrideValuesCreate /**< Synonym for #fiftyoneDegreesOverrideValuesCreate function. */
 #define OverrideValuesFree fiftyoneDegreesOverrideValuesFree /**< Synonym for #fiftyoneDegreesOverrideValuesFree function. */
@@ -65,6 +67,14 @@ MAP_TYPE(ConfigDeviceDetection)
 #define DataSetDeviceDetectionRelease fiftyoneDegreesDataSetDeviceDetectionRelease /**< Synonym for #fiftyoneDegreesDataSetDeviceDetectionRelease function. */
 #define DataSetDeviceDetectionGet fiftyoneDegreesDataSetDeviceDetectionGet /**< Synonym for #fiftyoneDegreesDataSetDeviceDetectionGet function. */
 #define DataSetDeviceDetectionInitPropertiesAndHeaders fiftyoneDegreesDataSetDeviceDetectionInitPropertiesAndHeaders /**< Synonym for #fiftyoneDegreesDataSetDeviceDetectionInitPropertiesAndHeaders function. */
+
+#define TransformGhevFromJson fiftyoneDegreesTransformGhevFromJson /**< Synonym for fiftyoneDegreesTransformGhevFromJson */
+#define TransformGhevFromBase64 fiftyoneDegreesTransformGhevFromBase64 /**< Synonym for fiftyoneDegreesTransformGhevFromBase64 */
+#define TransformSua fiftyoneDegreesTransformSua /**< Synonym for fiftyoneDegreesTransformSua */
+#define TransformIterateSua fiftyoneDegreesTransformIterateSua /**< Synonym for fiftyoneDegreesTransformIterateSua */
+#define TransformIterateGhevFromBase64 fiftyoneDegreesTransformIterateGhevFromBase64 /**< Synonym for fiftyoneDegreesTransformIterateGhevFromBase64 */
+#define TransformIterateGhevFromJson fiftyoneDegreesTransformIterateGhevFromJson /**< Synonym for fiftyoneDegreesTransformIterateGhevFromJson */
+#define TransformCallback fiftyoneDegreesTransformCallback /**< Synonym for fiftyoneDegreesTransformCallback */
 
 /**
  * @}

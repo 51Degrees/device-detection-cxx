@@ -2555,16 +2555,16 @@ static bool setGetHighEntropyValuesHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
+	TransformIterateResult result = TransformIterateGhevFromBase64
+	(pair->parsedValue,
+	 state->results->b.bufferTransform,
+	 state->results->b.bufferTransformLength,
+	 setSpecialHeadersCallback,
+	 state->evidence,exception);
+
 	return IS_HEADER_MATCH(
 		FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES, 
-		pair) &&
-		fiftyoneDegreesTransformIterateGhevFromBase64(
-			pair->parsedValue,
-			state->results->b.bufferTransform,
-			state->results->b.bufferTransformLength,
-			setSpecialHeadersCallback,
-			state->evidence,
-			exception) > 0 && 
+		pair) && result.iterations > 0 &&
 		(EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
 }
 
@@ -2574,16 +2574,18 @@ static bool setStructuredUserAgentHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
+	TransformIterateResult result = TransformIterateSua
+	(pair->parsedValue,
+	 state->results->b.bufferTransform,
+	 state->results->b.bufferTransformLength,
+	 setSpecialHeadersCallback,
+	 state->evidence,
+	 exception);
+
 	return IS_HEADER_MATCH(
 		FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT,
 		pair) &&
-		fiftyoneDegreesTransformIterateSua(
-			pair->parsedValue,
-			state->results->b.bufferTransform,
-			state->results->b.bufferTransformLength,
-			setSpecialHeadersCallback,
-			state->evidence,
-			exception) > 0 && 
+		result.iterations > 0 &&
 		(EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
 }
 
