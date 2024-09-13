@@ -221,10 +221,22 @@ void EngineHash::refreshData(
 DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	DeviceDetection::EvidenceDeviceDetection *evidence) const {
 	EXCEPTION_CREATE;
-	uint32_t size = evidence == nullptr ? 0 : (uint32_t)evidence->size();
+	
+	// Number of items on the evidence array.
+	uint32_t evidenceSize = evidence == nullptr ? 
+		0 : 
+		(uint32_t)evidence->size();
+
+	// Get the number of components.
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(manager.get());
+	uint32_t componentsSize = dataSet->componentsList.count;
+	DataSetRelease((DataSetBase*)dataSet);
+
+	// Create the results with capacity for the larger of the components and
+	// the evidence array.
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
-		size);
+		componentsSize > evidenceSize ? componentsSize : evidenceSize);
 	ResultsHashFromEvidence(
 		results, 
 		evidence == nullptr ? nullptr : evidence->get(),
