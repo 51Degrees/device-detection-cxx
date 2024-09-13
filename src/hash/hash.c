@@ -357,16 +357,10 @@ static void hashResultReset(const DataSetHash *dataSet, ResultHash *result) {
 		// Overridden profiles have to be set explicitly.
 		result->profileIsOverriden[i] = false;
 
-		// If the allowUnmatched configuration is set then a result that does 
-		// not match any nodes will return the default profile for the 
-		// component. If allowUnmatched is not set then a null profile is 
-		// returned which signals to the caller that the input data did not 
-		// conform at all to any known data. Rather than setting this outcome
-		// at the end of the graph evaluation the default is set in this reset
-		// method to reduce the complexity of other functions.
-		result->profileOffsets[i] = dataSet->config.b.allowUnmatched ? 
-			COMPONENT(dataSet, i)->defaultProfileOffset :
-			NULL_PROFILE_OFFSET;
+		// Set the profile offset to null to avoid any profile being returned
+		// for the component and result unless explicitly set during device
+		// detection.
+		result->profileOffsets[i] = NULL_PROFILE_OFFSET;
 	}
 
 	if (result->b.matchedUserAgent != NULL) {
@@ -985,6 +979,7 @@ static bool processRoot(
 static bool processRoots(
 	detectionState *state,
 	DataSetHash *dataSet,
+	uint32_t componentIndex,
 	Component *component,
 	HashRootNodes *rootNodes) {
 	bool matched = false;
@@ -1033,6 +1028,15 @@ static bool processRoots(
 			state->predictiveMatches++;
 		}
 	}
+
+	// If there is still no matched node and the unmatched (or default) not and
+	// profile should be returned then set the profile offset for the component
+	// to the default.
+	if (matched == false && dataSet->config.b.allowUnmatched) {
+		state->result->profileOffsets[componentIndex] =
+			component->defaultProfileOffset;
+	}
+
 	return matched;
 }
 
@@ -1064,6 +1068,7 @@ static void setResultFromUserAgentComponentIndex(
 				if (processRoots(
 					state, 
 					state->dataSet,
+					componentIndex,
 					component,
 					rootNodes) == true) {
 					addProfile(
@@ -2235,28 +2240,6 @@ size_t fiftyoneDegreesHashSizeManagerFromMemory(
 	return allocated;
 }
 
-static void hashResultSetDefaults(DataSetHash *dataSet, ResultHash *result) {
-	byte i = 0;
-	Component *component;
-
-	// Add a null or default profile for each of the components.
-	while (i < dataSet->componentsList.count) {
-		component = (Component*)(dataSet->componentsList.items[i].data.ptr);
-		if (dataSet->config.b.allowUnmatched) {
-			addProfile(result, i, component->defaultProfileOffset, false);
-		}
-		else {
-			addProfile(result, i, NULL_PROFILE_OFFSET, false);
-		}
-		i++;
-	}
-
-	// Set the match method to none, as no matching method has been used, and
-	// a difference of zero.
-	result->difference = 0;
-	result->method = FIFTYONE_DEGREES_HASH_MATCH_METHOD_NONE;
-}
-
 static void addProfileById(
 	ResultsHash *results,
 	const uint32_t profileId,
@@ -2335,7 +2318,6 @@ static ResultHash* hashResultSet(
 	size_t valueLength, 
 	int headerIndex) {
 	hashResultReset(dataSet, result);
-	hashResultSetDefaults(dataSet, result);
 	result->b.targetUserAgent = value;
 	result->b.targetUserAgentLength = valueLength;
 	result->b.uniqueHttpHeaderIndex = headerIndex;
@@ -2430,6 +2412,7 @@ static bool setResultForComponentHeader(
 		if (processRoots(
 			&ddState,
 			dataSet,
+			componentIndex,
 			component,
 			rootNodes) == true) {
 
@@ -2917,14 +2900,13 @@ void fiftyoneDegreesResultsHashFromUserAgent(
 	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
 
 	hashResultReset(dataSet, &results->items[0]);
-	hashResultSetDefaults(dataSet, &results->items[0]);
 	results->items[0].b.targetUserAgent = (char*)userAgent;
 	results->items[0].b.targetUserAgentLength = (int)userAgentLength;
-	results->items[0].b.uniqueHttpHeaderIndex = dataSet->b.uniqueUserAgentHeaderIndex;
+	results->items[0].b.uniqueHttpHeaderIndex = 
+		dataSet->b.uniqueUserAgentHeaderIndex;
 	results->count = 1;
 
 	if (results != (ResultsHash*)NULL) {
-		
 		setResultFromUserAgent(
 			&results->items[0],
 			dataSet,
