@@ -2629,17 +2629,13 @@ static bool setResultFromDeviceId(
 // Sets all result in the results collection to the profile associated with the
 // profile id if valid. Returns true if the profile id relates to a profile,
 // otherwise false.
-static bool overrideProfileId(void *state, const uint32_t profileId) {
+static void overrideProfileId(void *state, const uint32_t profileId) {
 	detectionComponentState* s = (detectionComponentState*)state;
 	Exception* exception = s->exception;
 	ResultsHash *results = (ResultsHash*)s->results;
-
 	if (profileId > 0) {
-		return addProfileById(results, profileId, true, exception);
+		addProfileById(results, profileId, true, exception);
 	}
-
-	// The profile id was not value, return false.
-	return false;
 }
 
 /**
