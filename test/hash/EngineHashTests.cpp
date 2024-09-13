@@ -449,7 +449,11 @@ public:
 		Common::Collection<byte, ComponentMetaData> *components =
 			getEngine()->getMetaData()->getComponents();
 		ComponentMetaData *component = components->getByIndex(0);
-		snprintf(expectedDeviceId2, expectedDeviceId2Length, "%d-17779-17470-18092", component->getDefaultProfileId());
+		snprintf(
+			expectedDeviceId2, 
+			expectedDeviceId2Length, 
+			"%d-17779-17470-18092", 
+			component->getDefaultProfileId());
 
 		// Get a property to check which belongs to the component with no
 		// profile.
@@ -661,6 +665,9 @@ public:
 	}
 
 	void verifyProfileOverrideBad() {
+		bool originalAllowUnmatched = setAllowUnmatched(
+			(EngineHash*)getEngine(), 
+			false);
 		EvidenceDeviceDetection evidence;
 		evidence["header.user-agent"] = mobileUserAgent;
 		ResultsHash *goodResults =
@@ -688,6 +695,7 @@ public:
 		delete emptyResults;
 		delete highResults;
 		delete wrongResults;
+		setAllowUnmatched((EngineHash*)getEngine(), originalAllowUnmatched);
 	}
 
 	vector<string> splitDeviceId(string deviceId) {

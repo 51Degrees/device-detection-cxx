@@ -183,7 +183,7 @@ typedef struct detection_state_t {
 
 typedef struct deviceId_lookup_state_t {
 	ResultsHash* results; /* The detection results to modify */
-	int deviceIdsFound; /* The number of deviceIds found */
+	int profilesFoundFromDeviceId; /* The number of deviceIds found */
 	Exception* exception; /* Exception pointer */
 } deviceIdLookupState;
 
@@ -2240,7 +2240,9 @@ size_t fiftyoneDegreesHashSizeManagerFromMemory(
 	return allocated;
 }
 
-static void addProfileById(
+// Adds the profile associated with the integer profile id provided to the 
+// results. Returns true if the profile could be found, otherwise false.
+static bool addProfileById(
 	ResultsHash *results,
 	const uint32_t profileId,
 	bool isOverride,
@@ -2284,8 +2286,14 @@ static void addProfileById(
 					isOverride);
 			}
 			COLLECTION_RELEASE(dataSet->profiles, &profileItem);
+
+			// A profile was found and added.
+			return true;
 		}
 	}
+
+	// There is no corresponding profile for the profile id.
+	return false;
 }
 
 // Returns the root node for the header id from the component if one exists.
@@ -2585,16 +2593,21 @@ static bool setSpecialHeaders(
 	return true; // continue iterating
 }
 
+// If the device id is a valid string uses it to try and find profiles to add
+// to the results in state. Returns true to keep iterating because there might
+// always be another device id to be processed.
 static bool setResultFromDeviceId(
 	void* state,
 	EvidenceKeyValuePair* pair) {
 
-	if (!IS_HEADER_MATCH("51D_deviceId", pair)) {
+	// Only consider the device id header.
+	if (!IS_HEADER_MATCH(FIFTYONE_DEGREES_EVIDENCE_DEVICE_ID, pair)) {
 		return true; // not a match, skip
 	}
 
+	// Ignore null device id values.
 	const char* const deviceId = (const char*)pair->parsedValue;
-	if (!deviceId) {
+	if (deviceId == NULL) {
 		return true; // unexpected nullptr value, skip
 	}
 
@@ -2602,31 +2615,97 @@ static bool setResultFromDeviceId(
 	ResultsHash* const results = lookupState->results;
 	Exception* const exception = lookupState->exception;
 
-	lookupState->deviceIdsFound += 1;
-
-	fiftyoneDegreesResultsHashFromDeviceId(
+	// Increment the number of profiles found.
+	lookupState->profilesFoundFromDeviceId += ResultsHashFromDeviceId(
 		results,
 		deviceId,
 		strlen(deviceId) + 1,
 		exception);
 
+	// Keep going if not exception.
 	return EXCEPTION_OKAY;
 }
 
-static void overrideProfileId(void *state, const uint32_t profileId) {
+// Sets all result in the results collection to the profile associated with the
+// profile id if valid. Returns true if the profile id relates to a profile,
+// otherwise false.
+static bool overrideProfileId(void *state, const uint32_t profileId) {
 	detectionComponentState* s = (detectionComponentState*)state;
 	Exception* exception = s->exception;
 	ResultsHash *results = (ResultsHash*)s->results;
 
 	if (profileId > 0) {
-		// Only override the profile id if it is not a null profile. In the
-		// case of a null profile (profileId = 0), the component cannot be
-		// determined. So instead of setting it here, it is left to the value
-		// set by the setResultDefault method which indicates either a null
-		// profile or the default profile depending on the data set
-		// configuration.
-		addProfileById(results, profileId, true, exception);
+		return addProfileById(results, profileId, true, exception);
 	}
+
+	// The profile id was not value, return false.
+	return false;
+}
+
+/**
+ * Where there are more than one result for the component identifies the result
+ * to use for property value get, and device id operations.
+ */
+static ResultHash* getResultFromResults(
+	ResultsHash* results,
+	byte componentIndex) {
+	uint32_t i;
+	ResultHash* r;
+	ResultHash* result = NULL;
+
+	if (results->count == 1 &&
+		results->items[0].b.uniqueHttpHeaderIndex == -1) {
+
+		// If there is only one result and uniqueHttpHeaderIndex was not set 
+		// then use the only result that exists.
+		result = results->items;
+	}
+	else {
+
+		// Return the first result that has a profile for this component.
+		for (i = 0; i < results->count; i++) {
+			r = &results->items[i];
+			if (r->profileOffsets[componentIndex] != NULL_PROFILE_OFFSET) {
+				result = r;
+				break;
+			}
+		}
+	}
+	return result;
+}
+
+/**
+ * Loop through the HTTP headers that matter to this component index until a
+ * matching result for an HTTP header is found in the results.
+ */
+static ResultHash* getResultFromResultsForComponentIndex(
+	DataSetHash* dataSet,
+	ResultsHash* results,
+	byte componentIndex) {
+	uint32_t i;
+	ResultHash* result = NULL;
+
+	// Check if there are any results with on overridden profile. This takes
+	// precedence.
+	for (i = 0; i < results->count; i++) {
+		if (results->items[i].profileIsOverriden[componentIndex]) {
+			return &results->items[i];
+		}
+	}
+
+	// Now look for the best result based on the order of preference for HTTP
+	// headers.
+	result = getResultFromResults(results, componentIndex);
+
+	// Return the first result if an unmatched result is allowed, otherwise
+	// null.
+	if (result == NULL &&
+		dataSet->config.b.allowUnmatched &&
+		results->count > 0) {
+		result = results->items;
+	}
+
+	return result;
 }
 
 static void resultsHashFromEvidence_extractOverrides(
@@ -2675,6 +2754,53 @@ static void resultsHashFromEvidence_extractOverrides(
 	}
 }
 
+// Quirk. If a device id was found and allowUnmatched is true, meaning the 
+// default profile should be returned if no match is found, then set the 
+// components that were not covered by the evidence to the default profile.
+// The method is needed to handle an expectation that a profile is always
+// returned for a component which is a past behavior when allowUnmatched is
+// true.
+static void resultsHashFromEvidence_SetMissingComponentDefaultProfiles(
+	DataSetHash* dataSet,
+	ResultsHash* results) {
+
+	if (dataSet->config.b.allowUnmatched == true) {
+		for (byte i = 0;
+			i < dataSet->componentsList.count;
+			i++) {
+
+			// Get the result for the component.
+			ResultHash* result = getResultFromResultsForComponentIndex(
+				dataSet,
+				results,
+				i);
+
+			// If there is no result for the component, or no profile within 
+			// the result for the component, then add the default profile.
+			if (result == NULL ||
+				result->profileOffsets[i] == NULL_PROFILE_OFFSET) {
+				if (result != NULL) {
+					addProfile(
+						result,
+						i,
+						COMPONENT(dataSet, i)->defaultProfileOffset,
+						true);
+				}
+				else {
+					addProfile(
+						&results->items[0],
+						i,
+						COMPONENT(dataSet, i)->defaultProfileOffset,
+						true);
+					if (results->count == 0) {
+						results->count = 1;
+					}
+				}
+			}
+		}
+	}
+}
+
 // Iterate the query evidence to find device id pairs and set the results 
 // from the profile ids contained in the string value avoiding the need for
 // device detection using the graphs.
@@ -2691,17 +2817,16 @@ static int resultsHashFromEvidence_findAndApplyDeviceIDs(
 			setResultFromDeviceId);
 		if (EXCEPTION_FAILED) { break; }
 
-		if (lookupState.deviceIdsFound && !ResultsHashGetHasValues(
-			state->results, 
-			0, 
-			exception)) {
-			lookupState.deviceIdsFound = 0;
-			state->results->count = 0;
+		// If profiles were found then check if missing ones need to be added.
+		if (lookupState.profilesFoundFromDeviceId > 0) {
+			resultsHashFromEvidence_SetMissingComponentDefaultProfiles(
+				state->dataSet,
+				state->results);
 		}
-		if (EXCEPTION_FAILED) { break; }
+
 	} while (false); // once
 
-	return lookupState.deviceIdsFound;
+	return lookupState.profilesFoundFromDeviceId;
 }
 
 // For the component defined in state perform device detection using the most 
@@ -2883,10 +3008,15 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			resultsHashFromEvidence_handleAllEvidence(&state);
 		}
 
-		// Check for and process any profile Id overrides.
+		// Check for and process any profile Id overrides. If the caller can
+		// expect defaults to be returned for missing components then also set
+		// these.
 		if (dataSet->config.b.processSpecialEvidence) {
 			OverrideProfileIds(evidence, &state, overrideProfileId);
 			if (EXCEPTION_FAILED) { break; };
+			resultsHashFromEvidence_SetMissingComponentDefaultProfiles(
+				dataSet,
+				results);
 		}
 
 	} while (false); // once
@@ -2917,32 +3047,42 @@ void fiftyoneDegreesResultsHashFromUserAgent(
 	}
 }
 
-static void setProfileFromProfileId(
+// Adds the profile associated with the string version of the profile id 
+// provided to the results. Returns true if the profile could be found, 
+// otherwise false.
+static bool setProfileFromProfileId(
 	ResultsHash *results,
 	char *value,
 	Exception *exception) {
 	const uint32_t profileId = (const uint32_t)atoi(value);
-	addProfileById(results, profileId, true, exception);
+	return addProfileById(results, profileId, true, exception);
 }
 
-void fiftyoneDegreesResultsHashFromDeviceId(
+int fiftyoneDegreesResultsHashFromDeviceId(
 	fiftyoneDegreesResultsHash *results,
 	const char* deviceId,
 	size_t deviceIdLength,
 	fiftyoneDegreesException *exception) {
+	int count = 0;
 	char *current = (char*)deviceId, *previous = (char*)deviceId;
 	while (*current != '\0' &&
 		(size_t)(current - deviceId) < deviceIdLength &&
 		EXCEPTION_OKAY) {
 		if (*current == '-') {
-			setProfileFromProfileId(results, previous, exception);
+			if (setProfileFromProfileId(results, previous, exception) &&
+				EXCEPTION_OKAY) {
+				count++;
+			}
 			previous = current + 1;
 		}
 		current++;
 	}
-	if (EXCEPTION_OKAY) {
-		setProfileFromProfileId(results, previous, exception);
+	if (EXCEPTION_OKAY &&
+		setProfileFromProfileId(results, previous, exception) &&
+		EXCEPTION_OKAY) {
+		count++;
 	}
+	return count;
 }
 
 static void resultsHashRelease(ResultsHash *results) {
@@ -3193,72 +3333,6 @@ static uint32_t addValuesFromResult(
 	}
 
 	return count;
-}
-
-/**
- * Where there are more than one result for the component identifies the result
- * to use for property value get, and device id operations.
- */
-static ResultHash* getResultFromResults(
-	ResultsHash* results,
-	byte componentIndex) {
-	uint32_t i;
-	ResultHash* r;
-	ResultHash* result = NULL;
-
-	if (results->count == 1 &&
-		results->items[0].b.uniqueHttpHeaderIndex == -1) {
-
-		// If there is only one result and uniqueHttpHeaderIndex was not set 
-		// then use the only result that exists.
-		result = results->items;
-	}
-	else {
-
-		// Return the first result that has a profile for this component.
-		for (i = 0; i < results->count; i++) {
-			r = &results->items[i];
-			if (r->profileOffsets[componentIndex] != NULL_PROFILE_OFFSET) {
-				result = r;
-				break;
-			}
-		}
-	}
-	return result;
-}
-
-/**
- * Loop through the HTTP headers that matter to this component index until a 
- * matching result for an HTTP header is found in the results.
- */
-static ResultHash* getResultFromResultsForComponentIndex(
-	DataSetHash *dataSet,
-	ResultsHash* results,
-	byte componentIndex) {
-	uint32_t i;
-	ResultHash* result = NULL;
-
-	// Check if there are any results with on overridden profile. This takes
-	// precedence.
-	for (i = 0; i < results->count; i++) {
-		if (results->items[i].profileIsOverriden[componentIndex]) {
-			return &results->items[i];
-		}
-	}
-
-	// Now look for the best result based on the order of preference for HTTP
-	// headers.
-	result = getResultFromResults(results, componentIndex);
-	
-	// Return the first result if an unmatched result is allowed, otherwise
-	// null.
-	if (result == NULL && 
-		dataSet->config.b.allowUnmatched && 
-		results->count > 0) {
-		result = results->items;
-	}
-
-	return result;
 }
 
 static Item* getValuesFromOverrides(

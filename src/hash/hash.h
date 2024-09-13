@@ -191,6 +191,15 @@
 	"structureduseragent")
 #endif
 
+ /**
+  * Evidence key for Structured User Agents (SUA) JSON data.
+  */
+#ifndef FIFTYONE_DEGREES_EVIDENCE_DEVICE_ID
+#define FIFTYONE_DEGREES_EVIDENCE_DEVICE_ID \
+	(FIFTYONE_DEGREES_COMMON_COOKIE_PREFIX \
+	"deviceId")
+#endif
+
 /**
  * DATA STRUCTURES
  */
@@ -621,8 +630,9 @@ EXTERNAL void fiftyoneDegreesResultsHashFromUserAgent(
  * @param deviceIdLength of the deviceId string
  * @param exception pointer to an exception data structure to be used if an
  * exception occurs. See exceptions.h.
+ * @return number of profiles that were valid in the device id provided.
  */
-EXTERNAL void fiftyoneDegreesResultsHashFromDeviceId(
+EXTERNAL int fiftyoneDegreesResultsHashFromDeviceId(
 	fiftyoneDegreesResultsHash *results,
 	const char* deviceId,
 	size_t deviceIdLength,
