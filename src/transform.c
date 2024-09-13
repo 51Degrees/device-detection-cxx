@@ -27,13 +27,13 @@
 
 #define NotExpectSymbol(json, ch, exit) \
 if (*json == ch) {                    \
-EXCEPTION_SET(CORRUPT_DATA);   \
+*status = CORRUPT_DATA;   \
 exit;                               \
 }
 
 #define ExpectSymbol(json, ch, exit)  \
 if (*json != ch) {                  \
-EXCEPTION_SET(CORRUPT_DATA); \
+*status = CORRUPT_DATA; \
 exit;                             \
 }
 
@@ -44,11 +44,11 @@ return KEY_UNDEFINED;                \
 }
 
 #define ValuePtr \
-(EXCEPTION_CHECK(INSUFFICIENT_MEMORY) ? NULL \
+((*status == INSUFFICIENT_MEMORY) ? NULL \
 : begin)
 
 #define GET_SEXTET(str, i) \
-(str[i] == '=' ? 0 & i++ : base64CharToValue(str[i++], exception))
+(str[i] == '=' ? 0 & i++ : base64CharToValue(str[i++], status))
 
 typedef enum {
 	ARCHITECTURE,     // sec-ch-ua-arch
@@ -62,10 +62,10 @@ typedef enum {
 	KEY_UNDEFINED,    //
 } Key;
 
-typedef Key (*readKeyCallback)(const char**, Exception* const);
+typedef Key (*readKeyCallback)(const char**, StatusCode* const);
 typedef char* (*readValueCallback)(const char** json, StringBuilder *builder,
 								   KeyValuePair* cache, Key key,
-								   Exception* const exception);
+								   StatusCode* const status);
 
 static struct {
 	const char* key;
@@ -85,16 +85,16 @@ static struct {
 
 static inline char* safeWriteToBuffer(StringBuilder *builder,
 									  char symbol,
-									  Exception* const exception) {
+									  StatusCode* const status) {
 	StringBuilderAddChar(builder, symbol);
 	if (builder->full) {
-		EXCEPTION_SET(INSUFFICIENT_MEMORY);
+		*status = INSUFFICIENT_MEMORY;
 	}
 	return builder->current;
 }
 
 static inline uint32_t base64CharToValue(
-										 char c, Exception* const exception) {
+										 char c, StatusCode* const status) {
 	static const uint32_t base64_lookup_table[256] = {
 		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -116,18 +116,18 @@ static inline uint32_t base64CharToValue(
 		255};
 	
 	if (base64_lookup_table[(uint8_t)c] == 255) {
-		EXCEPTION_SET(CORRUPT_DATA);
+		*status = CORRUPT_DATA;
 	}
 	
 	return base64_lookup_table[(uint8_t)c];
 }
 
 static size_t base64Decode(const char* base64_input, StringBuilder *builder,
-						   Exception* const exception) {
+						   StatusCode* const status) {
 	size_t before = builder->added;
 	size_t input_length = strlen(base64_input);
 	if (input_length % 4 != 0) {
-		EXCEPTION_SET(CORRUPT_DATA);
+		*status = CORRUPT_DATA;
 		return 0;  // Invalid base64 input length
 	}
 	
@@ -137,19 +137,19 @@ static size_t base64Decode(const char* base64_input, StringBuilder *builder,
 		uint32_t sextet_c = GET_SEXTET(base64_input, i);
 		uint32_t sextet_d = GET_SEXTET(base64_input, i);
 		
-		if (EXCEPTION_CHECK(CORRUPT_DATA)) {
+		if (*status == CORRUPT_DATA) {
 			return 0;
 		}
 		
 		uint32_t triple =
 		(sextet_a << 18) + (sextet_b << 12) + (sextet_c << 6) + sextet_d;
 		
-		safeWriteToBuffer(builder, (triple >> 16) & 0xFF, exception);
-		safeWriteToBuffer(builder, (triple >> 8) & 0xFF, exception);
-		safeWriteToBuffer(builder, triple & 0xFF, exception);
+		safeWriteToBuffer(builder, (triple >> 16) & 0xFF, status);
+		safeWriteToBuffer(builder, (triple >> 8) & 0xFF, status);
+		safeWriteToBuffer(builder, triple & 0xFF, status);
 	}
 	
-	safeWriteToBuffer(builder, '\0', exception);
+	safeWriteToBuffer(builder, '\0', status);
 	size_t after = builder->added;
 	return after - before;
 }
@@ -291,13 +291,13 @@ static const char* skipValue(const char* json) {
 
 static inline void initKeys(StringBuilder *builder,
 							KeyValuePair* cache,
-							Exception* const exception) {
+							StatusCode* const status) {
 	for (size_t k = 0; k < KEY_UNDEFINED; ++k) {
 		cache[k].key = builder->current;
 		cache[k].keyLength = key_map[k].len;
 		
 		for (size_t i = 0; i < key_map[k].len; ++i) {
-			safeWriteToBuffer(builder, key_map[k].key[i], exception);
+			safeWriteToBuffer(builder, key_map[k].key[i], status);
 		}
 	}
 }
@@ -305,9 +305,9 @@ static inline void initKeys(StringBuilder *builder,
 static const char* initParsing(const char* json,
 							   StringBuilder *builder,
 							   KeyValuePair* cache,
-							   Exception* const exception) {
+							   StatusCode* const status) {
 	
-	initKeys(builder, cache, exception);
+	initKeys(builder, cache, status);
 	
 	json = skipWhitespaces(json);
 	ExpectSymbol(json, '{', return json);
@@ -315,7 +315,7 @@ static const char* initParsing(const char* json,
 }
 
 static Key readGhevKey(const char** json,
-					   Exception* const exception) {
+					   StatusCode* const status) {
 	enum ReadKeyState {
 		READ_KEY_INIT,
 		ARCH,
@@ -490,7 +490,7 @@ static Key readGhevKey(const char** json,
 }
 
 static Key readSuaKey(const char** json,
-					  Exception* const exception) {
+					  StatusCode* const status) {
 	enum ReadKeyState {
 		READ_KEY_INIT,
 		BROWSERS_OR_BITNESS,
@@ -632,7 +632,7 @@ static Key readSuaKey(const char** json,
 }
 
 static char* readStringValue(const char** json, StringBuilder *builder,
-							 Exception* const exception) {
+							 StatusCode* const status) {
 	char *begin = builder->current;
 	*json = skipWhitespaces(*json);
 	if (**json == 'n') {
@@ -650,10 +650,10 @@ static char* readStringValue(const char** json, StringBuilder *builder,
 	
 	++*json;
 	
-	for (begin = safeWriteToBuffer(builder, '"', exception);; ++(*json)) {
+	for (begin = safeWriteToBuffer(builder, '"', status);; ++(*json)) {
 		NotExpectSymbol(*json, '\0', return begin);
 		
-		begin = safeWriteToBuffer(builder, **json, exception);
+		begin = safeWriteToBuffer(builder, **json, status);
 		
 		switch (**json) {
 			case '\"': {
@@ -665,7 +665,7 @@ static char* readStringValue(const char** json, StringBuilder *builder,
 				if ((*json)[1] == '\\' || (*json)[1] == '"') {
 					++(*json);
 					
-					safeWriteToBuffer(builder, **json, exception);
+					safeWriteToBuffer(builder, **json, status);
 				}
 			} break;
 		}
@@ -675,7 +675,7 @@ static char* readStringValue(const char** json, StringBuilder *builder,
 static char* readBoolGhevValue(const char** json,
 							   StringBuilder *builder,
 							   KeyValuePair* cache, Key key,
-							   Exception* const exception) {
+							   StatusCode* const status) {
 	char *begin = builder->current;
 	char *ptr = begin;
 	size_t before = builder->added;
@@ -686,8 +686,8 @@ static char* readBoolGhevValue(const char** json,
 				ExpectSymbol(*json, *i, return begin);
 			}
 			
-			ptr = safeWriteToBuffer(builder, '?', exception);
-			ptr = safeWriteToBuffer(builder, '1', exception);
+			ptr = safeWriteToBuffer(builder, '?', status);
+			ptr = safeWriteToBuffer(builder, '1', status);
 		} break;
 			
 		case 'f': {
@@ -696,12 +696,12 @@ static char* readBoolGhevValue(const char** json,
 				ExpectSymbol(*json, *i, return begin);
 			}
 			
-			ptr = safeWriteToBuffer(builder, '?', exception);
-			ptr = safeWriteToBuffer(builder, '0', exception);
+			ptr = safeWriteToBuffer(builder, '?', status);
+			ptr = safeWriteToBuffer(builder, '0', status);
 		} break;
 			
 		default: {
-			EXCEPTION_SET(CORRUPT_DATA);
+			*status = CORRUPT_DATA;
 			return begin;
 		} break;
 	}
@@ -715,7 +715,7 @@ static char* readBoolGhevValue(const char** json,
 static char* readBoolSuaValue(const char** json,
 							  StringBuilder *builder,
 							  KeyValuePair* cache, Key key,
-							  Exception* const exception) {
+							  StatusCode* const status) {
 	char *begin = builder->current;
 	size_t before = builder->added;
 	switch (**json) {
@@ -724,13 +724,13 @@ static char* readBoolSuaValue(const char** json,
 		} break;
 			
 		default: {
-			EXCEPTION_SET(CORRUPT_DATA);
+			*status = CORRUPT_DATA;
 			return begin;
 		} break;
 	}
 	
-	char* ptr = safeWriteToBuffer(builder, '?', exception);
-	ptr = safeWriteToBuffer(builder, **json, exception);
+	char* ptr = safeWriteToBuffer(builder, '?', status);
+	ptr = safeWriteToBuffer(builder, **json, status);
 	
 	++(*json);
 	
@@ -743,7 +743,7 @@ static char* readBoolSuaValue(const char** json,
 
 static char* readVersionSua(const char** json,
 							StringBuilder *builder,
-							Exception* const exception) {
+							StatusCode* const status) {
 	enum version_state {
 		version_read,
 		version_skip,
@@ -762,16 +762,16 @@ static char* readVersionSua(const char** json,
 					} break;
 						
 					case '\\': {
-						ptr = safeWriteToBuffer(builder, **json, exception);
+						ptr = safeWriteToBuffer(builder, **json, status);
 						
 						if ((*json)[1] == '\\' || (*json)[1] == '"') {
 							++(*json);
-							ptr = safeWriteToBuffer(builder, **json, exception);
+							ptr = safeWriteToBuffer(builder, **json, status);
 						}
 					} break;
 						
 					default: {
-						ptr = safeWriteToBuffer(builder, **json, exception);
+						ptr = safeWriteToBuffer(builder, **json, status);
 					} break;
 				}
 			} break;
@@ -783,7 +783,7 @@ static char* readVersionSua(const char** json,
 					} break;
 						
 					case ',': {
-						ptr = safeWriteToBuffer(builder, '.', exception);
+						ptr = safeWriteToBuffer(builder, '.', status);
 					} break;
 						
 					case ']': {
@@ -793,7 +793,7 @@ static char* readVersionSua(const char** json,
 			} break;
 				
 			case version_exit: {
-				ptr = safeWriteToBuffer(builder, '"', exception);
+				ptr = safeWriteToBuffer(builder, '"', status);
 				return ptr;
 			} break;
 		}
@@ -802,7 +802,7 @@ static char* readVersionSua(const char** json,
 
 static char* readBrandsGhevValue(const char** json, StringBuilder *builder,
 								 KeyValuePair* cache, Key key,
-								 Exception* const exception) {
+								 StatusCode* const status) {
 	char *begin = builder->current;
 	*json = skipToNextChar(*json, '[');
 	ExpectSymbol(*json, '[', return begin);
@@ -827,11 +827,11 @@ static char* readBrandsGhevValue(const char** json, StringBuilder *builder,
 		
 		++*json;
 		
-		char* ptr2 = readStringValue(json, builder, exception);
+		char* ptr2 = readStringValue(json, builder, status);
 		if (ptr2 != NULL) {
-			ptr = safeWriteToBuffer(builder, ';', exception);
-			ptr = safeWriteToBuffer(builder, 'v', exception);
-			ptr = safeWriteToBuffer(builder, '=', exception);
+			ptr = safeWriteToBuffer(builder, ';', status);
+			ptr = safeWriteToBuffer(builder, 'v', status);
+			ptr = safeWriteToBuffer(builder, '=', status);
 			
 			*json = skipToNextChar(*json, ',');
 			ExpectSymbol(*json, ',', return begin); //rollback
@@ -850,14 +850,14 @@ static char* readBrandsGhevValue(const char** json, StringBuilder *builder,
 			
 			++*json;
 			
-			ptr2 = readStringValue(json, builder, exception);
+			ptr2 = readStringValue(json, builder, status);
 			if (ptr2 == NULL) {
 				ptr2 = ptr;
 				
-				ptr = safeWriteToBuffer(builder, 'n', exception);
-				ptr = safeWriteToBuffer(builder, 'u', exception);
-				ptr = safeWriteToBuffer(builder, 'l', exception);
-				ptr = safeWriteToBuffer(builder, 'l', exception);
+				ptr = safeWriteToBuffer(builder, 'n', status);
+				ptr = safeWriteToBuffer(builder, 'u', status);
+				ptr = safeWriteToBuffer(builder, 'l', status);
+				ptr = safeWriteToBuffer(builder, 'l', status);
 			} else {
 				ptr = ptr2;
 			}
@@ -883,13 +883,13 @@ static char* readBrandsGhevValue(const char** json, StringBuilder *builder,
 				
 			case ',': {
 				if (ptr2 != NULL) {
-					ptr = safeWriteToBuffer(builder, ',', exception);
-					ptr = safeWriteToBuffer(builder, ' ', exception);
+					ptr = safeWriteToBuffer(builder, ',', status);
+					ptr = safeWriteToBuffer(builder, ' ', status);
 				}
 			} break;
 				
 			default: {
-				EXCEPTION_SET(CORRUPT_DATA);
+				*status = CORRUPT_DATA;
 				return begin;
 			} break;
 		}
@@ -898,7 +898,7 @@ static char* readBrandsGhevValue(const char** json, StringBuilder *builder,
 
 static char* readBrandsSuaValue(const char** json, StringBuilder *builder,
 								KeyValuePair* cache, Key key,
-								Exception* const exception) {
+								StatusCode* const status) {
 	*json = skipToNextChar(*json, '[');
 	char *begin = builder->current;
 	ExpectSymbol(*json, '[', return begin);
@@ -923,11 +923,11 @@ static char* readBrandsSuaValue(const char** json, StringBuilder *builder,
 		
 		++*json;
 		
-		char* ptr2 = readStringValue(json, builder, exception);
+		char* ptr2 = readStringValue(json, builder, status);
 		if (ptr2 != NULL) {
-			ptr = safeWriteToBuffer(builder, ';', exception);
-			ptr = safeWriteToBuffer(builder, 'v', exception);
-			ptr = safeWriteToBuffer(builder, '=', exception);
+			ptr = safeWriteToBuffer(builder, ';', status);
+			ptr = safeWriteToBuffer(builder, 'v', status);
+			ptr = safeWriteToBuffer(builder, '=', status);
 			
 			*json = skipToNextChar(*json, ',');
 			ExpectSymbol(*json, ',', return begin);
@@ -949,8 +949,8 @@ static char* readBrandsSuaValue(const char** json, StringBuilder *builder,
 			
 			++*json;
 			
-			ptr = safeWriteToBuffer(builder, '"', exception);
-			ptr = readVersionSua(json, builder, exception);
+			ptr = safeWriteToBuffer(builder, '"', status);
+			ptr = readVersionSua(json, builder, status);
 		}
 		
 		*json = skipToNextChar(*json, '}');
@@ -972,13 +972,13 @@ static char* readBrandsSuaValue(const char** json, StringBuilder *builder,
 				
 			case ',': {
 				if (ptr != begin) {
-					ptr = safeWriteToBuffer(builder, ',', exception);
-					ptr = safeWriteToBuffer(builder, ' ', exception);
+					ptr = safeWriteToBuffer(builder, ',', status);
+					ptr = safeWriteToBuffer(builder, ' ', status);
 				}
 			} break;
 				
 			default: {
-				EXCEPTION_SET(CORRUPT_DATA);
+				*status = CORRUPT_DATA;
 				return begin;
 			} break;
 		}
@@ -987,9 +987,9 @@ static char* readBrandsSuaValue(const char** json, StringBuilder *builder,
 
 static char* readPureStringValue(const char** json, StringBuilder *builder,
 								 KeyValuePair* cache, Key key,
-								 Exception* const exception) {
+								 StatusCode* const status) {
 	char *begin = builder->current;
-	char* ptr = readStringValue(json, builder, exception);
+	char* ptr = readStringValue(json, builder, status);
 	
 	if (ptr != NULL) {
 		cache[key].value = ValuePtr;
@@ -1002,7 +1002,7 @@ static char* readPureStringValue(const char** json, StringBuilder *builder,
 static char* readPlatformSuaValue(
 								  const char** json, StringBuilder *builder,
 								  KeyValuePair* cache, Key key,
-								  Exception* const exception) {
+								  StatusCode* const status) {
 	char *begin = builder->current;
 	*json = skipToNextChar(*json, '{');
 	ExpectSymbol(*json, '{', return begin);
@@ -1021,7 +1021,7 @@ static char* readPlatformSuaValue(
 	
 	++*json;
 	
-	char* ptr = readStringValue(json, builder, exception);
+	char* ptr = readStringValue(json, builder, status);
 	if (ptr == NULL) {
 		return NULL;
 	}
@@ -1060,8 +1060,8 @@ static char* readPlatformSuaValue(
 	++*json;
 	NotExpectSymbol(*json, '\0', return begin);
 	
-	ptr = safeWriteToBuffer(builder, '"', exception);
-	ptr = readVersionSua(json, builder, exception);
+	ptr = safeWriteToBuffer(builder, '"', status);
+	ptr = readVersionSua(json, builder, status);
 	
 	cache[PLATFORMVERSION].value = ValuePtr;
 	cache[PLATFORMVERSION].valueLength = ptr - begin;
@@ -1129,7 +1129,7 @@ static bool pushToHeaders(void* ctx, KeyValuePair header) {
 // ----------------------------------------------------------------------------
 static uint32_t mainParsingBody(const char* json,
 								StringBuilder *builder,
-								Exception* const exception,
+								StatusCode* const status,
 								int isSua,
 								TransformCallback callback,
 								void* ctx) {
@@ -1139,8 +1139,8 @@ static uint32_t mainParsingBody(const char* json,
 	// define buffer range
 	
 	// write keys to buffer, init cache and skip to the first key
-	json = initParsing(json, builder, cache, exception);
-	if (EXCEPTION_CHECK(CORRUPT_DATA)) {
+	json = initParsing(json, builder, cache, status);
+	if (*status == CORRUPT_DATA) {
 		return 0;
 	}
 	
@@ -1149,7 +1149,7 @@ static uint32_t mainParsingBody(const char* json,
 	// main reading loop
 	readKeyCallback read_key = isSua ? readSuaKey : readGhevKey;
 	while (*json != '\0') {
-		Key key = read_key(&json, exception);
+		Key key = read_key(&json, status);
 		ExpectSymbol(json, '"', break);
 		
 		readValueCallback read_value = readValueSwitch(key, isSua);
@@ -1164,8 +1164,8 @@ static uint32_t mainParsingBody(const char* json,
 		json = skipWhitespaces(json + 1);
 		NotExpectSymbol(json, '\0', break);
 		
-		char* ptr = read_value(&json, builder, cache, key, exception);
-		if (EXCEPTION_CHECK(CORRUPT_DATA)) {
+		char* ptr = read_value(&json, builder, cache, key, status);
+		if (*status == CORRUPT_DATA) {
 			break;
 		}
 		
@@ -1200,7 +1200,12 @@ TransformIterateGhevFromJsonPrivate
   fiftyoneDegreesTransformCallback callback, 
   void* ctx,
   fiftyoneDegreesException* const exception) {
-	return mainParsingBody(json, builder, exception, 0, callback, ctx);
+	StatusCode status = NOT_SET;
+	uint32_t result = mainParsingBody(json, builder, &status, 0, callback, ctx);
+	if (status != NOT_SET) {
+		EXCEPTION_SET(status);
+	}
+	return result;
 }
 // ------------------------------------------------------------------------------------------------
 fiftyoneDegreesTransformIterateResult 
@@ -1221,12 +1226,14 @@ fiftyoneDegreesTransformIterateGhevFromBase64
  (const char* base64, char *buffer, size_t length,
   fiftyoneDegreesTransformCallback callback, void* ctx,
   fiftyoneDegreesException* const exception) {
+	StatusCode status = NOT_SET;
 	StringBuilder builder = {buffer, length};
 	StringBuilderInit(&builder);
-	base64Decode(base64, &builder, exception);
-	fiftyoneDegreesTransformIterateResult result = {0, builder.added, 
+	base64Decode(base64, &builder, &status);
+	fiftyoneDegreesTransformIterateResult result = {0, builder.added,
 		builder.added > builder.length};
-	if (EXCEPTION_CHECK(CORRUPT_DATA) || EXCEPTION_CHECK(INSUFFICIENT_MEMORY)) {
+	if (status == CORRUPT_DATA || status == INSUFFICIENT_MEMORY) {
+		EXCEPTION_SET(status);
 		return result;
 	}
 	char *json = builder.ptr;
@@ -1246,9 +1253,13 @@ fiftyoneDegreesTransformIterateSua
   fiftyoneDegreesException* const exception) {
 	StringBuilder builder = {buffer, length};
 	StringBuilderInit(&builder);
-	uint32_t iterations = mainParsingBody(json, &builder, exception, 1, callback, ctx);
+	StatusCode status = NOT_SET;
+	uint32_t iterations = mainParsingBody(json, &builder, &status, 1, callback, ctx);
 	StringBuilderComplete(&builder);
 	fiftyoneDegreesTransformIterateResult result = {iterations, builder.added, builder.added > builder.length};
+	if (status != NOT_SET) {
+		EXCEPTION_SET(status);
+	}
 	return result;
 }
 
