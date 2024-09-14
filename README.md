@@ -84,13 +84,12 @@ Note: when building arm64 binaries on x64 Mac system, it is necessary to add `-D
 Note: for maximum possible performance file based operation the following flags can be passed to the `cmake ..` command.
 
 - `MemoryOnly=YES` removes code and configuration options that consider retaining device data in the file and loading into memory only when it's needed.
-- `NoThreading=YES` removes code that is used to support thread safety such as atomic exchange and compare operations. These are not needed when all data can be guaranteed to be in memory following initialization.
 - `ExceptionsDisabled=YES` removes the checking and setting of exceptions.
 
 ```
 mkdir build
 cd build
-cmake .. -DMemoryOnly=YES -DNoThreading=YES -DExceptionsDisabled=YES
+cmake .. -DMemoryOnly=YES -DExceptionsDisabled=YES
 ```
 
 Then build the whole solution with
