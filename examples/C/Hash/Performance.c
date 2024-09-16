@@ -119,10 +119,6 @@ performanceConfig performanceConfigs[] = {
  * Result of benchmarking from a single thread.
  */
 typedef struct benchmarkResult_t {
-	// Number of device evidence processed to determine the result.
-	long count;
-	// Processing time in millis this thread
-	double elapsedMillis;
 	// Used to ensure compiler optimiser doesn't optimise out the very
 	// method that the benchmark is testing.
 	unsigned long checkSum;
@@ -186,6 +182,8 @@ typedef struct performanceState_t {
 	int availableProperties;
 	// Max number of evidence key values pairs that will be processed.
 	int maxEvidence;
+	// The total time taken to run all the threads.
+	double elapsedMilliSeconds;
 } performanceState;
 
 /**
@@ -196,6 +194,8 @@ typedef struct threadState_t {
 	performanceState* mainState;
 	// The result for this thread within mainState->resultList.
 	benchmarkResult* result;
+	// Index of the thread in the collection of threads.
+	int threadIndex;
 } threadState;
 
 static const char* getOrAddSharedString(
@@ -345,6 +345,12 @@ void runPerformanceThread(void* state) {
 	String* value;
 	threadState *thisState = (threadState*)state;
 
+	// How many evidence items to skip before taking evidence.
+	const int offset = thisState->threadIndex;
+
+	// Number of items to skip for each iteration.
+	const int increment = thisState->mainState->numberOfThreads;
+
 	// Create an instance of results to access the returned values.
 	ResultsHash *results = ResultsHashCreate(
 		&thisState->mainState->manager,
@@ -360,11 +366,16 @@ void runPerformanceThread(void* state) {
 		evidence->items[i].header = NULL;
 	}
 
-    TIMER_CREATE;
-    TIMER_START;
-
 	// Execute the performance test moving through the linked list.
 	evidenceNode* node = thisState->mainState->evidenceFirst;
+	
+	// Next index in the collection of evidence to perform device detection 
+	// with.
+	int next = offset;
+	
+	// Total evidence iterated so far.
+	int count = 0;
+
 	while(node != NULL) {
 
 		// The evidence data structure has a field for pseudoEvidence which is
@@ -373,38 +384,38 @@ void runPerformanceThread(void* state) {
 		// copy the immutable members of the evidence node.
 		*evidence = *node->array;
 
-		ResultsHashFromEvidence(results, evidence, exception);
-		EXCEPTION_THROW;
+		if (count == next) {
 
-		// Get the all properties from the results if this is part of the
-		// performance evaluation.
-		for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
-			if (ResultsHashGetValues(
-				results,
-				j,
-				exception) != NULL && EXCEPTION_OKAY) {
-				value = (String*)results->values.items[0].data.ptr;
-				if (value != NULL) {
-					// Increase the checksum with the size of the string to 
-					// provide a crude checksum.
-					thisState->result->checkSum += value->size;
+			ResultsHashFromEvidence(results, evidence, exception);
+			EXCEPTION_THROW;
+
+			// Get the all properties from the results if this is part of the
+			// performance evaluation.
+			for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
+				if (ResultsHashGetValues(
+					results,
+					j,
+					exception) != NULL && EXCEPTION_OKAY) {
+					value = (String*)results->values.items[0].data.ptr;
+					if (value != NULL) {
+						// Increase the checksum with the size of the string to 
+						// provide a crude checksum.
+						thisState->result->checkSum += value->size;
+					}
 				}
 			}
-		}
 
-		// Increase the count.
-		thisState->result->count++;
+			next += increment;
+		}
 
 		// Move to the next node.
 		node = node->next;
+
+		count++;
 	}
-    
-    TIMER_END;
     
 	EvidenceFree(evidence);
 	ResultsHashFree(results);
-
-	thisState->result->elapsedMillis = TIMER_ELAPSED;
 
 	if (ThreadingGetIsThreadSafe()) {
 		THREAD_EXIT;
@@ -420,11 +431,10 @@ double runTests(performanceState *state) {
 	threadState* states = (threadState*)
 		Malloc(sizeof(threadState) * state->numberOfThreads);
 	for (int i = 0; i < state->numberOfThreads; i++) {
+		states[i].threadIndex = i;
 		states[i].mainState = state;
 		states[i].result = &state->resultList[i];
 		states[i].result->checkSum = 0;
-		states[i].result->count = 0;
-		states[i].result->elapsedMillis = 0;
 	}
 
 	int thread;
@@ -462,27 +472,19 @@ double runTests(performanceState *state) {
  * @param state contains benchmarking results for each thread
  */
 void doReport(performanceState *state) {
-	double totalMillis = 0;
-	long totalChecks = 0;
+
+	// Work out the checksum from all threads.
 	long checksum = 0;
 	for (int i = 0; i < state->numberOfThreads; i++) {
 		benchmarkResult *result = &state->resultList[i];
-		fprintf(state->output,
-			"Thread: %ld detections, elapsed %.3f seconds, %.0lf Detections per second\n",
-			result->count,
-			result->elapsedMillis / 1000.0,
-			round(1000.0 * result->count / result->elapsedMillis));
-
-		totalMillis += result->elapsedMillis;
-		totalChecks += result->count;
 		checksum += result->checkSum;
 	}
 
 	// output the results from the benchmark to the console
-	double millisPerTest = ((double)totalMillis / (state->numberOfThreads * totalChecks));
+	double millisPerTest = state->elapsedMilliSeconds / (double)state->evidenceCount;
 	fprintf(state->output,
-		"Overall: %ld detections, Average ms per detection: %f, Detections per second: %.0lf\n",
-		totalChecks,
+		"Overall: %d detections, Average ms per detection: %f, Detections per second: %.0lf\n",
+		state->evidenceCount,
 		millisPerTest,
 		round(1000.0 / millisPerTest));
 	fprintf(state->output,
@@ -528,7 +530,7 @@ void executeBenchmark(
 
 	PropertiesRequired properties = PropertiesDefault;
 	if (config.allProperties == false) {
-		properties.string = "IsMobile";
+		properties.string = "IsCrawler";
 	}
 
 	// Multi graph operation is being deprecated. There is only one graph.
@@ -580,10 +582,10 @@ void executeBenchmark(
 	runTests(state);
 
 	fprintf(state->output, "Running\n");
-	double executionTime = runTests(state);
+	state->elapsedMilliSeconds = runTests(state);
 	fprintf(state->output,
 		"Finished - Execution time was %lf ms\n",
-		executionTime);
+		state->elapsedMilliSeconds);
 
 	ResourceManagerFree(&state->manager);
 	Free(state->threads);
