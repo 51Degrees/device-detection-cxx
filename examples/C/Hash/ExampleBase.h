@@ -66,7 +66,7 @@ typedef struct fiftyoneDegrees_example_parameters_t{
     char *propertiesString; /**< Required properties string */
     fiftyoneDegreesConfigHash *config; /**< Hash Configuration */
     uint16_t numberOfThreads; /**< Concurrent threads */
-    int iterationsPerThread; /**< Count of evidence per thread */
+    int iterations; /**< Count of evidence per thread */
     FILE* output; /**< Output target for the example */
     FILE* resultsOutput; /**< Output target for any results. Null if not required */
 } fiftyoneDegreesExampleParameters;
