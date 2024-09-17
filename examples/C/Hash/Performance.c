@@ -54,7 +54,7 @@
 // the default number of threads if one is not provided.
 #define DEFAULT_NUMBER_OF_THREADS 2
 // the default number of tests to execute.
-#define DEFAULT_ITERATIONS_PER_THREAD 10000
+#define DEFAULT_ITERATIONS 10000
 
 // Parameters used for allocating memory when reading evidence. 
 #define SIZE_OF_KEY 500
@@ -116,15 +116,6 @@ performanceConfig performanceConfigs[] = {
 };
 
 /**
- * Result of benchmarking from a single thread.
- */
-typedef struct benchmarkResult_t {
-	// Used to ensure compiler optimiser doesn't optimise out the very
-	// method that the benchmark is testing.
-	unsigned long checkSum;
-} benchmarkResult;
-
-/**
  * Pointer to evidence, and the next item in the list. 
  */
 typedef struct evidence_node_t evidenceNode;
@@ -146,18 +137,32 @@ typedef struct shared_string_node_t {
 } sharedStringNode;
 
 /**
- * Single state containing everything needed for running and then
- * reporting the performance tests.
+ * Early declaration of the performance state.
  */
-typedef struct performanceState_t {
-	// Where the results of the tests are gathered
-	benchmarkResult* resultList;
-	// Number of concurrent threads to benchmark
-	uint16_t numberOfThreads;
+typedef struct performanceState_t performanceState;
+
+/**
+ * State specific to a single thread.
+ */
+typedef struct threadState_t {
+	// The main state containing the dataset.
+	performanceState* mainState;
 	// Pointer to the first item of evidence available.
 	evidenceNode* evidenceFirst;
 	// Pointer to the last item of evidence available.
 	evidenceNode* evidenceLast;
+	// Used to ensure compiler optimiser doesn't optimise out the very
+	// method that the benchmark is testing.
+	unsigned long checkSum;
+} threadState;
+
+/**
+ * Single state containing everything needed for running and then
+ * reporting the performance tests.
+ */
+typedef struct performanceState_t {
+	// Number of concurrent threads to benchmark
+	uint16_t numberOfThreads;
 	// Pointer to the first shared string.
 	sharedStringNode* sharedStringFirst;
 	// Pointer to the last shared string.
@@ -165,7 +170,7 @@ typedef struct performanceState_t {
 	// Number of sets of evidence in the evidence array
 	int evidenceCount;
 	// Number of sets of evidence to process
-	int iterationsPerThread;
+	int iterations;
 	// Location of the 51Degrees data file
 	const char* dataFileLocation;
 	// File pointer to write output to, usually stdout
@@ -184,19 +189,11 @@ typedef struct performanceState_t {
 	int maxEvidence;
 	// The total time taken to run all the threads.
 	double elapsedMilliSeconds;
-} performanceState;
-
-/**
- * State specific to a single thread.
- */
-typedef struct threadState_t {
-	// The main state containing the dataset.
-	performanceState* mainState;
-	// The result for this thread within mainState->resultList.
-	benchmarkResult* result;
-	// Index of the thread in the collection of threads.
+	// Pointer to an array of size numberOfThreads containing the thread states.
+	threadState* threadStates;
+	// Index in threadStates that should be used when preparing evidence.
 	int threadIndex;
-} threadState;
+} performanceState;
 
 static const char* getOrAddSharedString(
 	performanceState* perfState, 
@@ -247,6 +244,9 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 	char* ptr;
 	performanceState* perfState = (performanceState*)state;
 
+	// Get the thread state to store this evidence against.
+	threadState* threadState = perfState->threadStates + perfState->threadIndex;
+
 	// Allocate space for this node and the evidence.
 	evidenceNode* node = (evidenceNode*)Malloc(sizeof(evidenceNode));
 	node->next = NULL;
@@ -254,13 +254,13 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 	node->array = evidence;
 
 	// Add the evidence node to the linked list of evidence nodes.
-	if (perfState->evidenceFirst == NULL) {
-		perfState->evidenceFirst = node;
-		perfState->evidenceLast = node;
+	if (threadState->evidenceFirst == NULL) {
+		threadState->evidenceFirst = node;
+		threadState->evidenceLast = node;
 	}
 	else {
-		perfState->evidenceLast->next = node;
-		perfState->evidenceLast = node;
+		threadState->evidenceLast->next = node;
+		threadState->evidenceLast = node;
 	}	
 
 	// Get the target pair that was just allocated.
@@ -334,6 +334,12 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 
 	// Increment the total evidence count.
 	perfState->evidenceCount++;
+
+	// Increment the thread state index.
+	perfState->threadIndex++;
+	if (perfState->threadIndex == perfState->numberOfThreads) {
+		perfState->threadIndex = 0;
+	}
 }
 
 /**
@@ -344,12 +350,6 @@ void runPerformanceThread(void* state) {
 	EXCEPTION_CREATE;
 	String* value;
 	threadState *thisState = (threadState*)state;
-
-	// How many evidence items to skip before taking evidence.
-	const int offset = thisState->threadIndex;
-
-	// Number of items to skip for each iteration.
-	const int increment = thisState->mainState->numberOfThreads;
 
 	// Create an instance of results to access the returned values.
 	ResultsHash *results = ResultsHashCreate(
@@ -367,14 +367,7 @@ void runPerformanceThread(void* state) {
 	}
 
 	// Execute the performance test moving through the linked list.
-	evidenceNode* node = thisState->mainState->evidenceFirst;
-	
-	// Next index in the collection of evidence to perform device detection 
-	// with.
-	int next = offset;
-	
-	// Total evidence iterated so far.
-	int count = 0;
+	evidenceNode* node = thisState->evidenceFirst;
 
 	while(node != NULL) {
 
@@ -384,34 +377,27 @@ void runPerformanceThread(void* state) {
 		// copy the immutable members of the evidence node.
 		*evidence = *node->array;
 
-		if (count == next) {
+		ResultsHashFromEvidence(results, evidence, exception);
+		EXCEPTION_THROW;
 
-			ResultsHashFromEvidence(results, evidence, exception);
-			EXCEPTION_THROW;
-
-			// Get the all properties from the results if this is part of the
-			// performance evaluation.
-			for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
-				if (ResultsHashGetValues(
-					results,
-					j,
-					exception) != NULL && EXCEPTION_OKAY) {
-					value = (String*)results->values.items[0].data.ptr;
-					if (value != NULL) {
-						// Increase the checksum with the size of the string to 
-						// provide a crude checksum.
-						thisState->result->checkSum += value->size;
-					}
+		// Get the all properties from the results if this is part of the
+		// performance evaluation.
+		for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
+			if (ResultsHashGetValues(
+				results,
+				j,
+				exception) != NULL && EXCEPTION_OKAY) {
+				value = (String*)results->values.items[0].data.ptr;
+				if (value != NULL) {
+					// Increase the checksum with the size of the string to 
+					// provide a crude checksum.
+					thisState->checkSum += value->size;
 				}
 			}
-
-			next += increment;
 		}
 
 		// Move to the next node.
 		node = node->next;
-
-		count++;
 	}
     
 	EvidenceFree(evidence);
@@ -427,14 +413,10 @@ void runPerformanceThread(void* state) {
  * @return elapsed millis
  */
 double runTests(performanceState *state) {
-	// Initialize states for each thread.
-	threadState* states = (threadState*)
-		Malloc(sizeof(threadState) * state->numberOfThreads);
+
+	// Reset the checksums for all the thread states before running the tests.
 	for (int i = 0; i < state->numberOfThreads; i++) {
-		states[i].threadIndex = i;
-		states[i].mainState = state;
-		states[i].result = &state->resultList[i];
-		states[i].result->checkSum = 0;
+		state->threadStates[i].checkSum = 0;
 	}
 
 	int thread;
@@ -449,7 +431,7 @@ double runTests(performanceState *state) {
 			THREAD_CREATE(
 				state->threads[thread],
 				(THREAD_ROUTINE)&runPerformanceThread,
-				&states[thread]);
+				&state->threadStates[thread]);
 		}
 
 		// Wait for them to finish.
@@ -460,10 +442,9 @@ double runTests(performanceState *state) {
 	}
 	else {
 		fprintf(state->output, "Example not build with multi threading support.\n");
-		runPerformanceThread(&states[0]);
+		runPerformanceThread(&state->threadStates[0]);
 	}
 	TIMER_END;
-	Free(states);
 	return TIMER_ELAPSED;
 }
 
@@ -476,8 +457,7 @@ void doReport(performanceState *state) {
 	// Work out the checksum from all threads.
 	long checksum = 0;
 	for (int i = 0; i < state->numberOfThreads; i++) {
-		benchmarkResult *result = &state->resultList[i];
-		checksum += result->checkSum;
+		checksum += state->threadStates[i].checkSum;
 	}
 
 	// output the results from the benchmark to the console
@@ -530,7 +510,7 @@ void executeBenchmark(
 
 	PropertiesRequired properties = PropertiesDefault;
 	if (config.allProperties == false) {
-		properties.string = "IsCrawler";
+		properties.string = "IsMobile";
 	}
 
 	// Multi graph operation is being deprecated. There is only one graph.
@@ -597,18 +577,20 @@ void executeBenchmark(
  * Frees the memory used by the evidence linked list.
  */
 void freeEvidence(performanceState* state) {
-	evidenceNode* node = state->evidenceFirst;
-	while (node != NULL) {
-		EvidenceKeyValuePairArray* evidence = node->array;
-		for (uint32_t j = 0; j < evidence->count; j++) {
-			if (evidence->items[j].originalValue != NULL) {
-				Free((void*)evidence->items[j].originalValue);
+	for(int i = 0; i < state->numberOfThreads; i++) {
+		evidenceNode* node = state->threadStates[i].evidenceFirst;
+		while (node != NULL) {
+			EvidenceKeyValuePairArray* evidence = node->array;
+			for (uint32_t j = 0; j < evidence->count; j++) {
+				if (evidence->items[j].originalValue != NULL) {
+					Free((void*)evidence->items[j].originalValue);
+				}
 			}
+			EvidenceFree(evidence);
+			evidenceNode* next = node->next;
+			Free(node);
+			node = next;
 		}
-		EvidenceFree(evidence);
-		evidenceNode* next = node->next;
-		Free(node);
-		node = next;
 	}
 }
 
@@ -632,13 +614,14 @@ void freeSharedStrings(performanceState* state) {
  * @param evidenceFilePath path to a text file of evidence
  * @param numberOfThreads number of concurrent threads
  * @param output file pointer to print output to
+ * @param iterations number of evidence pairs to include
  * @param resultsOutput file pointer to print results file to
  */
 void fiftyoneDegreesHashPerformance(
 	const char* dataFilePath,
 	const char* evidenceFilePath,
 	uint16_t numberOfThreads,
-	int iterationsPerThread,
+	int iterations,
 	FILE* output,
 	FILE* resultsOutput) {
 	performanceState state;
@@ -668,9 +651,14 @@ void fiftyoneDegreesHashPerformance(
 	else {
 		state.numberOfThreads = 1;
 	}
-	state.resultList = (benchmarkResult*)
-		Malloc(sizeof(benchmarkResult) * numberOfThreads);
-	state.iterationsPerThread = iterationsPerThread;
+	state.threadStates = (threadState*)
+		Malloc(sizeof(threadState) * numberOfThreads);
+	for(int i = 0; i < numberOfThreads; i++) {
+		state.threadStates[i].evidenceFirst = NULL;
+		state.threadStates[i].evidenceLast = NULL;
+		state.threadStates[i].mainState = &state;
+	}
+	state.iterations = iterations;
 
 	// Allocate working memory for iterating over the YAML evidence source.
 	char buffer[MAX_EVIDENCE * (SIZE_OF_KEY + SIZE_OF_VALUE)];
@@ -688,13 +676,12 @@ void fiftyoneDegreesHashPerformance(
 	fprintf(
 		state.output,
 		"Reading '%i' evidence records into memory.\n",
-		state.iterationsPerThread);
+		state.iterations);
 	
 	// Set the state to empty default values.
 	state.evidenceCount = 0;
 	state.maxEvidence = 0;
-	state.evidenceFirst = NULL;
-	state.evidenceLast = NULL;
+	state.threadIndex = 0;
 	state.sharedStringFirst = NULL;
 	state.sharedStringLast = NULL;
 
@@ -704,7 +691,7 @@ void fiftyoneDegreesHashPerformance(
 		sizeof(buffer),
 		pair,
 		MAX_EVIDENCE,
-		state.iterationsPerThread,
+		state.iterations,
 		&state,
 		storeEvidence);
 
@@ -756,8 +743,8 @@ void fiftyoneDegreesHashPerformance(
 	// Free the memory used for the evidence.
 	freeEvidence(&state);
 
-	// Free the memory used for output.
-	Free(state.resultList);
+	// Free the memory used for results and thread state.
+	Free(state.threadStates);
 
 	fprintf(output, "Finished Performance example\n");
 }
@@ -771,7 +758,7 @@ void fiftyoneDegreesExampleCPerformanceRun(ExampleParameters* params) {
 		params->dataFilePath,
 		params->evidenceFilePath,
 		params->numberOfThreads,
-		params->iterationsPerThread,
+		params->iterations,
 		params->output,
 		params->resultsOutput);
 }
@@ -800,8 +787,8 @@ void printHelp() {
 	printf("Available options are:\n");
 	OPTION_MESSAGE("Path to a 51Degrees Hash data file", DATA_OPTION, DATA_OPTION_SHORT);
 	OPTION_MESSAGE("Path to a User-Agents YAML file", UA_OPTION, UA_OPTION_SHORT);
-	OPTION_MESSAGE("Number of threads to run", THREAD_OPTION, THREAD_OPTION_SHORT);
-	OPTION_MESSAGE("Number of iterations per thread", ITERATIONS_OPTION, ITERATIONS_OPTION_SHORT);
+	OPTION_MESSAGE("Number of threads to run in parallel", THREAD_OPTION, THREAD_OPTION_SHORT);
+	OPTION_MESSAGE("Number of iterations", ITERATIONS_OPTION, ITERATIONS_OPTION_SHORT);
 	OPTION_MESSAGE("Path to a file to output JSON format results to", JSON_OPTION, JSON_OPTION_SHORT);
 	OPTION_MESSAGE("Print this help", HELP_OPTION, HELP_OPTION_SHORT);
 }
@@ -820,7 +807,7 @@ int main(int argc, char* argv[]) {
 	char dataFilePath[FILE_MAX_PATH];
 	char evidenceFilePath[FILE_MAX_PATH];
 	uint16_t numberOfThreads = DEFAULT_NUMBER_OF_THREADS;
-	int iterationsPerThread = DEFAULT_ITERATIONS_PER_THREAD;
+	int iterations = DEFAULT_ITERATIONS;
 	char *outFile = NULL;
 	dataFilePath[0] = '\0';
 	evidenceFilePath[0] = '\0';
@@ -849,7 +836,7 @@ int main(int argc, char* argv[]) {
 		else if (strcmp(argv[i], ITERATIONS_OPTION) == 0 ||
 			strcmp(argv[i], ITERATIONS_OPTION_SHORT) == 0) {
 			// Set the iterations per thread
-			iterationsPerThread = atoi(argv[i + 1]);
+			iterations = atoi(argv[i + 1]);
 		}
 		else if (strcmp(argv[i], HELP_OPTION) == 0 ||
 			strcmp(argv[i], HELP_OPTION_SHORT) == 0) {
@@ -907,7 +894,7 @@ int main(int argc, char* argv[]) {
 	params.dataFilePath = dataFilePath;
 	params.evidenceFilePath = evidenceFilePath;
 	params.numberOfThreads = numberOfThreads;
-	params.iterationsPerThread = iterationsPerThread;
+	params.iterations = iterations;
 	params.output = stdout;
 	if (outFile != NULL) {
 		params.resultsOutput = fopen(outFile, "w");
