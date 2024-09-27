@@ -153,7 +153,9 @@ typedef struct threadState_t {
 	evidenceNode* evidenceLast;
 	// Used to ensure compiler optimiser doesn't optimise out the very
 	// method that the benchmark is testing.
-	unsigned long checkSum;
+	unsigned long long checkSum;
+	// Number of device detection iterations.
+	unsigned long long iterations;
 } threadState;
 
 /**
@@ -380,6 +382,12 @@ void runPerformanceThread(void* state) {
 		ResultsHashFromEvidence(results, evidence, exception);
 		EXCEPTION_THROW;
 
+		// Update the total iterations for the thread.
+		for (uint32_t i = 0; i < results->count; i++) {
+			thisState->iterations += 
+				(unsigned long long)results->items[i].iterations;
+		}
+
 		// Get the all properties from the results if this is part of the
 		// performance evaluation.
 		for (uint32_t j = 0; j < dataSet->b.b.available->count; j++) {
@@ -417,6 +425,7 @@ double runTests(performanceState *state) {
 	// Reset the checksums for all the thread states before running the tests.
 	for (int i = 0; i < state->numberOfThreads; i++) {
 		state->threadStates[i].checkSum = 0;
+		state->threadStates[i].iterations = 0;
 	}
 
 	int thread;
@@ -454,28 +463,31 @@ double runTests(performanceState *state) {
  */
 void doReport(performanceState *state) {
 
-	// Work out the checksum from all threads.
-	long checksum = 0;
+	// Work out the checksum and iterations from all threads.
+	unsigned long long checksum = 0;
+	unsigned long long iterations = 0;
 	for (int i = 0; i < state->numberOfThreads; i++) {
 		checksum += state->threadStates[i].checkSum;
+		iterations += state->threadStates[i].iterations;
 	}
 
 	// output the results from the benchmark to the console
 	double millisPerTest = state->elapsedMilliSeconds / (double)state->evidenceCount;
 	fprintf(state->output,
-		"Overall: %d detections, Average ms per detection: %f, Detections per second: %.0lf\n",
+		"%d detections, Average ms per detection: %f, Detections per second: %.0lf\n",
 		state->evidenceCount,
 		millisPerTest,
 		round(1000.0 / millisPerTest));
 	fprintf(state->output,
-		"Overall: Concurrent threads: %d, Checksum: %lx\n",
+		"Concurrent threads: %d, Checksum: %llu, Iterations: %llu\n",
 		state->numberOfThreads,
-		checksum);
+		checksum,
+		iterations);
 	fprintf(state->output,
-		"Overall: Startup ms %.0lf\n",
+		"Startup ms %.0lf\n",
 		state->startUpMillis);
 	fprintf(state->output,
-		"Overall: Properties retrieved %d\n",
+		"Properties retrieved %d\n",
 		state->availableProperties);
 	fprintf(state->output, "\n");
 
