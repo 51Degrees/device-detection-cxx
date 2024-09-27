@@ -473,6 +473,7 @@ static void updateMatchedUserAgent(detectionState *state) {
 	}
 }
 
+#ifdef DEBUG
 static void traceRoute(detectionState *state, GraphNodeHash* hash) {
 	if (state->dataSet->config.traceRoute == true) {
 		GraphTraceNode* node = GraphTraceCreate(NULL);
@@ -487,6 +488,7 @@ static void traceRoute(detectionState *state, GraphNodeHash* hash) {
 		GraphTraceAppend(state->result->trace, node);
 	}
 }
+#endif
 
 /**
  * Checks to see if the offset represents a node or a device index.
@@ -736,14 +738,18 @@ static void evaluateListNode(detectionState *state) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
+#ifdef DEBUG
 		traceRoute(state, nodeHash);
+#endif
 		setNextNode(state, nodeHash->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
+#ifdef DEBUG
 		traceRoute(state, NULL);
+#endif
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -857,14 +863,18 @@ static void evaluateBinaryNode(detectionState *state) {
 		// A match occurred and the hash value was found. Use the offset
 		// to either find another node to evaluate or the device index.
 		updateMatchedUserAgent(state);
+#ifdef DEBUG
 		traceRoute(state, hashes);
+#endif
 		setNextNode(state, hashes->nodeOffset);
 		state->matchedNodes++;
 	}
 	else {
 		// No matching hash value was found. Use the unmatched node offset
 		// to find another node to evaluate or the device index.
+#ifdef DEBUG
 		traceRoute(state, NULL);
+#endif
 		setNextNode(state, NODE(state)->unmatchedNodeOffset);
 	}
 }
@@ -916,34 +926,48 @@ static bool processFromRoot(
 	return state->matchedNodes > previouslyMatchedNodes;
 }
 
+#ifdef DEBUG
 static void addTraceRootName(
 	detectionState *state,
 	const char *key,
 	Component *component,
 	Header *header) {
 	Exception* exception = state->exception;
-	String* componentName;
 	Item componentNameItem;
 	GraphTraceNode *node;
 	DataReset(&componentNameItem.data);
-
-	componentName = StringGet(state->dataSet->strings, component->nameOffset, &componentNameItem, exception);
+	String* componentName = StringGet(
+		state->dataSet->strings, 
+		component->nameOffset, 
+		&componentNameItem, 
+		exception);
 	if (EXCEPTION_FAILED) {
 		return;
 	}
-
-	node = GraphTraceCreate("%s %s %s", STRING(componentName), header->name, key);
+	node = GraphTraceCreate(
+		"%s %s %s", 
+		STRING(componentName),
+		header->name,
+		key);
 	COLLECTION_RELEASE(state->dataSet->strings, &componentNameItem);
 	GraphTraceAppend(state->result->trace, node);
 }
+#endif
 
 static bool processRoot(
 	detectionState* state,
 	DataSetHash* dataSet,
 	uint32_t rootNodeOffset) {
+	
+	// Initial result without drift or difference being applied.
 	bool matched = processFromRoot(dataSet, rootNodeOffset, state);
+	if (matched) return true;
+
+	// Record the depth in case more attempts are needed.
 	int depth = state->currentDepth;
-	if (matched == false && dataSet->config.difference > 0) {
+
+	// Apply difference if configured.
+	if (dataSet->config.difference > 0) {
 		state->allowedDifference = dataSet->config.difference;
 		state->breakDepth = depth;
 		while (matched == false && state->breakDepth > 0) {
@@ -951,18 +975,25 @@ static bool processRoot(
 			state->breakDepth--;
 		}
 		state->allowedDifference = 0;
+		if (matched) return true;
 	}
-	if (matched == false && dataSet->config.drift > 0) {
+
+	// Apply drift if configured.
+	if (dataSet->config.drift > 0) {
 		state->allowedDrift = dataSet->config.drift;
 		state->breakDepth = depth;
 		while (matched == false && state->breakDepth > 0) {
-			
+
 			matched = processFromRoot(dataSet, rootNodeOffset, state);
 			state->breakDepth--;
 		}
 		state->allowedDrift = 0;
+		if (matched) return true;
 	}
-	if (matched == false && dataSet->config.difference > 0 && dataSet->config.drift > 0) {
+
+	// Apply both drift and difference if configured.
+	if (dataSet->config.difference > 0 &&
+		dataSet->config.drift > 0) {
 		state->allowedDifference = dataSet->config.difference;
 		state->allowedDrift = dataSet->config.drift;
 		state->breakDepth = depth;
@@ -986,6 +1017,7 @@ static bool processRoots(
 
 	// First try searching in the performance graph if it is enabled.
 	if (dataSet->config.usePerformanceGraph == true) {
+#ifdef DEBUG
 		if (dataSet->config.traceRoute == true) {
 			// Add the start point to the trace if it is enabled (and we are in
 			// a debug build).
@@ -996,6 +1028,7 @@ static bool processRoots(
 				&dataSet->b.b.uniqueHeaders->items[
 					state->result->b.uniqueHttpHeaderIndex]);
 		}
+#endif
 		// Find a match from the performance graph, starting from the performance
 		// graph root defined by the root nodes structure.
 		matched = processRoot(state, dataSet, rootNodes->performanceNodeOffset);
@@ -1009,6 +1042,7 @@ static bool processRoots(
 	// Now try searching in the predictive graph if it is enabled and there was
 	// no match found in the performance graph.
 	if (matched == false && dataSet->config.usePredictiveGraph == true) {
+#ifdef DEBUG
 		if (dataSet->config.traceRoute == true) {
 			// Add the start point to the trace if it is enabled (and we are in
 			// a debug build).
@@ -1019,6 +1053,7 @@ static bool processRoots(
 				&dataSet->b.b.uniqueHeaders->items[
 					state->result->b.uniqueHttpHeaderIndex]);
 		}
+#endif
 		// Find a match from the predictive graph, starting from the predictive
 		// graph root defined by the root nodes structure.
 		matched = processRoot(state, dataSet, rootNodes->predictiveNodeOffset);
