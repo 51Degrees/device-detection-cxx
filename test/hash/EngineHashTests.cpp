@@ -556,7 +556,7 @@ public:
 	std::string getDeviceId(const char* ua) {
 		EvidenceDeviceDetection evidence;
 		evidence["header.user-agent"] = ua;
-		return engine->process(&evidence)->getDeviceId();
+		return std::unique_ptr<ResultsHash>(engine->process(&evidence))->getDeviceId();
 	}
 
 	void verifyProcessDeviceIdQuery() {
