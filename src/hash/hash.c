@@ -461,12 +461,11 @@ GraphNodeHash* getMatchingHashFromListNodeWithinDifference(
  * @param match
  */
 static void updateMatchedUserAgent(detectionState *state) {
-	int i, nodeLength, end;
+	size_t i, nodeLength, end;
 	if (state->result->b.matchedUserAgent != NULL) {
 		nodeLength = state->currentIndex + NODE(state)->length;
 		end = nodeLength < state->result->b.matchedUserAgentLength ?
-			nodeLength : 
-			(int)state->result->b.matchedUserAgentLength;
+			nodeLength : state->result->b.matchedUserAgentLength;
 		for (i = state->currentIndex; i < end; i++) {
 			state->result->b.matchedUserAgent[i] = state->result->b.targetUserAgent[i];
 		}
@@ -555,15 +554,14 @@ static void setNextNode(detectionState *state, int32_t offset) {
  * otherwise false
  */
 static bool setInitialHash(detectionState *state) {
-	int i;
 	bool result = false;
-	const int length = state->firstIndex + NODE(state)->length;
+	const size_t length = state->firstIndex + NODE(state)->length;
 	state->hash = 0;
 	// Hash over the whole length using:
 	// h[i] = (c[i]*p^(L-1)) + (c[i+1]*p^(L-2)) ... + (c[i+L]*p^(0))
 	if (length <= state->result->b.targetUserAgentLength) {
 		state->power = POWERS[NODE(state)->length];
-		for (i = state->firstIndex; i < length; i++) {
+		for (size_t i = state->firstIndex; i < length; i++) {
 			// Increment the powers of the prime coefficients.
 			state->hash *= RK_PRIME;
 			// Add the next character to the right.
@@ -604,7 +602,7 @@ static bool setInitialHash(detectionState *state) {
  */
 static int advanceHash(detectionState *state) {
 	int result = 0;
-	int nextAddIndex;
+	size_t nextAddIndex;
 	// Roll the hash on by one character using:
 	// h[n] = p*h[n-1] - c[n-1]*p^(L) + c[i+L]
 	if (state->currentIndex < state->lastIndex) {
