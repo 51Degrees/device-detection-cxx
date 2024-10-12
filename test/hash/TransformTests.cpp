@@ -1790,3 +1790,35 @@ TEST_F(Transform, CPPWrapper0Size) {
 	}
 	EXPECT_FALSE(thrown);
 }
+
+TEST_F(Transform, GHEVBrandsEmptyArrays) {
+    FiftyoneDegrees::DeviceDetection::Transform t;
+    bool thrown = false;
+    try {
+        {
+            auto result = t.fromBase64GHEV
+            ("eyJicmFuZHMiOltdLCJmdWxsVmVyc2lvbkxpc3QiOltdLCJtb2JpbGUiOmZhbHNlLCJtb2RlbCI6IiIsInBsYXRmb3JtIjoiIiwicGxhdGZvcm1WZXJzaW9uIjoiIn0=");
+            //{"brands":[],"fullVersionList":[],"mobile":false,"model":"","platform":"","platformVersion":""}
+            EXPECT_EQ(result["sec-ch-ua"], "");
+            EXPECT_EQ(result["sec-ch-ua-full-version-list"], "");
+            EXPECT_EQ(result["sec-ch-ua-mobile"], "?0");
+            EXPECT_EQ(result["sec-ch-ua-model"], "\"\"");
+            EXPECT_EQ(result["sec-ch-ua-platform"], "\"\"");
+            EXPECT_EQ(result["sec-ch-ua-platform-version"], "\"\"");
+        }
+        {
+            auto result = t.fromBase64GHEV
+            ("eyJicmFuZHMiOlt7ImJyYW5kIjoiQW5kcm9pZCBXZWJWaWV3IiwidmVyc2lvbiI6IjEyOSJ9LHsiYnJhbmQiOiJOb3Q9QT9CcmFuZCIsInZlcnNpb24iOiI4In0seyJicmFuZCI6IkNocm9taXVtIiwidmVyc2lvbiI6IjEyOSJ9XSwiZnVsbFZlcnNpb25MaXN0IjpbXSwibW9iaWxlIjp0cnVlLCJtb2RlbCI6IiIsInBsYXRmb3JtIjoiQW5kcm9pZCIsInBsYXRmb3JtVmVyc2lvbiI6IiJ9");
+            /*{"brands":[{"brand":"Android WebView","version":"129"},{"brand":"Not=A?Brand","version":"8"},{"brand":"Chromium","version":"129"}],"fullVersionList":[],"mobile":true,"model":"","platform":"Android","platformVersion":""}*/
+            EXPECT_EQ(result["sec-ch-ua"], "\"Android WebView\";v=\"129\", \"Not=A?Brand\";v=\"8\", \"Chromium\";v=\"129\"");
+            EXPECT_EQ(result["sec-ch-ua-full-version-list"], "");
+            EXPECT_EQ(result["sec-ch-ua-mobile"], "?1");
+            EXPECT_EQ(result["sec-ch-ua-model"], "\"\"");
+            EXPECT_EQ(result["sec-ch-ua-platform"], "\"Android\"");
+            EXPECT_EQ(result["sec-ch-ua-platform-version"], "\"\"");
+        }
+    } catch (const FiftyoneDegrees::Common::FatalException &) {
+        thrown = true;
+    }
+    EXPECT_FALSE(thrown);
+}

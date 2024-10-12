@@ -810,6 +810,12 @@ static char* readBrandsGhevValue(const char** json, StringBuilder *builder,
 	++*json;
 	
 	for (char* ptr = begin;; ++*json) {
+        *json = skipWhitespaces(*json);
+        if (*json[0] == ']') {
+            cache[key].value = NULL;
+            cache[key].valueLength = 0;
+            return ptr;
+        }
 		*json = skipToNextChar(*json, '{');
 		ExpectSymbol(*json, '{', return begin);
 		
