@@ -294,7 +294,7 @@ TEST_F(Transform, IncompleteJSON) {
 		 Transform::results, exception);
 		EXPECT_FALSE(EXCEPTION_OKAY);
 		EXPECT_TRUE(EXCEPTION_FAILED);
-		EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+		EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	}
 	fiftyoneDegreesFree(buffer);
 }
@@ -405,7 +405,7 @@ TEST_F(Transform, IncompleteSUA) {
 										   fillResultsCallback, Transform::results,
 										   exception);
 		
-		EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+		EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	}
 	fiftyoneDegreesFree(buffer);
 }
@@ -431,7 +431,7 @@ TEST_F(Transform, GHEVIncorrectBool) {
 	
 	// ---
 	
-	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	fiftyoneDegreesFree(buffer);
 }
 
@@ -449,7 +449,7 @@ TEST_F(Transform, SUAIncorrectBool) {
 	
 	// ---
 	
-	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	fiftyoneDegreesFree(buffer);
 }
 
@@ -593,7 +593,7 @@ TEST_F(Transform, GHEVBase64CorruptedLen) {
 	 ghev, buffer, bufferLength, fillResultsCallback, Transform::results,
 	 exception);
 	
-	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	fiftyoneDegreesFree(buffer);
 }
 
@@ -618,7 +618,7 @@ TEST_F(Transform, GHEVBase64CorruptedSymbol) {
 	 ghev, buffer, bufferLength, fillResultsCallback, Transform::results,
 	 exception);
 	
-	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	fiftyoneDegreesFree(buffer);
 }
 
@@ -643,7 +643,7 @@ TEST_F(Transform, GHEVBase64CorruptedSymbol2) {
 	 ghev, buffer, bufferLength, fillResultsCallback, Transform::results,
 	 exception);
 	
-	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	fiftyoneDegreesFree(buffer);
 }
 
@@ -1233,7 +1233,7 @@ TEST_F(Transform, GHEVCorruptInput) {
 	fiftyoneDegreesTransformIterateGhevFromJson(ghev, buffer, bufferLength,
 												fillResultsCallback,
 												Transform::results, exception);
-	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	fiftyoneDegreesFree(buffer);
 }
 
@@ -1518,7 +1518,7 @@ TEST_F(Transform, SUACorrupt2) {
 	fiftyoneDegreesTransformIterateSua(sua, buffer, bufferLength,
 									   fillResultsCallback, Transform::results,
 									   exception);
-	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	fiftyoneDegreesFree(buffer);
 }
 
@@ -1535,7 +1535,7 @@ TEST_F(Transform, SUACorrupt3) {
 	fiftyoneDegreesTransformIterateSua(sua, buffer, bufferLength,
 									   fillResultsCallback, Transform::results,
 									   exception);
-	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA));
+	EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
 	fiftyoneDegreesFree(buffer);
 }
 
@@ -1758,7 +1758,7 @@ TEST_F(Transform, emptycases) {
 	try {
 		t.fromJsonGHEV("");
 	} catch (const FiftyoneDegrees::Common::FatalException &e) {
-		EXPECT_EQ(e.getCode(), FIFTYONE_DEGREES_STATUS_CORRUPT_DATA);
+		EXPECT_EQ(e.getCode(), FIFTYONE_DEGREES_STATUS_INVALID_INPUT);
 		thrown = true;
 	}
 	
@@ -1772,7 +1772,7 @@ TEST_F(Transform, CPPWrapperBase64Corrupt) {
 		auto result = t.fromBase64GHEV("base64 invalid string");
 		EXPECT_EQ(result.size(), 0);
 	} catch (const FiftyoneDegrees::Common::FatalException &e) {
-		EXPECT_EQ(e.getCode(), FIFTYONE_DEGREES_STATUS_CORRUPT_DATA);
+		EXPECT_EQ(e.getCode(), FIFTYONE_DEGREES_STATUS_INVALID_INPUT);
 		thrown = true;
 	}
 	EXPECT_TRUE(thrown);

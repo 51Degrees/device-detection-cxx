@@ -27,13 +27,13 @@
 
 #define NotExpectSymbol(json, ch, exit) \
 if (*json == ch) {                    \
-*status = CORRUPT_DATA;   \
+*status = INVALID_INPUT;   \
 exit;                               \
 }
 
 #define ExpectSymbol(json, ch, exit)  \
 if (*json != ch) {                  \
-*status = CORRUPT_DATA; \
+*status = INVALID_INPUT; \
 exit;                             \
 }
 
@@ -116,7 +116,7 @@ static inline uint32_t base64CharToValue(
 		255};
 	
 	if (base64_lookup_table[(uint8_t)c] == 255) {
-		*status = CORRUPT_DATA;
+		*status = INVALID_INPUT;
 	}
 	
 	return base64_lookup_table[(uint8_t)c];
@@ -127,7 +127,7 @@ static size_t base64Decode(const char* base64_input, StringBuilder *builder,
 	size_t before = builder->added;
 	size_t input_length = strlen(base64_input);
 	if (input_length % 4 != 0) {
-		*status = CORRUPT_DATA;
+		*status = INVALID_INPUT;
 		return 0;  // Invalid base64 input length
 	}
 	
@@ -137,7 +137,7 @@ static size_t base64Decode(const char* base64_input, StringBuilder *builder,
 		uint32_t sextet_c = GET_SEXTET(base64_input, i);
 		uint32_t sextet_d = GET_SEXTET(base64_input, i);
 		
-		if (*status == CORRUPT_DATA) {
+		if (*status == INVALID_INPUT) {
 			return 0;
 		}
 		
@@ -701,7 +701,7 @@ static char* readBoolGhevValue(const char** json,
 		} break;
 			
 		default: {
-			*status = CORRUPT_DATA;
+			*status = INVALID_INPUT;
 			return begin;
 		} break;
 	}
@@ -724,7 +724,7 @@ static char* readBoolSuaValue(const char** json,
 		} break;
 			
 		default: {
-			*status = CORRUPT_DATA;
+			*status = INVALID_INPUT;
 			return begin;
 		} break;
 	}
@@ -895,7 +895,7 @@ static char* readBrandsGhevValue(const char** json, StringBuilder *builder,
 			} break;
 				
 			default: {
-				*status = CORRUPT_DATA;
+				*status = INVALID_INPUT;
 				return begin;
 			} break;
 		}
@@ -984,7 +984,7 @@ static char* readBrandsSuaValue(const char** json, StringBuilder *builder,
 			} break;
 				
 			default: {
-				*status = CORRUPT_DATA;
+				*status = INVALID_INPUT;
 				return begin;
 			} break;
 		}
@@ -1146,7 +1146,7 @@ static uint32_t mainParsingBody(const char* json,
 	
 	// write keys to buffer, init cache and skip to the first key
 	json = initParsing(json, builder, cache, status);
-	if (*status == CORRUPT_DATA) {
+	if (*status == INVALID_INPUT) {
 		return 0;
 	}
 	
@@ -1171,7 +1171,7 @@ static uint32_t mainParsingBody(const char* json,
 		NotExpectSymbol(json, '\0', break);
 		
 		char* ptr = read_value(&json, builder, cache, key, status);
-		if (*status == CORRUPT_DATA) {
+		if (*status == INVALID_INPUT) {
 			break;
 		}
 		
@@ -1238,7 +1238,7 @@ fiftyoneDegreesTransformIterateGhevFromBase64
 	base64Decode(base64, &builder, &status);
 	fiftyoneDegreesTransformIterateResult result = {0, builder.added,
 		builder.added > builder.length};
-	if (status == CORRUPT_DATA || status == INSUFFICIENT_MEMORY) {
+	if (status == INVALID_INPUT || status == INSUFFICIENT_MEMORY) {
 		EXCEPTION_SET(status);
 		return result;
 	}

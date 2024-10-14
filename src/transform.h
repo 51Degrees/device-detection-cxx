@@ -128,7 +128,7 @@ EXTERNAL typedef bool (*fiftyoneDegreesTransformCallback)
  * value in the buffer - this info can be then used by the caller to allocate
  * the buffer of sufficient size and execute another call - essentially
  * resulting in a dry run before allocation.
- * - `FIFTYONE_DEGREES_STATUS_CORRUPT_DATA` if f.e. JSON was malformed - in that
+ * - `FIFTYONE_DEGREES_STATUS_INVALID_INPUT` if f.e. JSON was malformed - in that
  * case callback will likely not be called, or will be called a limited number
  * of times until the corruption becomes obvious to the iterator as no lookahead
  * logic is implemented
@@ -165,7 +165,7 @@ fiftyoneDegreesTransformIterateGhevFromJson
  * value in the buffer - this info can be then used by the caller to allocate
  * the buffer of sufficient size and execute another call - essentially
  * resulting in a dry run before allocation...
- * - `FIFTYONE_DEGREES_STATUS_CORRUPT_DATA` if f.e. JSON was malformed - in that
+ * - `FIFTYONE_DEGREES_STATUS_INVALID_INPUT` if f.e. JSON was malformed - in that
  * case callback will likely not be called, or will be called a limited number
  * of times until the corruption becomes obvious to the iterator as no lookahead
  * logic is intended
@@ -200,7 +200,7 @@ fiftyoneDegreesTransformIterateGhevFromBase64
  * value in the buffer - this info can be then used by the caller to allocate
  * the buffer of sufficient size and execute another call - essentially
  * resulting in a dry run before allocation...
- * - `FIFTYONE_DEGREES_STATUS_CORRUPT_DATA` if f.e. JSON was malformed - in that
+ * - `FIFTYONE_DEGREES_STATUS_INVALID_INPUT` if f.e. JSON was malformed - in that
  * case callback will likely not be called, or will be called a limited number
  * of times until the corruption becomes obvious to the iterator as no lookahead
  * logic is intended
@@ -236,7 +236,7 @@ fiftyoneDegreesTransformIterateSua
  * value in the buffer - this info can be then used by the caller to allocate
  * the buffer of sufficient size and execute another call - essentially
  * resulting in a dry run before allocation...
- * - `FIFTYONE_DEGREES_STATUS_CORRUPT_DATA` if f.e. JSON was malformed - in that
+ * - `FIFTYONE_DEGREES_STATUS_INVALID_INPUT` if f.e. JSON was malformed - in that
  * case callback will likely not be called, or will be called a limited number
  * of times until the corruption becomes obvious to the iterator as no lookahead
  * logic is intended
@@ -278,7 +278,7 @@ fiftyoneDegreesTransformGhevFromJson
  * value in the buffer - this info can be then used by the caller to allocate
  * the buffer of sufficient size and execute another call - essentially
  * resulting in a dry run before allocation...
- * - `FIFTYONE_DEGREES_STATUS_CORRUPT_DATA` if f.e. JSON was malformed - in that
+ * - `FIFTYONE_DEGREES_STATUS_INVALID_INPUT` if f.e. JSON was malformed - in that
  * case callback will likely not be called, or will be called a limited number
  * of times until the corruption becomes obvious to the iterator as no lookahead
  * logic is intended
@@ -318,7 +318,7 @@ fiftyoneDegreesTransformGhevFromBase64
  * value in the buffer - this info can be then used by the caller to allocate
  * the buffer of sufficient size and execute another call - essentially
  * resulting in a dry run before allocation...
- * - `FIFTYONE_DEGREES_STATUS_CORRUPT_DATA` if f.e. JSON was malformed - in that
+ * - `FIFTYONE_DEGREES_STATUS_INVALID_INPUT` if f.e. JSON was malformed - in that
  * case callback will likely not be called, or will be called a limited number
  * of times until the corruption becomes obvious to the iterator as no lookahead
  * logic is intended

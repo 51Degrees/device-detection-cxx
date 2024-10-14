@@ -74,7 +74,7 @@ Transform::Headers Transform::apiInvoker(CTransformAPI func,
 		written = result.written;
 	}
 	
-	if (EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_CORRUPT_DATA)) {
+	if (EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT)) {
 		EXCEPTION_THROW;
 	}
 	
