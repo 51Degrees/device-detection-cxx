@@ -14,5 +14,5 @@ if ($BuildMethod -eq "msbuild") {
 }
 
 if ($IsLinux -or $IsMacOS) {
-    python -m pip install --user 'gcovr~=7.2' || $(throw "gcovr install failed")
+    pipx install 'gcovr~=7.2' || $(throw "gcovr install failed")
 }
