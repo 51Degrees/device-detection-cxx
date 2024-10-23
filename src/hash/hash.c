@@ -1614,6 +1614,32 @@ static bool initComponentHeaders(
 	return true;
 }
 
+// Initialize the gethighentropyvalues check feature that prevents the GHEV
+// javascript being returned as a value if all the required headers are already
+// present.
+static void initGetHighEntropyValues(
+	DataSetHash* dataSet,
+	Exception* exception) {
+	
+	// Initialise the get high entropy values data structure.
+	GhevDeviceDetectionInit(
+		&dataSet->b, 
+		dataSet->properties, 
+		dataSet->values, 
+		dataSet->strings, 
+		exception);
+
+	// Clean up if an exception occurred after checking in debug mode if there
+	// was an exception.
+	assert(EXCEPTION_OKAY);
+	if (!EXCEPTION_OKAY) {
+		if (dataSet->b.ghevHeaders != NULL) {
+			Free(dataSet->b.ghevHeaders);
+		}
+		dataSet->b.ghevHeaders = NULL;
+	}
+}
+
 static StatusCode readHeaderFromMemory(
 	MemoryReader *reader,
 	const DataSetHashHeader *header) {
@@ -1758,6 +1784,8 @@ static StatusCode initInMemory(
 }
 
 static void initDataSet(DataSetHash *dataSet, ConfigHash **config) {
+	EXCEPTION_CREATE
+
 	// If no config has been provided then use the balanced configuration.
 	if (*config == NULL) {
 		*config = &HashBalancedConfig;
@@ -2022,6 +2050,8 @@ static StatusCode initDataSetFromFile(
 		return status;
 	}
 
+	initGetHighEntropyValues(dataSet, exception);
+
 	return status;
 }
 
@@ -2174,6 +2204,8 @@ static StatusCode initDataSetFromMemory(
 		}
 		return status;
 	}
+
+	initGetHighEntropyValues(dataSet, exception);
 
 	return status;
 }
@@ -2765,9 +2797,10 @@ static void resultsHashFromEvidence_extractOverrides(
 			// Get the property index so that the type of the property that 
 			// performs the override can be checked before it is removed
 			// from  the result.
-			const int propertyIndex = PropertiesGetPropertyIndexFromRequiredIndex(
-				state->dataSet->b.b.available,
-				overridingPropertyIndex);
+			const int propertyIndex = 
+				PropertiesGetPropertyIndexFromRequiredIndex(
+					state->dataSet->b.b.available,
+					overridingPropertyIndex);
 			if (PropertyGetValueType(
 				state->dataSet->properties,
 				propertyIndex,
@@ -3046,6 +3079,19 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			resultsHashFromEvidence_SetMissingComponentDefaultProfiles(
 				dataSet,
 				results);
+		}
+
+		// Check to see if all the UACH evidence is present and if so then 
+		// override the JavascriptGetHighEntropyValues value to an empty value
+		// to ensure unneeded JavaScript isn't returned.
+		if (dataSet->config.b.processSpecialEvidence &&
+			results->b.overrides->capacity > 0 &&
+			GhevDeviceDetectionAllPresent(
+				&dataSet->b,
+				evidence,
+				exception) &&
+			EXCEPTION_OKAY) {
+			GhevDeviceDetectionOverride(&dataSet->b, &results->b, exception);
 		}
 
 	} while (false); // once
