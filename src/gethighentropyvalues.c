@@ -88,6 +88,9 @@ static bool countHeadersCallback(
 	fiftyoneDegreesHeader* header,
 	const char* value,
 	size_t length) {
+    (void)header;
+    (void)value;
+    (void)length; // to suppress C4100 warning
     (*(int*)state)++;
     return true;
 }
@@ -99,7 +102,6 @@ static bool isAcceptCh(
     Exception *exception) {
     Item stringItem;
     String* name;
-    char* startChar;
     bool result = false;
 
     // Get the name of the property from the strings collection.
@@ -305,7 +307,8 @@ bool fiftyoneDegreesGhevDeviceDetectionAllPresent(
     fiftyoneDegreesDataSetDeviceDetection *dataSet,
     fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
     fiftyoneDegreesException *exception) {
-    int counter = 0;
+    (void)exception; // to suppress C4100 warning
+    unsigned int counter = 0;
 
     // If the init method was not called or couldn't initialise the required
     // data structure then return false.
@@ -333,6 +336,7 @@ void fiftyoneDegreesGhevDeviceDetectionOverride(
     fiftyoneDegreesDataSetDeviceDetection *dataSet,
     fiftyoneDegreesResultsDeviceDetection *results,
 	fiftyoneDegreesException *exception) {
+    (void)exception; // to suppress C4100 warning
     OverridesAdd(
         results->overrides,
         dataSet->ghevRequiredPropertyIndex,
