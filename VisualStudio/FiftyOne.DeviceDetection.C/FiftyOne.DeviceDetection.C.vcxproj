@@ -13,11 +13,13 @@
     <ClInclude Include="..\..\src\fiftyone.h" />
     <ClInclude Include="..\..\src\results-dd.h" />
     <ClInclude Include="..\..\src\transform.h" />
+    <ClInclude Include="..\..\src\gethighentropyvalues.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\dataset-dd.c" />
     <ClCompile Include="..\..\src\results-dd.c" />
     <ClCompile Include="..\..\src\transform.c" />
+    <ClCompile Include="..\..\src\gethighentropyvalues.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\common-cxx\VisualStudio\FiftyOne.Common.C\FiftyOne.Common.C.vcxproj">
