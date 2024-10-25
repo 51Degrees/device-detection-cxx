@@ -28,5 +28,5 @@
 
 class EvidenceDeviceDetection : public EvidenceBase {
 public:
-	EvidenceDeviceDetection();
+	EvidenceDeviceDetection(size_t additionalCapacity=0);
 };

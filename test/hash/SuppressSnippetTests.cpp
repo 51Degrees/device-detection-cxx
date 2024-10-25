@@ -106,7 +106,9 @@ void SuppressSnippetTests::verifySuppressWithPrefix(const string &prefix) {
     //Verify that JavascriptGHEV snippet is suppressed when necessary evidence is
     //provided in a form of 51D_GetHighEntropyValues
     
-    EvidenceDeviceDetection evidence;
+    //we signal extra capacity to be able to convert the headers
+
+    EvidenceDeviceDetection evidence(10);
     evidence["header.user-agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36";
 
     /*

@@ -33,6 +33,10 @@ namespace FiftyoneDegrees {
 		 * Device detection specific evidence class containing evidence to be
 		 * processed by a device detection engine.
 		 * This wraps a dynamically generated C evidence structure.
+         *
+         * Note: additional capacity hint must be passed when
+         * evidence may be expanded into additional kv pairs - f.e.
+         *  51d_gethighenropyvalues or 51d_sua is present.
 		 *
 		 * The class extends the EvidenceBase class to implement the
 		 * EvidenceBase::isRelevant method to return for device detection
@@ -71,7 +75,8 @@ namespace FiftyoneDegrees {
 			/**
 			 * @copydoc Common::EvidenceBase::EvidenceBase
 			 */
-			EvidenceDeviceDetection() : EvidenceBase() {}
+			EvidenceDeviceDetection(size_t additionalCapacity=0) : 
+            EvidenceBase(additionalCapacity) {}
 
 			/**
 			 * @}
