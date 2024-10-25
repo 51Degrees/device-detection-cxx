@@ -20,7 +20,7 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 #include "../Constants.hpp"
-#include "../../src/common-cxx/tests/Base.hpp"
+#include "SimpleEngineTestBase.hpp"
 #include "../../src/hash/EngineHash.hpp"
 #include "../../src/hash/ResultsHashSerializer.hpp"
 
@@ -29,13 +29,12 @@ using namespace FiftyoneDegrees::DeviceDetection;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
 using namespace std;
 
-class ResultsHashSerializerTests: public Base {
+class ResultsHashSerializerTests: public SimpleEngineTestBase {
 public:
     virtual void SetUp();
     virtual void TearDown();
     void verify(ResultsHashSerializer &serializer, ResultsHash *results);
 
-    EngineHash *engine = nullptr;
     ConfigHash *config = nullptr;
     bool isLiteDataFile = false;
     vector<string> properties {
@@ -57,29 +56,17 @@ public:
 };
 
 void ResultsHashSerializerTests::SetUp() {
-    Base::SetUp();
+    SimpleEngineTestBase::SetUp();
     config = new ConfigHash();
     requiredProperties = new RequiredPropertiesConfig(&properties);
-    for (int i=0;i<_HashFileNamesLength;++i) {
-        auto filePath = GetFilePath(_dataFolderName, _HashFileNames[i]);
-        try {
-            engine = new EngineHash(filePath, config, requiredProperties);
-            if (filePath.find("Lite") != filePath.npos) {
-                isLiteDataFile = true;
-            }
-            cout<< "filePath: "<<filePath <<" found, engine instantiated"<<endl;
-            break;
-        } catch(const StatusCodeException &exception) {
-            cout << "fileName: "<<  _HashFileNames[i] << " filePath: " << filePath << " exception code:" << exception.getCode() << endl;
-        }
-    }
+    createEngine(config, requiredProperties);
 }
 
 void ResultsHashSerializerTests::TearDown() {
-    delete engine;
+    deallocEngine();
     delete config;
     delete requiredProperties;
-    Base::TearDown();
+    SimpleEngineTestBase::TearDown();
 }
 
 void ResultsHashSerializerTests::verify(ResultsHashSerializer &serializer, ResultsHash *results) {
@@ -92,7 +79,7 @@ void ResultsHashSerializerTests::verify(ResultsHashSerializer &serializer, Resul
 }
 
 TEST_F(ResultsHashSerializerTests, basicJSONSerialization) {
-    auto results = unique_ptr<ResultsHash>(engine->process(mobileUA));
+    auto results = unique_ptr<ResultsHash>(getEngine()->process(mobileUA));
     ResultsHashSerializer serializer;
     verify(serializer, results.get());
 }
@@ -100,7 +87,7 @@ TEST_F(ResultsHashSerializerTests, basicJSONSerialization) {
 TEST_F(ResultsHashSerializerTests, unhappyCases) {
     ResultsHashSerializer serializer(0); // zero buffer
     
-    auto results = unique_ptr<ResultsHash>(engine->process(mobileUA));
+    auto results = unique_ptr<ResultsHash>(getEngine()->process(mobileUA));
     verify(serializer, results.get());
     
     ResultsHashSerializer serializer2(5); // small buffer
@@ -114,7 +101,7 @@ TEST_F(ResultsHashSerializerTests, processEmpty) {
     
     auto evidence = make_unique<EvidenceDeviceDetection>();
     evidence->operator[]("nonevidence") = "test";
-    auto results = unique_ptr<ResultsHash>(engine->process(evidence.get()));
+    auto results = unique_ptr<ResultsHash>(getEngine()->process(evidence.get()));
     
     EXPECT_EQ(serializer.allValuesJson(results.get()), "{}");
 }

@@ -20,7 +20,7 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 #include "../Constants.hpp"
-#include "../../src/common-cxx/tests/Base.hpp"
+#include "SimpleEngineTestBase.hpp"
 #include "../../src/hash/EngineHash.hpp"
 
 using namespace FiftyoneDegrees::Common;
@@ -30,16 +30,17 @@ using namespace std;
 
 const char * SNIPPET_NAME = "JavascriptGetHighEntropyValues";
 
-class SuppressSnippetTests: public Base {
+class SuppressSnippetTests: public SimpleEngineTestBase {
 public:
     virtual void SetUp();
     virtual void TearDown();
     EvidenceDeviceDetection getEvidence();
-    
+    void verifySuppressWithPrefix(const string &prefix);
+
     ConfigHash *config = nullptr;
     RequiredPropertiesConfig *requiredProperties = nullptr;
-    EngineHash *engine = nullptr;
     bool isLiteDataFile = false;
+    
     vector<string> properties {
         "HardwareVendor",
         "HardwareName",
@@ -52,7 +53,7 @@ public:
     
 };
 void SuppressSnippetTests::TearDown() {
-    delete engine;
+    deallocEngine();
     delete requiredProperties;
     delete config;
     Base::TearDown();
@@ -62,19 +63,7 @@ void SuppressSnippetTests::SetUp() {
     Base::SetUp();
     config = new ConfigHash();
     requiredProperties = new RequiredPropertiesConfig(&properties);
-    for (int i=0;i<_HashFileNamesLength;++i) {
-        auto filePath = GetFilePath(_dataFolderName, _HashFileNames[i]);
-        try {
-            engine = new EngineHash(filePath, config, requiredProperties);
-            if (filePath.find("Lite") != filePath.npos) {
-                isLiteDataFile = true;
-            }
-            cout<< "filePath: "<<filePath <<" found, engine instantiated"<<endl;
-            break;
-        } catch(const StatusCodeException &exception) {
-            cout << "fileName: "<<  _HashFileNames[i] << " filePath: " << filePath << " exception code:" << exception.getCode() << endl;
-        }
-    }
+    createEngine(config, requiredProperties);
 }
 
 EvidenceDeviceDetection SuppressSnippetTests::getEvidence() {
@@ -99,7 +88,7 @@ TEST_F(SuppressSnippetTests, snippetPresent) {
         }
         auto evidence_copy = evidence;
         evidence_copy.erase(evidence_copy.find(kv.first));
-        auto results = unique_ptr<ResultsHash>(engine->process(&evidence_copy));
+        auto results = unique_ptr<ResultsHash>(getEngine()->process(&evidence_copy));
         auto value = results.get()->getValueAsString(SNIPPET_NAME);
         EXPECT_NE(value.getValue(), ""); //snippet not empty
     }
@@ -107,14 +96,14 @@ TEST_F(SuppressSnippetTests, snippetPresent) {
 
 TEST_F(SuppressSnippetTests, snippetSuppressedDueToHeaders) {
     auto evidence = getEvidence();
-    auto results = engine->process(&evidence);
+    auto results = getEngine()->process(&evidence);
     auto value = results->getValueAsString(SNIPPET_NAME);
     EXPECT_EQ(value.getValue(), ""); //snippet empty == suppressed
     delete results;
 }
 
-TEST_F(SuppressSnippetTests, snippetSuppressedDueToQuery) {
-    //Verify that JavascriptGHEV is suppressed when necessary evidence is
+void SuppressSnippetTests::verifySuppressWithPrefix(const string &prefix) {
+    //Verify that JavascriptGHEV snippet is suppressed when necessary evidence is
     //provided in a form of 51D_GetHighEntropyValues
     
     EvidenceDeviceDetection evidence;
@@ -124,10 +113,18 @@ TEST_F(SuppressSnippetTests, snippetSuppressedDueToQuery) {
      {"brands":[{"brand":"Google Chrome","version":"129"},{"brand":"Not=A?Brand","version":"8"},{"brand":"Chromium","version":"129"}],"fullVersionList":[{"brand":"Google Chrome","version":"129.0.6668.103"},{"brand":"Not=A?Brand","version":"8.0.0.0"},{"brand":"Chromium","version":"129.0.6668.103"}],"mobile":false,"model":"","platform":"macOS","platformVersion":"14.3.0"}
      */
 
-    evidence["query.51D_gethighentropyvalues"] = "eyJicmFuZHMiOlt7ImJyYW5kIjoiR29vZ2xlIENocm9tZSIsInZlcnNpb24iOiIxMjkifSx7ImJyYW5kIjoiTm90PUE/QnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJhbmQiOiJDaHJvbWl1bSIsInZlcnNpb24iOiIxMjkifV0sImZ1bGxWZXJzaW9uTGlzdCI6W3siYnJhbmQiOiJHb29nbGUgQ2hyb21lIiwidmVyc2lvbiI6IjEyOS4wLjY2NjguMTAzIn0seyJicmFuZCI6Ik5vdD1BP0JyYW5kIiwidmVyc2lvbiI6IjguMC4wLjAifSx7ImJyYW5kIjoiQ2hyb21pdW0iLCJ2ZXJzaW9uIjoiMTI5LjAuNjY2OC4xMDMifV0sIm1vYmlsZSI6ZmFsc2UsIm1vZGVsIjoiIiwicGxhdGZvcm0iOiJtYWNPUyIsInBsYXRmb3JtVmVyc2lvbiI6IjE0LjMuMCJ9";
+    evidence[prefix + ".51D_gethighentropyvalues"] = "eyJicmFuZHMiOlt7ImJyYW5kIjoiR29vZ2xlIENocm9tZSIsInZlcnNpb24iOiIxMjkifSx7ImJyYW5kIjoiTm90PUE/QnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJhbmQiOiJDaHJvbWl1bSIsInZlcnNpb24iOiIxMjkifV0sImZ1bGxWZXJzaW9uTGlzdCI6W3siYnJhbmQiOiJHb29nbGUgQ2hyb21lIiwidmVyc2lvbiI6IjEyOS4wLjY2NjguMTAzIn0seyJicmFuZCI6Ik5vdD1BP0JyYW5kIiwidmVyc2lvbiI6IjguMC4wLjAifSx7ImJyYW5kIjoiQ2hyb21pdW0iLCJ2ZXJzaW9uIjoiMTI5LjAuNjY2OC4xMDMifV0sIm1vYmlsZSI6ZmFsc2UsIm1vZGVsIjoiIiwicGxhdGZvcm0iOiJtYWNPUyIsInBsYXRmb3JtVmVyc2lvbiI6IjE0LjMuMCJ9";
 
-    auto results = engine->process(&evidence);
+    auto results = getEngine()->process(&evidence);
     auto value = results->getValueAsString(SNIPPET_NAME);
     EXPECT_EQ(value.getValue(), ""); //we expect snippet is suppressed
     delete results;
+}
+
+TEST_F(SuppressSnippetTests, snippetSuppressedDueToQuery) {
+    verifySuppressWithPrefix("query");
+}
+
+TEST_F(SuppressSnippetTests, snippetSuppressedDueToCookie) {
+    verifySuppressWithPrefix("cookie");
 }
