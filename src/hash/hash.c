@@ -2796,11 +2796,10 @@ static void resultsHashFromEvidence_extractOverrides(
 		if (overridingPropertyIndex >= 0) {
 			// Get the property index so that the type of the property that 
 			// performs the override can be checked before it is removed
-			// from  the result.
-			const int propertyIndex = 
-				PropertiesGetPropertyIndexFromRequiredIndex(
-					state->dataSet->b.b.available,
-					overridingPropertyIndex);
+			// from the result.
+			const int propertyIndex = PropertiesGetPropertyIndexFromRequiredIndex(
+				state->dataSet->b.b.available,
+				overridingPropertyIndex);
 			if (PropertyGetValueType(
 				state->dataSet->properties,
 				propertyIndex,
@@ -3636,7 +3635,7 @@ bool fiftyoneDegreesResultsHashGetHasValues(
 		// The property index is not valid.
 		return false;
 	}
-	if (fiftyoneDegreesOverrideHasValueForRequiredPropertyIndex(
+	if (OverrideHasValueForRequiredPropertyIndex(
 		results->b.overrides,
 		requiredPropertyIndex)) {
 		// There is an override value for the property.
