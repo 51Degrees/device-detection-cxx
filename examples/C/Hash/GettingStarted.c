@@ -380,7 +380,9 @@ void fiftyoneDegreesHashGettingStarted(
 	// returned when all the required evidence is already present.
 	ResultsHash *results = ResultsHashCreate(&manager, 1);
 
-	for (int i = 0; i < sizeof(evidenceValues)/sizeof(evidence*); i++) {
+	for (int i = 0;
+		i < (int)sizeof(evidenceValues)/(int)sizeof(evidence*);
+		i++) {
 		// Create an evidence collection and add the evidence.
 		evidence* evs = evidenceValues[i];
 		EvidenceKeyValuePairArray* evidenceArray = EvidenceCreate(evs->count);
