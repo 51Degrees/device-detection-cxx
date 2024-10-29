@@ -103,18 +103,11 @@ TEST_F(SuppressSnippetTests, snippetSuppressedDueToHeaders) {
 }
 
 void SuppressSnippetTests::verifySuppressWithPrefix(const string &prefix) {
-    //Verify that JavascriptGHEV snippet is suppressed when necessary evidence is
-    //provided in a form of 51D_GetHighEntropyValues
+    // Verify that JavascriptGHEV snippet is suppressed when necessary evidence 
+    // is provided in a form of 51D_GetHighEntropyValues
     
-    //we signal extra capacity to be able to convert the headers
-
-    EvidenceDeviceDetection evidence(10);
+    EvidenceDeviceDetection evidence;
     evidence["header.user-agent"] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36";
-
-    /*
-     {"brands":[{"brand":"Google Chrome","version":"129"},{"brand":"Not=A?Brand","version":"8"},{"brand":"Chromium","version":"129"}],"fullVersionList":[{"brand":"Google Chrome","version":"129.0.6668.103"},{"brand":"Not=A?Brand","version":"8.0.0.0"},{"brand":"Chromium","version":"129.0.6668.103"}],"mobile":false,"model":"","platform":"macOS","platformVersion":"14.3.0"}
-     */
-
     evidence[prefix + ".51D_gethighentropyvalues"] = "eyJicmFuZHMiOlt7ImJyYW5kIjoiR29vZ2xlIENocm9tZSIsInZlcnNpb24iOiIxMjkifSx7ImJyYW5kIjoiTm90PUE/QnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJhbmQiOiJDaHJvbWl1bSIsInZlcnNpb24iOiIxMjkifV0sImZ1bGxWZXJzaW9uTGlzdCI6W3siYnJhbmQiOiJHb29nbGUgQ2hyb21lIiwidmVyc2lvbiI6IjEyOS4wLjY2NjguMTAzIn0seyJicmFuZCI6Ik5vdD1BP0JyYW5kIiwidmVyc2lvbiI6IjguMC4wLjAifSx7ImJyYW5kIjoiQ2hyb21pdW0iLCJ2ZXJzaW9uIjoiMTI5LjAuNjY2OC4xMDMifV0sIm1vYmlsZSI6ZmFsc2UsIm1vZGVsIjoiIiwicGxhdGZvcm0iOiJtYWNPUyIsInBsYXRmb3JtVmVyc2lvbiI6IjE0LjMuMCJ9";
 
     auto results = getEngine()->process(&evidence);

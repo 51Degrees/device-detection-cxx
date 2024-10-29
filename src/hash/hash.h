@@ -173,6 +173,7 @@
 #ifndef FIFTYONE_DEGREES_PROPERTY_LOADED
 #define FIFTYONE_DEGREES_PROPERTY_LOADED INT_MAX
 #endif
+
 /**
  * Evidence key for GetHighEntropyValues base 64 encoded JSON data.
  */

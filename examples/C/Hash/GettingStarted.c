@@ -158,9 +158,8 @@ static evidence headersWithWebView = {
 static evidence getHighEntropyValues = {
 	2,
 	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", 
-	"Mozilla/5.0 (Linux; Android 13; RMX3762 Build/TP1A.220624.014; wv) "
-	"AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
-	"Chrome/122.0.6261.106 Mobile Safari/537.36 TwitterAndroid"},
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
+	"like Gecko) Chrome/98.0.4758.102 Safari/537.36"},
 	{FIFTYONE_DEGREES_EVIDENCE_QUERY, 
 	FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES,
 	"eyJicmFuZHMiOlt7ImJyYW5kIjoiTm90L0EpQnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJh"
@@ -175,11 +174,11 @@ static evidence getHighEntropyValues = {
 // This collection contains the various input values that will
 // be passed to the device detection algorithm.
 static evidence* evidenceValues[] = {
-	// &mobileDevice,
-	// &desktopDevice,
-	// &userAgentClientHints,
-	// &userAgentWithMobileID,
-	// &headersWithWebView,
+	&mobileDevice,
+	&desktopDevice,
+	&userAgentClientHints,
+	&userAgentWithMobileID,
+	&headersWithWebView,
 	&getHighEntropyValues
 };
 
@@ -242,14 +241,24 @@ static void reportStatus(StatusCode status,
  */
 static bool reportHeader(
 	void* state,
-	fiftyoneDegreesHeader* header,
-	const char* value,
-	size_t length) {
-	char* buffer = (char*)Malloc(length + 1);
-	strncpy(buffer, value, length);
-	buffer[length] = '\0';
-	fprintf((FILE*)state, "\n\t%s: %s", header->name, buffer);
-	Free(buffer);
+	EvidenceKeyValuePair* pair) {
+	
+	// Copy the key and value into null terminated strings for output.
+	char* key = (char*)Malloc(pair->item.keyLength + 1);
+	char* value = (char*)Malloc(pair->item.valueLength + 1);
+	strncpy(key, pair->item.key, pair->item.keyLength);
+	strncpy(value, pair->item.value, pair->item.valueLength);
+	key[pair->item.keyLength] = '\0';
+	value[pair->item.valueLength] = '\0';
+
+	// Output the key and value.
+	fprintf((FILE*)state, "\n\t%s: %s", key, value);
+
+	// Free memory.
+	Free(key);
+	Free(value);
+
+	// Keep iterating the evidence.
 	return true;
 }
 
@@ -264,12 +273,7 @@ static void analyse(
 
 	// list the evidence
 	fprintf(output, "Input values:");
-	for (uint32_t i = 0; i < evidence->count; i++) {
-		EvidenceKeyValuePair e = evidence->items[i];
-		fprintf(output,
-			"\n\t%s%s: %s",
-			EvidencePrefixString(e.prefix), e.field, (char *)e.originalValue);
-	}
+	EvidenceIterate(evidence, INT_MAX, output, reportHeader);
 	fprintf(output, "\n\n");
 
 	EXCEPTION_CREATE
@@ -295,7 +299,7 @@ static void analyse(
 	EXCEPTION_THROW;
 	fprintf(output, "\n\tDevice ID: %s\n", valueBuffer);
 
-	// Shows how to get all the required properties as a single JSON stirng.
+	// Shows how to get all the required properties as a single JSON string.
 	ResultsHashGetValuesJson(results,
 		valueBuffer,
 		sizeof(valueBuffer),
@@ -303,7 +307,7 @@ static void analyse(
 	fprintf(output, "\n\tJSON: %s\n", valueBuffer);
 
 	// Shows the JavaScript that can be run in a User Agent Client Hint 
-	// compatable web browsers to return evidence needed for device detection
+	// compatible web browsers to return evidence needed for device detection
 	// as a base64 string. See 
 	// https://51degrees.com/documentation/4.4/_device_detection__features__u_a_c_h__overview.html
 	outputValue(
@@ -314,20 +318,23 @@ static void analyse(
 
 	fprintf(output, "\n\n");
 
-	// iterate the evidence to show pseudo headers and GHEV results which is 
+	// Iterate the evidence to show pseudo headers and GHEV results which is 
 	// only going to be exposed after the call to ResultsHashFromEvidence.
 	if (((DataSetHash*)results->b.b.dataSet)->b.ghevHeaders != NULL) {
-	fprintf(output, "UACH evidence:");
-		EvidenceIterateForHeaders(
-			evidence, 
-			INT_MAX,
-			((DataSetHash*)results->b.b.dataSet)->b.ghevHeaders,
-			NULL, 
-			0, 
-			output, 
-			reportHeader);
-		fprintf(output, "\n\n");
+		fprintf(output, "UACH evidence:");
+			EvidenceIterateForHeaders(
+				evidence, 
+				INT_MAX,
+				((DataSetHash*)results->b.b.dataSet)->b.ghevHeaders,
+				NULL, 
+				0, 
+				output, 
+				reportHeader);
+			fprintf(output, "\n\n");
 	}
+
+	fprintf(output, "---###---");
+	fprintf(output, "\n\n");
 }
 
 void fiftyoneDegreesHashGettingStarted(
@@ -373,12 +380,11 @@ void fiftyoneDegreesHashGettingStarted(
 	// returned when all the required evidence is already present.
 	ResultsHash *results = ResultsHashCreate(&manager, 1);
 
-	for (int i = 0; i < (int)(sizeof(evidenceValues)/sizeof(evidence *)); i++) {
-		// Create an evidence collection and add the evidence to the collection
-		EvidenceKeyValuePairArray* evidenceArray = EvidenceCreate(MAX_EVIDENCE);
-		evidence *evs = evidenceValues[i];
+	for (int i = 0; i < sizeof(evidenceValues)/sizeof(evidence*); i++) {
+		// Create an evidence collection and add the evidence.
+		evidence* evs = evidenceValues[i];
+		EvidenceKeyValuePairArray* evidenceArray = EvidenceCreate(evs->count);
 		for (uint32_t j = 0; j < evs->count; j++) {
-			// Add the evidence as string
 			EvidenceAddString(
 				evidenceArray,
 				evs->items[j].prefix,

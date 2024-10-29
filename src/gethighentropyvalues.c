@@ -55,7 +55,7 @@ static bool isHeaderNew(
     HeaderPtr ptr;
     for(uint32_t i = 0; i < dataSet->ghevHeaders->count; i++) {
         ptr = dataSet->ghevHeaders->items[i];
-        if (ptr->length == length &&
+        if (ptr->nameLength == length &&
             StringCompareLength(name, ptr->name, length) == 0) {
             return false;
         }
@@ -85,12 +85,8 @@ static void addHeaderCallback(
 // Returns true to keep iterating over the headers.
 static bool countHeadersCallback(
 	void* state,
-	fiftyoneDegreesHeader* header,
-	const char* value,
-	size_t length) {
-    (void)header;
-    (void)value;
-    (void)length; // to suppress C4100 warning
+	EvidenceKeyValuePair *pair) {
+    (void)pair; // to suppress C4100 warning
     (*(int*)state)++;
     return true;
 }

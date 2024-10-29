@@ -130,13 +130,13 @@ if (dataSet->t == NULL) { \
 	r->matchedNodes == 0)
 
 /**
- * Checks if the pair (p) have a field name that matches the target (t).
- * The last byte of t is null where as fieldLength is the length of printable 
+ * Checks if the pair (p) have a key name that matches the target (t).
+ * The last byte of t is null where as keyLength is the length of printable 
  * characters. Take 1 from the t to compare length.
  */
 #define IS_HEADER_MATCH(t,p) \
-	(sizeof(t) - 1 == p->fieldLength && \
-	StringCompareLength(p->field, t, sizeof(t)) == 0)
+	(sizeof(t) - 1 == p->item.keyLength && \
+	StringCompareLength(p->item.key, t, sizeof(t)) == 0)
 
 /**
  * PRIVATE DATA STRUCTURES
@@ -201,6 +201,14 @@ typedef struct detection_component_state_t {
 	int headerIndex; /* Current header index. See macro HTTP_HEADER */
 	Exception* exception; /* Pointer to the exception structure */
 } detectionComponentState;
+
+/**
+ * Used to find an existing evidence pair for the header.
+ */
+typedef struct set_special_headers_find_state_t {
+	KeyValuePair* header;
+	EvidenceKeyValuePair* pair;
+} setSpecialHeadersFindState;
 
 /**
  * PRESET HASH CONFIGURATIONS
@@ -2507,28 +2515,29 @@ static bool setResultForComponentHeader(
 // if the pair resulted in a match or there are no results available to prevent
 // further processing. Returns true if more headers should be checked.
 static bool setResultFromEvidenceForComponentCallback(
-	void* state,
-	Header* header,
-	const char* value,
-	size_t length) {
+	void* state, EvidenceKeyValuePair *pair) {
 	ResultHash* result;
 	bool complete = false;
 	detectionComponentState* s = (detectionComponentState*)state;
 	Exception* exception = s->exception;
-	if (header->isDataSet) {
+	if (pair->header != NULL && pair->header->isDataSet) {
 
 		// Get the next result instance in the array of results or if there
 		// is already a result instance assigned to this iteration then use
 		// that one as it indicates that a prior evaluation did not result in
 		// any matched nodes.
 		result = s->lastResult == NULL ?
-			getNextResult(value, length, s->results, header->index) :
+			getNextResult(
+				(const char*)pair->parsedValue, 
+				pair->parsedLength, 
+				s->results, 
+				pair->header->index) :
 			hashResultSet(
 				s->dataSet, 
 				s->lastResult, 
-				value, 
-				length, 
-				header->index);
+				(const char*)pair->parsedValue,
+				pair->parsedLength,
+				pair->header->index);
 		if (result != NULL) {
 
 			// Set the last result instance in case this iteration doesn't 
@@ -2539,7 +2548,7 @@ static bool setResultFromEvidenceForComponentCallback(
 			complete = setResultForComponentHeader(
 				s->dataSet,
 				s->componentIndex,
-				header,
+				pair->header,
 				result,
 				exception);
 			if (EXCEPTION_FAILED) return false;
@@ -2554,55 +2563,66 @@ static bool setResultFromEvidenceForComponentCallback(
 	return !complete;
 }
 
-// Gets the index of the existing evidence for the header, or -1 if not found.
-static int setSpecialHeadersCallbackGetExistingIndex(
-	EvidenceKeyValuePairArray* evidence,
-	KeyValuePair* header) {
-	uint32_t index = 0;
-	while (index < evidence->count) {
-		EvidenceKeyValuePair* pair = &evidence->items[index];
-		if (pair->prefix == FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING &&
-			header->keyLength == pair->fieldLength &&
-			StringCompareLength(
-				header->key,
-				pair->field,
-				pair->fieldLength) == 0) {
-			return (int)index;
-		}
-		index++;
+// If the pair matches the header being sought then stop and record the pair,
+// otherwise continue iterating.
+static bool setSpecialHeadersFindCallback(
+	void* state,
+	EvidenceKeyValuePair* pair) {
+	setSpecialHeadersFindState* findState = (setSpecialHeadersFindState*)state;
+	if (findState->header->keyLength == pair->item.keyLength &&
+		StringCompareLength(
+			findState->header->key,
+			pair->item.key,
+			pair->item.keyLength) == 0) {
+		findState->pair = pair;
+		return false;
 	}
-	return -1;
+	return true;
 }
 
-// Adds the header to the evidence in the array if there is capacity left.
-// If the header already exists then the current value is replaced.
+// Adds the header to the evidence. If the header already exists then the 
+// current value is replaced.
 static bool setSpecialHeadersCallback(void *state, KeyValuePair header) {
-	EvidenceKeyValuePairArray* evidence = (EvidenceKeyValuePairArray*)state;
+	int uniqueHeaderIndex;
+	detectionComponentState* componentState = (detectionComponentState*)state;
 
-	// Get the existing index for the header if any.
-	int index = setSpecialHeadersCallbackGetExistingIndex(evidence, &header);
+	// Get the existing pair for the header with any prefix.
+	setSpecialHeadersFindState findState = { &header, NULL };
+	EvidenceIterate(
+		componentState->evidence,
+		INT_MAX,
+		&findState,
+		setSpecialHeadersFindCallback);
 
-	// If there is no existing header then use the next index in the array.
-	if (index < 0 && 
-		evidence->count < evidence->capacity) {
-		index = evidence->count;
-		evidence->count++;
+	if (findState.pair == NULL) {
+		// No pair was found so add a new string.
+		findState.pair = EvidenceAddPair(
+			componentState->evidence,
+			FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+			header);
 	}
 
-	// Update the entry at the index identified.
-	if (index > 0) {
-		EvidenceKeyValuePair* pair = &evidence->items[index];
-		pair->field = header.key;
-		pair->fieldLength = header.keyLength;
-		pair->parsedValue = header.value;
-		pair->parsedLength = header.valueLength;
-		pair->prefix = FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING;
-		return true;
+	// Update the parsed value and length.
+	findState.pair->parsedValue = header.value;
+	findState.pair->parsedLength = header.valueLength;
+	
+	// Ensure a unique header is associated with the pair. Perhaps the original
+	// pair was added without a known header.
+	if (findState.pair->header == NULL) {
+
+		// Get the unique header index for the header.
+		uniqueHeaderIndex = HeaderGetIndex(
+			componentState->dataSet->b.b.uniqueHeaders,
+			header.key,
+			header.keyLength);
+		if (uniqueHeaderIndex >= 0) {
+			findState.pair->header =
+				&componentState->dataSet->b.b.uniqueHeaders->items[
+					uniqueHeaderIndex];
+		}
 	}
 
-	// Stop iterating as there is insufficient capacity to add any more 
-	// entries.
-	return false;
+	return true;
 }
 
 // True if the header is GHEV, the transform results in at least one additional 
@@ -2611,12 +2631,13 @@ static bool setGetHighEntropyValuesHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
-	TransformIterateResult result = TransformIterateGhevFromBase64
-	(pair->parsedValue,
-	 state->results->b.bufferTransform,
-	 state->results->b.bufferTransformLength,
-	 setSpecialHeadersCallback,
-	 state->evidence,exception);
+	TransformIterateResult result = TransformIterateGhevFromBase64(
+		pair->parsedValue,
+		state->results->b.bufferTransform,
+		state->results->b.bufferTransformLength,
+		setSpecialHeadersCallback,
+		state,
+		exception);
 
 	return IS_HEADER_MATCH(
 		FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES, 
@@ -2928,7 +2949,8 @@ static void resultsHashFromEvidence_setSpecialHeaders(
 	do {
 		EvidenceIterate(
 			state->evidence,
-			FIFTYONE_DEGREES_EVIDENCE_QUERY,
+			FIFTYONE_DEGREES_EVIDENCE_QUERY |
+			FIFTYONE_DEGREES_EVIDENCE_COOKIE,
 			state,
 			setSpecialHeaders);
 		if (EXCEPTION_FAILED) { break; }
@@ -2953,14 +2975,14 @@ static void resultsHashFromEvidence_setEvidenceHeader(
 
 		// If the UA header then avoid iterating all headers. If not then find
 		// the header index.
-		if (pair->fieldLength == ua->length &&
-			StringCompareLength(pair->field, ua->name, ua->length) == 0) {
+		if (pair->item.keyLength == ua->nameLength &&
+			StringCompareLength(pair->item.key, ua->name, ua->nameLength) == 0) {
 			pair->header = ua;
 		} else if (pair->header == NULL) {
 			headerIndex = HeaderGetIndex(
 				state->dataSet->b.b.uniqueHeaders, 
-				pair->field, 
-				pair->fieldLength);
+				pair->item.key, 
+				pair->item.keyLength);
 			if (headerIndex >= 0) {
 				pair->header = 
 					&state->dataSet->b.b.uniqueHeaders->items[headerIndex];
@@ -3011,15 +3033,16 @@ void fiftyoneDegreesResultsHashFromEvidence(
 	Header* ua = &dataSet->b.b.uniqueHeaders->items[
 		dataSet->b.uniqueUserAgentHeaderIndex];
 	if (evidence->count == 1 &&
-		evidence->items->fieldLength == ua->length &&
+		evidence->next == NULL &&
+		evidence->items->item.keyLength == ua->nameLength &&
 		StringCompareLength(
-			evidence->items->field,
+			evidence->items->item.key,
 			ua->name,
-			ua->length) == 0) {
+			ua->nameLength) == 0) {
 		ResultsHashFromUserAgent(
 			results, 
-			evidence->items->originalValue, 
-			strlen(evidence->items->originalValue), 
+			evidence->items->item.value, 
+			evidence->items->item.valueLength,
 			exception);
 		return;
 	}
