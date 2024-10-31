@@ -2631,18 +2631,19 @@ static bool setGetHighEntropyValuesHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
-	TransformIterateResult result = TransformIterateGhevFromBase64(
-		pair->parsedValue,
-		state->results->b.bufferTransform,
-		state->results->b.bufferTransformLength,
-		setSpecialHeadersCallback,
-		state,
-		exception);
-
-	return IS_HEADER_MATCH(
-		FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES, 
-		pair) && result.iterations > 0 &&
-		(EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
+    if (IS_HEADER_MATCH(
+        FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES,
+        pair)) {
+        TransformIterateResult result = TransformIterateGhevFromBase64(
+            pair->parsedValue,
+            state->results->b.bufferTransform,
+            state->results->b.bufferTransformLength,
+            setSpecialHeadersCallback,
+            state,
+            exception);
+        return result.iterations > 0 && (EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
+    }
+    return false;
 }
 
 // True if the header is SUA, the transform results in at least one additional 
