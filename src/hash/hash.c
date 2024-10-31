@@ -2652,19 +2652,22 @@ static bool setStructuredUserAgentHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
-	TransformIterateResult result = TransformIterateSua
-	(pair->parsedValue,
-	 state->results->b.bufferTransform,
-	 state->results->b.bufferTransformLength,
-	 setSpecialHeadersCallback,
-	 state->evidence,
-	 exception);
+    if (IS_HEADER_MATCH(
+                        FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT,
+                        pair)) 
+    {
+        TransformIterateResult result = TransformIterateSua
+        (pair->parsedValue,
+         state->results->b.bufferTransform,
+         state->results->b.bufferTransformLength,
+         setSpecialHeadersCallback,
+         state->evidence,
+         exception);
 
-	return IS_HEADER_MATCH(
-		FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT,
-		pair) &&
-		result.iterations > 0 &&
-		(EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
+        return result.iterations > 0 &&
+        (EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
+    }
+    return false;
 }
 
 // Checks for special evidence headers and tries to add additional headers to
