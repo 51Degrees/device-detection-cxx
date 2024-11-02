@@ -203,6 +203,15 @@ typedef struct detection_component_state_t {
 } detectionComponentState;
 
 /**
+ * State structure for checking that there is a single User-Agent string in the
+ * evidence.
+ */
+typedef struct detection_ua_state_t {
+	EvidenceKeyValuePair* pair;
+	int count;
+} detectionUaState;
+
+/**
  * Used to find an existing evidence pair for the header.
  */
 typedef struct set_special_headers_find_state_t {
@@ -2961,38 +2970,47 @@ static void resultsHashFromEvidence_setSpecialHeaders(
 	} while (false); // once
 }
 
+static bool resultsHashFromEvidence_setEvidenceHeader_callback(
+	void* state,
+	fiftyoneDegreesEvidenceKeyValuePair* pair) {
+	int headerIndex;
+	detectionComponentState* s = (detectionComponentState*)state;
+
+	// Get the User-Agent header to avoid iterating over all possible headers
+	// for a very common header.	
+	Header* ua = &s->dataSet->b.b.uniqueHeaders->items[
+		s->dataSet->b.uniqueUserAgentHeaderIndex];
+
+	// If the UA header then avoid iterating all headers. If not then find
+	// the header index.
+	if (pair->item.keyLength == ua->nameLength &&
+		StringCompareLength(pair->item.key, ua->name, ua->nameLength) == 0) {
+		pair->header = ua;
+	}
+	else if (pair->header == NULL) {
+		headerIndex = HeaderGetIndex(
+			s->dataSet->b.b.uniqueHeaders,
+			pair->item.key,
+			pair->item.keyLength);
+		if (headerIndex >= 0) {
+			pair->header =
+				&s->dataSet->b.b.uniqueHeaders->items[headerIndex];
+		}
+	}
+
+	// Always continue to ensure all the evidence is considered.
+	return true;
+}
+
 // Assigns the header field to the evidence pair to avoid needing to lookup the
 // header during future operations.
 static void resultsHashFromEvidence_setEvidenceHeader(
 	detectionComponentState* state) {
-	EvidenceKeyValuePair* pair;
-	int headerIndex = 0;
-
-	// Get the User-Agent header to avoid iterating over all possible headers
-	// for a very common header.
-	Header* ua = &state->dataSet->b.b.uniqueHeaders->items[
-		state->dataSet->b.uniqueUserAgentHeaderIndex];
-
-	// For each of the evidence pairs assign the header.
-	for (uint32_t i = 0; i < state->evidence->count; i++) {
-		pair = &state->evidence->items[i];
-
-		// If the UA header then avoid iterating all headers. If not then find
-		// the header index.
-		if (pair->item.keyLength == ua->nameLength &&
-			StringCompareLength(pair->item.key, ua->name, ua->nameLength) == 0) {
-			pair->header = ua;
-		} else if (pair->header == NULL) {
-			headerIndex = HeaderGetIndex(
-				state->dataSet->b.b.uniqueHeaders, 
-				pair->item.key, 
-				pair->item.keyLength);
-			if (headerIndex >= 0) {
-				pair->header = 
-					&state->dataSet->b.b.uniqueHeaders->items[headerIndex];
-			}
-		}
-	}
+	EvidenceIterate(
+		state->evidence, 
+		INT_MAX, 
+		state,
+		resultsHashFromEvidence_setEvidenceHeader_callback);
 }
 
 // Considering only those components that have available properties perform
@@ -3013,6 +3031,15 @@ static void resultsHashFromEvidence_handleAllEvidence(
 	}
 }
 
+static bool resultsHashFromEvidence_findUa(
+	void* state, 
+	EvidenceKeyValuePair *pair) {
+	detectionUaState *s = (detectionUaState*)state;
+	s->pair = pair;
+	s->count++;
+	return true;
+}
+
 static void resultsHashReset(ResultsHash* results) {
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 	for (uint32_t i = 0; i < results->count; i++) {
@@ -3026,33 +3053,39 @@ void fiftyoneDegreesResultsHashFromEvidence(
 	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
 	fiftyoneDegreesException *exception) {
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
+	detectionUaState uaState = { NULL, 0 };
 
+	// Check for null evidence and set an exception if not present.
 	if (evidence == (EvidenceKeyValuePairArray*)NULL) {
+		EXCEPTION_SET(NULL_POINTER);
 		return;
 	}
-
+	
 	// If there is only one item of evidence and it's the User-Agent then use
 	// the simpler method that does not consider other headers, or the 
-	// possibility of profile id and device id overrides.
-	Header* ua = &dataSet->b.b.uniqueHeaders->items[
-		dataSet->b.uniqueUserAgentHeaderIndex];
-	if (evidence->count == 1 &&
-		evidence->next == NULL &&
-		evidence->items->item.keyLength == ua->nameLength &&
-		StringCompareLength(
-			evidence->items->item.key,
-			ua->name,
-			ua->nameLength) == 0) {
-		ResultsHashFromUserAgent(
-			results, 
-			evidence->items->item.value, 
-			evidence->items->item.valueLength,
-			exception);
-		return;
+	// possibility of profile id and device id overrides. Does not iterate the
+	// evidence as there is check to confirm only one entry.
+	EvidenceIterate(
+		evidence,
+		INT_MAX,
+		&uaState,
+		resultsHashFromEvidence_findUa);
+	if (uaState.count == 1) {
+		Header* ua = &dataSet->b.b.uniqueHeaders->items[
+			dataSet->b.uniqueUserAgentHeaderIndex];
+		if (uaState.pair->item.keyLength == ua->nameLength &&
+			StringCompareLength(
+				uaState.pair->item.key,
+				ua->name,
+				ua->nameLength) == 0) {
+			ResultsHashFromUserAgent(
+				results,
+				uaState.pair->parsedValue,
+				uaState.pair->parsedLength,
+				exception);
+			return;
+		}
 	}
-
-	// Reset the results data before iterating the evidence.
-	resultsHashReset(results);
 
 	// Initialise the state.
 	detectionComponentState state = {
@@ -3065,6 +3098,9 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		0,
 		exception };
 
+	// Reset the results data before iterating the evidence.
+	resultsHashReset(results);
+	
 	do {
 
 		// If enabled, extract any overridden values.
