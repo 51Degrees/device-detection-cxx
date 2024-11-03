@@ -204,7 +204,7 @@ void EngineDeviceDetectionTests::verifyWithInvalidCharUserAgent() {
 }
 
 void EngineDeviceDetectionTests::verifyWithNullEvidence() {
-	EngineTests::verifyWithEvidence(nullptr);
+	EXPECT_THROW(EngineTests::verifyWithEvidence(nullptr), FatalException);
 }
 
 void EngineDeviceDetectionTests::verifyWithNullUserAgent() {

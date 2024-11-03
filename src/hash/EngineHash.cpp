@@ -272,7 +272,10 @@ Common::ResultsBase* EngineHash::processBase(
 		results, 
 		evidence == nullptr ? nullptr : evidence->get(),
 		exception);
-	EXCEPTION_THROW;
+	if (EXCEPTION_FAILED) {
+		ResultsHashFree(results);
+		EXCEPTION_THROW;
+	}
 	return new ResultsHash(results, manager);
 }
 
