@@ -35,9 +35,7 @@ void SimpleEngineTestBase::createEngine(ConfigHash *config,
         try {
             deallocEngine();
             engine = new EngineHash(filePath, config, requiredProperties);
-            if (filePath.find("Lite") != filePath.npos) {
-                isLiteDataFile = true;
-            }
+            isLiteDataFile = string(_HashFileNames[i]).find("Lite") != filePath.npos;
             cout<< "filePath: "<<filePath <<" found, engine instantiated"<<endl;
             break;
         } catch(const StatusCodeException &exception) {
