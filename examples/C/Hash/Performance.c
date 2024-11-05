@@ -276,38 +276,43 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 			// Get a shared string for the field name without the prefix and 
 			// use this. Reduces memory consumption as there are only a limited
 			// number of keys.
-			evidence->items[i].field = getOrAddSharedString(
+			evidence->items[i].item.key = getOrAddSharedString(
 				perfState, 
 				pairs[i].key + prefix->prefixLength);
-			if (evidence->items[i].field == NULL) {
+			if (evidence->items[i].item.key == NULL) {
 				EXCEPTION_THROW
 			}
-			evidence->items[i].fieldLength = strlen(evidence->items[i].field);
+			evidence->items[i].item.keyLength = 
+				strlen(evidence->items[i].item.key);
 		}
 		else {
 			evidence->items[i].prefix = FIFTYONE_DEGREES_EVIDENCE_IGNORE;
-			evidence->items[i].field = NULL;
-			evidence->items[i].fieldLength = 0;
+			evidence->items[i].item.key = NULL;
+			evidence->items[i].item.keyLength = 0;
 		}
 
 		// If the field is User-Agent or NULL then create new memory for the 
 		// string value, otherwise use shared strings.
-		if (evidence->items[i].field == NULL ||
-			strcmp(evidence->items[i].field, userAgent) == 0) {
+		if (evidence->items[i].item.key == NULL ||
+			strcmp(evidence->items[i].item.key, userAgent) == 0) {
 
 			// Copy the value to new memory at the original value, and then set
 			// the parsed value to point to the original value. This memory 
 			// will be freed after the test.
-			evidence->items[i].originalValue = (const char*)Malloc(
-				sizeof(char) * (pairs[i].valueLength + 1));
+			evidence->items[i].item.valueLength =
+				evidence->items[i].parsedLength =
+				strlen(pairs[i].value);
+			evidence->items[i].item.value = (const char*)Malloc(
+				sizeof(char) * (evidence->items[i].item.valueLength + 1));
 			ptr = strncpy(
-				(char*)evidence->items[i].originalValue,
+				(char*)evidence->items[i].item.value,
 				pairs[i].value,
-				pairs[i].valueLength);
+				evidence->items[i].item.valueLength);
 			if (ptr == NULL) {
 				EXCEPTION_THROW
 			}
-			evidence->items[i].parsedValue = evidence->items[i].originalValue;
+			*(ptr + evidence->items[i].item.valueLength) = '\0';
+			evidence->items[i].parsedValue = evidence->items[i].item.value;
 		}
 		else {
 
@@ -320,12 +325,13 @@ static void storeEvidence(KeyValuePair* pairs, uint16_t size, void* state) {
 			if (evidence->items[i].parsedValue == NULL) {
 				EXCEPTION_THROW
 			}
-			evidence->items[i].originalValue = NULL;
-		}
 
-		// Set the length of the parsed value.
-		evidence->items[i].parsedLength = strlen(
-			(char*)evidence->items[i].parsedValue);
+			// Set the length of the parsed value.
+			evidence->items[i].parsedLength = strlen(
+				(char*)evidence->items[i].parsedValue);
+
+			evidence->items[i].item.value = NULL;
+		}
 	}
 	evidence->count = size;
 
@@ -396,7 +402,7 @@ void runPerformanceThread(void* state) {
 				j,
 				exception) != NULL && EXCEPTION_OKAY) {
 				value = (String*)results->values.items[0].data.ptr;
-				if (value != NULL) {
+				if (results->values.count > 0 && value != NULL) {
 					// Increase the checksum with the size of the string to 
 					// provide a crude checksum.
 					thisState->checkSum += value->size;
@@ -594,8 +600,8 @@ void freeEvidence(performanceState* state) {
 		while (node != NULL) {
 			EvidenceKeyValuePairArray* evidence = node->array;
 			for (uint32_t j = 0; j < evidence->count; j++) {
-				if (evidence->items[j].originalValue != NULL) {
-					Free((void*)evidence->items[j].originalValue);
+				if (evidence->items[j].item.value != NULL) {
+					Free((void*)evidence->items[j].item.value);
 				}
 			}
 			EvidenceFree(evidence);

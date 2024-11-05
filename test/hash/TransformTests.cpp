@@ -1822,3 +1822,34 @@ TEST_F(Transform, GHEVBrandsEmptyArrays) {
     }
     EXPECT_FALSE(thrown);
 }
+
+TEST_F(Transform, NULLInput) {
+    const char *ghev = NULL;
+    
+    size_t bufferLength = 10;
+    char *buffer = (char *)fiftyoneDegreesMalloc(bufferLength);
+    
+    EXCEPTION_CREATE;
+    
+    fiftyoneDegreesTransformIterateResult result =
+    fiftyoneDegreesTransformIterateGhevFromBase64
+    (
+     ghev, buffer, bufferLength, fillResultsCallback, Transform::results,
+     exception);
+    EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
+    EXCEPTION_CLEAR;
+    
+    result =
+    fiftyoneDegreesTransformIterateGhevFromJson
+    (ghev, buffer, bufferLength, fillResultsCallback, Transform::results,
+     exception);
+    EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
+    EXCEPTION_CLEAR;
+    
+    result =
+    fiftyoneDegreesTransformIterateSua
+    (ghev, buffer, bufferLength, fillResultsCallback, Transform::results,
+     exception);
+    EXPECT_TRUE(EXCEPTION_CHECK(FIFTYONE_DEGREES_STATUS_INVALID_INPUT));
+    fiftyoneDegreesFree(buffer);
+}

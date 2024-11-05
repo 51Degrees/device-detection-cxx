@@ -68,9 +68,9 @@ namespace FiftyoneDegrees {
 			 * @{
 			 */
 
-			/**
-			 * @copydoc Common::EvidenceBase::EvidenceBase
-			 */
+			 /**
+			  * @copydoc Common::EvidenceBase::EvidenceBase
+			  */
 			EvidenceDeviceDetection() : EvidenceBase() {}
 
 			/**

@@ -124,6 +124,10 @@ static inline uint32_t base64CharToValue(
 
 static size_t base64Decode(const char* base64_input, StringBuilder *builder,
 						   StatusCode* const status) {
+    if (base64_input == NULL) {
+        *status = INVALID_INPUT;
+        return 0;
+    }
 	size_t before = builder->added;
 	size_t input_length = strlen(base64_input);
 	if (input_length % 4 != 0) {
@@ -1139,8 +1143,11 @@ static uint32_t mainParsingBody(const char* json,
 								int isSua,
 								TransformCallback callback,
 								void* ctx) {
+    if (json == NULL) {
+        *status = INVALID_INPUT;
+        return 0;
+    }
 	KeyValuePair cache[KEY_UNDEFINED];
-	
 	char *begin = builder->current;
 	// define buffer range
 	

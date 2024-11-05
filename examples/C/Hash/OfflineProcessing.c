@@ -160,7 +160,9 @@ static void analyse(
 		EvidenceKeyValuePair e = evidence->items[i];
 		fprintf(outputFile,
 			"%s%s: %s\n",
-			EvidencePrefixString(e.prefix), e.field, (char *)e.originalValue);
+			EvidencePrefixString(e.prefix), 
+			e.item.key, 
+			e.item.value);
 	}
 
 	EXCEPTION_CREATE

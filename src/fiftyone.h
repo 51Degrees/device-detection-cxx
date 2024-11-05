@@ -46,6 +46,7 @@
 #include "config-dd.h"
 #include "results-dd.h"
 #include "transform.h"
+#include "gethighentropyvalues.h"
 
 MAP_TYPE(ConfigDeviceDetection)
 MAP_TYPE(ResultsDeviceDetection)
@@ -75,6 +76,10 @@ MAP_TYPE(TransformIterateResult)
 #define TransformIterateGhevFromBase64 fiftyoneDegreesTransformIterateGhevFromBase64 /**< Synonym for fiftyoneDegreesTransformIterateGhevFromBase64 */
 #define TransformIterateGhevFromJson fiftyoneDegreesTransformIterateGhevFromJson /**< Synonym for fiftyoneDegreesTransformIterateGhevFromJson */
 #define TransformCallback fiftyoneDegreesTransformCallback /**< Synonym for fiftyoneDegreesTransformCallback */
+
+#define GhevDeviceDetectionInit fiftyoneDegreesGhevDeviceDetectionInit /**< Synonym for fiftyoneDegreesGhevDeviceDetectionInit */
+#define GhevDeviceDetectionAllPresent fiftyoneDegreesGhevDeviceDetectionAllPresent /**< Synonym for fiftyoneDegreesGhevDeviceDetectionAllPresent */
+#define GhevDeviceDetectionOverride fiftyoneDegreesGhevDeviceDetectionOverride /**< Synonym for fiftyoneDegreesGhevDeviceDetectionOverride */
 
 /**
  * @}

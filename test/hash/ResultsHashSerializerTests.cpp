@@ -20,7 +20,7 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 #include "../Constants.hpp"
-#include "../../src/common-cxx/tests/Base.hpp"
+#include "SimpleEngineTestBase.hpp"
 #include "../../src/hash/EngineHash.hpp"
 #include "../../src/hash/ResultsHashSerializer.hpp"
 
@@ -29,15 +29,12 @@ using namespace FiftyoneDegrees::DeviceDetection;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
 using namespace std;
 
-class ResultsHashSerializerTests: public Base {
+class ResultsHashSerializerTests: public SimpleEngineTestBase {
 public:
     virtual void SetUp();
     virtual void TearDown();
     void verify(ResultsHashSerializer &serializer, ResultsHash *results);
-
-    EngineHash *engine = nullptr;
     ConfigHash *config = nullptr;
-    bool isLiteDataFile = false;
     vector<string> properties {
         "HardwareVendor",
         "HardwareName",
@@ -49,37 +46,29 @@ public:
         "IsMobile"};
     RequiredPropertiesConfig *requiredProperties = nullptr;
 
-    static constexpr auto expectedJson = "{\"BrowserName\":\"Mobile Safari\",\"BrowserVersion\":\"17.0\",\"HardwareModel\":\"iPhone\",\"HardwareName\":[\"iPhone\",\"iPhone 11\",\"iPhone 11 Pro\",\"iPhone 11 Pro Max\",\"iPhone 12\",\"iPhone 12 Pro\",\"iPhone 12 Pro Max\",\"iPhone 12 mini\",\"iPhone 13\",\"iPhone 13 Pro\",\"iPhone 13 Pro Max\",\"iPhone 13 mini\",\"iPhone 14\",\"iPhone 14 Plus\",\"iPhone 14 Pro\",\"iPhone 14 Pro Max\",\"iPhone 15\",\"iPhone 15 Plus\",\"iPhone 15 Pro\",\"iPhone 15 Pro Max\",\"iPhone 16\",\"iPhone 16 Plus\",\"iPhone 16 Pro\",\"iPhone 16 Pro Max\",\"iPhone 3G\",\"iPhone 3GS\",\"iPhone 4\",\"iPhone 4S\",\"iPhone 5\",\"iPhone 5S\",\"iPhone 5c\",\"iPhone 6\",\"iPhone 6 Plus\",\"iPhone 6s\",\"iPhone 6s Plus\",\"iPhone 7\",\"iPhone 7 Plus\",\"iPhone 8\",\"iPhone 8 Plus\",\"iPhone SE\",\"iPhone SE (2nd Gen.)\",\"iPhone SE (3rd Gen.)\",\"iPhone X\",\"iPhone XR\",\"iPhone XS\",\"iPhone XS Max\"],\"HardwareVendor\":\"Apple\",\"IsMobile\":\"True\",\"PlatformName\":\"iOS\",\"PlatformVersion\":\"17.0\"}";
+    static constexpr auto expectedJson = "{\"BrowserName\":\"Chrome\",\"BrowserVersion\":\"129\",\"HardwareModel\":\"Unknown\",\"HardwareName\":[\"Desktop\",\"Emulator\"],\"HardwareVendor\":\"Unknown\",\"IsMobile\":\"False\",\"PlatformName\":\"Windows\",\"PlatformVersion\":\"10.0\"}";
 
     static constexpr auto expectedJsonLite = "{\"BrowserName\":\"Mobile Safari\",\"BrowserVersion\":\"17.0\",\"IsMobile\":\"True\",\"PlatformName\":\"iOS\",\"PlatformVersion\":\"17.0\"}";
+    
+    static constexpr auto desktopUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36";
+    
+    static constexpr auto mobileUA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.6668.71 Safari/537.36";
 
-    static constexpr auto mobileUA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+    const char* uaToProcess();
 };
 
 void ResultsHashSerializerTests::SetUp() {
-    Base::SetUp();
+    SimpleEngineTestBase::SetUp();
     config = new ConfigHash();
     requiredProperties = new RequiredPropertiesConfig(&properties);
-    for (int i=0;i<_HashFileNamesLength;++i) {
-        auto filePath = GetFilePath(_dataFolderName, _HashFileNames[i]);
-        try {
-            engine = new EngineHash(filePath, config, requiredProperties);
-            if (filePath.find("Lite") != filePath.npos) {
-                isLiteDataFile = true;
-            }
-            cout<< "filePath: "<<filePath <<" found, engine instantiated"<<endl;
-            break;
-        } catch(const StatusCodeException &exception) {
-            cout << "fileName: "<<  _HashFileNames[i] << " filePath: " << filePath << " exception code:" << exception.getCode() << endl;
-        }
-    }
+    createEngine(config, requiredProperties);
 }
 
 void ResultsHashSerializerTests::TearDown() {
-    delete engine;
+    deallocEngine();
     delete config;
     delete requiredProperties;
-    Base::TearDown();
+    SimpleEngineTestBase::TearDown();
 }
 
 void ResultsHashSerializerTests::verify(ResultsHashSerializer &serializer, ResultsHash *results) {
@@ -91,8 +80,13 @@ void ResultsHashSerializerTests::verify(ResultsHashSerializer &serializer, Resul
     }
 }
 
+const char* ResultsHashSerializerTests::uaToProcess() {
+    return isLiteDataFile ? mobileUA : desktopUA;
+}
+
 TEST_F(ResultsHashSerializerTests, basicJSONSerialization) {
-    auto results = unique_ptr<ResultsHash>(engine->process(mobileUA));
+    auto results = unique_ptr<ResultsHash>
+        (getEngine()->process(uaToProcess()));
     ResultsHashSerializer serializer;
     verify(serializer, results.get());
 }
@@ -100,7 +94,7 @@ TEST_F(ResultsHashSerializerTests, basicJSONSerialization) {
 TEST_F(ResultsHashSerializerTests, unhappyCases) {
     ResultsHashSerializer serializer(0); // zero buffer
     
-    auto results = unique_ptr<ResultsHash>(engine->process(mobileUA));
+    auto results = unique_ptr<ResultsHash>(getEngine()->process(uaToProcess()));
     verify(serializer, results.get());
     
     ResultsHashSerializer serializer2(5); // small buffer
@@ -114,7 +108,7 @@ TEST_F(ResultsHashSerializerTests, processEmpty) {
     
     auto evidence = make_unique<EvidenceDeviceDetection>();
     evidence->operator[]("nonevidence") = "test";
-    auto results = unique_ptr<ResultsHash>(engine->process(evidence.get()));
+    auto results = unique_ptr<ResultsHash>(getEngine()->process(evidence.get()));
     
     EXPECT_EQ(serializer.allValuesJson(results.get()), "{}");
 }

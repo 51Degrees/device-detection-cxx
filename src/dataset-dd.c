@@ -75,6 +75,10 @@ fiftyoneDegreesDataSetDeviceDetectionInitPropertiesAndHeaders(
 		state,
 		overridesFilter);
 
+	// The ghevHeaders member is initialised in 
+	// fiftyoneDegreesGhevDeviceDetectionInit if required.
+	dataSet->ghevHeaders = NULL;
+
 	return status;
 }
 
@@ -85,6 +89,10 @@ void fiftyoneDegreesDataSetDeviceDetectionRelease(
 
 void fiftyoneDegreesDataSetDeviceDetectionFree(
 	fiftyoneDegreesDataSetDeviceDetection *dataSet) {
+	if (dataSet->ghevHeaders != NULL) {
+		Free(dataSet->ghevHeaders);
+		dataSet->ghevHeaders = NULL;
+	}
 	DataSetFree(&dataSet->b);
 }
 
@@ -98,4 +106,5 @@ void fiftyoneDegreesDataSetDeviceDetectionReset(
 	fiftyoneDegreesDataSetDeviceDetection *dataSet) {
 	DataSetReset(&dataSet->b);
 	dataSet->uniqueUserAgentHeaderIndex = 0;
+	dataSet->ghevHeaders = NULL;
 }

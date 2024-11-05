@@ -130,13 +130,13 @@ if (dataSet->t == NULL) { \
 	r->matchedNodes == 0)
 
 /**
- * Checks if the pair (p) have a field name that matches the target (t).
- * The last byte of t is null where as fieldLength is the length of printable 
+ * Checks if the pair (p) have a key name that matches the target (t).
+ * The last byte of t is null where as keyLength is the length of printable 
  * characters. Take 1 from the t to compare length.
  */
 #define IS_HEADER_MATCH(t,p) \
-	(sizeof(t) - 1 == p->fieldLength && \
-	StringCompareLength(p->field, t, sizeof(t)) == 0)
+	(sizeof(t) - 1 == p->item.keyLength && \
+	StringCompareLength(p->item.key, t, sizeof(t)) == 0)
 
 /**
  * PRIVATE DATA STRUCTURES
@@ -201,6 +201,23 @@ typedef struct detection_component_state_t {
 	int headerIndex; /* Current header index. See macro HTTP_HEADER */
 	Exception* exception; /* Pointer to the exception structure */
 } detectionComponentState;
+
+/**
+ * State structure for checking that there is a single User-Agent string in the
+ * evidence.
+ */
+typedef struct detection_ua_state_t {
+	EvidenceKeyValuePair* pair;
+	int count;
+} detectionUaState;
+
+/**
+ * Used to find an existing evidence pair for the header.
+ */
+typedef struct set_special_headers_find_state_t {
+	KeyValuePair* header;
+	EvidenceKeyValuePair* pair;
+} setSpecialHeadersFindState;
 
 /**
  * PRESET HASH CONFIGURATIONS
@@ -1614,6 +1631,32 @@ static bool initComponentHeaders(
 	return true;
 }
 
+// Initialize the gethighentropyvalues check feature that prevents the GHEV
+// javascript being returned as a value if all the required headers are already
+// present.
+static void initGetHighEntropyValues(
+	DataSetHash* dataSet,
+	Exception* exception) {
+	
+	// Initialise the get high entropy values data structure.
+	GhevDeviceDetectionInit(
+		&dataSet->b, 
+		dataSet->properties, 
+		dataSet->values, 
+		dataSet->strings, 
+		exception);
+
+	// Clean up if an exception occurred after checking in debug mode if there
+	// was an exception.
+	assert(EXCEPTION_OKAY);
+	if (!EXCEPTION_OKAY) {
+		if (dataSet->b.ghevHeaders != NULL) {
+			Free(dataSet->b.ghevHeaders);
+		}
+		dataSet->b.ghevHeaders = NULL;
+	}
+}
+
 static StatusCode readHeaderFromMemory(
 	MemoryReader *reader,
 	const DataSetHashHeader *header) {
@@ -1758,6 +1801,8 @@ static StatusCode initInMemory(
 }
 
 static void initDataSet(DataSetHash *dataSet, ConfigHash **config) {
+	EXCEPTION_CREATE
+
 	// If no config has been provided then use the balanced configuration.
 	if (*config == NULL) {
 		*config = &HashBalancedConfig;
@@ -2022,6 +2067,8 @@ static StatusCode initDataSetFromFile(
 		return status;
 	}
 
+	initGetHighEntropyValues(dataSet, exception);
+
 	return status;
 }
 
@@ -2174,6 +2221,8 @@ static StatusCode initDataSetFromMemory(
 		}
 		return status;
 	}
+
+	initGetHighEntropyValues(dataSet, exception);
 
 	return status;
 }
@@ -2475,28 +2524,29 @@ static bool setResultForComponentHeader(
 // if the pair resulted in a match or there are no results available to prevent
 // further processing. Returns true if more headers should be checked.
 static bool setResultFromEvidenceForComponentCallback(
-	void* state,
-	Header* header,
-	const char* value,
-	size_t length) {
+	void* state, EvidenceKeyValuePair *pair) {
 	ResultHash* result;
 	bool complete = false;
 	detectionComponentState* s = (detectionComponentState*)state;
 	Exception* exception = s->exception;
-	if (header->isDataSet) {
+	if (pair->header != NULL && pair->header->isDataSet) {
 
 		// Get the next result instance in the array of results or if there
 		// is already a result instance assigned to this iteration then use
 		// that one as it indicates that a prior evaluation did not result in
 		// any matched nodes.
 		result = s->lastResult == NULL ?
-			getNextResult(value, length, s->results, header->index) :
+			getNextResult(
+				(const char*)pair->parsedValue, 
+				pair->parsedLength, 
+				s->results, 
+				pair->header->index) :
 			hashResultSet(
 				s->dataSet, 
 				s->lastResult, 
-				value, 
-				length, 
-				header->index);
+				(const char*)pair->parsedValue,
+				pair->parsedLength,
+				pair->header->index);
 		if (result != NULL) {
 
 			// Set the last result instance in case this iteration doesn't 
@@ -2507,7 +2557,7 @@ static bool setResultFromEvidenceForComponentCallback(
 			complete = setResultForComponentHeader(
 				s->dataSet,
 				s->componentIndex,
-				header,
+				pair->header,
 				result,
 				exception);
 			if (EXCEPTION_FAILED) return false;
@@ -2522,55 +2572,66 @@ static bool setResultFromEvidenceForComponentCallback(
 	return !complete;
 }
 
-// Gets the index of the existing evidence for the header, or -1 if not found.
-static int setSpecialHeadersCallbackGetExistingIndex(
-	EvidenceKeyValuePairArray* evidence,
-	KeyValuePair* header) {
-	uint32_t index = 0;
-	while (index < evidence->count) {
-		EvidenceKeyValuePair* pair = &evidence->items[index];
-		if (pair->prefix == FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING &&
-			header->keyLength == pair->fieldLength &&
-			StringCompareLength(
-				header->key,
-				pair->field,
-				pair->fieldLength) == 0) {
-			return (int)index;
-		}
-		index++;
+// If the pair matches the header being sought then stop and record the pair,
+// otherwise continue iterating.
+static bool setSpecialHeadersFindCallback(
+	void* state,
+	EvidenceKeyValuePair* pair) {
+	setSpecialHeadersFindState* findState = (setSpecialHeadersFindState*)state;
+	if (findState->header->keyLength == pair->item.keyLength &&
+		StringCompareLength(
+			findState->header->key,
+			pair->item.key,
+			pair->item.keyLength) == 0) {
+		findState->pair = pair;
+		return false;
 	}
-	return -1;
+	return true;
 }
 
-// Adds the header to the evidence in the array if there is capacity left.
-// If the header already exists then the current value is replaced.
+// Adds the header to the evidence. If the header already exists then the 
+// current value is replaced.
 static bool setSpecialHeadersCallback(void *state, KeyValuePair header) {
-	EvidenceKeyValuePairArray* evidence = (EvidenceKeyValuePairArray*)state;
+	int uniqueHeaderIndex;
+	detectionComponentState* componentState = (detectionComponentState*)state;
 
-	// Get the existing index for the header if any.
-	int index = setSpecialHeadersCallbackGetExistingIndex(evidence, &header);
+	// Get the existing pair for the header with any prefix.
+	setSpecialHeadersFindState findState = { &header, NULL };
+	EvidenceIterate(
+		componentState->evidence,
+		INT_MAX,
+		&findState,
+		setSpecialHeadersFindCallback);
 
-	// If there is no existing header then use the next index in the array.
-	if (index < 0 && 
-		evidence->count < evidence->capacity) {
-		index = evidence->count;
-		evidence->count++;
+	if (findState.pair == NULL) {
+		// No pair was found so add a new string.
+		findState.pair = EvidenceAddPair(
+			componentState->evidence,
+			FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+			header);
 	}
 
-	// Update the entry at the index identified.
-	if (index > 0) {
-		EvidenceKeyValuePair* pair = &evidence->items[index];
-		pair->field = header.key;
-		pair->fieldLength = header.keyLength;
-		pair->parsedValue = header.value;
-		pair->parsedLength = header.valueLength;
-		pair->prefix = FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING;
-		return true;
+	// Update the parsed value and length.
+	findState.pair->parsedValue = header.value;
+	findState.pair->parsedLength = header.valueLength;
+	
+	// Ensure a unique header is associated with the pair. Perhaps the original
+	// pair was added without a known header.
+	if (findState.pair->header == NULL) {
+
+		// Get the unique header index for the header.
+		uniqueHeaderIndex = HeaderGetIndex(
+			componentState->dataSet->b.b.uniqueHeaders,
+			header.key,
+			header.keyLength);
+		if (uniqueHeaderIndex >= 0) {
+			findState.pair->header =
+				&componentState->dataSet->b.b.uniqueHeaders->items[
+					uniqueHeaderIndex];
+		}
 	}
 
-	// Stop iterating as there is insufficient capacity to add any more 
-	// entries.
-	return false;
+	return true;
 }
 
 // True if the header is GHEV, the transform results in at least one additional 
@@ -2579,17 +2640,19 @@ static bool setGetHighEntropyValuesHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
-	TransformIterateResult result = TransformIterateGhevFromBase64
-	(pair->parsedValue,
-	 state->results->b.bufferTransform,
-	 state->results->b.bufferTransformLength,
-	 setSpecialHeadersCallback,
-	 state->evidence,exception);
-
-	return IS_HEADER_MATCH(
-		FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES, 
-		pair) && result.iterations > 0 &&
-		(EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
+    if (IS_HEADER_MATCH(
+        FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES,
+        pair)) {
+        TransformIterateResult result = TransformIterateGhevFromBase64(
+            pair->parsedValue,
+            state->results->b.bufferTransform,
+            state->results->b.bufferTransformLength,
+            setSpecialHeadersCallback,
+            state,
+            exception);
+        return result.iterations > 0 && (EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
+    }
+    return false;
 }
 
 // True if the header is SUA, the transform results in at least one additional 
@@ -2598,19 +2661,22 @@ static bool setStructuredUserAgentHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
-	TransformIterateResult result = TransformIterateSua
-	(pair->parsedValue,
-	 state->results->b.bufferTransform,
-	 state->results->b.bufferTransformLength,
-	 setSpecialHeadersCallback,
-	 state->evidence,
-	 exception);
+    if (IS_HEADER_MATCH(
+                        FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT,
+                        pair)) 
+    {
+        TransformIterateResult result = TransformIterateSua
+        (pair->parsedValue,
+         state->results->b.bufferTransform,
+         state->results->b.bufferTransformLength,
+         setSpecialHeadersCallback,
+         state->evidence,
+         exception);
 
-	return IS_HEADER_MATCH(
-		FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT,
-		pair) &&
-		result.iterations > 0 &&
-		(EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
+        return result.iterations > 0 &&
+        (EXCEPTION_OKAY || EXCEPTION_CHECK(SUCCESS));
+    }
+    return false;
 }
 
 // Checks for special evidence headers and tries to add additional headers to
@@ -2764,7 +2830,7 @@ static void resultsHashFromEvidence_extractOverrides(
 		if (overridingPropertyIndex >= 0) {
 			// Get the property index so that the type of the property that 
 			// performs the override can be checked before it is removed
-			// from  the result.
+			// from the result.
 			const int propertyIndex = PropertiesGetPropertyIndexFromRequiredIndex(
 				state->dataSet->b.b.available,
 				overridingPropertyIndex);
@@ -2896,45 +2962,55 @@ static void resultsHashFromEvidence_setSpecialHeaders(
 	do {
 		EvidenceIterate(
 			state->evidence,
-			FIFTYONE_DEGREES_EVIDENCE_QUERY,
+			FIFTYONE_DEGREES_EVIDENCE_QUERY |
+			FIFTYONE_DEGREES_EVIDENCE_COOKIE,
 			state,
 			setSpecialHeaders);
 		if (EXCEPTION_FAILED) { break; }
 	} while (false); // once
 }
 
+static bool resultsHashFromEvidence_setEvidenceHeader_callback(
+	void* state,
+	fiftyoneDegreesEvidenceKeyValuePair* pair) {
+	int headerIndex;
+	detectionComponentState* s = (detectionComponentState*)state;
+
+	// Get the User-Agent header to avoid iterating over all possible headers
+	// for a very common header.	
+	Header* ua = &s->dataSet->b.b.uniqueHeaders->items[
+		s->dataSet->b.uniqueUserAgentHeaderIndex];
+
+	// If the UA header then avoid iterating all headers. If not then find
+	// the header index.
+	if (pair->item.keyLength == ua->nameLength &&
+		StringCompareLength(pair->item.key, ua->name, ua->nameLength) == 0) {
+		pair->header = ua;
+	}
+	else if (pair->header == NULL) {
+		headerIndex = HeaderGetIndex(
+			s->dataSet->b.b.uniqueHeaders,
+			pair->item.key,
+			pair->item.keyLength);
+		if (headerIndex >= 0) {
+			pair->header =
+				&s->dataSet->b.b.uniqueHeaders->items[headerIndex];
+		}
+	}
+
+	// Always continue to ensure all the evidence is considered.
+	return true;
+}
+
 // Assigns the header field to the evidence pair to avoid needing to lookup the
 // header during future operations.
 static void resultsHashFromEvidence_setEvidenceHeader(
 	detectionComponentState* state) {
-	EvidenceKeyValuePair* pair;
-	int headerIndex = 0;
-
-	// Get the User-Agent header to avoid iterating over all possible headers
-	// for a very common header.
-	Header* ua = &state->dataSet->b.b.uniqueHeaders->items[
-		state->dataSet->b.uniqueUserAgentHeaderIndex];
-
-	// For each of the evidence pairs assign the header.
-	for (uint32_t i = 0; i < state->evidence->count; i++) {
-		pair = &state->evidence->items[i];
-
-		// If the UA header then avoid iterating all headers. If not then find
-		// the header index.
-		if (pair->fieldLength == ua->length &&
-			StringCompareLength(pair->field, ua->name, ua->length) == 0) {
-			pair->header = ua;
-		} else if (pair->header == NULL) {
-			headerIndex = HeaderGetIndex(
-				state->dataSet->b.b.uniqueHeaders, 
-				pair->field, 
-				pair->fieldLength);
-			if (headerIndex >= 0) {
-				pair->header = 
-					&state->dataSet->b.b.uniqueHeaders->items[headerIndex];
-			}
-		}
-	}
+	EvidenceIterate(
+		state->evidence, 
+		INT_MAX, 
+		state,
+		resultsHashFromEvidence_setEvidenceHeader_callback);
 }
 
 // Considering only those components that have available properties perform
@@ -2955,6 +3031,15 @@ static void resultsHashFromEvidence_handleAllEvidence(
 	}
 }
 
+static bool resultsHashFromEvidence_findUa(
+	void* state, 
+	EvidenceKeyValuePair *pair) {
+	detectionUaState *s = (detectionUaState*)state;
+	s->pair = pair;
+	s->count++;
+	return true;
+}
+
 static void resultsHashReset(ResultsHash* results) {
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 	for (uint32_t i = 0; i < results->count; i++) {
@@ -2968,32 +3053,39 @@ void fiftyoneDegreesResultsHashFromEvidence(
 	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
 	fiftyoneDegreesException *exception) {
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
+	detectionUaState uaState = { NULL, 0 };
 
+	// Check for null evidence and set an exception if not present.
 	if (evidence == (EvidenceKeyValuePairArray*)NULL) {
+		EXCEPTION_SET(NULL_POINTER);
 		return;
 	}
-
+	
 	// If there is only one item of evidence and it's the User-Agent then use
 	// the simpler method that does not consider other headers, or the 
-	// possibility of profile id and device id overrides.
-	Header* ua = &dataSet->b.b.uniqueHeaders->items[
-		dataSet->b.uniqueUserAgentHeaderIndex];
-	if (evidence->count == 1 &&
-		evidence->items->fieldLength == ua->length &&
-		StringCompareLength(
-			evidence->items->field,
-			ua->name,
-			ua->length) == 0) {
-		ResultsHashFromUserAgent(
-			results, 
-			evidence->items->originalValue, 
-			strlen(evidence->items->originalValue), 
-			exception);
-		return;
+	// possibility of profile id and device id overrides. Does not iterate the
+	// evidence as there is check to confirm only one entry.
+	EvidenceIterate(
+		evidence,
+		INT_MAX,
+		&uaState,
+		resultsHashFromEvidence_findUa);
+	if (uaState.count == 1) {
+		Header* ua = &dataSet->b.b.uniqueHeaders->items[
+			dataSet->b.uniqueUserAgentHeaderIndex];
+		if (uaState.pair->item.keyLength == ua->nameLength &&
+			StringCompareLength(
+				uaState.pair->item.key,
+				ua->name,
+				ua->nameLength) == 0) {
+			ResultsHashFromUserAgent(
+				results,
+				uaState.pair->parsedValue,
+				uaState.pair->parsedLength,
+				exception);
+			return;
+		}
 	}
-
-	// Reset the results data before iterating the evidence.
-	resultsHashReset(results);
 
 	// Initialise the state.
 	detectionComponentState state = {
@@ -3006,6 +3098,9 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		0,
 		exception };
 
+	// Reset the results data before iterating the evidence.
+	resultsHashReset(results);
+	
 	do {
 
 		// If enabled, extract any overridden values.
@@ -3046,6 +3141,19 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			resultsHashFromEvidence_SetMissingComponentDefaultProfiles(
 				dataSet,
 				results);
+		}
+
+		// Check to see if all the UACH evidence is present and if so then 
+		// override the JavascriptGetHighEntropyValues value to an empty value
+		// to ensure unneeded JavaScript isn't returned.
+		if (dataSet->config.b.processSpecialEvidence &&
+			results->b.overrides->capacity > 0 &&
+			GhevDeviceDetectionAllPresent(
+				&dataSet->b,
+				evidence,
+				exception) &&
+			EXCEPTION_OKAY) {
+			GhevDeviceDetectionOverride(&dataSet->b, &results->b, exception);
 		}
 
 	} while (false); // once
@@ -3590,7 +3698,7 @@ bool fiftyoneDegreesResultsHashGetHasValues(
 		// The property index is not valid.
 		return false;
 	}
-	if (fiftyoneDegreesOverrideHasValueForRequiredPropertyIndex(
+	if (OverrideHasValueForRequiredPropertyIndex(
 		results->b.overrides,
 		requiredPropertyIndex)) {
 		// There is an override value for the property.

@@ -43,7 +43,7 @@ This example is available in full on [GitHub](https://github.com/51Degrees/devic
 // which requires to be included before 'malloc.h'.
 #include "ExampleBase.h"
 
-#define MAX_EVIDENCE 7
+#define MAX_EVIDENCE 8
 
 static const char *dataDir = "device-detection-data";
 
@@ -58,7 +58,8 @@ static const char *dataDir = "device-detection-data";
 static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static char valueBuffer[1024] = "";
-static const size_t valueBufferLength = sizeof(valueBuffer) / sizeof(valueBuffer[0]);
+static const size_t valueBufferLength = 
+	sizeof(valueBuffer) / sizeof(valueBuffer[0]);
 
 typedef struct {
 	uint32_t count;
@@ -128,13 +129,22 @@ static evidence userAgentWithMobileID = {
 
 static evidence headersWithWebView = {
 	7,
-	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", "Mozilla/5.0 (Linux; Android 13; RMX3762 Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/122.0.6261.106 Mobile Safari/537.36 TwitterAndroid"},
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", 
+	"Mozilla/5.0 (Linux; Android 13; RMX3762 Build/TP1A.220624.014; wv) "
+	"AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/122.0.6261.106 "
+	"Mobile Safari/537.36 TwitterAndroid"},
 	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-mobile", "?1"},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Android WebView\";v=\"122\""},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", "\"Android\""},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", "\"13.0.0\""},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-model", "\"RMX3762\""},
-	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-full-version", "\"122.0.6261.106\""} }
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua", 
+	"\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", "
+	"\"Android WebView\";v=\"122\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform", 
+	"\"Android\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-platform-version", 
+	"\"13.0.0\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-model", 
+	"\"RMX3762\""},
+	{FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "sec-ch-ua-full-version", 
+	"\"122.0.6261.106\""} }
 };
 
 // Base 64 string for the JSON returned from a call to getHighEntropyValues
@@ -143,10 +153,15 @@ static evidence headersWithWebView = {
 // 64 being returned to a second server request for device detection. Providing
 // the value direct from user code would not be an expected use of the feature. 
 // The example is included to help those starting to work with the project 
-// understand that evidence is not always HTTP headers.
+// understand that evidence is not always HTTP headers. A normal user-agent is
+// included to show how this is ignored when better evidence is available.
 static evidence getHighEntropyValues = {
-	1,
-	{ {FIFTYONE_DEGREES_EVIDENCE_QUERY, FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES,
+	2,
+	{ {FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", 
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, "
+	"like Gecko) Chrome/98.0.4758.102 Safari/537.36"},
+	{FIFTYONE_DEGREES_EVIDENCE_QUERY, 
+	FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES,
 	"eyJicmFuZHMiOlt7ImJyYW5kIjoiTm90L0EpQnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJh"
 	"bmQiOiJDaHJvbWl1bSIsInZlcnNpb24iOiIxMjYifSx7ImJyYW5kIjoiR29vZ2xlIENocm9t"
 	"ZSIsInZlcnNpb24iOiIxMjYifV0sImZ1bGxWZXJzaW9uTGlzdCI6W3siYnJhbmQiOiJOb3Qv"
@@ -220,6 +235,33 @@ static void reportStatus(StatusCode status,
 	Free((void*)message);
 }
 
+/**
+ * Report the header value from the evidence iteration. May not be the same as
+ * the original input values.
+ */
+static bool reportHeader(
+	void* state,
+	EvidenceKeyValuePair* pair) {
+	
+	// Copy the key and value into null terminated strings for output.
+	char* key = (char*)Malloc(pair->item.keyLength + 1);
+	char* value = (char*)Malloc(pair->item.valueLength + 1);
+	strncpy(key, pair->item.key, pair->item.keyLength);
+	strncpy(value, pair->item.value, pair->item.valueLength);
+	key[pair->item.keyLength] = '\0';
+	value[pair->item.valueLength] = '\0';
+
+	// Output the key and value.
+	fprintf((FILE*)state, "\n\t%s: %s", key, value);
+
+	// Free memory.
+	Free(key);
+	Free(value);
+
+	// Keep iterating the evidence.
+	return true;
+}
+
 static void analyse(
 	ResultsHash* results,
 	EvidenceKeyValuePairArray* evidence,
@@ -231,13 +273,8 @@ static void analyse(
 
 	// list the evidence
 	fprintf(output, "Input values:");
-	for (uint32_t i = 0; i < evidence->count; i++) {
-		EvidenceKeyValuePair e = evidence->items[i];
-		fprintf(output,
-			"\n\t%s%s: %s",
-			EvidencePrefixString(e.prefix), e.field, (char *)e.originalValue);
-	}
-	fprintf(output, "\n");
+	EvidenceIterate(evidence, INT_MAX, output, reportHeader);
+	fprintf(output, "\n\n");
 
 	EXCEPTION_CREATE
 	ResultsHashFromEvidence(results, evidence, exception);
@@ -250,6 +287,10 @@ static void analyse(
 	outputValue(results, "Browser Name", "BrowserName", output);
 	outputValue(results, "Browser Version", "BrowserVersion", output);
 
+	// Shows the Device Id that can be used to look up the properties via
+	// reference tables. 
+	// Note: Reference tables not shown and are available for on premise 
+	// subscribers using the CSV data format.
 	HashGetDeviceIdFromResults(
 		results,
 		valueBuffer,
@@ -258,12 +299,41 @@ static void analyse(
 	EXCEPTION_THROW;
 	fprintf(output, "\n\tDevice ID: %s\n", valueBuffer);
 
+	// Shows how to get all the required properties as a single JSON string.
 	ResultsHashGetValuesJson(results,
 		valueBuffer,
 		sizeof(valueBuffer),
 		exception);
 	fprintf(output, "\n\tJSON: %s\n", valueBuffer);
 
+	// Shows the JavaScript that can be run in a User Agent Client Hint 
+	// compatible web browsers to return evidence needed for device detection
+	// as a base64 string. See 
+	// https://51degrees.com/documentation/4.4/_device_detection__features__u_a_c_h__overview.html
+	outputValue(
+		results, 
+		"GetHighEntropyValues JS", 
+		"JavascriptGetHighEntropyValues", 
+		output);
+
+	fprintf(output, "\n\n");
+
+	// Iterate the evidence to show pseudo headers and GHEV results which is 
+	// only going to be exposed after the call to ResultsHashFromEvidence.
+	if (((DataSetHash*)results->b.b.dataSet)->b.ghevHeaders != NULL) {
+		fprintf(output, "UACH evidence:");
+			EvidenceIterateForHeaders(
+				evidence, 
+				INT_MAX,
+				((DataSetHash*)results->b.b.dataSet)->b.ghevHeaders,
+				NULL, 
+				0, 
+				output, 
+				reportHeader);
+			fprintf(output, "\n\n");
+	}
+
+	fprintf(output, "---###---");
 	fprintf(output, "\n\n");
 }
 
@@ -275,12 +345,17 @@ void fiftyoneDegreesHashGettingStarted(
 	EXCEPTION_CREATE;
 
 	// Set the properties to be returned for each User-Agent. Specifying the
-	// properties that will later be retrieved at initialisation time improves
-	// performance.
+	// properties that will later be retrieved or used during device detection 
+	// at initialisation time improves performance.
+	// Note: The Accept-CH properties are used to prevent the 
+	// JavascriptGetHighEntropyValues value being returned when all the data is
+	// already present in the evidence.
 	PropertiesRequired properties = { 
 		NULL,
 		0,
-		"IsMobile,PlatformName,PlatformVersion,BrowserName,BrowserVersion,HardwareImages",
+		"IsMobile,PlatformName,PlatformVersion,BrowserName,BrowserVersion,"
+		"HardwareImages,SetHeaderBrowserAccept-CH,SetHeaderHardwareAccept-CH,"
+		"SetHeaderPlatformAccept-CH,JavascriptGetHighEntropyValues",
 		NULL };
 
 	// Initialise the manager for device detection.
@@ -299,15 +374,19 @@ void fiftyoneDegreesHashGettingStarted(
 
 	// Create a results instance to store and process evidence.
 	// The capacity of the results should be the same as the maximum potential
-	// evidence that can be provided.
-	ResultsHash *results = ResultsHashCreate(&manager, 0);
+	// evidence that can be provided. 
+	// Note: Capacity of overriding values dynamically is required to ensure 
+	// that the JavascriptGetHighEntropyValues code can be blocked from being
+	// returned when all the required evidence is already present.
+	ResultsHash *results = ResultsHashCreate(&manager, 1);
 
-	for (int i = 0; i < (int)(sizeof(evidenceValues)/sizeof(evidence *)); i++) {
-		// Create an evidence collection and add the evidence to the collection
-		EvidenceKeyValuePairArray* evidenceArray = EvidenceCreate(MAX_EVIDENCE);
-		evidence *evs = evidenceValues[i];
+	for (int i = 0;
+		i < (int)sizeof(evidenceValues)/(int)sizeof(evidence*);
+		i++) {
+		// Create an evidence collection and add the evidence.
+		evidence* evs = evidenceValues[i];
+		EvidenceKeyValuePairArray* evidenceArray = EvidenceCreate(evs->count);
 		for (uint32_t j = 0; j < evs->count; j++) {
-			// Add the evidence as string
 			EvidenceAddString(
 				evidenceArray,
 				evs->items[j].prefix,

@@ -53,6 +53,13 @@ typedef struct fiftyone_degrees_dataset_device_detection_t {
 	fiftyoneDegreesDataSetBase b; /**< Base structure members */
 	uint32_t uniqueUserAgentHeaderIndex; /**< The unique HTTP header for the 
 										 field name "User-Agent" */
+	fiftyoneDegreesHeaderPtrArray *ghevHeaders; /**< Array of get high entropy 
+											    values headers that must all be 
+											    present to prevent the 
+											    gethighentropyvalues javascript 
+											    from being returned */
+	int ghevRequiredPropertyIndex; /**< Required property index for 
+						   		   JavascriptGetHighEntropyValues */
 } fiftyoneDegreesDataSetDeviceDetection;
 
 /**
