@@ -36,9 +36,17 @@
   */
 #define RK_PRIME 997
 
-  /**
-   * Array of powers for the RK_PRIME.
-   */
+/**
+ * Used to compare specific elements in an array.
+ */
+#define GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(i) \
+if (nodeHashes[i].hashCode == hash) { \
+	return &nodeHashes[i]; \
+}
+
+/**
+* Array of powers for the RK_PRIME.
+*/
 #ifndef FIFTYONE_DEGREES_POWERS
 #define FIFTYONE_DEGREES_POWERS
 static unsigned int POWERS[129] = {
@@ -118,13 +126,12 @@ fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromListNodeTable(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash) {
-	fiftyoneDegreesGraphNodeHash *foundHash = NULL;
-	fiftyoneDegreesGraphNodeHash *nodeHashes = (GraphNodeHash*)(node + 1);
+	GraphNodeHash *nodeHashes = (GraphNodeHash*)(node + 1);
 	int index = hash % node->modulo;
-	fiftyoneDegreesGraphNodeHash *nodeHash = &nodeHashes[index];
+	GraphNodeHash *nodeHash = &nodeHashes[index];
 	if (hash == nodeHash->hashCode) {
 		// There is a single record at this index and it matched, so return it.
-		foundHash = nodeHash;
+		return nodeHash;
 	}
 	else if (nodeHash->hashCode == 0 && nodeHash->nodeOffset > 0) {
 		// There are multiple records at this index, so go through them to find
@@ -133,54 +140,81 @@ fiftyoneDegreesGraphGetMatchingHashFromListNodeTable(
 		while (nodeHash->hashCode != 0) {
 			if (hash == nodeHash->hashCode) {
 				// There was a match, so stop looking.
-				foundHash = nodeHash;
-				break;
+				return nodeHash;
 			}
 			nodeHash++;
 		}
 	}
-	return foundHash;
+	return NULL;
 }
 
 fiftyoneDegreesGraphNodeHash*
 fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash) {
-	GraphNodeHash* foundHash = NULL;
 	GraphNodeHash* nodeHashes = (GraphNodeHash*)(node + 1);
 	int32_t lower = 0, upper = node->hashesCount - 1, middle;
+	uint32_t current;
 	while (lower <= upper) {
 		middle = lower + (upper - lower) / 2;
-		if (nodeHashes[middle].hashCode == hash) {
-			foundHash = &nodeHashes[middle];
-			break;
+		current = nodeHashes[middle].hashCode;
+		if (current == hash) {
+			return &nodeHashes[middle];
 		}
-		else if (nodeHashes[middle].hashCode > hash) {
+		else if (current > hash) {
 			upper = middle - 1;
 		}
 		else {
 			lower = middle + 1;
 		}
 	}
-	return foundHash;
+	return NULL;
 }
 
 fiftyoneDegreesGraphNodeHash* 
 fiftyoneDegreesGraphGetMatchingHashFromListNode(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash) {
-	fiftyoneDegreesGraphNodeHash *foundHash;
+	GraphNodeHash* nodeHashes;
 	if (node->modulo == 0) {
-		foundHash = GraphGetMatchingHashFromListNodeSearch(
-			node,
-			hash);
+		if (node->hashesCount == 2) {
+			nodeHashes = (GraphNodeHash*)(node + 1);
+			GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(0)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(1)
+		}
+		else if (node->hashesCount == 3) {
+			nodeHashes = (GraphNodeHash*)(node + 1);
+			GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(0)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(1)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(2)
+		}
+		else if (node->hashesCount == 4) {
+			nodeHashes = (GraphNodeHash*)(node + 1);
+			GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(0)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(1)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(2)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(3)
+		}
+		else if (node->hashesCount == 5) {
+			nodeHashes = (GraphNodeHash*)(node + 1); 
+			GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(0)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(1)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(2)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(3)
+			else GRAPH_GET_MATCHING_HASH_FROM_LIST_NODE_MATCH(4)
+		}
+		else {
+			return GraphGetMatchingHashFromListNodeSearch(
+				node,
+				hash);
+		}
 	}
 	else {
-		foundHash = GraphGetMatchingHashFromListNodeTable(
+		return GraphGetMatchingHashFromListNodeTable(
 			node,
 			hash);
 	}
-	return foundHash;
+	return NULL;
 }
 
 fiftyoneDegreesGraphNodeHash*
