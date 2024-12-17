@@ -215,6 +215,7 @@ if(BUILD_TESTING)
 		target_link_options(HashTests PRIVATE "/WX")
 	else ()
 		target_compile_options(HashTests PRIVATE ${COMPILE_OPTION_DEBUG})
+		target_link_options(HashTests PRIVATE "-fsanitize=address")
 	endif()
 
 	if (CMAKE_COMPILER_IS_GNUCC)
