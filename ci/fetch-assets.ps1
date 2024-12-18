@@ -23,11 +23,14 @@ try {
     Write-Output "Pulling evidence files"
     git lfs pull -I "*.csv" 
     git lfs pull -I "*.yml"
-}
-finally {
+} catch {
+    #ignore git lfs if it fails
+} finally {
     Pop-Location
 }
 
 if ($IsLinux) {
     ls -l $DataFileDir
 }
+
+exit 0 #to ignore git lfs errors

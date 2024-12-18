@@ -206,7 +206,7 @@ if(BUILD_TESTING)
 		target_link_libraries(HashTests fiftyone-device-detection-test-base fiftyone-hash-cxx)
 	endif()
 
-	gtest_discover_tests(HashTests)
+	gtest_discover_tests(HashTests DISCOVERY_MODE PRE_TEST)
 
 	set_target_properties(HashTests PROPERTIES FOLDER "Tests")
 
@@ -215,6 +215,7 @@ if(BUILD_TESTING)
 		target_link_options(HashTests PRIVATE "/WX")
 	else ()
 		target_compile_options(HashTests PRIVATE ${COMPILE_OPTION_DEBUG})
+		target_link_options(HashTests PRIVATE "-fsanitize=address")
 	endif()
 
 	if (CMAKE_COMPILER_IS_GNUCC)

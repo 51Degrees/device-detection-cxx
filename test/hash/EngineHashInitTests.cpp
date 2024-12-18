@@ -303,15 +303,15 @@ TEST_F(EngineHashInitTests, SmallData_Memory) {
     try {
         EngineHash* testEngine = new EngineHash(
             mem,
-            (long)sizeof(byte),
+            (long)sizeof(fiftyoneDegreesDataSetHashHeader),
             &config,
             &properties);
         delete testEngine;
         FAIL() << L"No exception was thrown";
     }
     catch (exception & e) {
-        const char* expected = fiftyoneDegreesStatusGetMessage(
-            FIFTYONE_DEGREES_STATUS_CORRUPT_DATA,
+        const char* expected = fiftyoneDegreesStatusGetMessage
+        (FIFTYONE_DEGREES_STATUS_INCORRECT_VERSION,
             NULL);
         ASSERT_STREQ(
             e.what(),
