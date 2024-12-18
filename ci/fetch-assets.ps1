@@ -32,3 +32,5 @@ try {
 if ($IsLinux) {
     ls -l $DataFileDir
 }
+
+exit 0 #to ignore git lfs errors
