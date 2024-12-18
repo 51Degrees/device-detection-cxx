@@ -23,8 +23,9 @@ try {
     Write-Output "Pulling evidence files"
     git lfs pull -I "*.csv" 
     git lfs pull -I "*.yml"
-}
-finally {
+} catch {
+    #ignore git lfs if it fails
+} finally {
     Pop-Location
 }
 
