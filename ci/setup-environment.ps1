@@ -16,3 +16,8 @@ if ($BuildMethod -eq "msbuild") {
 if ($IsLinux -or $IsMacOS) {
     pipx install 'gcovr~=7.2' || $(throw "gcovr install failed")
 }
+
+if ($IsLinux) {
+    # needed to turn of ASLR feature to not get ASAN failures
+    echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
+}
