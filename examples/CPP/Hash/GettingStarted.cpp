@@ -166,6 +166,7 @@ namespace FiftyoneDegrees {
 
 					std::string deviceId_mobile;
 					{
+                        evidence->clear();
 						// Carries out a match for a mobile User-Agent.
 						cout << "\n";
 						cout << "Mobile User-Agent: " <<
@@ -179,6 +180,7 @@ namespace FiftyoneDegrees {
 						delete results;
 					};
 					{
+                        evidence->clear();
 						// Carries out a match for a desktop User-Agent.
 						cout << "\n[---]\n";
 						cout << "Desktop User-Agent: " <<
@@ -191,6 +193,7 @@ namespace FiftyoneDegrees {
 						delete results;
 					};
 					{
+                        evidence->clear();
 						// Carries out a match for a MediaHub User-Agent.
 						cout << "\n[---]\n";
 						cout << "MediaHub User-Agent: " <<
@@ -204,12 +207,14 @@ namespace FiftyoneDegrees {
 					};
 					std::string deviceId_hintedHub;
 					{
+                        evidence->clear();
 						// Carries out a match for a platform based on UACH headers.
 						cout << "\n(+)\n";
 						cout << "UACH Sec-CH-UA-Platform: " <<
 							uachPlatform << "\n";
 						cout << "UACH Sec-CH-UA-Platform-Version: " <<
 							uachPlatformVersion << "\n";
+                        evidence->operator[]("header.user-agent") = mediaHubUserAgent;
 						evidence->operator[]("header.Sec-CH-UA-Platform")
 							= uachPlatform;
 						evidence->operator[]("header.Sec-CH-UA-Platform-Version")
@@ -221,10 +226,11 @@ namespace FiftyoneDegrees {
 						delete results;
 					};
 					{
+                        evidence->clear();
 						// Carries out a match for a platform based on device ID.
-						cout << "\n(+)\n";
+						cout << "\n[---]\n";
 						cout << "DeviceID: " << deviceId_mobile << " -- Mobile\n";
-
+                        
 						evidence->operator[]("query.51D_deviceId")
 							= deviceId_mobile.c_str();
 
@@ -234,7 +240,8 @@ namespace FiftyoneDegrees {
 						delete results;
 					};
 					{
-						// Carries out a match for a platform with invalid device ID.
+                        evidence->clear();
+                        // Carries out a match for a platform with invalid device ID.
 						cout << "\n(+)\n";
 						const char* const deviceId_dummy = "123234-2244-1242-2412";
 						cout << "DeviceID: " << deviceId_dummy << " -- Dummy\n";
@@ -272,9 +279,11 @@ namespace FiftyoneDegrees {
 						delete evidence2;
 					};
 					{
-						// Carries out a match for a base 64 encoded GetHighEntropyValue JSON result.
-						cout << "\n(+)\n";
-						const char* const ghev_dummy = 
+                        evidence->clear();
+                        // Carries out a match for a base 64 encoded GetHighEntropyValue JSON result.
+						cout << "\n[---]\n";
+                        
+						const char* const ghev_dummy =
 							"eyJicmFuZHMiOlt7ImJyYW5kIjoiTm90L0EpQnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJh"
 							"bmQiOiJDaHJvbWl1bSIsInZlcnNpb24iOiIxMjYifSx7ImJyYW5kIjoiR29vZ2xlIENocm9t"
 							"ZSIsInZlcnNpb24iOiIxMjYifV0sImZ1bGxWZXJzaW9uTGlzdCI6W3siYnJhbmQiOiJOb3Qv"
@@ -291,6 +300,16 @@ namespace FiftyoneDegrees {
 						printResults(results);
 						delete results;
 					};
+                    {
+                        evidence->clear();
+                        cout <<" \n[---]\n";
+                        const char * const sua = "{\"browsers\":[{\"brand\":\"Chromium\",\"version\":[\"124\",\"0\",\"6367\",\"91\"]},{\"brand\":\"Google Chrome\",\"version\":[\"124\",\"0\",\"6367\",\"91\"]},{\"brand\":\"Not-A.Brand\",\"version\":[\"99\",\"0\",\"0\",\"0\"]}],\"platform\":{\"brand\":\"Windows\",\"version\":[\"14\",\"0\",\"0\"]},\"mobile\":0,\"architecture\":\"x86\",\"source\":2}";
+                        evidence->operator[]("query.51D_structureduseragent") = sua;
+                        cout << "SUA:" << sua << std::endl;
+                        DeviceDetection::Hash::ResultsHash* results = engine->process(evidence);
+                        printResults(results);
+                        delete results;
+                    };
 
 					// Free the evidence.
 					delete evidence;

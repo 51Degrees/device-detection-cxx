@@ -30,7 +30,7 @@ using namespace std;
 
 const char * SNIPPET_NAME = "JavascriptGetHighEntropyValues";
 
-class SuppressSnippetTests: public SimpleEngineTestBase {
+class SimpleEngineTests: public SimpleEngineTestBase {
 public:
     virtual void SetUp();
     virtual void TearDown();
@@ -52,21 +52,21 @@ public:
         SNIPPET_NAME};
     
 };
-void SuppressSnippetTests::TearDown() {
+void SimpleEngineTests::TearDown() {
     deallocEngine();
     delete requiredProperties;
     delete config;
     Base::TearDown();
 }
 
-void SuppressSnippetTests::SetUp() {
+void SimpleEngineTests::SetUp() {
     Base::SetUp();
     config = new ConfigHash();
     requiredProperties = new RequiredPropertiesConfig(&properties);
     createEngine(config, requiredProperties);
 }
 
-EvidenceDeviceDetection SuppressSnippetTests::getEvidence() {
+EvidenceDeviceDetection SimpleEngineTests::getEvidence() {
     EvidenceDeviceDetection evidence;
     evidence["header.user-agent"]="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36";
     evidence["header.sec-ch-ua"]="\"Google Chrome\";v=\"129\", \"Not=A?Brand\";v=\"8\", \"Chromium\";v=\"129\"";
@@ -78,7 +78,7 @@ EvidenceDeviceDetection SuppressSnippetTests::getEvidence() {
     return evidence;
 }
 
-TEST_F(SuppressSnippetTests, snippetPresent) {
+TEST_F(SimpleEngineTests, snippetPresent) {
     //Verify that JavascriptGHEV is present if at least one required UACH header
     //was not provided
     auto evidence = getEvidence();
@@ -94,7 +94,7 @@ TEST_F(SuppressSnippetTests, snippetPresent) {
     }
 }
 
-TEST_F(SuppressSnippetTests, snippetSuppressedDueToHeaders) {
+TEST_F(SimpleEngineTests, snippetSuppressedDueToHeaders) {
     auto evidence = getEvidence();
     auto results = getEngine()->process(&evidence);
     auto value = results->getValueAsString(SNIPPET_NAME);
@@ -102,7 +102,7 @@ TEST_F(SuppressSnippetTests, snippetSuppressedDueToHeaders) {
     delete results;
 }
 
-void SuppressSnippetTests::verifySuppressWithPrefix(const string &prefix) {
+void SimpleEngineTests::verifySuppressWithPrefix(const string &prefix) {
     // Verify that JavascriptGHEV snippet is suppressed when necessary evidence 
     // is provided in a form of 51D_GetHighEntropyValues
     
@@ -116,10 +116,45 @@ void SuppressSnippetTests::verifySuppressWithPrefix(const string &prefix) {
     delete results;
 }
 
-TEST_F(SuppressSnippetTests, snippetSuppressedDueToQuery) {
+TEST_F(SimpleEngineTests, snippetSuppressedDueToQuery) {
     verifySuppressWithPrefix("query");
 }
 
-TEST_F(SuppressSnippetTests, snippetSuppressedDueToCookie) {
+TEST_F(SimpleEngineTests, snippetSuppressedDueToCookie) {
     verifySuppressWithPrefix("cookie");
+}
+
+TEST_F(SimpleEngineTests, specialEvidenceGHEV) {
+    EvidenceDeviceDetection evidence;
+    /*
+     {"brands":[{"brand":"Not/A)Brand","version":"8"},{"brand":"Chromium","version":"126"},
+     {"brand":"Google Chrome","version":"126"}],"fullVersionList":[
+     {"brand":"Not/A)Brand","version":"8.0.0.0"},{"brand":"Chromium","version":"126.0.6478.127"},
+     {"brand":"Google Chrome","version":"126.0.6478.127"}],"mobile":false,"model":"","platform":"macOS","platformVersion":"14.5.0"}
+     */
+    evidence["query.51D_gethighentropyvalues"] =                             "eyJicmFuZHMiOlt7ImJyYW5kIjoiTm90L0EpQnJhbmQiLCJ2ZXJzaW9uIjoiOCJ9LHsiYnJh"
+    "bmQiOiJDaHJvbWl1bSIsInZlcnNpb24iOiIxMjYifSx7ImJyYW5kIjoiR29vZ2xlIENocm9t"
+    "ZSIsInZlcnNpb24iOiIxMjYifV0sImZ1bGxWZXJzaW9uTGlzdCI6W3siYnJhbmQiOiJOb3Qv"
+    "QSlCcmFuZCIsInZlcnNpb24iOiI4LjAuMC4wIn0seyJicmFuZCI6IkNocm9taXVtIiwidmVy"
+    "c2lvbiI6IjEyNi4wLjY0NzguMTI3In0seyJicmFuZCI6Ikdvb2dsZSBDaHJvbWUiLCJ2ZXJz"
+    "aW9uIjoiMTI2LjAuNjQ3OC4xMjcifV0sIm1vYmlsZSI6ZmFsc2UsIm1vZGVsIjoiIiwicGxh"
+    "dGZvcm0iOiJtYWNPUyIsInBsYXRmb3JtVmVyc2lvbiI6IjE0LjUuMCJ9";
+    
+    ResultsBase *results = getEngine()->process(&evidence);
+    EXPECT_EQ(results->getValueAsString("BrowserName").getValue(), "Chrome");
+    EXPECT_EQ(results->getValueAsString("PlatformName").getValue(), "macOS");
+    EXPECT_EQ(results->getValueAsString("PlatformVersion").getValue(), "14.5");
+    delete results;
+}
+
+TEST_F(SimpleEngineTests, specialEvidenceSUA) {
+    EvidenceDeviceDetection evidence;
+    evidence["query.51D_structureduseragent"] =
+    "{\"browsers\":[{\"brand\":\"Chromium\",\"version\":[\"124\",\"0\",\"6367\",\"91\"]},{\"brand\":\"Google Chrome\",\"version\":[\"124\",\"0\",\"6367\",\"91\"]},{\"brand\":\"Not-A.Brand\",\"version\":[\"99\",\"0\",\"0\",\"0\"]}],\"platform\":{\"brand\":\"Windows\",\"version\":[\"14\",\"0\",\"0\"]},\"mobile\":0,\"architecture\":\"x86\",\"source\":2}";
+    
+    ResultsBase *results = getEngine()->process(&evidence);
+    EXPECT_EQ(results->getValueAsString("BrowserName").getValue(), "Chrome");
+    EXPECT_EQ(results->getValueAsString("PlatformName").getValue(), "Windows");
+    EXPECT_EQ(results->getValueAsString("PlatformVersion").getValue(), "11.0");
+    delete results;
 }

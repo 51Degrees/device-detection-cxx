@@ -2670,7 +2670,7 @@ static bool setStructuredUserAgentHeader(
          state->results->b.bufferTransform,
          state->results->b.bufferTransformLength,
          setSpecialHeadersCallback,
-         state->evidence,
+         state,
          exception);
 
         return result.iterations > 0 &&
