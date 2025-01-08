@@ -51,7 +51,7 @@
     <ClCompile Include="..\..\test\hash\HashMemLeakReloadFromFileTests.cpp" />
     <ClCompile Include="..\..\test\hash\TransformTests.cpp" />
     <ClCompile Include="..\..\test\hash\ResultsHashSerializerTests.cpp" />
-    <ClCompile Include="..\..\test\hash\SuppressSnippetTests.cpp" />
+    <ClCompile Include="..\..\test\hash\SimpleEngineTests.cpp" />
     <ClCompile Include="..\..\test\hash\SimpleEngineTestBase.cpp" />
   </ItemGroup>
   <ItemGroup>
