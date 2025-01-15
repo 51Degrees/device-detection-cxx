@@ -133,7 +133,9 @@ $(document).ready(function(){initNavTree('md__home_runner_work_device-detection-
 <h2>CMake</h2>
 <p>CMake automatically pulls in the latest Google Test from GitHub.</p>
 <p>Building the project builds the test executable <code>CommonTests</code> to the <code>bin/</code> directory. This can be run directly from a terminal.</p>
-<p>These can be run by calling </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">ctest</div></div><p>If CMake has been used in an MSVC environment, then the tests will be set up and discoverable in the Visual Studio solution <code>51DegreesCommon</code> created by CMake.</p>
+<p>These can be run by calling </p><div class="c-code__block c-code__block--outline"><div class="c-code__line">ctest</div></div><p>CTest module automatically creates a <code>BUILD_TESTING</code> option &ndash; see <a href="https://cmake.org/cmake/help/latest/module/CTest.html">https://cmake.org/cmake/help/latest/module/CTest.html</a></p>
+<p>When testing some dependent code, running <code>CommonTests</code> can be skipped by turning OFF the <code>FIFTYONE_COMMON_CXX_BUILD_TESTING</code> option.</p>
+<p>If CMake has been used in an MSVC environment, then the tests will be set up and discoverable in the Visual Studio solution <code>51DegreesCommon</code> created by CMake.</p>
 <h2>Visual Studio</h2>
 <p>Tests in the Visual Studio solution automatically install the GTest dependency via a NuGet package. However, in order for the tests to show up in the Visual Studio test explorer, the <a href="https://marketplace.visualstudio.com/items?itemName=VisualCPPTeam.TestAdapterforGoogleTest">Test Adapter for Google Test</a> extension must be installed.</p>
 <p>The VisualStudio solution includes <code>FiftyOne.Common.Tests</code>, which can be run through the standard Visual Studio test runner.</p>
