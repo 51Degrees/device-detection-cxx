@@ -12,7 +12,7 @@ on:
 jobs:
   DocumentationUpdate:
     name: Nightly Documentation Update
-    uses: postindustria-tech/common-ci/.github/workflows/nightly-documentation-update.yml@nightly-pipeline
+    uses: 51Degrees/common-ci/.github/workflows/nightly-documentation-update.yml@main
     with:
       common-ci-ref: nightly-pipeline
       repo-name: ${{ github.event.repository.name }}
@@ -23,7 +23,7 @@ jobs:
 
   SubmoduleUpdate:
     name: Nightly Submodule Update
-    uses: postindustria-tech/common-ci/.github/workflows/nightly-submodule-update.yml@nightly-pipeline
+    uses: 51Degrees/common-ci/.github/workflows/nightly-submodule-update.yml@main
     with:
       common-ci-ref: nightly-pipeline
       repo-name: ${{ github.event.repository.name }}
@@ -36,7 +36,7 @@ jobs:
     if: ${{ !cancelled() }}
     needs: [DocumentationUpdate, SubmoduleUpdate]
     name: Nightly Pull Requests
-    uses: postindustria-tech/common-ci/.github/workflows/nightly-pull-requests.yml@nightly-pipeline
+    uses: 51Degrees/common-ci/.github/workflows/nightly-pull-requests.yml@main
     with:
       common-ci-ref: nightly-pipeline
       repo-name: ${{ github.event.repository.name }}
@@ -52,7 +52,7 @@ jobs:
     if: ${{ !cancelled() }}
     needs: PullRequests
     name: Nightly Publish
-    uses: postindustria-tech/common-ci/.github/workflows/nightly-publish.yml@nightly-pipeline
+    uses: 51Degrees/common-ci/.github/workflows/nightly-publish.yml@main
     with:
       common-ci-ref: nightly-pipeline
       repo-name: ${{ github.event.repository.name }}
