@@ -20,6 +20,17 @@
  * such notice(s) shall fulfill the requirements of that article.
  * ********************************************************************* */
 
+/*
+ * If you wanted to rename this file into `transform.c` - PLEASE DON'T!
+ * The name of the file is NOT A TYPO! 
+ * `transformc.c` is not `transform.c` because some build systems create
+ * a `transform.obj` for both `Transform.cpp` and `transform.c` in the same 
+ * directory on a case-insensitive file system. This results in a name
+ * collission and a file overwrite - as a result we get undefined symbols 
+ * during linking.  Thus to avoid such name collisions in the future 
+ * the file is named transformc.c.  
+ */
+
 #include "transform.h"
 #include "fiftyone.h"
 

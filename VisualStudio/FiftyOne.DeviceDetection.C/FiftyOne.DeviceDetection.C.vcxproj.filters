@@ -38,7 +38,7 @@
     <ClCompile Include="..\..\src\results-dd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transform.c">
+    <ClCompile Include="..\..\src\transformc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

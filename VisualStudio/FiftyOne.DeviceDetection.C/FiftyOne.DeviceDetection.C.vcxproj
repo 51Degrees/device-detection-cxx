@@ -18,7 +18,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\dataset-dd.c" />
     <ClCompile Include="..\..\src\results-dd.c" />
-    <ClCompile Include="..\..\src\transform.c" />
+    <ClCompile Include="..\..\src\transformc.c" />
     <ClCompile Include="..\..\src\gethighentropyvalues.c" />
   </ItemGroup>
   <ItemGroup>
