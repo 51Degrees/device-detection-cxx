@@ -36,6 +36,10 @@ void EngineDeviceDetection::init(
 	initHttpHeaderKeys(dataSet->b.uniqueHeaders);
 	initOverrideKeys(dataSet->b.overridable);
 	addKey("query.51D_deviceId");
+	addKey("query.51D_gethighentropyvalues");
+	addKey("query.51D_structureduseragent");
+	addKey("cookie.51D_gethighentropyvalues");
+	addKey("cookie.51D_structureduseragent");
 }
 
 ResultsDeviceDetection*
