@@ -127,7 +127,9 @@ public:
 	void verifyWithEmptyEvidence();
 	void verifyUserAgentInQuery();
 	void verifyValueOverride();
+	void verifyHasMandatoryKey(const std::string &);
 	void verifyHasDeviceIDQueryKey();
+	void verifyHasEntropyKeys();
 	static void multiThreadRandomRunThread(void* state);
 	void multiThreadRandom(uint16_t concurrency);
 	void reloadMemory();

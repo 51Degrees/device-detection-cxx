@@ -307,16 +307,32 @@ void EngineDeviceDetectionTests::verifyWithEmptyUserAgent() {
 	delete results;
 }
 
-void EngineDeviceDetectionTests::verifyHasDeviceIDQueryKey() {
-	string userAgentKey = "query.51D_deviceId";
-	EngineDeviceDetection* engine = (EngineDeviceDetection*)getEngine();
+void EngineDeviceDetectionTests::verifyHasMandatoryKey(
+	const std::string &expectedKey) {
+	const auto* const engine = (EngineDeviceDetection*)getEngine();
 	const vector<string>* keys = engine->getKeys();
-	for (auto it = keys->begin(), end = keys->end(); it != end; ++it) {
-		if (!StringCompare("query.51D_deviceId", it->c_str())) {
+	for (const auto & key : *keys) {
+		if (expectedKey == key) {
 			return;
 		}
 	}
-	FAIL();
+	FAIL() << "Key not found: " << expectedKey;
+}
+
+void EngineDeviceDetectionTests::verifyHasDeviceIDQueryKey() {
+	verifyHasMandatoryKey("query.51D_deviceId");
+}
+
+void EngineDeviceDetectionTests::verifyHasEntropyKeys() {
+	const std::vector<std::string> keys {
+		"query.51D_gethighentropyvalues",
+		"query.51D_structureduseragent",
+		"cookie.51D_gethighentropyvalues",
+		"cookie.51D_structureduseragent",
+	};
+	for (const auto & key : keys) {
+		verifyHasMandatoryKey(key);
+	}
 }
 
 void EngineDeviceDetectionTests::verify() {
@@ -336,6 +352,7 @@ void EngineDeviceDetectionTests::verify() {
 	verifyUserAgentInQuery();
 	verifyValueOverride();
 	verifyHasDeviceIDQueryKey();
+	verifyHasEntropyKeys();
 }
 
 void EngineDeviceDetectionTests::userAgentPresent(const char *userAgent) {
