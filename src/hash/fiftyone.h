@@ -101,6 +101,7 @@ MAP_TYPE(GraphTraceNode)
 #define GraphTraceFree fiftyoneDegreesGraphTraceFree /**< Synonym for #fiftyoneDegreesGraphTraceFree function. */
 #define GraphTraceAppend fiftyoneDegreesGraphTraceAppend /**< Synonym for #fiftyoneDegreesGraphTraceAppend function. */
 #define GraphTraceGet fiftyoneDegreesGraphTraceGet /**< Synonym for #fiftyoneDegreesGraphTraceGet function. */
+#define GraphGetMatchingHashFromListNodeSequential fiftyoneDegreesGraphGetMatchingHashFromListNodeSequential /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromListNodeSequential function. */
 /**
  * @}
  */
