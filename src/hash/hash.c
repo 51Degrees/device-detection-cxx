@@ -4084,6 +4084,7 @@ size_t fiftyoneDegreesResultsHashGetValuesJson(
 	s.strings = dataSet->strings;
 	s.property = NULL;
 	s.values = NULL;
+	s.storedPropertyType = FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_STRING; // only strings in device-detection
 
 	// Ensure any previous uses of the results to get values are released.
 	resultsHashRelease(results);
