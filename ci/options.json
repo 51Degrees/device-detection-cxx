@@ -45,7 +45,6 @@
     "Arch": "x64",
     "BuildMethod": "cmake",
     "RunPerformance": true,
-    "PackageRequirement": true
   },
   {
     "Image": "windows-latest",
@@ -61,7 +60,6 @@
     "Arch": "x86",
     "BuildMethod": "cmake",
     "RunPerformance": true,
-    "PackageRequirement": true
   },
   {
     "Image": "ubuntu-latest",
@@ -75,7 +73,6 @@
     "Configuration": "Release",
     "Arch": "x86",
     "RunPerformance": true,
-    "PackageRequirement": true
   },
   {
     "Image": "ubuntu-latest",
