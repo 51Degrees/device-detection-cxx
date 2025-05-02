@@ -20,7 +20,7 @@ jobs:
     secrets:
       token: ${{ secrets.ACCESS_TOKEN }}
 
-  NightlyDocumentationUpdate_v4.5:
+  NightlyDocumentationUpdate-v4_5:
     needs: NightlyDocumentationUpdate
     if: ${{ !cancelled() }}
     uses: 51Degrees/common-ci/.github/workflows/nightly-documentation-update.yml@main
