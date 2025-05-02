@@ -1,0 +1,13 @@
+<map id="FiftyoneDegrees::DeviceDetection::Hash::EngineHash" name="FiftyoneDegrees::DeviceDetection::Hash::EngineHash">
+<area shape="rect" id="node1" title="Encapsulates the Hash engine class which implements EngineDeviceDetection." alt="" coords="1561,303,1805,344"/>
+<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_device_detection_1_1_engine_device_detection.html" title="Encapsulates the device detection engine class to be extended by device detection engine implementati..." alt="" coords="1268,303,1512,344"/>
+<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_common_1_1_engine_base.html" title="Encapsulates the engine class to be extended by engine implementations." alt="" coords="1024,196,1219,237"/>
+<area shape="rect" id="node4" href="$class_fiftyone_degrees_1_1_common_1_1_required_properties_config.html" title="C++ class wrapper for the fiftyoneDegreesPropertiesRequired structure." alt="" coords="656,71,851,112"/>
+<area shape="rect" id="node5" title=" " alt="" coords="327,175,536,216"/>
+<area shape="rect" id="node10" href="$class_fiftyone_degrees_1_1_common_1_1_meta_data.html" title="Contains meta data for the properties, values, profiles and components that exist within the engine i..." alt="" coords="656,136,851,177"/>
+<area shape="rect" id="node6" title=" " alt="" coords="5,182,96,209"/>
+<area shape="rect" id="node7" title=" " alt="" coords="688,265,819,291"/>
+<area shape="rect" id="node8" title=" " alt="" coords="400,265,463,291"/>
+<area shape="rect" id="node9" title=" " alt="" coords="724,335,783,362"/>
+<area shape="rect" id="node11" href="$class_fiftyone_degrees_1_1_common_1_1_config_base.html" title="C++ class wrapper for the fiftyoneDegreesConfigBase configuration structure." alt="" coords="656,5,851,47"/>
+</map>

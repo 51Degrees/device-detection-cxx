@@ -1,0 +1,5 @@
+<map id="FiftyoneDegrees::Common::FatalException" name="FiftyoneDegrees::Common::FatalException">
+<area shape="rect" id="node1" title="Fatal exception meaning the process should be halted." alt="" coords="5,169,200,211"/>
+<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_common_1_1_status_code_exception.html" title="Exception containing the status code which caused the exception." alt="" coords="5,80,200,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="59,5,146,32"/>
+</map>

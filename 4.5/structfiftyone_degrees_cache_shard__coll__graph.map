@@ -1,0 +1,8 @@
+<map id="fiftyoneDegreesCacheShard" name="fiftyoneDegreesCacheShard">
+<area shape="rect" id="node1" title="Cache shard structure used to enable concurrent access to the cache." alt="" coords="257,216,459,243"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_cache_node.html" title="Cache node structure used for storing data in the cache along with its key." alt="" coords="120,336,319,363"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_cache.html" title="Cache structure to store the root of the red black tree and a list of allocated cache nodes." alt="" coords="326,427,491,453"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_tree_node.html" title="Node structure defining a single node in the tree." alt="" coords="186,14,373,41"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_tree_root.html" title="Tree root structure defining the beginning of the tree." alt="" coords="261,127,444,153"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="5,216,161,243"/>
+</map>

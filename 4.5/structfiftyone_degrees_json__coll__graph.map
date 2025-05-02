@@ -1,0 +1,10 @@
+<map id="fiftyoneDegreesJson" name="fiftyoneDegreesJson">
+<area shape="rect" id="node1" title="Structure used to populated a JSON string for all required properties and values." alt="" coords="905,175,1057,201"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_list.html" title="List structure which contains a list of collection items." alt="" coords="609,5,757,32"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="243,79,463,105"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="588,124,779,151"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="5,79,161,105"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_property.html" title="Property structure containing all the meta data relating to a property." alt="" coords="593,175,773,201"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_string_builder.html" title="String buffer for building strings with memory checks." alt="" coords="579,225,788,252"/>
+<area shape="rect" id="node8" href="$structfiftyone_degrees_exception.html" title="Structure used to represent a 51Degrees exception and passed into methods that might generate excepti..." alt="" coords="589,276,778,303"/>
+</map>

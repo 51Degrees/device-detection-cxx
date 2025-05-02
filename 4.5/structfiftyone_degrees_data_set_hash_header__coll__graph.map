@@ -1,0 +1,5 @@
+<map id="fiftyoneDegreesDataSetHashHeader" name="fiftyoneDegreesDataSetHashHeader">
+<area shape="rect" id="node1" title="Dataset header containing information about the dataset." alt="" coords="77,227,287,268"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_date.html" title="Used to store the date when the dataset was produced and next date 51Degrees expect to provide a new ..." alt="" coords="5,13,161,39"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_collection_header.html" title="Collection header structure which defines the size and location of the collection data." alt="" coords="185,5,376,47"/>
+</map>

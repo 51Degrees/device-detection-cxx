@@ -1,0 +1,7 @@
+<map id="fiftyoneDegreesResultsDeviceDetection" name="fiftyoneDegreesResultsDeviceDetection">
+<area shape="rect" id="node1" title="Device detection specific results structure which any device detection processing results should exte..." alt="" coords="123,288,342,329"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_override_value_array.html" title="An array of properties and values to use when getting override values." alt="" coords="5,184,223,225"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_override_value.html" title="String value which should override the value for the property indicated by the required property inde..." alt="" coords="5,95,223,121"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="36,5,192,32"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_results_base.html" title="Base results structure which any processing results should extend." alt="" coords="247,191,453,218"/>
+</map>

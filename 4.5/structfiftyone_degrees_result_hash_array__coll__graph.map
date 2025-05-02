@@ -1,0 +1,14 @@
+<map id="fiftyoneDegreesResultHashArray" name="fiftyoneDegreesResultHashArray">
+<area shape="rect" id="node1" title="Array of items of type fiftyoneDegreesResultHash used to easily access and track the size of the arra..." alt="" coords="1220,107,1419,149"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_list.html" title="List structure which contains a list of collection items." alt="" coords="941,48,1089,75"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="563,93,783,120"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="919,167,1110,193"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="5,125,161,152"/>
+<area shape="rect" id="node8" href="$structfiftyone_degrees_override_value.html" title="String value which should override the value for the property indicated by the required property inde..." alt="" coords="251,157,468,184"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_results_device_detection.html" title="Device detection specific results structure which any device detection processing results should exte..." alt="" coords="905,218,1124,259"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_override_value_array.html" title="An array of properties and values to use when getting override values." alt="" coords="565,162,782,203"/>
+<area shape="rect" id="node9" href="$structfiftyone_degrees_results_base.html" title="Base results structure which any processing results should extend." alt="" coords="571,229,776,256"/>
+<area shape="rect" id="node10" href="$structfiftyone_degrees_result_hash.html" title="Singular User&#45;Agent result returned by a Hash process method." alt="" coords="915,319,1114,345"/>
+<area shape="rect" id="node11" href="$structfiftyone_degrees_graph_trace_node.html" title="Trace node structure used to trace the route taken when evaluating a graph." alt="" coords="557,319,789,345"/>
+<area shape="rect" id="node12" href="$structfiftyone_degrees_result_user_agent.html" title="Singular User&#45;Agent result returned by a device detection process method." alt="" coords="575,370,771,411"/>
+</map>

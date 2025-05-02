@@ -1,0 +1,5 @@
+<map id="fiftyoneDegreesResourceHandle" name="fiftyoneDegreesResourceHandle">
+<area shape="rect" id="node1" title="Handle for a shared resource." alt="" coords="11,109,242,136"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="5,199,248,225"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_interlock_double_width.html" title="Double width (64 or 128 depending on the architecture) compare and exchange." alt="" coords="35,5,218,47"/>
+</map>

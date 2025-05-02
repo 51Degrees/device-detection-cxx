@@ -1,0 +1,20 @@
+<map id="fiftyoneDegreesDataSetBase" name="fiftyoneDegreesDataSetBase">
+<area shape="rect" id="node1" title="Base data set structure which contains the &#39;must have&#39;s for all data sets." alt="" coords="1974,200,2183,227"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_header_array.html" title="Array of Headers which should always be ordered in ascending order of fullHeaderId." alt="" coords="1551,108,1757,135"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_resource_handle.html" title="Handle for a shared resource." alt="" coords="1539,28,1769,55"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="1957,5,2200,32"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_interlock_double_width.html" title="Double width (64 or 128 depending on the architecture) compare and exchange." alt="" coords="1039,21,1221,62"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_file_pool.html" title="Stack of handles used to read data from a single source file." alt="" coords="1566,405,1742,432"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_pool.html" title="Pool of resources stored as items in a stack." alt="" coords="1053,336,1207,363"/>
+<area shape="rect" id="node9" href="$structfiftyone_degrees_pool_item.html" title="Pool item node in the stack of items." alt="" coords="1563,355,1745,381"/>
+<area shape="rect" id="node8" href="$unionfiftyone_degrees_pool_head.html" title="The head of the stack used for pop and push operations." alt="" coords="685,307,872,333"/>
+<area shape="rect" id="node10" href="$structfiftyone_degrees_override_property_array.html" title="Array of items of type fiftyoneDegreesOverrideProperty used to easily access and track the size of th..." alt="" coords="1536,159,1772,201"/>
+<area shape="rect" id="node11" href="$structfiftyone_degrees_override_property.html" title="Index and pointer to a property which can be overridden." alt="" coords="1012,172,1248,199"/>
+<area shape="rect" id="node12" href="$structfiftyone_degrees_property_available.html" title="Used to access the property item quickly without the need to search." alt="" coords="659,227,899,253"/>
+<area shape="rect" id="node18" href="$structfiftyone_degrees_property_available_array.html" title="Array of items of type fiftyoneDegreesPropertyAvailable used to easily access and track the size of t..." alt="" coords="1272,219,1512,261"/>
+<area shape="rect" id="node13" href="$structfiftyone_degrees_evidence_property_index_array.html" title="Array of items of type fiftyoneDegreesEvidencePropertyIndex used to easily access and track the size ..." alt="" coords="243,219,481,261"/>
+<area shape="rect" id="node14" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="252,380,472,407"/>
+<area shape="rect" id="node15" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="683,425,874,452"/>
+<area shape="rect" id="node16" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="5,380,161,407"/>
+<area shape="rect" id="node17" href="$structfiftyone_degrees_indices_property_profile.html" title="Maps the profile index and the property index to the first value index of the profile for the propert..." alt="" coords="1541,289,1767,330"/>
+</map>

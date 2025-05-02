@@ -1,0 +1,6 @@
+<map id="fiftyoneDegreesFileHandle" name="fiftyoneDegreesFileHandle">
+<area shape="rect" id="node1" title="File handle node in the stack of handles." alt="" coords="5,95,200,121"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_pool_item.html" title="Pool item node in the stack of items." alt="" coords="38,5,221,32"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_pool.html" title="Pool of resources stored as items in a stack." alt="" coords="225,95,378,121"/>
+<area shape="rect" id="node4" href="$unionfiftyone_degrees_pool_head.html" title="The head of the stack used for pop and push operations." alt="" coords="245,5,432,32"/>
+</map>

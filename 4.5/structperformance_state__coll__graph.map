@@ -1,0 +1,12 @@
+<map id="performanceState" name="performanceState">
+<area shape="rect" id="node1" title="Single state containing everything needed for running and then reporting the performance tests." alt="" coords="113,317,252,344"/>
+<area shape="rect" id="node6" href="$structthread_state.html" title="State specific to a single thread." alt="" coords="243,421,341,448"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_resource_manager.html" title="Manager structure used to provide access to a shared and changing resource." alt="" coords="225,206,468,233"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_resource_handle.html" title="Handle for a shared resource." alt="" coords="434,317,665,344"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_interlock_double_width.html" title="Double width (64 or 128 depending on the architecture) compare and exchange." alt="" coords="493,199,675,240"/>
+<area shape="rect" id="node5" href="$structshared_string_node.html" title=" " alt="" coords="5,206,144,233"/>
+<area shape="rect" id="node7" href="$structevidence_node.html" title=" " alt="" coords="704,317,819,344"/>
+<area shape="rect" id="node8" href="$structfiftyone_degrees_evidence_key_value_pair_array.html" title="Array of evidence key value pairs and a pointer to the next array if present or NULL of not present." alt="" coords="700,199,908,240"/>
+<area shape="rect" id="node9" href="$structfiftyone_degrees_evidence_key_value_pair.html" title="Evidence key value pair structure which combines the prefix, key and value." alt="" coords="700,95,908,136"/>
+<area shape="rect" id="node10" href="$structfiftyone_degrees_key_value_pair.html" title=" " alt="" coords="699,5,909,32"/>
+</map>

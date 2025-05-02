@@ -1,0 +1,5 @@
+<map id="FiftyoneDegrees::DeviceDetection::ResultsDeviceDetection" name="FiftyoneDegrees::DeviceDetection::ResultsDeviceDetection">
+<area shape="rect" id="node1" title="Encapsulates the results of a device detection engine&#39;s processing." alt="" coords="5,95,249,136"/>
+<area shape="rect" id="node3" href="$class_fiftyone_degrees_1_1_device_detection_1_1_hash_1_1_results_hash.html" title="Encapsulates the results of a Hash device detection engine&#39;s processing." alt="" coords="5,184,249,225"/>
+<area shape="rect" id="node2" href="$class_fiftyone_degrees_1_1_common_1_1_results_base.html" title="Encapsulates the results of an engine&#39;s processing." alt="" coords="30,5,225,47"/>
+</map>

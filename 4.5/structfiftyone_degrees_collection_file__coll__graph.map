@@ -1,0 +1,10 @@
+<map id="fiftyoneDegreesCollectionFile" name="fiftyoneDegreesCollectionFile">
+<area shape="rect" id="node1" title="Type of collection where the collection is streamed from file." alt="" coords="148,291,361,317"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_file_pool.html" title="Stack of handles used to read data from a single source file." alt="" coords="5,193,181,219"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_pool.html" title="Pool of resources stored as items in a stack." alt="" coords="157,95,310,121"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_pool_item.html" title="Pool item node in the stack of items." alt="" coords="206,193,389,219"/>
+<area shape="rect" id="node4" href="$unionfiftyone_degrees_pool_head.html" title="The head of the stack used for pop and push operations." alt="" coords="140,5,327,32"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="413,193,603,219"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="497,291,717,317"/>
+<area shape="rect" id="node8" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="743,193,899,219"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="FiftyoneDegrees::Common::ResultsBase" name="FiftyoneDegrees::Common::ResultsBase">
+<area shape="rect" id="node1" title="Encapsulates the results of an engine&#39;s processing." alt="" coords="65,409,259,451"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_property_available_array.html" title="Array of items of type fiftyoneDegreesPropertyAvailable used to easily access and track the size of t..." alt="" coords="42,305,282,347"/>
+<area shape="rect" id="node3" href="$structfiftyone_degrees_property_available.html" title="Used to access the property item quickly without the need to search." alt="" coords="42,207,282,234"/>
+<area shape="rect" id="node4" href="$structfiftyone_degrees_evidence_property_index_array.html" title="Array of items of type fiftyoneDegreesEvidencePropertyIndex used to easily access and track the size ..." alt="" coords="5,95,244,136"/>
+<area shape="rect" id="node5" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="268,102,488,129"/>
+<area shape="rect" id="node6" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="333,207,524,234"/>
+<area shape="rect" id="node7" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="300,5,456,32"/>
+</map>

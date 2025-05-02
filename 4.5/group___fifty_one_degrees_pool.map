@@ -1,0 +1,4 @@
+<map id="Pool" name="Pool">
+<area shape="rect" id="node1" href="$group___fifty_one_degrees_common.html" title="Common 51Degrees methods, types and macros." alt="" coords="5,5,87,31"/>
+<area shape="rect" id="node2" title="Pool of handles to allow safe access to multiple threads." alt="" coords="135,5,185,31"/>
+</map>
