@@ -126,9 +126,9 @@
 /** Hash record structure to compare to a substring hash. */
 #pragma pack(push, 4)
 typedef struct fiftyoneDegrees_graph_node_hash_t {
-	uint32_t hashCode; /**< Hash code to compare. */
-	int32_t nodeOffset; /**< Offset of the node to use if this hash code is a
-						match. */
+	uint32_t const hashCode; /**< Hash code to compare. */
+	int32_t const nodeOffset; /**< Offset of the node to use if this hash code 
+								is a match. */
 } fiftyoneDegreesGraphNodeHash;
 #pragma pack(pop)
 
@@ -163,16 +163,17 @@ typedef struct fiftyoneDegrees_graph_trace_node_t {
  */
 #pragma pack(push, 1)
 typedef struct fiftyoneDegrees_graph_node_t {
-	int32_t unmatchedNodeOffset; /**< Offset of the node to use if there is no
-								 matching hash record. */
-    byte flags; /**< Flags available for future implementation. */
-    int16_t firstIndex; /**< First character index to search for a matching
-						hash code. */
-	int16_t lastIndex; /**< Last character index to search for a matching hash
-					   code. */
-	byte length; /**< Length of the substring to hash. */
-    int32_t hashesCount; /**< Number of hash records in the node. */
-	int32_t modulo; /**< Modulo to use when the hashes are a hash table. */
+	int32_t const unmatchedNodeOffset; /**< Offset of the node to use if there
+										is no matching hash record. */
+    byte const flags; /**< Flags available for future implementation. */
+    int16_t const firstIndex; /**< First character index to search for a
+								matching hash code. */
+	int16_t const lastIndex; /**< Last character index to search for a matching
+								hash code. */
+	byte const length; /**< Length of the substring to hash. */
+    int32_t const hashesCount; /**< Number of hash records in the node. */
+	int32_t const modulo; /**< Modulo to use when the hashes are a hash 
+							table. */
 } fiftyoneDegreesGraphNode;
 #pragma pack(pop)
 
