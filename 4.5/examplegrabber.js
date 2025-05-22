@@ -39,7 +39,7 @@ function selectAllWithName(name, index) {
             btns[i].click();
         }
     }
-} 
+}
 
 function selectFromMemory() {
     var selectedTabs = [];
@@ -72,17 +72,27 @@ function grabExample(caller, project, name) {
 
 function grabSnippet(caller, project, file, tag, btnClass, divId) {
     selectBtn(caller, caller.parentElement.children);
-    var url = '../../' + project + '/' + getVersion()
-        + '/' + file;
+    let url = '../../' + project + '/' + getVersion() + '/' + file;
     // Load the example into the 'grabbed-example' div, then update the links.
-	var element = document.getElementById(divId);
-	element.style = "display:block"
+    let element = document.getElementById(divId);
+    element.style.display = 'block';
+
     $('#' + divId)
-    .html('')
-    .load(url + ' #' + tag, function() {
-        updateLinks(project, divId);
-        addLink(url, divId);
-    });	
+        .html('')
+        .load(url + ' #' + tag, function(response, status) {
+            if (status === 'error' && getVersion() === '4.5') {
+                url = '../../' + project + '/' + '4.4' + '/' + file;
+                $('#' + divId)
+                    .html('')
+                    .load(url + ' #' + tag, function() {
+                        updateLinks(project, divId);
+                        addLink(url, divId);
+                    });
+            } else {
+                updateLinks(project, divId);
+                addLink(url, divId);
+            }
+        });
 }
 
 function selectBtn(caller, btns) {
@@ -133,7 +143,6 @@ function showSnippet(caller, language) {
         }
     }
 }
-
 
 function readCookie(name) {
     var nameEQ = name + "=";
