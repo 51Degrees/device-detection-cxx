@@ -511,8 +511,8 @@ TEST_F(HashCTests, HashResultsGetValuesOutOfRangePropertyIndex) {
 #endif
 
 static void* getFail(
-	fiftyoneDegreesCollection* collection,
-	uint32_t indexOrOffset,
+	const fiftyoneDegreesCollection* collection,
+	CollectionKey key,
 	fiftyoneDegreesCollectionItem* item,
 	fiftyoneDegreesException* exception) {
 	EXCEPTION_SET(CORRUPT_DATA);
