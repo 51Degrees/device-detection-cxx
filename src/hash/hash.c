@@ -28,6 +28,7 @@
 
 #include "hash.h"
 #include "fiftyone.h"
+#include "../common-cxx/collectionKeyTypes.h"
 
 MAP_TYPE(Collection)
 
@@ -395,6 +396,12 @@ static void addProfile(
 	result->profileIsOverriden[componentIndex] = isOverride;
 }
 
+static const CollectionKeyType nodesKeyType = {
+	FIFTYONE_DEGREES_COLLECTION_ENTRY_TYPE_CUSTOM,
+	sizeof(HashRootNodes),
+	NULL,
+};
+
 static HashRootNodes* getRootNodes(
 	DataSetHash* dataSet,
 	uint32_t index,
@@ -402,7 +409,10 @@ static HashRootNodes* getRootNodes(
 	Exception *exception) {
 	return (HashRootNodes*)dataSet->rootNodes->get(
 		dataSet->rootNodes,
-		index,
+		(CollectionKey){
+			{index},
+			nodesKeyType,
+		},
 		item,
 		exception);
 }
@@ -1254,7 +1264,10 @@ static long initGetHttpHeaderString(
 			nameItem->collection = NULL;
 			dataSet->strings->get(
 				dataSet->strings,
-				keyValue->key,
+				(CollectionKey){
+					{keyValue->key},
+					CollectionKeyType_String,
+				},
 				nameItem,
 				exception);
 			return keyValue->key;
@@ -1266,11 +1279,11 @@ static long initGetHttpHeaderString(
 	return -1;
 }
 
-static String* initGetPropertyString(
+static const String* initGetPropertyString(
 	void *state,
 	uint32_t index,
 	Item *item) {
-	String *name = NULL;
+	const String *name = NULL;
 	Item propertyItem;
 	Property *property;
 	DataSetHash *dataSet = (DataSetHash*)((stateWithException*)state)->state;
@@ -1283,7 +1296,10 @@ static String* initGetPropertyString(
 		item->handle = NULL;
 		property = (Property*)dataSet->properties->get(
 			dataSet->properties,
-			index,
+			(CollectionKey){
+				{index},
+				CollectionKeyType_Property,
+			},
 			&propertyItem,
 			exception);
 		if (property != NULL && EXCEPTION_OKAY) {
@@ -1381,7 +1397,7 @@ static int findPropertyIndexByName(
 	int index;
 	int foundIndex = -1;
 	Property *property;
-	String *propertyName;
+	const String *propertyName;
 	Item propertyItem, nameItem;
 	int count = CollectionGetCount(properties);
 	DataReset(&propertyItem.data);
@@ -1420,9 +1436,9 @@ static void initGetEvidenceProperty(
 	char* relatedPropertyName,
 	Exception* exception) {
 	int index;
-	Component* component;
-	Property* property;
-	String* name;
+	const Component* component;
+	const Property* property;
+	const String* name;
 	Item propertyItem, nameItem;
 	DataReset(&propertyItem.data);
 	DataReset(&nameItem.data);
@@ -1473,9 +1489,9 @@ static void initGetEvidencePropertyRelated(
 	int* count,
 	char* suffix,
 	Exception* exception) {
-	Property* property;
-	String* name;
-	String* availableName = (String*)availableProperty->name.data.ptr;
+	const Property* property;
+	const String* name;
+	const String* const availableName = (String*)availableProperty->name.data.ptr;
 	int requiredLength = ((int)strlen(suffix)) + availableName->size - 1;
 	Item propertyItem, nameItem;
 	DataReset(&propertyItem.data);
@@ -2344,7 +2360,10 @@ static bool addProfileById(
 		DataReset(&profileItem.data);
 		profile = (Profile*)dataSet->profiles->get(
 			dataSet->profiles,
-			profileOffset,
+			(CollectionKey){
+				{profileOffset},
+				CollectionKeyType_Profile,
+			},
 			&profileItem,
 			exception);
 		if (profile != NULL && EXCEPTION_OKAY) {
@@ -3452,7 +3471,10 @@ static uint32_t addValuesFromResult(
 	if (profileOffset != NULL_PROFILE_OFFSET) {
 		profile = (Profile*)dataSet->profiles->get(
 			dataSet->profiles,
-			profileOffset, 
+			(CollectionKey){
+				{profileOffset},
+				CollectionKeyType_Profile,
+			},
 			&item, 
 			exception);
 	}
@@ -3942,7 +3964,10 @@ char* fiftyoneDegreesHashGetDeviceIdFromResult(
 		else {
 			profile = (Profile*)dataSet->profiles->get(
 				dataSet->profiles,
-				profileOffset,
+				(CollectionKey){
+					{profileOffset},
+					CollectionKeyType_Profile,
+				},
 				&item,
 				exception);
 			if (profile == NULL) {
@@ -4020,7 +4045,10 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 					// Get the profile for the result.
 					profile = dataSet->profiles->get(
 						dataSet->profiles,
-						profileOffset,
+						(CollectionKey){
+							{profileOffset},
+							CollectionKeyType_Profile,
+						},
 						&profileItem,
 						exception);
 
@@ -4108,7 +4136,10 @@ size_t fiftyoneDegreesResultsHashGetValuesJson(
                 // Get the property.
                 s.property = (Property*)dataSet->properties->get(
                     dataSet->properties,
-                    propertyIndex,
+					(CollectionKey){
+						{propertyIndex},
+						CollectionKeyType_Property,
+					},
                     &propertyItem,
                     exception);
 
