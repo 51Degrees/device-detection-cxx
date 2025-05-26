@@ -28,7 +28,7 @@ using namespace FiftyoneDegrees::DeviceDetection::Hash;
 
 ValueMetaData* ValueMetaDataBuilderHash::build(
 	fiftyoneDegreesDataSetHash *dataSet,
-	fiftyoneDegreesValue *value) {
+	const fiftyoneDegreesValue *value) {
 	EXCEPTION_CREATE;
 	ValueMetaData *result = nullptr;
 	Item item;
