@@ -36,12 +36,13 @@ ComponentMetaData* ComponentMetaDataBuilderHash::build(
 	Item item;
 	Profile *profile;
 	DataReset(&item.data);
+	const CollectionKey key {
+		{(uint32_t)component->defaultProfileOffset},
+		CollectionKeyType_Profile,
+	};
 	profile = (Profile*)dataSet->profiles->get(
 		dataSet->profiles,
-		(CollectionKey){
-			{(uint32_t)component->defaultProfileOffset},
-			CollectionKeyType_Profile,
-		},
+		key,
 		&item,
 		exception);
 	EXCEPTION_THROW;
