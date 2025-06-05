@@ -85,11 +85,11 @@ function grabSnippet(caller, project, file, tag, btnClass, divId) {
                 $('#' + divId)
                     .html('')
                     .load(url + ' #' + tag, function() {
-                        updateLinks(project, divId);
+                        // updateLinks(project, divId);
                         addLink(url, divId);
                     });
             } else {
-                updateLinks(project, divId);
+                // updateLinks(project, divId);
                 addLink(url, divId);
             }
         });
