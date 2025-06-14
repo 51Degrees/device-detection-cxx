@@ -1,5 +1,6 @@
 var NAVTREEINDEX3 =
 {
+"group___fifty_one_degrees_synonyms.html#gabbf03123b46d92d57bb5d517944ff247":[3,1,9,287],
 "group___fifty_one_degrees_synonyms.html#gabcc97331756c66edbe71096239bf6a69":[3,1,9,212],
 "group___fifty_one_degrees_synonyms.html#gabf3bbc1b7d789a4ee8800ba611c4786a":[3,1,9,236],
 "group___fifty_one_degrees_synonyms.html#gac0d0435d95ea76ed3ee71c0348b3be81":[3,1,9,45],
@@ -248,6 +249,5 @@ var NAVTREEINDEX3 =
 "structfiftyone_degrees_collection_file.html#acb4c6a5010e03c7dc4a3c407db894c0c":[3,1,2,5,0],
 "structfiftyone_degrees_collection_file.html#adaec12cc34cece15ae64272efb707f13":[3,1,2,5,3],
 "structfiftyone_degrees_collection_file.html#ae0abd01060955851bafd8510f0afe3fd":[3,1,2,5,2],
-"structfiftyone_degrees_collection_header.html":[3,1,2,0],
-"structfiftyone_degrees_collection_header.html#a58dba2b81e723461c4cfd0080debef95":[3,1,2,0,1]
+"structfiftyone_degrees_collection_header.html":[3,1,2,0]
 };

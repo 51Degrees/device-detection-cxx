@@ -11,6 +11,7 @@ var group___fifty_one_degrees_results =
       [ "FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_RESULTS", "group___fifty_one_degrees_results.html#ggaef347b638495391733e5962b576321e6a9c1a3677c82f99477ea136eb04323986", null ],
       [ "FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_TOO_MANY_VALUES", "group___fifty_one_degrees_results.html#ggaef347b638495391733e5962b576321e6ae0f3545c1f1109e3020a5c1b5528c7e8", null ],
       [ "FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE", "group___fifty_one_degrees_results.html#ggaef347b638495391733e5962b576321e6ac048b82896b3e8d9adc056dc3afd4f96", null ],
+      [ "FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_HIGH_RISK", "group___fifty_one_degrees_results.html#ggaef347b638495391733e5962b576321e6aad16e61206d304caee38a6a03a3a8cab", null ],
       [ "FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_UNKNOWN", "group___fifty_one_degrees_results.html#ggaef347b638495391733e5962b576321e6a9694a50fcc39fadfaac0dab8ea0c069e", null ]
     ] ],
     [ "fiftyoneDegreesResultsInit", "group___fifty_one_degrees_results.html#gaa796280c0b8b13235ef8fb90672ca705", null ]

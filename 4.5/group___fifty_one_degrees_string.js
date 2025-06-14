@@ -6,6 +6,7 @@ var group___fifty_one_degrees_string =
     ] ],
     [ "fiftyoneDegreesStoredBinaryValue", "unionfiftyone_degrees_stored_binary_value.html", [
       [ "byteArrayValue", "unionfiftyone_degrees_stored_binary_value.html#ac8f2201b61bf690ecb251dd4f16355d0", null ],
+      [ "byteValue", "unionfiftyone_degrees_stored_binary_value.html#a416e6531b82a39f2bde53cac16ad695a", null ],
       [ "floatValue", "unionfiftyone_degrees_stored_binary_value.html#af857166eca5b582c5ced3a88de0a9a5f", null ],
       [ "intValue", "unionfiftyone_degrees_stored_binary_value.html#aac14dab8dfe81969693f16ff52a36752", null ],
       [ "shortValue", "unionfiftyone_degrees_stored_binary_value.html#a48234dc8d3be7cf7369effb2629c43dd", null ],
