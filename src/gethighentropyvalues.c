@@ -217,12 +217,13 @@ static int iterateProperties(
 	DataReset(&item.data);
 
     for(uint32_t i = 0; i < propertiesCount && EXCEPTION_OKAY; i++) {
+        const CollectionKey propertyKey = {
+            i,
+            CollectionKeyType_Property,
+        };
         Property* property = (Property*)properties->get(
             properties, 
-            (CollectionKey){
-                {i},
-                CollectionKeyType_Property,
-            },
+            &propertyKey,
             &item,
             exception);
         if (property != NULL && EXCEPTION_OKAY) {

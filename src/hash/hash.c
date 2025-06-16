@@ -407,12 +407,13 @@ static HashRootNodes* getRootNodes(
 	uint32_t index,
 	Item *item,
 	Exception *exception) {
+	const CollectionKey nodeKey = {
+		{index},
+		&nodesKeyType,
+	};
 	return (HashRootNodes*)dataSet->rootNodes->get(
 		dataSet->rootNodes,
-		(CollectionKey){
-			{index},
-			nodesKeyType,
-		},
+		&nodeKey,
 		item,
 		exception);
 }
@@ -1262,12 +1263,13 @@ static long initGetHttpHeaderString(
 					(uint16_t)(index - i),
 					exception);
 			nameItem->collection = NULL;
+			const CollectionKey stringKey = {
+				{keyValue->key},
+				CollectionKeyType_String,
+			};
 			dataSet->strings->get(
 				dataSet->strings,
-				(CollectionKey){
-					{keyValue->key},
-					CollectionKeyType_String,
-				},
+				&stringKey,
 				nameItem,
 				exception);
 			return keyValue->key;
@@ -1294,12 +1296,13 @@ static const String* initGetPropertyString(
 		DataReset(&propertyItem.data);
 		item->collection = NULL;
 		item->handle = NULL;
+		const CollectionKey propertyKey = {
+			{index},
+			CollectionKeyType_Property,
+		};
 		property = (Property*)dataSet->properties->get(
 			dataSet->properties,
-			(CollectionKey){
-				{index},
-				CollectionKeyType_Property,
-			},
+			&propertyKey,
 			&propertyItem,
 			exception);
 		if (property != NULL && EXCEPTION_OKAY) {
@@ -2358,12 +2361,13 @@ static bool addProfileById(
 			&profileOffset,
 			exception) != NULL && EXCEPTION_OKAY) {
 		DataReset(&profileItem.data);
+		const CollectionKey profileKey = {
+			{profileOffset},
+			CollectionKeyType_Profile,
+		};
 		profile = (Profile*)dataSet->profiles->get(
 			dataSet->profiles,
-			(CollectionKey){
-				{profileOffset},
-				CollectionKeyType_Profile,
-			},
+			&profileKey,
 			&profileItem,
 			exception);
 		if (profile != NULL && EXCEPTION_OKAY) {
@@ -3469,12 +3473,13 @@ static uint32_t addValuesFromResult(
 	DataReset(&item.data);
 	profileOffset = result->profileOffsets[property->componentIndex];
 	if (profileOffset != NULL_PROFILE_OFFSET) {
+		const CollectionKey profileKey = {
+			{profileOffset},
+			CollectionKeyType_Profile,
+		};
 		profile = (Profile*)dataSet->profiles->get(
 			dataSet->profiles,
-			(CollectionKey){
-				{profileOffset},
-				CollectionKeyType_Profile,
-			},
+			&profileKey,
 			&item, 
 			exception);
 	}
@@ -3962,12 +3967,13 @@ char* fiftyoneDegreesHashGetDeviceIdFromResult(
 			StringBuilderAddChar(&builder, '0');
 		}
 		else {
+			const CollectionKey profileKey = {
+				{profileOffset},
+				CollectionKeyType_Profile,
+			};
 			profile = (Profile*)dataSet->profiles->get(
 				dataSet->profiles,
-				(CollectionKey){
-					{profileOffset},
-					CollectionKeyType_Profile,
-				},
+				&profileKey,
 				&item,
 				exception);
 			if (profile == NULL) {
@@ -4043,12 +4049,13 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 				if (profileOffset != NULL_PROFILE_OFFSET) {
 
 					// Get the profile for the result.
+					const CollectionKey profileKey = {
+						{profileOffset},
+						CollectionKeyType_Profile,
+					};
 					profile = dataSet->profiles->get(
 						dataSet->profiles,
-						(CollectionKey){
-							{profileOffset},
-							CollectionKeyType_Profile,
-						},
+						&profileKey,
 						&profileItem,
 						exception);
 
@@ -4134,12 +4141,13 @@ size_t fiftyoneDegreesResultsHashGetValuesJson(
             if (ResultsHashGetValues(results, i, exception) != NULL &&
                 EXCEPTION_OKAY) {
                 // Get the property.
+            	const CollectionKey propertyKey = {
+					{propertyIndex},
+					CollectionKeyType_Property,
+				};
                 s.property = (Property*)dataSet->properties->get(
                     dataSet->properties,
-					(CollectionKey){
-						{propertyIndex},
-						CollectionKeyType_Property,
-					},
+					&propertyKey,
                     &propertyItem,
                     exception);
 

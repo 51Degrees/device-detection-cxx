@@ -96,10 +96,10 @@ static const CollectionKeyType nodeKeyType = {
 };
 
 void* fiftyoneDegreesGraphNodeReadFromFile(
-	const fiftyoneDegreesCollectionFile *file,
-	CollectionKey key,
-	fiftyoneDegreesData *data,
-	fiftyoneDegreesException *exception) {
+	const fiftyoneDegreesCollectionFile * const file,
+	const CollectionKey * const key,
+	fiftyoneDegreesData * const data,
+	fiftyoneDegreesException * const exception) {
 	GraphNode nodeHeader;
 	return CollectionReadFileVariable(
 		file,
@@ -116,12 +116,13 @@ fiftyoneDegreesGraphNode* fiftyoneDegreesGraphGetNode(
 	uint32_t offset,
 	fiftyoneDegreesCollectionItem *item,
 	fiftyoneDegreesException *exception) {
+	const CollectionKey nodeKey = {
+		{offset},
+		&nodeKeyType,
+	};
 	return (GraphNode*)collection->get(
 		collection,
-		(CollectionKey){
-			{offset},
-			nodeKeyType,
-		},
+		&nodeKey,
 		item,
 		exception);
 }

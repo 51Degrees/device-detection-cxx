@@ -190,7 +190,7 @@ typedef struct fiftyoneDegrees_graph_node_t {
  */
 EXTERNAL void* fiftyoneDegreesGraphNodeReadFromFile(
 	const fiftyoneDegreesCollectionFile *file,
-	fiftyoneDegreesCollectionKey key,
+	const fiftyoneDegreesCollectionKey *key,
 	fiftyoneDegreesData *data,
 	fiftyoneDegreesException *exception);
 
