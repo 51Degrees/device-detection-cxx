@@ -128,7 +128,7 @@ static bool getPropertyIsBool(
 	DataReset(&item.data);
 
 	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
-	Property *property = PropertyGetByName(
+	const Property *property = PropertyGetByName(
 		dataSet->properties,
 		dataSet->strings,
 		propertyName,

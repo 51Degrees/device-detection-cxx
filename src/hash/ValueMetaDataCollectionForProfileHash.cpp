@@ -53,7 +53,7 @@ ValueMetaDataCollectionForProfileHash::~ValueMetaDataCollectionForProfileHash() 
 ValueMetaData* ValueMetaDataCollectionForProfileHash::getByIndex(uint32_t index) const {
 	EXCEPTION_CREATE;
 	ValueMetaData *result = nullptr;
-	Value *value;
+	const Value *value;
 	Item item;
 	DataReset(&item.data);
 	uint32_t valueIndex = ((uint32_t*)(getProfile() + 1))[index];
@@ -75,8 +75,8 @@ bool ValueMetaDataCollectionForProfileHash::valueFilter(
 	fiftyoneDegreesCollectionItem *valueItem) {
 	EXCEPTION_CREATE;
 	Item nameItem;
-	String *name;
-	Value *value;
+	const String *name;
+	const Value *value;
 	FilterResult *result = (FilterResult*)state;
 	value = (Value*)valueItem->data.ptr;
 	DataReset(&nameItem.data);
@@ -110,7 +110,7 @@ ValueMetaData* ValueMetaDataCollectionForProfileHash::getByKey(
 	ValueMetaDataKey key) const {
 	EXCEPTION_CREATE;
 	Item propertyItem;
-	Property *property;
+	const Property *property;
 	uint32_t count;
 	ValueMetaData *result = nullptr;
 	FilterResult state;
