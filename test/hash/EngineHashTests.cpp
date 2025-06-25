@@ -729,7 +729,7 @@ public:
 				component = (fiftyoneDegreesComponent*)
 					dataSet->componentsList.items[componentIndex].data.ptr;
 				for (keyIndex = 0; keyIndex < component->keyValuesCount; keyIndex++) {
-					fiftyoneDegreesString* keyName = fiftyoneDegreesStringGet(
+					const fiftyoneDegreesString* keyName = fiftyoneDegreesStringGet(
 						dataSet->strings,
 						(&component->firstKeyValuePair)[keyIndex].key,
 						&item,
