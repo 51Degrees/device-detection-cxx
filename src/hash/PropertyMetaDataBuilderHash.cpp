@@ -28,7 +28,7 @@ using namespace FiftyoneDegrees::DeviceDetection::Hash;
 
 PropertyMetaData* PropertyMetaDataBuilderHash::build(
 	fiftyoneDegreesDataSetHash *dataSet,
-	fiftyoneDegreesProperty *property) {
+	const fiftyoneDegreesProperty *property) {
 	string name = getString(dataSet->strings, property->nameOffset);
 	return new PropertyMetaData(
 		name,
@@ -60,20 +60,20 @@ PropertyMetaData* PropertyMetaDataBuilderHash::build(
 
 byte PropertyMetaDataBuilderHash::getComponentId(
 	fiftyoneDegreesDataSetHash *dataSet,
-	fiftyoneDegreesProperty *property) {
+	const fiftyoneDegreesProperty *property) {
 	return ((Component*)dataSet->componentsList.items[
 		property->componentIndex].data.ptr)->componentId;
 }
 
 vector<uint32_t> PropertyMetaDataBuilderHash::getEvidenceProperties(
 	fiftyoneDegreesDataSetHash *dataSet,
-	fiftyoneDegreesProperty *property) {
+	const fiftyoneDegreesProperty *property) {
 	EXCEPTION_CREATE;
 	vector<uint32_t> indexes;
 	uint32_t i;
 	int index;
 	Item item;
-	String* name;
+	const String* name;
 	DataReset(&item.data);
 	name = PropertyGetName(
 		dataSet->strings,
@@ -106,7 +106,7 @@ string PropertyMetaDataBuilderHash::getDefaultValue(
 	EXCEPTION_CREATE;
 	string result;
 	Item item;
-	Value *value;
+	const Value *value;
 	if (valueIndex != UINT32_MAX) {
 		DataReset(&item.data);
 		value = ValueGet(
@@ -132,7 +132,7 @@ bool PropertyMetaDataBuilderHash::propertyIsAvailable(
 }
 
 string PropertyMetaDataBuilderHash::getPropertyType(
-	fiftyoneDegreesProperty *property) {
+	const fiftyoneDegreesProperty *property) {
 	switch (property->valueType) {
 	case FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_INTEGER:
 		return string("int");
@@ -153,9 +153,9 @@ string PropertyMetaDataBuilderHash::getPropertyType(
 }
 
 vector<string> PropertyMetaDataBuilderHash::getPropertyMap(
-	fiftyoneDegreesCollection *stringsCollection,
-	fiftyoneDegreesCollection *mapsCollection,
-	fiftyoneDegreesProperty *property) {
+	const fiftyoneDegreesCollection *stringsCollection,
+	const fiftyoneDegreesCollection *mapsCollection,
+	const fiftyoneDegreesProperty *property) {
 	EXCEPTION_CREATE;
 	uint32_t i, offset;
 	const char *name;

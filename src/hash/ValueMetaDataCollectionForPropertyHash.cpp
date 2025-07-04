@@ -48,7 +48,7 @@ ValueMetaData* ValueMetaDataCollectionForPropertyHash::getByIndex(
 	uint32_t index) const {
 	EXCEPTION_CREATE;
 	Item item;
-	Value *value;
+	const Value *value;
 	ValueMetaData *result = nullptr;
 	DataReset(&item.data);
 	value = ValueGet(
@@ -70,7 +70,7 @@ ValueMetaData* ValueMetaDataCollectionForPropertyHash::getByKey(
 	Item item;
 	ValueMetaData *result = nullptr;
 	DataReset(&item.data);
-	String *name = PropertyGetName(
+	const String * const name = PropertyGetName(
 		dataSet->strings, 
 		getProperty(), 
 		&item, 
