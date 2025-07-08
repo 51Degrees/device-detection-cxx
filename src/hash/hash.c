@@ -28,6 +28,7 @@
 
 #include "hash.h"
 #include "fiftyone.h"
+#include "../common-cxx/collectionKeyTypes.h"
 
 MAP_TYPE(Collection)
 
@@ -252,15 +253,15 @@ FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY_DEFAULT
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
 	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_WITH_INDEX,
-	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Strings
-	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Components
-	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Maps
-	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Properties
-	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Values
-	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Profiles
-	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Root Nodes
-	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Nodes
-	{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
+	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Strings
+	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Components
+	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Maps
+	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Properties
+	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Values
+	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Profiles
+	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Root Nodes
+	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Nodes
+	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
 	FIFTYONE_DEGREES_HASH_DIFFERENCE,
 	FIFTYONE_DEGREES_HASH_DRIFT,
 	false, // Performance graph
@@ -306,15 +307,15 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
 
 #define FIFTYONE_DEGREES_HASH_CONFIG_BALANCED \
 FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_NO_INDEX, \
-{ FIFTYONE_DEGREES_STRING_LOADED, FIFTYONE_DEGREES_STRING_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Strings */ \
-{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Components */ \
-{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Maps */ \
-{ FIFTYONE_DEGREES_PROPERTY_LOADED, FIFTYONE_DEGREES_PROPERTY_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Properties */ \
-{ FIFTYONE_DEGREES_VALUE_LOADED, FIFTYONE_DEGREES_VALUE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Values */ \
-{ FIFTYONE_DEGREES_PROFILE_LOADED, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Profiles */ \
-{ INT_MAX, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Root Nodes */ \
-{ FIFTYONE_DEGREES_NODE_LOADED, FIFTYONE_DEGREES_NODE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Nodes */ \
-{ FIFTYONE_DEGREES_PROFILE_LOADED, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* ProfileOffsets */ \
+{ false, FIFTYONE_DEGREES_STRING_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Strings */ \
+{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Components */ \
+{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Maps */ \
+{ false, FIFTYONE_DEGREES_PROPERTY_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Properties */ \
+{ false, FIFTYONE_DEGREES_VALUE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Values */ \
+{ false, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Profiles */ \
+{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Root Nodes */ \
+{ false, FIFTYONE_DEGREES_NODE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Nodes */ \
+{ false, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* ProfileOffsets */ \
 FIFTYONE_DEGREES_HASH_DIFFERENCE, \
 FIFTYONE_DEGREES_HASH_DRIFT, \
 false, /* Performance graph */ \
@@ -395,14 +396,24 @@ static void addProfile(
 	result->profileIsOverriden[componentIndex] = isOverride;
 }
 
+static const CollectionKeyType nodesKeyType = {
+	FIFTYONE_DEGREES_COLLECTION_ENTRY_TYPE_CUSTOM,
+	sizeof(HashRootNodes),
+	NULL,
+};
+
 static HashRootNodes* getRootNodes(
 	DataSetHash* dataSet,
 	uint32_t index,
 	Item *item,
 	Exception *exception) {
+	const CollectionKey nodeKey = {
+		{index},
+		&nodesKeyType,
+	};
 	return (HashRootNodes*)dataSet->rootNodes->get(
 		dataSet->rootNodes,
-		index,
+		&nodeKey,
 		item,
 		exception);
 }
@@ -1252,9 +1263,13 @@ static long initGetHttpHeaderString(
 					(uint16_t)(index - i),
 					exception);
 			nameItem->collection = NULL;
+			const CollectionKey stringKey = {
+				{keyValue->key},
+				CollectionKeyType_String,
+			};
 			dataSet->strings->get(
 				dataSet->strings,
-				keyValue->key,
+				&stringKey,
 				nameItem,
 				exception);
 			return keyValue->key;
@@ -1266,11 +1281,11 @@ static long initGetHttpHeaderString(
 	return -1;
 }
 
-static String* initGetPropertyString(
+static const String* initGetPropertyString(
 	void *state,
 	uint32_t index,
 	Item *item) {
-	String *name = NULL;
+	const String *name = NULL;
 	Item propertyItem;
 	Property *property;
 	DataSetHash *dataSet = (DataSetHash*)((stateWithException*)state)->state;
@@ -1281,9 +1296,13 @@ static String* initGetPropertyString(
 		DataReset(&propertyItem.data);
 		item->collection = NULL;
 		item->handle = NULL;
+		const CollectionKey propertyKey = {
+			{index},
+			CollectionKeyType_Property,
+		};
 		property = (Property*)dataSet->properties->get(
 			dataSet->properties,
-			index,
+			&propertyKey,
 			&propertyItem,
 			exception);
 		if (property != NULL && EXCEPTION_OKAY) {
@@ -1381,7 +1400,7 @@ static int findPropertyIndexByName(
 	int index;
 	int foundIndex = -1;
 	Property *property;
-	String *propertyName;
+	const String *propertyName;
 	Item propertyItem, nameItem;
 	int count = CollectionGetCount(properties);
 	DataReset(&propertyItem.data);
@@ -1420,9 +1439,9 @@ static void initGetEvidenceProperty(
 	char* relatedPropertyName,
 	Exception* exception) {
 	int index;
-	Component* component;
-	Property* property;
-	String* name;
+	const Component* component;
+	const Property* property;
+	const String* name;
 	Item propertyItem, nameItem;
 	DataReset(&propertyItem.data);
 	DataReset(&nameItem.data);
@@ -1473,9 +1492,9 @@ static void initGetEvidencePropertyRelated(
 	int* count,
 	char* suffix,
 	Exception* exception) {
-	Property* property;
-	String* name;
-	String* availableName = (String*)availableProperty->name.data.ptr;
+	const Property* property;
+	const String* name;
+	const String* const availableName = (String*)availableProperty->name.data.ptr;
 	int requiredLength = ((int)strlen(suffix)) + availableName->size - 1;
 	Item propertyItem, nameItem;
 	DataReset(&propertyItem.data);
@@ -2342,9 +2361,13 @@ static bool addProfileById(
 			&profileOffset,
 			exception) != NULL && EXCEPTION_OKAY) {
 		DataReset(&profileItem.data);
+		const CollectionKey profileKey = {
+			{profileOffset},
+			CollectionKeyType_Profile,
+		};
 		profile = (Profile*)dataSet->profiles->get(
 			dataSet->profiles,
-			profileOffset,
+			&profileKey,
 			&profileItem,
 			exception);
 		if (profile != NULL && EXCEPTION_OKAY) {
@@ -3450,9 +3473,13 @@ static uint32_t addValuesFromResult(
 	DataReset(&item.data);
 	profileOffset = result->profileOffsets[property->componentIndex];
 	if (profileOffset != NULL_PROFILE_OFFSET) {
+		const CollectionKey profileKey = {
+			{profileOffset},
+			CollectionKeyType_Profile,
+		};
 		profile = (Profile*)dataSet->profiles->get(
 			dataSet->profiles,
-			profileOffset, 
+			&profileKey,
 			&item, 
 			exception);
 	}
@@ -3940,9 +3967,13 @@ char* fiftyoneDegreesHashGetDeviceIdFromResult(
 			StringBuilderAddChar(&builder, '0');
 		}
 		else {
+			const CollectionKey profileKey = {
+				{profileOffset},
+				CollectionKeyType_Profile,
+			};
 			profile = (Profile*)dataSet->profiles->get(
 				dataSet->profiles,
-				profileOffset,
+				&profileKey,
 				&item,
 				exception);
 			if (profile == NULL) {
@@ -4018,9 +4049,13 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 				if (profileOffset != NULL_PROFILE_OFFSET) {
 
 					// Get the profile for the result.
+					const CollectionKey profileKey = {
+						{profileOffset},
+						CollectionKeyType_Profile,
+					};
 					profile = dataSet->profiles->get(
 						dataSet->profiles,
-						profileOffset,
+						&profileKey,
 						&profileItem,
 						exception);
 
@@ -4106,9 +4141,13 @@ size_t fiftyoneDegreesResultsHashGetValuesJson(
             if (ResultsHashGetValues(results, i, exception) != NULL &&
                 EXCEPTION_OKAY) {
                 // Get the property.
+            	const CollectionKey propertyKey = {
+					{propertyIndex},
+					CollectionKeyType_Property,
+				};
                 s.property = (Property*)dataSet->properties->get(
                     dataSet->properties,
-                    propertyIndex,
+					&propertyKey,
                     &propertyItem,
                     exception);
 

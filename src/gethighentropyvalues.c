@@ -22,6 +22,7 @@
 
 #include "gethighentropyvalues.h"
 #include "fiftyone.h"
+#include "common-cxx/collectionKeyTypes.h"
 
 // The property name of the GHEV javascript. This property value can be 
 // overridden with no value if there is no need for it to be returned.
@@ -97,7 +98,7 @@ static bool isAcceptCh(
     Property *property,
     Exception *exception) {
     Item stringItem;
-    String* name;
+    const String* name;
     bool result = false;
 
     // Get the name of the property from the strings collection.
@@ -130,10 +131,10 @@ static bool isAcceptCh(
 // there are no separators, or each segment if there are. When used to count the
 // headers returned there will be a null callback so this is checked for. 
 static int iterateValueSeparators(
-    DataSetDeviceDetection *dataSet,
-    valueIterateMethod callback,
-    char *value, 
-    char separator) {
+    DataSetDeviceDetection * const dataSet,
+    const valueIterateMethod callback,
+    const char *value,
+    const char separator) {
     int i = 0;
     int count = 0;
 
@@ -172,8 +173,8 @@ static int iterateValues(
 	Exception *exception) {
     Item valueItem;
     Item stringItem;
-    String *name;
-    Value *value;
+    const String *name;
+    const Value *value;
     int count = 0;
     DataReset(&valueItem.data);
     DataReset(&stringItem.data);
@@ -216,9 +217,13 @@ static int iterateProperties(
 	DataReset(&item.data);
 
     for(uint32_t i = 0; i < propertiesCount && EXCEPTION_OKAY; i++) {
+        const CollectionKey propertyKey = {
+            i,
+            CollectionKeyType_Property,
+        };
         Property* property = (Property*)properties->get(
             properties, 
-            i, 
+            &propertyKey,
             &item,
             exception);
         if (property != NULL && EXCEPTION_OKAY) {

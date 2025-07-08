@@ -73,7 +73,12 @@ static unsigned int POWERS[129] = {
 
 #ifndef FIFTYONE_DEGREES_MEMORY_ONLY
 
-static uint32_t getNodeFinalSize(void *initial) {
+static uint32_t getNodeFinalSize(
+	const void * const initial,
+	Exception * const exception) {
+#	ifdef _MSC_VER
+	UNREFERENCED_PARAMETER(exception);
+#	endif
 	GraphNode *nodeHeader =
 		(GraphNode*)initial;
 	size_t size = sizeof(GraphNode);
@@ -84,19 +89,23 @@ static uint32_t getNodeFinalSize(void *initial) {
 	return (uint32_t)size;
 }
 
+static const CollectionKeyType nodeKeyType = {
+	FIFTYONE_DEGREES_COLLECTION_ENTRY_TYPE_CUSTOM,
+	sizeof(GraphNode),
+	getNodeFinalSize,
+};
+
 void* fiftyoneDegreesGraphNodeReadFromFile(
-	const fiftyoneDegreesCollectionFile *file,
-	uint32_t offset,
-	fiftyoneDegreesData *data,
-	fiftyoneDegreesException *exception) {
+	const fiftyoneDegreesCollectionFile * const file,
+	const CollectionKey * const key,
+	fiftyoneDegreesData * const data,
+	fiftyoneDegreesException * const exception) {
 	GraphNode nodeHeader;
 	return CollectionReadFileVariable(
 		file,
 		data,
-		offset,
+		key,
 		&nodeHeader,
-		sizeof(GraphNode),
-		getNodeFinalSize,
 		exception);
 }
 
@@ -107,9 +116,13 @@ fiftyoneDegreesGraphNode* fiftyoneDegreesGraphGetNode(
 	uint32_t offset,
 	fiftyoneDegreesCollectionItem *item,
 	fiftyoneDegreesException *exception) {
+	const CollectionKey nodeKey = {
+		{offset},
+		&nodeKeyType,
+	};
 	return (GraphNode*)collection->get(
 		collection,
-		offset,
+		&nodeKey,
 		item,
 		exception);
 }

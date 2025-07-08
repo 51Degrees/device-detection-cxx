@@ -505,24 +505,19 @@ TEST_F(HashCTests, HashResultsGetValuesOutOfRangePropertyIndex) {
 	EXPECT_TRUE(EXCEPTION_CHECK(COLLECTION_INDEX_OUT_OF_RANGE));
 }
 
-#ifdef _MSC_VER
-#pragma warning (push)
-#pragma warning (disable: 4100) 
-#endif
-
 static void* getFail(
-	fiftyoneDegreesCollection* collection,
-	uint32_t indexOrOffset,
-	fiftyoneDegreesCollectionItem* item,
-	fiftyoneDegreesException* exception) {
+	const fiftyoneDegreesCollection * const collection,
+	const CollectionKey * const key,
+	fiftyoneDegreesCollectionItem * const item,
+	fiftyoneDegreesException * const exception) {
+#	ifdef _MSC_VER
+	UNREFERENCED_PARAMETER(collection);
+	UNREFERENCED_PARAMETER(key);
+	UNREFERENCED_PARAMETER(item);
+#	endif
 	EXCEPTION_SET(CORRUPT_DATA);
-	return NULL;
+	return nullptr;
 }
-
-#ifdef _MSC_VER
-#pragma warning (default: 4100) 
-#pragma warning (pop)
-#endif
 
 /**
  * Check that when an exception is set by the values collection,

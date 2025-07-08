@@ -51,7 +51,7 @@ namespace FiftyoneDegrees {
 				 */
 				static ValueMetaData* build(
 					fiftyoneDegreesDataSetHash *dataSet,
-					fiftyoneDegreesValue *value);
+					const fiftyoneDegreesValue *value);
 			};
 		}
 	}
