@@ -15,8 +15,8 @@
 <area shape="rect" id="node14" href="$structfiftyone_degrees_property_available.html" title="Used to access the property item quickly without the need to search." alt="" coords="659,259,899,286"/>
 <area shape="rect" id="node20" href="$structfiftyone_degrees_property_available_array.html" title="Array of items of type fiftyoneDegreesPropertyAvailable used to easily access and track the size of t..." alt="" coords="1272,252,1512,293"/>
 <area shape="rect" id="node15" href="$structfiftyone_degrees_evidence_property_index_array.html" title="Array of items of type fiftyoneDegreesEvidencePropertyIndex used to easily access and track the size ..." alt="" coords="243,252,481,293"/>
-<area shape="rect" id="node16" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="252,413,472,439"/>
-<area shape="rect" id="node17" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="683,458,874,485"/>
-<area shape="rect" id="node18" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="5,413,161,439"/>
+<area shape="rect" id="node16" href="$structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish..." alt="" coords="252,398,472,425"/>
+<area shape="rect" id="node17" href="$structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections." alt="" coords="683,443,874,470"/>
+<area shape="rect" id="node18" href="$structfiftyone_degrees_data.html" title="Data structure used for reusing memory which may have been allocated in a previous operation." alt="" coords="5,398,161,425"/>
 <area shape="rect" id="node19" href="$structfiftyone_degrees_indices_property_profile.html" title="Maps the profile index and the property index to the first value index of the profile for the propert..." alt="" coords="1541,321,1767,363"/>
 </map>

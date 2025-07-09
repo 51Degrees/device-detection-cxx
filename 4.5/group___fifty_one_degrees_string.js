@@ -26,8 +26,8 @@ var group___fifty_one_degrees_string =
     ] ],
     [ "FIFTYONE_DEGREES_STRING", "group___fifty_one_degrees_string.html#ga4ea1078e4c9e3c7668251f9e03023e59", null ],
     [ "fiftyoneDegreesStoredBinaryValueCompareWithString", "group___fifty_one_degrees_string.html#ga1b877b90dfaa9367ce5298ff04fc6e8a", null ],
-    [ "fiftyoneDegreesStoredBinaryValueGet", "group___fifty_one_degrees_string.html#ga97d60586de2a43bd8cf2aa21051fd72e", null ],
-    [ "fiftyoneDegreesStoredBinaryValueRead", "group___fifty_one_degrees_string.html#ga02cf40961090e7b9e2db735766444436", null ],
+    [ "fiftyoneDegreesStoredBinaryValueGet", "group___fifty_one_degrees_string.html#ga440030fcc3b55187a6e64927d735f611", null ],
+    [ "fiftyoneDegreesStoredBinaryValueRead", "group___fifty_one_degrees_string.html#gacfcae349c6fb7af10991f09beed53a15", null ],
     [ "fiftyoneDegreesStoredBinaryValueToBoolOrDefault", "group___fifty_one_degrees_string.html#gacea8faa7ae872ffb7650bea53dfcc26b", null ],
     [ "fiftyoneDegreesStoredBinaryValueToDoubleOrDefault", "group___fifty_one_degrees_string.html#ga690781569a66c988ee884870e87d03f5", null ],
     [ "fiftyoneDegreesStoredBinaryValueToIntOrDefault", "group___fifty_one_degrees_string.html#ga86e6bd5f95831de2e957595618ff46ab", null ],
@@ -41,7 +41,8 @@ var group___fifty_one_degrees_string =
     [ "fiftyoneDegreesStringBuilderInit", "group___fifty_one_degrees_string.html#ga07ca999939220ffa6e73896d0b9de250", null ],
     [ "fiftyoneDegreesStringCompare", "group___fifty_one_degrees_string.html#ga486bcfeb3313e8c39cd3eb3371e4ebfe", null ],
     [ "fiftyoneDegreesStringCompareLength", "group___fifty_one_degrees_string.html#ga4ebd9184774f9c252e26505edc0cb68b", null ],
-    [ "fiftyoneDegreesStringGet", "group___fifty_one_degrees_string.html#ga3825333ea531aa8de5546955bdfab3cf", null ],
-    [ "fiftyoneDegreesStringRead", "group___fifty_one_degrees_string.html#gaabadc8944fbbe89c87480635a630a672", null ],
+    [ "fiftyoneDegreesStringGet", "group___fifty_one_degrees_string.html#gaef9d1fc42002a0b5c4269b526b09632c", null ],
+    [ "fiftyoneDegreesStringGetFinalSize", "group___fifty_one_degrees_string.html#ga8d9dccd66132de4dae6135cd823d5891", null ],
+    [ "fiftyoneDegreesStringRead", "group___fifty_one_degrees_string.html#gacf8f21a245b0c3d15cf78f535ef631f7", null ],
     [ "fiftyoneDegreesStringSubString", "group___fifty_one_degrees_string.html#ga3a7fd30c1770a514a8e97c3aa25b6ab6", null ]
 ];

@@ -75,7 +75,7 @@ $(document).ready(function(){initNavTree('group___fifty_one_degrees_profile.html
 <p><b>By Id</b> : If the index of a profile is not known, then the profile can be fetched using the <a class="el" href="group___fifty_one_degrees_profile.html#gaeeb3316cd527b4c264c7f5a3d37248d9" title="Gets the profile associated with the profileId or NULL if there is no corresponding profile.">fiftyoneDegreesProfileGetByProfileId</a> method to find the profile in a profiles collection.</p>
 <h2>Iterate</h2>
 <p>A profiles collection can be iterated in two ways:</p>
-<p><b>Values</b> : The <a class="el" href="group___fifty_one_degrees_profile.html#gabb5a42154443fb32c819c6831ed6a702" title="Iterate over all values contained in the profile which relate to the specified property,...">fiftyoneDegreesProfileIterateValuesForProperty</a> method can be used to iterate over all the values which a profile contains for a specified property.</p>
+<p><b>Values</b> : The <a class="el" href="group___fifty_one_degrees_profile.html#gabd0996480bc6d11ae0b8ecf7642d3df4" title="Iterate over all values contained in the profile which relate to the specified property,...">fiftyoneDegreesProfileIterateValuesForProperty</a> method can be used to iterate over all the values which a profile contains for a specified property.</p>
 <p><b>Profiles</b> : The <a class="el" href="group___fifty_one_degrees_profile.html#ga8be4598c298ab52c64ecb925679eeb44" title="Iterate all profiles which contain the specified value, calling the callback method for each.">fiftyoneDegreesProfileIterateProfilesForPropertyAndValue</a> method can be used to iterate over all the profiles in a profiles collection which contain a specified property and value pairing. </p>
 <h2 class="g-docs__section-heading">
 Collaboration diagram for Profile:</h2>
@@ -181,6 +181,13 @@ Functions</h2>
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
+<tr class="c-table__row memitem:ga7224c6dec8a86b50c5b0ff691f2fbacf"><td class="c-table__cell">uint32_t<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#ga7224c6dec8a86b50c5b0ff691f2fbacf">fiftyoneDegreesProfileGetFinalSize</a> (const void *initial, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *const exception)
+<!-- startMemberDescription -->
+<div class="c-table__desc memdesc:ga7224c6dec8a86b50c5b0ff691f2fbacf">Gets size of Profile with trailing values.  <a href="#ga7224c6dec8a86b50c5b0ff691f2fbacf">More...</a><!-- endMemberDescription -->
+</div></td></tr>
+<!-- member dec start -->
+<!-- startMemberItem() -->
 <tr class="c-table__row memitem:gaeeb3316cd527b4c264c7f5a3d37248d9"><td class="c-table__cell"><a class="el" href="structfiftyone_degrees_profile.html">fiftyoneDegreesProfile</a>&#160;*<!-- insertMemberAlign -->
 &#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#gaeeb3316cd527b4c264c7f5a3d37248d9">fiftyoneDegreesProfileGetByProfileId</a> (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *profileOffsets, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *profiles, uint32_t profileId, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
@@ -195,24 +202,24 @@ Functions</h2>
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:ga3e84d4aac0a0d232d450435405fe99eb"><td class="c-table__cell">void&#160;*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#ga3e84d4aac0a0d232d450435405fe99eb">fiftyoneDegreesProfileReadFromFile</a> (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *file, uint32_t offset, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:ga44cdd46e3c6c328cb465dabf4b0182d7"><td class="c-table__cell">void&#160;*<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#ga44cdd46e3c6c328cb465dabf4b0182d7">fiftyoneDegreesProfileReadFromFile</a> (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *file, const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *key, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:ga3e84d4aac0a0d232d450435405fe99eb">Read a profile from the file collection provided and store in the data pointer.  <a href="#ga3e84d4aac0a0d232d450435405fe99eb">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:ga44cdd46e3c6c328cb465dabf4b0182d7">Read a profile from the file collection provided and store in the data pointer.  <a href="#ga44cdd46e3c6c328cb465dabf4b0182d7">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:gabb5a42154443fb32c819c6831ed6a702"><td class="c-table__cell">uint32_t<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#gabb5a42154443fb32c819c6831ed6a702">fiftyoneDegreesProfileIterateValuesForProperty</a> (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *values, <a class="el" href="structfiftyone_degrees_profile.html">fiftyoneDegreesProfile</a> *profile, <a class="el" href="structfiftyone_degrees_property.html">fiftyoneDegreesProperty</a> *property, void *state, <a class="el" href="group___fifty_one_degrees_profile.html#ga3b3b294644686c4352c12e115aa4f962">fiftyoneDegreesProfileIterateMethod</a> callback, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:gabd0996480bc6d11ae0b8ecf7642d3df4"><td class="c-table__cell">uint32_t<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#gabd0996480bc6d11ae0b8ecf7642d3df4">fiftyoneDegreesProfileIterateValuesForProperty</a> (const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *values, const <a class="el" href="structfiftyone_degrees_profile.html">fiftyoneDegreesProfile</a> *profile, const <a class="el" href="structfiftyone_degrees_property.html">fiftyoneDegreesProperty</a> *property, void *state, <a class="el" href="group___fifty_one_degrees_profile.html#ga3b3b294644686c4352c12e115aa4f962">fiftyoneDegreesProfileIterateMethod</a> callback, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:gabb5a42154443fb32c819c6831ed6a702">Iterate over all values contained in the profile which relate to the specified property, calling the callback method for each.  <a href="#gabb5a42154443fb32c819c6831ed6a702">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:gabd0996480bc6d11ae0b8ecf7642d3df4">Iterate over all values contained in the profile which relate to the specified property, calling the callback method for each.  <a href="#gabd0996480bc6d11ae0b8ecf7642d3df4">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:ga24ebb549c8adc88d5fe5e4c23415eafe"><td class="c-table__cell">uint32_t<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#ga24ebb549c8adc88d5fe5e4c23415eafe">fiftyoneDegreesProfileIterateValuesForPropertyWithIndex</a> (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *values, <a class="el" href="structfiftyone_degrees_indices_property_profile.html">fiftyoneDegreesIndicesPropertyProfile</a> *index, uint32_t availablePropertyIndex, <a class="el" href="structfiftyone_degrees_profile.html">fiftyoneDegreesProfile</a> *profile, <a class="el" href="structfiftyone_degrees_property.html">fiftyoneDegreesProperty</a> *property, void *state, <a class="el" href="group___fifty_one_degrees_profile.html#ga3b3b294644686c4352c12e115aa4f962">fiftyoneDegreesProfileIterateMethod</a> callback, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:gaca8f5a2cda72064384203ddcc45c7051"><td class="c-table__cell">uint32_t<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#gaca8f5a2cda72064384203ddcc45c7051">fiftyoneDegreesProfileIterateValuesForPropertyWithIndex</a> (const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *values, <a class="el" href="structfiftyone_degrees_indices_property_profile.html">fiftyoneDegreesIndicesPropertyProfile</a> *index, uint32_t availablePropertyIndex, const <a class="el" href="structfiftyone_degrees_profile.html">fiftyoneDegreesProfile</a> *profile, const <a class="el" href="structfiftyone_degrees_property.html">fiftyoneDegreesProperty</a> *property, void *state, <a class="el" href="group___fifty_one_degrees_profile.html#ga3b3b294644686c4352c12e115aa4f962">fiftyoneDegreesProfileIterateMethod</a> callback, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:ga24ebb549c8adc88d5fe5e4c23415eafe">Iterate over all values contained in the profile which relate to the specified property and profile, calling the callback method for each.  <a href="#ga24ebb549c8adc88d5fe5e4c23415eafe">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:gaca8f5a2cda72064384203ddcc45c7051">Iterate over all values contained in the profile which relate to the specified property and profile, calling the callback method for each.  <a href="#gaca8f5a2cda72064384203ddcc45c7051">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
@@ -223,10 +230,10 @@ Functions</h2>
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:ga62dcd39deaa41f757a33122dbfa1ce39"><td class="c-table__cell">uint32_t<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#ga62dcd39deaa41f757a33122dbfa1ce39">fiftyoneDegreesProfileIterateProfilesForPropertyWithTypeAndValueAndOffsetExtractor</a> (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *strings, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *properties, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *propertyTypes, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *values, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *profiles, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *profileOffsets, <a class="el" href="group___fifty_one_degrees_profile.html#gac40aefd8b4f84301690922192e5c28a5">fiftyoneDegreesProfileOffsetValueExtractor</a> offsetValueExtractor, const char *propertyName, const char *valueName, void *state, <a class="el" href="group___fifty_one_degrees_profile.html#ga3b3b294644686c4352c12e115aa4f962">fiftyoneDegreesProfileIterateMethod</a> callback, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:ga19209053b0e6cd8c406815809c27fc0f"><td class="c-table__cell">uint32_t<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_profile.html#ga19209053b0e6cd8c406815809c27fc0f">fiftyoneDegreesProfileIterateProfilesForPropertyWithTypeAndValueAndOffsetExtractor</a> (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *strings, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *properties, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *propertyTypes, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *values, <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *profiles, const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *profileOffsets, <a class="el" href="group___fifty_one_degrees_profile.html#gac40aefd8b4f84301690922192e5c28a5">fiftyoneDegreesProfileOffsetValueExtractor</a> offsetValueExtractor, const char *propertyName, const char *valueName, void *state, <a class="el" href="group___fifty_one_degrees_profile.html#ga3b3b294644686c4352c12e115aa4f962">fiftyoneDegreesProfileIterateMethod</a> callback, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:ga62dcd39deaa41f757a33122dbfa1ce39">Iterate all profiles which contain the specified value, calling the callback method for each.  <a href="#ga62dcd39deaa41f757a33122dbfa1ce39">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:ga19209053b0e6cd8c406815809c27fc0f">Iterate all profiles which contain the specified value, calling the callback method for each.  <a href="#ga19209053b0e6cd8c406815809c27fc0f">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
@@ -657,6 +664,63 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
+<a id="ga7224c6dec8a86b50c5b0ff691f2fbacf"></a><!-- startMemberDoc -->
+
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga7224c6dec8a86b50c5b0ff691f2fbacf">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileGetFinalSize()</h2>
+
+<div class="c-member__main">
+<div class="c-member__head">
+<!-- startMemberDocName -->
+      <div class="c-member__split">
+        <div class="g-table g-table--overflow">
+          <table class="c-table c-table--article">
+            <tr class="c-table__row">
+              <td class="c-table__cell">uint32_t fiftyoneDegreesProfileGetFinalSize <!-- endMemberDocName -->
+</td>
+<!-- startParameterList -->
+          <td>(</td>
+<!-- startFirstParameterType -->
+          <td class="c-table__cell">const void *<!-- endParameterType -->
+&#160;</td>
+<!-- startParameterName -->
+          <td class="c-table__cell"><em>initial</em>, <!-- endParameterName -->
+</td>
+        </tr>
+<!-- startParameterType -->
+        <tr>
+          <td class="c-table__cell"></td>
+          <td></td>
+          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *const<!-- endParameterType -->
+&#160;</td>
+<!-- startParameterName -->
+          <td class="c-table__cell"><em>exception</em><!-- endParameterName -->
+&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><!-- endParameterList -->
+</td>
+        </tr>
+<!-- endMemberDoc -->
+          </table>
+        </div>
+      </div>
+</div><!-- startIndent -->
+<div class="c-member__body">
+
+<p>Gets size of Profile with trailing values. </p>
+<dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">initial</span> - pointer to profile "head" </dd>
+  </dd>
+</dl>
+<dl class="c-list-definition return"><dt class="c-list-definition__title">Returns</dt><dd class="c-list-definition__desc">full (with tail) struct size </dd></dl>
+<!-- endIndent -->
+
+</div>
+</div>
+</article>
+<article class="c-member">
 <a id="ga011cb9bf3cdc811f1a24fe3eef2d60d7"></a><!-- startMemberDoc -->
 
 <h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga011cb9bf3cdc811f1a24fe3eef2d60d7">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileGetOffsetForProfileId()</h2>
@@ -1040,9 +1104,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="ga62dcd39deaa41f757a33122dbfa1ce39"></a><!-- startMemberDoc -->
+<a id="ga19209053b0e6cd8c406815809c27fc0f"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga62dcd39deaa41f757a33122dbfa1ce39">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileIterateProfilesForPropertyWithTypeAndValueAndOffsetExtractor()</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga19209053b0e6cd8c406815809c27fc0f">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileIterateProfilesForPropertyWithTypeAndValueAndOffsetExtractor()</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -1106,7 +1170,7 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>profileOffsets</em>, <!-- endParameterName -->
@@ -1310,9 +1374,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="gabb5a42154443fb32c819c6831ed6a702"></a><!-- startMemberDoc -->
+<a id="gabd0996480bc6d11ae0b8ecf7642d3df4"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gabb5a42154443fb32c819c6831ed6a702">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileIterateValuesForProperty()</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gabd0996480bc6d11ae0b8ecf7642d3df4">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileIterateValuesForProperty()</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -1326,7 +1390,7 @@ Functions</h2>
 <!-- startParameterList -->
           <td>(</td>
 <!-- startFirstParameterType -->
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>values</em>, <!-- endParameterName -->
@@ -1336,7 +1400,7 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_profile.html">fiftyoneDegreesProfile</a> *<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_profile.html">fiftyoneDegreesProfile</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>profile</em>, <!-- endParameterName -->
@@ -1346,7 +1410,7 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_property.html">fiftyoneDegreesProperty</a> *<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_property.html">fiftyoneDegreesProperty</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>property</em>, <!-- endParameterName -->
@@ -1412,9 +1476,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="ga24ebb549c8adc88d5fe5e4c23415eafe"></a><!-- startMemberDoc -->
+<a id="gaca8f5a2cda72064384203ddcc45c7051"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga24ebb549c8adc88d5fe5e4c23415eafe">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileIterateValuesForPropertyWithIndex()</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gaca8f5a2cda72064384203ddcc45c7051">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileIterateValuesForPropertyWithIndex()</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -1428,7 +1492,7 @@ Functions</h2>
 <!-- startParameterList -->
           <td>(</td>
 <!-- startFirstParameterType -->
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>values</em>, <!-- endParameterName -->
@@ -1458,7 +1522,7 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_profile.html">fiftyoneDegreesProfile</a> *<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_profile.html">fiftyoneDegreesProfile</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>profile</em>, <!-- endParameterName -->
@@ -1468,7 +1532,7 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_property.html">fiftyoneDegreesProperty</a> *<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_property.html">fiftyoneDegreesProperty</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>property</em>, <!-- endParameterName -->
@@ -1622,9 +1686,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="ga3e84d4aac0a0d232d450435405fe99eb"></a><!-- startMemberDoc -->
+<a id="ga44cdd46e3c6c328cb465dabf4b0182d7"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga3e84d4aac0a0d232d450435405fe99eb">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileReadFromFile()</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga44cdd46e3c6c328cb465dabf4b0182d7">&#9670;&nbsp;</a></span>fiftyoneDegreesProfileReadFromFile()</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -1648,10 +1712,10 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell">uint32_t<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
-          <td class="c-table__cell"><em>offset</em>, <!-- endParameterName -->
+          <td class="c-table__cell"><em>key</em>, <!-- endParameterName -->
 </td>
         </tr>
 <!-- startParameterType -->
@@ -1690,7 +1754,7 @@ Functions</h2>
 <p>Read a profile from the file collection provided and store in the data pointer. </p>
 <p>This method is used when creating a collection from file. </p><dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">file</span> - collection to read from </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">offset</span> - of the profile in the collection </dd>
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">key</span> - of the profile in the collection </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">data</span> - to store the resulting profile in </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">exception</span> - pointer to an exception data structure to be used if an exception occurs. See <a class="el" href="exceptions_8h_source.html">exceptions.h</a> </dd>
   </dd>

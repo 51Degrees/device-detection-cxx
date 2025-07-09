@@ -15,14 +15,15 @@ var group___fifty_one_degrees_profile =
     [ "fiftyoneDegreesProfileGetByIndex", "group___fifty_one_degrees_profile.html#gae74dfe0de13a27417d62f84f0b4ca866", null ],
     [ "fiftyoneDegreesProfileGetByProfileId", "group___fifty_one_degrees_profile.html#gaeeb3316cd527b4c264c7f5a3d37248d9", null ],
     [ "fiftyoneDegreesProfileGetByProfileIdIndirect", "group___fifty_one_degrees_profile.html#ga1bb61958ad311b30f4277ab85c2db82e", null ],
+    [ "fiftyoneDegreesProfileGetFinalSize", "group___fifty_one_degrees_profile.html#ga7224c6dec8a86b50c5b0ff691f2fbacf", null ],
     [ "fiftyoneDegreesProfileGetOffsetForProfileId", "group___fifty_one_degrees_profile.html#ga011cb9bf3cdc811f1a24fe3eef2d60d7", null ],
     [ "fiftyoneDegreesProfileIterateProfilesForPropertyAndValue", "group___fifty_one_degrees_profile.html#ga8be4598c298ab52c64ecb925679eeb44", null ],
     [ "fiftyoneDegreesProfileIterateProfilesForPropertyWithTypeAndValue", "group___fifty_one_degrees_profile.html#ga24a7bd23358439e8e6668a43cb1af8f0", null ],
-    [ "fiftyoneDegreesProfileIterateProfilesForPropertyWithTypeAndValueAndOffsetExtractor", "group___fifty_one_degrees_profile.html#ga62dcd39deaa41f757a33122dbfa1ce39", null ],
+    [ "fiftyoneDegreesProfileIterateProfilesForPropertyWithTypeAndValueAndOffsetExtractor", "group___fifty_one_degrees_profile.html#ga19209053b0e6cd8c406815809c27fc0f", null ],
     [ "fiftyoneDegreesProfileIterateValueIndexes", "group___fifty_one_degrees_profile.html#ga200629e34234180a1f6fe13c14ce7a06", null ],
-    [ "fiftyoneDegreesProfileIterateValuesForProperty", "group___fifty_one_degrees_profile.html#gabb5a42154443fb32c819c6831ed6a702", null ],
-    [ "fiftyoneDegreesProfileIterateValuesForPropertyWithIndex", "group___fifty_one_degrees_profile.html#ga24ebb549c8adc88d5fe5e4c23415eafe", null ],
+    [ "fiftyoneDegreesProfileIterateValuesForProperty", "group___fifty_one_degrees_profile.html#gabd0996480bc6d11ae0b8ecf7642d3df4", null ],
+    [ "fiftyoneDegreesProfileIterateValuesForPropertyWithIndex", "group___fifty_one_degrees_profile.html#gaca8f5a2cda72064384203ddcc45c7051", null ],
     [ "fiftyoneDegreesProfileOffsetAsPureOffset", "group___fifty_one_degrees_profile.html#ga725fedf5ad19d78ca14e7fb05b645de1", null ],
     [ "fiftyoneDegreesProfileOffsetToPureOffset", "group___fifty_one_degrees_profile.html#ga8bba1a1fc21e5dca10902f58f66c682d", null ],
-    [ "fiftyoneDegreesProfileReadFromFile", "group___fifty_one_degrees_profile.html#ga3e84d4aac0a0d232d450435405fe99eb", null ]
+    [ "fiftyoneDegreesProfileReadFromFile", "group___fifty_one_degrees_profile.html#ga44cdd46e3c6c328cb465dabf4b0182d7", null ]
 ];

@@ -1,0 +1,5 @@
+<map id="fiftyoneDegreesCollectionKey" name="fiftyoneDegreesCollectionKey">
+<area shape="rect" id="node1" title="Explains to a collection (or cache) what the consumer is looking for." alt="" coords="100,109,315,136"/>
+<area shape="rect" id="node2" href="$structfiftyone_degrees_collection_key_type.html" title="Explains to a collection how to properly extract the requested value." alt="" coords="5,5,196,47"/>
+<area shape="rect" id="node3" href="$unionfiftyone_degrees_collection_index_or_offset.html" title="Location of the item within the Collection." alt="" coords="220,5,411,47"/>
+</map>

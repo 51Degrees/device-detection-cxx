@@ -6,13 +6,13 @@ var group___fifty_one_degrees_value =
       [ "propertyIndex", "structfiftyone_degrees_value.html#a745b37aba51f1f6eb4680201abd4b23c", null ],
       [ "urlOffset", "structfiftyone_degrees_value.html#a0ac256571cae9b309fbee9c0771fd2f5", null ]
     ] ],
-    [ "fiftyoneDegreesValueGet", "group___fifty_one_degrees_value.html#ga2b9b0f3726dd631f75f5f57bf44c29fb", null ],
-    [ "fiftyoneDegreesValueGetByName", "group___fifty_one_degrees_value.html#ga21550a78f0bef2393da0e0f2a72f67cb", null ],
-    [ "fiftyoneDegreesValueGetByNameAndType", "group___fifty_one_degrees_value.html#gab5483946ad74e055ef02bfce11217dd8", null ],
-    [ "fiftyoneDegreesValueGetContent", "group___fifty_one_degrees_value.html#ga96382b06aa259199f4b94dc506b8f433", null ],
-    [ "fiftyoneDegreesValueGetDescription", "group___fifty_one_degrees_value.html#gace9f65abd2bbe141d2b1dffb9710334a", null ],
+    [ "fiftyoneDegreesValueGet", "group___fifty_one_degrees_value.html#ga1a7093a9762c013ef86c7ad175cec9df", null ],
+    [ "fiftyoneDegreesValueGetByName", "group___fifty_one_degrees_value.html#gaeca64053cc0f86876ba150c59b431230", null ],
+    [ "fiftyoneDegreesValueGetByNameAndType", "group___fifty_one_degrees_value.html#gacb664a35914ae7f910eb5be60ec489e9", null ],
+    [ "fiftyoneDegreesValueGetContent", "group___fifty_one_degrees_value.html#gae741287f11e26d35f27ebd1e5422bfdd", null ],
+    [ "fiftyoneDegreesValueGetDescription", "group___fifty_one_degrees_value.html#gaf8fb66358a02819260bcdff65ceba438", null ],
     [ "fiftyoneDegreesValueGetIndexByName", "group___fifty_one_degrees_value.html#gaaed8a8b28a1e5550d128ad8be4e08698", null ],
-    [ "fiftyoneDegreesValueGetIndexByNameAndType", "group___fifty_one_degrees_value.html#gad9e3e4b668bd9af3d7d0891dce0e2962", null ],
-    [ "fiftyoneDegreesValueGetName", "group___fifty_one_degrees_value.html#ga3657f978dea420fd3249af4bf4858e7c", null ],
-    [ "fiftyoneDegreesValueGetUrl", "group___fifty_one_degrees_value.html#gaf3b2c4f54c2328cc7a80bdaee0228d15", null ]
+    [ "fiftyoneDegreesValueGetIndexByNameAndType", "group___fifty_one_degrees_value.html#gac6b69c8283341767ea375213e715bc23", null ],
+    [ "fiftyoneDegreesValueGetName", "group___fifty_one_degrees_value.html#ga44ba118ebed6ffde647a3814d306f1e5", null ],
+    [ "fiftyoneDegreesValueGetUrl", "group___fifty_one_degrees_value.html#gad50bdd54ac07c0f83cc9e81a63927ccc", null ]
 ];

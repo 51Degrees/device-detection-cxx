@@ -82,7 +82,7 @@ $(document).ready(function(){initNavTree('group___fifty_one_degrees_properties.h
 <li>An array of strings.</li>
 <li>Existing properties results from a previous creation operation. This method is used when a data set is being reloaded due to a change in the underlying data.</li>
 </ol>
-<p>Creation also requires a method to retrieve the name of the properties from the underlying data source. A method pointer conforming to <a class="el" href="group___fifty_one_degrees_properties.html#ga9674ffb0f32de9e7223b6bd626603a9c" title="Returns a string for the property at the index provided or NULL if there is no property available at ...">fiftyoneDegreesPropertiesGetMethod</a> must be provided to retrieve the property name string item for a given property index up to the maximum count. The call back is used to avoid any hard dependency between the data structure and the properties methods.</p>
+<p>Creation also requires a method to retrieve the name of the properties from the underlying data source. A method pointer conforming to <a class="el" href="group___fifty_one_degrees_properties.html#gad7e4056e8d706392f73a06481d480d45" title="Returns a string for the property at the index provided or NULL if there is no property available at ...">fiftyoneDegreesPropertiesGetMethod</a> must be provided to retrieve the property name string item for a given property index up to the maximum count. The call back is used to avoid any hard dependency between the data structure and the properties methods.</p>
 <p>Unlike standard collection item retrieval the properties methods will not know the underlying collection implement or reference from which the item was obtained from. Therefore the implementation of get MUST set the collection field of the collection item.</p>
 <p>Some, or all, of the required properties may not be present in the underlying data source. Any missing properties will be ignored in the results. The get name from required index method can be used to iterate over the available properties. The number of available properties after creation can be obtained from the count field of properties results.</p>
 <p>Whilst the property names can be provided as string(s) the property names referenced from the properties results are collection items from a strings collection. The properties methods are responsible for releasing the references to these strings when the properties results are freed.</p>
@@ -179,10 +179,10 @@ typedef&#160;<a class="el" href="structfiftyone_degrees_evidence_property_index_
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:ga9674ffb0f32de9e7223b6bd626603a9c"><td class="c-table__cell">typedef&#160;<a class="el" href="structfiftyone_degrees_string.html">fiftyoneDegreesString</a>&#160;*(*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_properties.html#ga9674ffb0f32de9e7223b6bd626603a9c">fiftyoneDegreesPropertiesGetMethod</a>) (void *state, uint32_t index, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item)
+<tr class="c-table__row memitem:gad7e4056e8d706392f73a06481d480d45"><td class="c-table__cell">typedef&#160;const&#160;<a class="el" href="structfiftyone_degrees_string.html">fiftyoneDegreesString</a>&#160;*(*<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_properties.html#gad7e4056e8d706392f73a06481d480d45">fiftyoneDegreesPropertiesGetMethod</a>) (void *state, uint32_t index, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:ga9674ffb0f32de9e7223b6bd626603a9c">Returns a string for the property at the index provided or NULL if there is no property available at the index.  <a href="#ga9674ffb0f32de9e7223b6bd626603a9c">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:gad7e4056e8d706392f73a06481d480d45">Returns a string for the property at the index provided or NULL if there is no property available at the index.  <a href="#gad7e4056e8d706392f73a06481d480d45">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
@@ -213,7 +213,7 @@ Functions</h2>
 <!-- member dec start -->
 <!-- startMemberItem() -->
 <tr class="c-table__row memitem:ga3b8782c358b72fd2664de3127293ba7c"><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_properties.html#ga927d138aa1c8aa695f8014619ed8e4d3">fiftyoneDegreesPropertiesAvailable</a>&#160;*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_properties.html#ga3b8782c358b72fd2664de3127293ba7c">fiftyoneDegreesPropertiesCreate</a> (<a class="el" href="structfiftyone_degrees_properties_required.html">fiftyoneDegreesPropertiesRequired</a> *properties, void *state, <a class="el" href="group___fifty_one_degrees_properties.html#ga9674ffb0f32de9e7223b6bd626603a9c">fiftyoneDegreesPropertiesGetMethod</a> getPropertyMethod, <a class="el" href="group___fifty_one_degrees_properties.html#ga4fa1e4432a72eafbbb3e19eec1f1e6dd">fiftyoneDegreesEvidencePropertiesGetMethod</a> getEvidencePropertiesMethod)
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_properties.html#ga3b8782c358b72fd2664de3127293ba7c">fiftyoneDegreesPropertiesCreate</a> (<a class="el" href="structfiftyone_degrees_properties_required.html">fiftyoneDegreesPropertiesRequired</a> *properties, void *state, <a class="el" href="group___fifty_one_degrees_properties.html#gad7e4056e8d706392f73a06481d480d45">fiftyoneDegreesPropertiesGetMethod</a> getPropertyMethod, <a class="el" href="group___fifty_one_degrees_properties.html#ga4fa1e4432a72eafbbb3e19eec1f1e6dd">fiftyoneDegreesEvidencePropertiesGetMethod</a> getEvidencePropertiesMethod)
 <!-- startMemberDescription -->
 <div class="c-table__desc memdesc:ga3b8782c358b72fd2664de3127293ba7c">Creates a properties result instance for use with future property operations.  <a href="#ga3b8782c358b72fd2664de3127293ba7c">More...</a><!-- endMemberDescription -->
 </div></td></tr>
@@ -366,9 +366,9 @@ Variables</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="ga9674ffb0f32de9e7223b6bd626603a9c"></a><!-- startMemberDoc -->
+<a id="gad7e4056e8d706392f73a06481d480d45"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga9674ffb0f32de9e7223b6bd626603a9c">&#9670;&nbsp;</a></span>fiftyoneDegreesPropertiesGetMethod</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gad7e4056e8d706392f73a06481d480d45">&#9670;&nbsp;</a></span>fiftyoneDegreesPropertiesGetMethod</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -377,7 +377,7 @@ Variables</h2>
         <div class="g-table g-table--overflow">
           <table class="c-table c-table--article">
             <tr class="c-table__row">
-              <td class="c-table__cell">typedef <a class="el" href="structfiftyone_degrees_string.html">fiftyoneDegreesString</a>*(* fiftyoneDegreesPropertiesGetMethod) (void *state, uint32_t index, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item)<!-- endMemberDocName -->
+              <td class="c-table__cell">typedef const <a class="el" href="structfiftyone_degrees_string.html">fiftyoneDegreesString</a>*(* fiftyoneDegreesPropertiesGetMethod) (void *state, uint32_t index, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item)<!-- endMemberDocName -->
 </td>
 <!-- endMemberDoc -->
             </tr>
@@ -440,7 +440,7 @@ Variables</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_properties.html#ga9674ffb0f32de9e7223b6bd626603a9c">fiftyoneDegreesPropertiesGetMethod</a><!-- endParameterType -->
+          <td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_properties.html#gad7e4056e8d706392f73a06481d480d45">fiftyoneDegreesPropertiesGetMethod</a><!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>getPropertyMethod</em>, <!-- endParameterName -->

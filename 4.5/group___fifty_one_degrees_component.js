@@ -12,9 +12,10 @@ var group___fifty_one_degrees_component =
       [ "nameOffset", "structfiftyone_degrees_component.html#a3775ae62e8b47f277c257076237de60f", null ]
     ] ],
     [ "fiftyoneDegreesComponentGetDefaultProfileId", "group___fifty_one_degrees_component.html#gaecac9276db71e32eae2038703840933a", null ],
+    [ "fiftyoneDegreesComponentGetFinalSize", "group___fifty_one_degrees_component.html#ga44efe1f4b5782dde8dc06a5c3f65970c", null ],
     [ "fiftyoneDegreesComponentGetHeaders", "group___fifty_one_degrees_component.html#gaabdc73184fd9271a3fce3f7e3b90c6b0", null ],
     [ "fiftyoneDegreesComponentGetKeyValuePair", "group___fifty_one_degrees_component.html#gaf5abab9a2550a3496b34cf692908c973", null ],
-    [ "fiftyoneDegreesComponentGetName", "group___fifty_one_degrees_component.html#gaac88c4674337d6f91b2ef8280205d5ec", null ],
+    [ "fiftyoneDegreesComponentGetName", "group___fifty_one_degrees_component.html#ga35d95948956dcd2c758344db23531053", null ],
     [ "fiftyoneDegreesComponentInitList", "group___fifty_one_degrees_component.html#ga701e8d1056ad9d58ea6c1e8b32043034", null ],
-    [ "fiftyoneDegreesComponentReadFromFile", "group___fifty_one_degrees_component.html#ga2ebba63e605e180575830ff298745ec7", null ]
+    [ "fiftyoneDegreesComponentReadFromFile", "group___fifty_one_degrees_component.html#gaa7033a1f833cc4f7aa90f77e187b5a82", null ]
 ];

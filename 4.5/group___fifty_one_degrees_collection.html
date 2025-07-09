@@ -94,14 +94,14 @@ $(document).ready(function(){initNavTree('group___fifty_one_degrees_collection.h
 <p><b>capacity</b> : 0 if a cache should not be used, otherwise the capacity of cache.</p>
 <p><b>concurrency</b> : the expected number of concurrent operations, 1 or greater.</p>
 <p>The file create method will work out the different types of Collection(s) needed and how to chain them based on the configuration provided.</p>
-<p>Additionally, a pointer to a method to read an Item into the Collection from the underlying data file is required. For fixed width Collections the fiftyoneDegreesCollectionReadFileFixed can be used where the Item key is the zero based index in the Collection. For variable byte width Collections the consumer will need to provide a method that implements <a class="el" href="group___fifty_one_degrees_collection.html#gaf4de31bf37e60c518048bbe91dc8e570" title="Reads the item from the underlying data file.">fiftyoneDegreesCollectionFileRead</a>.</p>
+<p>Additionally, a pointer to a method to read an Item into the Collection from the underlying data file is required. For fixed width Collections the fiftyoneDegreesCollectionReadFileFixed can be used where the Item key is the zero based index in the Collection. For variable byte width Collections the consumer will need to provide a method that implements <a class="el" href="group___fifty_one_degrees_collection.html#ga3dcc6a340141c4c0435e963b9a379be2" title="Reads the item from the underlying data file.">fiftyoneDegreesCollectionFileRead</a>.</p>
 <p>All creation methods return a pointer to an instance of <a class="el" href="structfiftyone_degrees_collection.html" title="All the shared methods and fields required by file, memory and cached collections.">fiftyoneDegreesCollection</a>. Following creation only the methods exposed by this Collection should be used to retrieve and release Items.</p>
 <h2>Free</h2>
 <p>The freeCollection method of the Collection must be called when the Collection is finished with. After this method is called the Collection data structure and all owned data will be released.</p>
 <h2>Get &amp; Release</h2>
 <p>All operations that retrieve data from the Collection require an instance of <a class="el" href="structfiftyone_degrees_collection_item.html" title="Used to store a handle to the underlying item that could be used to release the item when it&#39;s finish...">fiftyoneDegreesCollectionItem</a> to be passed. Items can be reused across multiple Get and Release operations to reduce the frequency of memory allocations. Items contain a handle to the underlying data which might be used during the Release operation.</p>
 <h2>Usage Example</h2>
-<div class="c-code__block c-code__block--outline"><div class="c-code__line">FILE *file;</div><div class="c-code__line"><a class="code" href="structfiftyone_degrees_file_pool.html">fiftyoneDegreesFilePool</a> *filePool;</div><div class="c-code__line"><a class="code" href="group___fifty_one_degrees_exceptions.html#gae78f9f100e8f25f01c57fd36e7a6aa18">FIFTYONE_DEGREES_EXCEPTION_CREATE</a>;</div><div class="c-code__line"><span class="c-code__keyword">const</span> <a class="code" href="structfiftyone_degrees_collection_config.html">fiftyoneDegreesCollectionConfig</a> *config;</div><div class="c-code__line"><a class="code" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> item;</div><div class="c-code__line"></div><div class="c-code__line"><span class="c-code__comment">// Read the collection header from file which contains 32 bit integers</span></div><div class="c-code__line"><a class="code" href="structfiftyone_degrees_collection_header.html">fiftyoneDegreesCollectionHeader</a> *header = <a class="code" href="group___fifty_one_degrees_collection.html#ga90d84ac2ea157fdd1c689ca083059b8a">fiftyoneDegreesCollectionHeaderFromFile</a>(</div><div class="c-code__line">    file,</div><div class="c-code__line">    <span class="c-code__keyword">sizeof</span>(int32_t),</div><div class="c-code__line">    <span class="c-code__keyword">true</span>);</div><div class="c-code__line"></div><div class="c-code__line"><span class="c-code__comment">// Create the collection from a file which contains 32 bit integers</span></div><div class="c-code__line"><a class="code" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection = <a class="code" href="group___fifty_one_degrees_collection.html#ga121a6a769c9702dd53795d13086c133d">fiftyoneDegreesCollectionCreateFromFile</a>(</div><div class="c-code__line">    file,</div><div class="c-code__line">    filePool,</div><div class="c-code__line">    config,</div><div class="c-code__line">    header,</div><div class="c-code__line">    <a class="code" href="group___fifty_one_degrees_collection.html#ga00b0e267683622a47c9dfcb18c9ab13e">fiftyoneDegreesCollectionGetInteger32</a>);</div><div class="c-code__line"></div><div class="c-code__line"><span class="c-code__comment">// Check the collection was create successfully</span></div><div class="c-code__line"><span class="c-code__keywordflow">if</span> (collection != NULL) {</div><div class="c-code__line"></div><div class="c-code__line">    <span class="c-code__comment">// Initialise the item ready to store data from the collection</span></div><div class="c-code__line">    <a class="code" href="group___fifty_one_degrees_data.html#gaa4e9094f98c7d526d430950174967048">fiftyoneDegreesDataReset</a>(&amp;item.<a class="code" href="structfiftyone_degrees_collection_item.html#a2a6c691d3e58694438f2b5575a2d7f08">data</a>);</div><div class="c-code__line"></div><div class="c-code__line">    <span class="c-code__comment">// Get a pointer to the value from the collection</span></div><div class="c-code__line">    int32_t *valuePtr = collection-&gt;<a class="code" href="structfiftyone_degrees_collection.html#a0df0146feccd079d879c17da909a17fc">get</a>(</div><div class="c-code__line">        collection,</div><div class="c-code__line">        0,</div><div class="c-code__line">        &amp;item,</div><div class="c-code__line">        exception);</div><div class="c-code__line"></div><div class="c-code__line">    <span class="c-code__comment">// Check the value was returned</span></div><div class="c-code__line">    <span class="c-code__keywordflow">if</span> (valuePtr != NULL) {</div><div class="c-code__line"></div><div class="c-code__line">        <span class="c-code__comment">// Get the value from the pointer</span></div><div class="c-code__line">        int32_t value = *valuePtr;</div><div class="c-code__line"></div><div class="c-code__line">        <span class="c-code__comment">// Release the value back to the collection</span></div><div class="c-code__line">        <a class="code" href="group___fifty_one_degrees_collection.html#gad015940a119a3bc156ee852e326d7a4e">FIFTYONE_DEGREES_COLLECTION_RELEASE</a>(collection, &amp;item);</div><div class="c-code__line">    }</div><div class="c-code__line"></div><div class="c-code__line">    <span class="c-code__comment">// Free the collection</span></div><div class="c-code__line">    <a class="code" href="group___fifty_one_degrees_collection.html#ga71bee288cc35e09101c9349eebfa7219">FIFTYONE_DEGREES_COLLECTION_FREE</a>(collection);</div><div class="c-code__line">}</div></div><h2>Important Considerations</h2>
+<div class="c-code__block c-code__block--outline"><div class="c-code__line">FILE *file;</div><div class="c-code__line"><a class="code" href="structfiftyone_degrees_file_pool.html">fiftyoneDegreesFilePool</a> *filePool;</div><div class="c-code__line"><a class="code" href="group___fifty_one_degrees_exceptions.html#gae78f9f100e8f25f01c57fd36e7a6aa18">FIFTYONE_DEGREES_EXCEPTION_CREATE</a>;</div><div class="c-code__line"><span class="c-code__keyword">const</span> <a class="code" href="structfiftyone_degrees_collection_config.html">fiftyoneDegreesCollectionConfig</a> *config;</div><div class="c-code__line"><a class="code" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> item;</div><div class="c-code__line"></div><div class="c-code__line"><span class="c-code__comment">// Read the collection header from file which contains 32 bit integers</span></div><div class="c-code__line"><a class="code" href="structfiftyone_degrees_collection_header.html">fiftyoneDegreesCollectionHeader</a> *header = <a class="code" href="group___fifty_one_degrees_collection.html#ga90d84ac2ea157fdd1c689ca083059b8a">fiftyoneDegreesCollectionHeaderFromFile</a>(</div><div class="c-code__line">    file,</div><div class="c-code__line">    <span class="c-code__keyword">sizeof</span>(int32_t),</div><div class="c-code__line">    <span class="c-code__keyword">true</span>);</div><div class="c-code__line"></div><div class="c-code__line"><span class="c-code__comment">// Create the collection from a file which contains 32 bit integers</span></div><div class="c-code__line"><a class="code" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection = <a class="code" href="group___fifty_one_degrees_collection.html#ga121a6a769c9702dd53795d13086c133d">fiftyoneDegreesCollectionCreateFromFile</a>(</div><div class="c-code__line">    file,</div><div class="c-code__line">    filePool,</div><div class="c-code__line">    config,</div><div class="c-code__line">    header,</div><div class="c-code__line">    <a class="code" href="group___fifty_one_degrees_collection.html#ga869bfcf6f49f954c24ddb9af408dbbf3">fiftyoneDegreesCollectionGetInteger32</a>);</div><div class="c-code__line"></div><div class="c-code__line"><span class="c-code__comment">// Check the collection was create successfully</span></div><div class="c-code__line"><span class="c-code__keywordflow">if</span> (collection != NULL) {</div><div class="c-code__line"></div><div class="c-code__line">    <span class="c-code__comment">// Initialise the item ready to store data from the collection</span></div><div class="c-code__line">    <a class="code" href="group___fifty_one_degrees_data.html#gaa4e9094f98c7d526d430950174967048">fiftyoneDegreesDataReset</a>(&amp;item.<a class="code" href="structfiftyone_degrees_collection_item.html#a2a6c691d3e58694438f2b5575a2d7f08">data</a>);</div><div class="c-code__line"></div><div class="c-code__line">    <span class="c-code__comment">// Get a pointer to the value from the collection</span></div><div class="c-code__line">    int32_t *valuePtr = collection-&gt;<a class="code" href="structfiftyone_degrees_collection.html#a0df0146feccd079d879c17da909a17fc">get</a>(</div><div class="c-code__line">        collection,</div><div class="c-code__line">        0,</div><div class="c-code__line">        &amp;item,</div><div class="c-code__line">        exception);</div><div class="c-code__line"></div><div class="c-code__line">    <span class="c-code__comment">// Check the value was returned</span></div><div class="c-code__line">    <span class="c-code__keywordflow">if</span> (valuePtr != NULL) {</div><div class="c-code__line"></div><div class="c-code__line">        <span class="c-code__comment">// Get the value from the pointer</span></div><div class="c-code__line">        int32_t value = *valuePtr;</div><div class="c-code__line"></div><div class="c-code__line">        <span class="c-code__comment">// Release the value back to the collection</span></div><div class="c-code__line">        <a class="code" href="group___fifty_one_degrees_collection.html#gad015940a119a3bc156ee852e326d7a4e">FIFTYONE_DEGREES_COLLECTION_RELEASE</a>(collection, &amp;item);</div><div class="c-code__line">    }</div><div class="c-code__line"></div><div class="c-code__line">    <span class="c-code__comment">// Free the collection</span></div><div class="c-code__line">    <a class="code" href="group___fifty_one_degrees_collection.html#ga71bee288cc35e09101c9349eebfa7219">FIFTYONE_DEGREES_COLLECTION_FREE</a>(collection);</div><div class="c-code__line">}</div></div><h2>Important Considerations</h2>
 <p>The Item passed to the Get method <b>MUST</b> have had <a class="el" href="group___fifty_one_degrees_data.html#gaa4e9094f98c7d526d430950174967048" title="Resets the data structure ready for a new operation.">fiftyoneDegreesDataReset</a> called on the data field before use to set the default field values. Without this reset the Collection will not know if it can reuse any memory already allocated from a previous Get operation that is no longer being referenced. For example, if a large string was loaded into an Item, and the Item is then reused for a shorter string, there is no need to reallocate memory. Therefore, the same memory is reused.</p>
 <p>The get and release methods of the collection are the only methods that should be used to retrieve items from a collection. An item retrieved with the get method <b>MUST</b> be released when finished with via a call to the collection’s release method.</p>
 <p>A call to Get <b>DOES NOT</b> need to set the Collection field of the Item. Collection is not a mandatory field to avoid the overhead of setting the Collection field where the Collection’s implementation of the Release method does nothing. This is important to avoid a performance penalty when all Collection data is in memory and does not need to be released. For this reason the consumer must always reference the Collection directly and not via the Collection field of the Item. The Collection field is used by some internal 51Degrees method where a specific Get method is used that will always set the Collection. </p>
@@ -196,9 +196,16 @@ Macros</h2>
 <!-- member dec start -->
 <!-- startMemberItem() -->
 <tr class="c-table__row memitem:gad015940a119a3bc156ee852e326d7a4e"><td class="c-table__cell">#define<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#gad015940a119a3bc156ee852e326d7a4e">FIFTYONE_DEGREES_COLLECTION_RELEASE</a>(c,  i)&#160;&#160;&#160;c-&gt;release(i)
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#gad015940a119a3bc156ee852e326d7a4e">FIFTYONE_DEGREES_COLLECTION_RELEASE</a>(c,  i)&#160;&#160;&#160;{ assert(!((i)-&gt;collection) || (c == (i)-&gt;collection)); c-&gt;release(i); };
 <!-- startMemberDescription -->
 <div class="c-table__desc memdesc:gad015940a119a3bc156ee852e326d7a4e">Collection release macro used to release a collection item.  <a href="#gad015940a119a3bc156ee852e326d7a4e">More...</a><!-- endMemberDescription -->
+</div></td></tr>
+<!-- member dec start -->
+<!-- startMemberItem() -->
+<tr class="c-table__row memitem:ga22e7fa63b6c785e5d8e6b2889896d013"><td class="c-table__cell">#define<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga22e7fa63b6c785e5d8e6b2889896d013">fiftyoneDegreesCollectionGetCount</a>(collection)&#160;&#160;&#160;((collection)-&gt;count)
+<!-- startMemberDescription -->
+<div class="c-table__desc memdesc:ga22e7fa63b6c785e5d8e6b2889896d013">Gets the actual number of items in the collection by iterating through to the base collection.  <a href="#ga22e7fa63b6c785e5d8e6b2889896d013">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- endMemberList -->
 <!-- end member list -->
@@ -217,31 +224,24 @@ Typedefs</h2>
 <tbody class="c-table__body">
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:gac547016bf16925d1631d147e3f6104f1"><td class="c-table__cell">typedef&#160;void&#160;*(*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#gac547016bf16925d1631d147e3f6104f1">fiftyoneDegreesCollectionGetMethod</a>) (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection, uint32_t indexOrOffset, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:ga4e602bff68c13f3e8b98a9c0309dbe39"><td class="c-table__cell">typedef&#160;void&#160;*(*<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga4e602bff68c13f3e8b98a9c0309dbe39">fiftyoneDegreesCollectionGetMethod</a>) (const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection, const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *key, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:gac547016bf16925d1631d147e3f6104f1">Gets an item from the collection.  <a href="#gac547016bf16925d1631d147e3f6104f1">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:ga4e602bff68c13f3e8b98a9c0309dbe39">Gets an item from the collection.  <a href="#ga4e602bff68c13f3e8b98a9c0309dbe39">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:ga40914cc064fd916cd7a1f3537de81f02"><td class="c-table__cell">typedef&#160;uint32_t(*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga40914cc064fd916cd7a1f3537de81f02">fiftyoneDegreesCollectionGetFileVariableSizeMethod</a>) (void *initial)
+<tr class="c-table__row memitem:ga3dcc6a340141c4c0435e963b9a379be2"><td class="c-table__cell">typedef&#160;void&#160;*(*<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga3dcc6a340141c4c0435e963b9a379be2">fiftyoneDegreesCollectionFileRead</a>) (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *collection, const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *key, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:ga40914cc064fd916cd7a1f3537de81f02">Passed a pointer to the first part of a variable size item and returns the size of the entire item.  <a href="#ga40914cc064fd916cd7a1f3537de81f02">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:ga3dcc6a340141c4c0435e963b9a379be2">Reads the item from the underlying data file.  <a href="#ga3dcc6a340141c4c0435e963b9a379be2">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:gaf4de31bf37e60c518048bbe91dc8e570"><td class="c-table__cell">typedef&#160;void&#160;*(*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#gaf4de31bf37e60c518048bbe91dc8e570">fiftyoneDegreesCollectionFileRead</a>) (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *collection, uint32_t offsetOrIndex, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:ga3b57063f899a7c18da61343f23ecf6e4"><td class="c-table__cell">typedef&#160;int(*<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga3b57063f899a7c18da61343f23ecf6e4">fiftyoneDegreesCollectionItemComparer</a>) (void *state, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> key, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:gaf4de31bf37e60c518048bbe91dc8e570">Reads the item from the underlying data file.  <a href="#gaf4de31bf37e60c518048bbe91dc8e570">More...</a><!-- endMemberDescription -->
-</div></td></tr>
-<!-- member dec start -->
-<!-- startMemberItem() -->
-<tr class="c-table__row memitem:gad6227daa8c17fdad563de6206e3594b0"><td class="c-table__cell">typedef&#160;int(*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#gad6227daa8c17fdad563de6206e3594b0">fiftyoneDegreesCollectionItemComparer</a>) (void *state, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, long curIndex, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
-<!-- startMemberDescription -->
-<div class="c-table__desc memdesc:gad6227daa8c17fdad563de6206e3594b0">Compares two items and returns the difference between them for the purposes of a binary search of ordering operation.  <a href="#gad6227daa8c17fdad563de6206e3594b0">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:ga3b57063f899a7c18da61343f23ecf6e4">Compares two items and returns the difference between them for the purposes of a binary search of ordering operation.  <a href="#ga3b57063f899a7c18da61343f23ecf6e4">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
@@ -292,15 +292,15 @@ Functions</h2>
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:ga00b0e267683622a47c9dfcb18c9ab13e"><td class="c-table__cell">int32_t<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga00b0e267683622a47c9dfcb18c9ab13e">fiftyoneDegreesCollectionGetInteger32</a> (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection, uint32_t indexOrOffset, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:ga869bfcf6f49f954c24ddb9af408dbbf3"><td class="c-table__cell">int32_t<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga869bfcf6f49f954c24ddb9af408dbbf3">fiftyoneDegreesCollectionGetInteger32</a> (const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection, uint32_t indexOrOffset, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:ga00b0e267683622a47c9dfcb18c9ab13e">Returns a 32 bit integer from collections that provide such values.  <a href="#ga00b0e267683622a47c9dfcb18c9ab13e">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:ga869bfcf6f49f954c24ddb9af408dbbf3">Returns a 32 bit integer from collections that provide such values.  <a href="#ga869bfcf6f49f954c24ddb9af408dbbf3">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
 <tr class="c-table__row memitem:ga121a6a769c9702dd53795d13086c133d"><td class="c-table__cell"><a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a>&#160;*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga121a6a769c9702dd53795d13086c133d">fiftyoneDegreesCollectionCreateFromFile</a> (FILE *file, <a class="el" href="structfiftyone_degrees_file_pool.html">fiftyoneDegreesFilePool</a> *reader, const <a class="el" href="structfiftyone_degrees_collection_config.html">fiftyoneDegreesCollectionConfig</a> *config, <a class="el" href="structfiftyone_degrees_collection_header.html">fiftyoneDegreesCollectionHeader</a> header, <a class="el" href="group___fifty_one_degrees_collection.html#gaf4de31bf37e60c518048bbe91dc8e570">fiftyoneDegreesCollectionFileRead</a> read)
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga121a6a769c9702dd53795d13086c133d">fiftyoneDegreesCollectionCreateFromFile</a> (FILE *file, <a class="el" href="structfiftyone_degrees_file_pool.html">fiftyoneDegreesFilePool</a> *reader, const <a class="el" href="structfiftyone_degrees_collection_config.html">fiftyoneDegreesCollectionConfig</a> *config, <a class="el" href="structfiftyone_degrees_collection_header.html">fiftyoneDegreesCollectionHeader</a> header, <a class="el" href="group___fifty_one_degrees_collection.html#ga3dcc6a340141c4c0435e963b9a379be2">fiftyoneDegreesCollectionFileRead</a> read)
 <!-- startMemberDescription -->
 <div class="c-table__desc memdesc:ga121a6a769c9702dd53795d13086c133d">Creates a collection from the file handle at the current position in the file.  <a href="#ga121a6a769c9702dd53795d13086c133d">More...</a><!-- endMemberDescription -->
 </div></td></tr>
@@ -320,10 +320,10 @@ Functions</h2>
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:ga3a983293cfd5b0775b6fee7eedc09c97"><td class="c-table__cell">void&#160;*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga3a983293cfd5b0775b6fee7eedc09c97">fiftyoneDegreesCollectionReadFileFixed</a> (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *file, uint32_t index, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:gaff4001f9a2cd0797cadf46ba5aed0a3f"><td class="c-table__cell">void&#160;*<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#gaff4001f9a2cd0797cadf46ba5aed0a3f">fiftyoneDegreesCollectionReadFileFixed</a> (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *file, const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *key, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:ga3a983293cfd5b0775b6fee7eedc09c97">Used with collections where each item is a fixed number of bytes recorded in elementSize.  <a href="#ga3a983293cfd5b0775b6fee7eedc09c97">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:gaff4001f9a2cd0797cadf46ba5aed0a3f">Used with collections where each item is a fixed number of bytes recorded in elementSize.  <a href="#gaff4001f9a2cd0797cadf46ba5aed0a3f">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
@@ -334,10 +334,10 @@ Functions</h2>
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:ga9bd20972b368977b0d5ca2483b82eebd"><td class="c-table__cell">void&#160;*<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga9bd20972b368977b0d5ca2483b82eebd">fiftyoneDegreesCollectionReadFileVariable</a> (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *file, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, uint32_t offset, void *initial, size_t initialSize, <a class="el" href="group___fifty_one_degrees_collection.html#ga40914cc064fd916cd7a1f3537de81f02">fiftyoneDegreesCollectionGetFileVariableSizeMethod</a> getFinalSize, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:ga5108660fba3e86aed3d0f440188da3b9"><td class="c-table__cell">void&#160;*<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga5108660fba3e86aed3d0f440188da3b9">fiftyoneDegreesCollectionReadFileVariable</a> (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *file, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *key, void *initial, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:ga9bd20972b368977b0d5ca2483b82eebd">Reads a variable size item from the file where the initial bytes can be used to calculate the size of the entire item.  <a href="#ga9bd20972b368977b0d5ca2483b82eebd">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:ga5108660fba3e86aed3d0f440188da3b9">Reads a variable size item from the file where the initial bytes can be used to calculate the size of the entire item.  <a href="#ga5108660fba3e86aed3d0f440188da3b9">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
@@ -348,17 +348,10 @@ Functions</h2>
 </div></td></tr>
 <!-- member dec start -->
 <!-- startMemberItem() -->
-<tr class="c-table__row memitem:ga5d23cc13e3fca189671c2d83b4b6f9e7"><td class="c-table__cell">long<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga5d23cc13e3fca189671c2d83b4b6f9e7">fiftyoneDegreesCollectionBinarySearch</a> (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, uint32_t lowerIndex, uint32_t upperIndex, void *state, <a class="el" href="group___fifty_one_degrees_collection.html#gad6227daa8c17fdad563de6206e3594b0">fiftyoneDegreesCollectionItemComparer</a> comparer, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
+<tr class="c-table__row memitem:ga628daf39582c96d2e88377e00d175e35"><td class="c-table__cell">long<!-- insertMemberAlign -->
+&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga628daf39582c96d2e88377e00d175e35">fiftyoneDegreesCollectionBinarySearch</a> (const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, <a class="el" href="unionfiftyone_degrees_collection_index_or_offset.html">fiftyoneDegreesCollectionIndexOrOffset</a> lowerKey, <a class="el" href="unionfiftyone_degrees_collection_index_or_offset.html">fiftyoneDegreesCollectionIndexOrOffset</a> upperKey, const <a class="el" href="structfiftyone_degrees_collection_key_type.html">fiftyoneDegreesCollectionKeyType</a> *keyType, void *state, <a class="el" href="group___fifty_one_degrees_collection.html#ga3b57063f899a7c18da61343f23ecf6e4">fiftyoneDegreesCollectionItemComparer</a> comparer, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)
 <!-- startMemberDescription -->
-<div class="c-table__desc memdesc:ga5d23cc13e3fca189671c2d83b4b6f9e7">Where a collection is fixed width and contains an ordered list of items this method is used to perform a divide and conquer search.  <a href="#ga5d23cc13e3fca189671c2d83b4b6f9e7">More...</a><!-- endMemberDescription -->
-</div></td></tr>
-<!-- member dec start -->
-<!-- startMemberItem() -->
-<tr class="c-table__row memitem:gaa3715e85c7bae4bdfdc876d20030e94f"><td class="c-table__cell">uint32_t<!-- insertMemberAlign -->
-&#160;</td><td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#gaa3715e85c7bae4bdfdc876d20030e94f">fiftyoneDegreesCollectionGetCount</a> (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection)
-<!-- startMemberDescription -->
-<div class="c-table__desc memdesc:gaa3715e85c7bae4bdfdc876d20030e94f">Gets the actual number of items in the collection by iterating through to the base collection.  <a href="#gaa3715e85c7bae4bdfdc876d20030e94f">More...</a><!-- endMemberDescription -->
+<div class="c-table__desc memdesc:ga628daf39582c96d2e88377e00d175e35">Where a collection is fixed width and contains an ordered list of items this method is used to perform a divide and conquer search.  <a href="#ga628daf39582c96d2e88377e00d175e35">More...</a><!-- endMemberDescription -->
 </div></td></tr>
 <!-- endMemberList -->
 <!-- end member list -->
@@ -461,7 +454,7 @@ Functions</h2>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;c-&gt;release(i)<!-- endParameterList -->
+          <td></td><td>&#160;&#160;&#160;{ assert(!((i)-&gt;collection) || (c == (i)-&gt;collection)); c-&gt;release(i); };<!-- endParameterList -->
 </td>
         </tr>
 <!-- endMemberDoc -->
@@ -482,13 +475,10 @@ Functions</h2>
 </div>
 </div>
 </article>
-<!-- endMemberDocList -->
-<h2 class="g-docs__section-heading">Typedef Documentation</h2>
-<!-- startMemberDocList -->
 <article class="c-member">
-<a id="gaf4de31bf37e60c518048bbe91dc8e570"></a><!-- startMemberDoc -->
+<a id="ga22e7fa63b6c785e5d8e6b2889896d013"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gaf4de31bf37e60c518048bbe91dc8e570">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionFileRead</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga22e7fa63b6c785e5d8e6b2889896d013">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionGetCount</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -497,7 +487,54 @@ Functions</h2>
         <div class="g-table g-table--overflow">
           <table class="c-table c-table--article">
             <tr class="c-table__row">
-              <td class="c-table__cell">typedef void*(* fiftyoneDegreesCollectionFileRead) (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *collection, uint32_t offsetOrIndex, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)<!-- endMemberDocName -->
+              <td class="c-table__cell">#define fiftyoneDegreesCollectionGetCount<!-- endMemberDocName -->
+</td>
+<!-- startParameterList -->
+          <td>(</td>
+<!-- startFirstParameterType -->
+          <td class="c-table__cell"><!-- endParameterType -->
+&#160;</td>
+<!-- startParameterName -->
+          <td class="c-table__cell">collection<!-- endParameterName -->
+</td><td>)</td>
+          <td>&#160;&#160;&#160;((collection)-&gt;count)<!-- endParameterList -->
+</td>
+        </tr>
+<!-- endMemberDoc -->
+          </table>
+        </div>
+      </div>
+</div><!-- startIndent -->
+<div class="c-member__body">
+
+<p>Gets the actual number of items in the collection by iterating through to the base collection. </p>
+<p>In cases where there are chained collections which pre-load and/or cache elements, the first collections may not contain the full collection of elements. Therefore the value of collection-&gt;count may not be correct. This method follows the collection-&gt;next pointers to get to the base collection containing the true count.</p>
+<p>It is important to note that this gets the count for a collection of fixed size elements, and does not apply to collections of variable sized elements. </p><dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">collection</span> - to get the count for </dd>
+  </dd>
+</dl>
+<dl class="c-list-definition return"><dt class="c-list-definition__title">Returns</dt><dd class="c-list-definition__desc">the number of items in the collection </dd></dl>
+<!-- endIndent -->
+
+</div>
+</div>
+</article>
+<!-- endMemberDocList -->
+<h2 class="g-docs__section-heading">Typedef Documentation</h2>
+<!-- startMemberDocList -->
+<article class="c-member">
+<a id="ga3dcc6a340141c4c0435e963b9a379be2"></a><!-- startMemberDoc -->
+
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga3dcc6a340141c4c0435e963b9a379be2">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionFileRead</h2>
+
+<div class="c-member__main">
+<div class="c-member__head">
+<!-- startMemberDocName -->
+      <div class="c-member__split">
+        <div class="g-table g-table--overflow">
+          <table class="c-table c-table--article">
+            <tr class="c-table__row">
+              <td class="c-table__cell">typedef void*(* fiftyoneDegreesCollectionFileRead) (const <a class="el" href="structfiftyone_degrees_collection_file.html">fiftyoneDegreesCollectionFile</a> *collection, const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *key, <a class="el" href="structfiftyone_degrees_data.html">fiftyoneDegreesData</a> *data, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)<!-- endMemberDocName -->
 </td>
 <!-- endMemberDoc -->
             </tr>
@@ -510,7 +547,7 @@ Functions</h2>
 <p>Reads the item from the underlying data file. </p>
 <p>Used by the file related collection methods. </p><dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">collection</span> - pointer to the file collection </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">offsetOrIndex</span> - index or offset to the item in the data structure </dd>
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">key</span> - key of the item in the data structure </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">data</span> - pointer to the data structure to store the item </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">exception</span> - pointer to an exception data structure to be used if an exception occurs. See <a class="el" href="exceptions_8h_source.html">exceptions.h</a>. </dd>
   </dd>
@@ -554,42 +591,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="ga40914cc064fd916cd7a1f3537de81f02"></a><!-- startMemberDoc -->
+<a id="ga4e602bff68c13f3e8b98a9c0309dbe39"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga40914cc064fd916cd7a1f3537de81f02">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionGetFileVariableSizeMethod</h2>
-
-<div class="c-member__main">
-<div class="c-member__head">
-<!-- startMemberDocName -->
-      <div class="c-member__split">
-        <div class="g-table g-table--overflow">
-          <table class="c-table c-table--article">
-            <tr class="c-table__row">
-              <td class="c-table__cell">typedef uint32_t(* fiftyoneDegreesCollectionGetFileVariableSizeMethod) (void *initial)<!-- endMemberDocName -->
-</td>
-<!-- endMemberDoc -->
-            </tr>
-          </table>
-        </div>
-      </div>
-</div><!-- startIndent -->
-<div class="c-member__body">
-
-<p>Passed a pointer to the first part of a variable size item and returns the size of the entire item. </p>
-<dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">initial</span> - pointer to the start of the item </dd>
-  </dd>
-</dl>
-<dl class="c-list-definition return"><dt class="c-list-definition__title">Returns</dt><dd class="c-list-definition__desc">size of the item in bytes </dd></dl>
-<!-- endIndent -->
-
-</div>
-</div>
-</article>
-<article class="c-member">
-<a id="gac547016bf16925d1631d147e3f6104f1"></a><!-- startMemberDoc -->
-
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gac547016bf16925d1631d147e3f6104f1">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionGetMethod</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga4e602bff68c13f3e8b98a9c0309dbe39">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionGetMethod</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -598,7 +602,7 @@ Functions</h2>
         <div class="g-table g-table--overflow">
           <table class="c-table c-table--article">
             <tr class="c-table__row">
-              <td class="c-table__cell">typedef void*(* fiftyoneDegreesCollectionGetMethod) (<a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection, uint32_t indexOrOffset, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)<!-- endMemberDocName -->
+              <td class="c-table__cell">typedef void*(* fiftyoneDegreesCollectionGetMethod) (const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *collection, const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *key, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)<!-- endMemberDocName -->
 </td>
 <!-- endMemberDoc -->
             </tr>
@@ -611,7 +615,7 @@ Functions</h2>
 <p>Gets an item from the collection. </p>
 <p>Returns a pointer to the item, or NULL if the item could not be loaded. The exception parameter is set to the status code to indicate the failure. </p><dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">collection</span> - pointer to the file collection </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">indexOrOffset</span> - index or offset to the item in the data structure </dd>
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">key</span> - key of the item in the data structure </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">item</span> - pointer to the item structure to place the result in </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">exception</span> - pointer to an exception data structure to be used if an exception occurs. See <a class="el" href="exceptions_8h_source.html">exceptions.h</a>. </dd>
   </dd>
@@ -623,9 +627,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="gad6227daa8c17fdad563de6206e3594b0"></a><!-- startMemberDoc -->
+<a id="ga3b57063f899a7c18da61343f23ecf6e4"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gad6227daa8c17fdad563de6206e3594b0">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionItemComparer</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga3b57063f899a7c18da61343f23ecf6e4">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionItemComparer</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -634,7 +638,7 @@ Functions</h2>
         <div class="g-table g-table--overflow">
           <table class="c-table c-table--article">
             <tr class="c-table__row">
-              <td class="c-table__cell">typedef int(* fiftyoneDegreesCollectionItemComparer) (void *state, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, long curIndex, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)<!-- endMemberDocName -->
+              <td class="c-table__cell">typedef int(* fiftyoneDegreesCollectionItemComparer) (void *state, <a class="el" href="structfiftyone_degrees_collection_item.html">fiftyoneDegreesCollectionItem</a> *item, <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> key, <a class="el" href="structfiftyone_degrees_exception.html">fiftyoneDegreesException</a> *exception)<!-- endMemberDocName -->
 </td>
 <!-- endMemberDoc -->
             </tr>
@@ -648,7 +652,7 @@ Functions</h2>
 <dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">state</span> - to be used for the comparison </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">item</span> - the value to compare against the state </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">curIndex</span> - the index of the current item in the collection </dd>
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">key</span> - key of the item in the data structure </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">exception</span> - pointer to an exception data structure to be used if an exception occurs. See <a class="el" href="exceptions_8h_source.html">exceptions.h</a> </dd>
   </dd>
 </dl>
@@ -729,9 +733,9 @@ Functions</h2>
 <h2 class="g-docs__section-heading">Function Documentation</h2>
 <!-- startMemberDocList -->
 <article class="c-member">
-<a id="ga5d23cc13e3fca189671c2d83b4b6f9e7"></a><!-- startMemberDoc -->
+<a id="ga628daf39582c96d2e88377e00d175e35"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga5d23cc13e3fca189671c2d83b4b6f9e7">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionBinarySearch()</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga628daf39582c96d2e88377e00d175e35">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionBinarySearch()</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -745,7 +749,7 @@ Functions</h2>
 <!-- startParameterList -->
           <td>(</td>
 <!-- startFirstParameterType -->
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>collection</em>, <!-- endParameterName -->
@@ -765,20 +769,30 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell">uint32_t<!-- endParameterType -->
+          <td class="c-table__cell"><a class="el" href="unionfiftyone_degrees_collection_index_or_offset.html">fiftyoneDegreesCollectionIndexOrOffset</a><!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
-          <td class="c-table__cell"><em>lowerIndex</em>, <!-- endParameterName -->
+          <td class="c-table__cell"><em>lowerKey</em>, <!-- endParameterName -->
 </td>
         </tr>
 <!-- startParameterType -->
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell">uint32_t<!-- endParameterType -->
+          <td class="c-table__cell"><a class="el" href="unionfiftyone_degrees_collection_index_or_offset.html">fiftyoneDegreesCollectionIndexOrOffset</a><!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
-          <td class="c-table__cell"><em>upperIndex</em>, <!-- endParameterName -->
+          <td class="c-table__cell"><em>upperKey</em>, <!-- endParameterName -->
+</td>
+        </tr>
+<!-- startParameterType -->
+        <tr>
+          <td class="c-table__cell"></td>
+          <td></td>
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_collection_key_type.html">fiftyoneDegreesCollectionKeyType</a> *<!-- endParameterType -->
+&#160;</td>
+<!-- startParameterName -->
+          <td class="c-table__cell"><em>keyType</em>, <!-- endParameterName -->
 </td>
         </tr>
 <!-- startParameterType -->
@@ -795,7 +809,7 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#gad6227daa8c17fdad563de6206e3594b0">fiftyoneDegreesCollectionItemComparer</a><!-- endParameterType -->
+          <td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga3b57063f899a7c18da61343f23ecf6e4">fiftyoneDegreesCollectionItemComparer</a><!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>comparer</em>, <!-- endParameterName -->
@@ -828,8 +842,9 @@ Functions</h2>
 <p>The state and the comparer are used to compare the current index with the value being sought. If an item is found in the collection the item parameter will contain that item when the method completes. The caller will therefore need to release the item when it's finished with it. </p><dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">collection</span> - to be searched </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">item</span> - memory to be used to store the current value being compared. Will have a lock on the item at the index returned if an item is found. The caller should release the item when finished with it. </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">lowerIndex</span> - to start the search at </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">upperIndex</span> - to end the search at </dd>
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">lowerKey</span> - to start the search at </dd>
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">upperKey</span> - to end the search at </dd>
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">keyType</span> - type of lower/upper keys </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">state</span> - used with the compare method when comparing items </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">comparer</span> - method used to perform the comparison </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">exception</span> - pointer to an exception data structure to be used if an exception occurs. See <a class="el" href="exceptions_8h_source.html">exceptions.h</a>. </dd>
@@ -898,7 +913,7 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#gaf4de31bf37e60c518048bbe91dc8e570">fiftyoneDegreesCollectionFileRead</a><!-- endParameterType -->
+          <td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga3dcc6a340141c4c0435e963b9a379be2">fiftyoneDegreesCollectionFileRead</a><!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>read</em><!-- endParameterName -->
@@ -991,53 +1006,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="gaa3715e85c7bae4bdfdc876d20030e94f"></a><!-- startMemberDoc -->
+<a id="ga869bfcf6f49f954c24ddb9af408dbbf3"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gaa3715e85c7bae4bdfdc876d20030e94f">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionGetCount()</h2>
-
-<div class="c-member__main">
-<div class="c-member__head">
-<!-- startMemberDocName -->
-      <div class="c-member__split">
-        <div class="g-table g-table--overflow">
-          <table class="c-table c-table--article">
-            <tr class="c-table__row">
-              <td class="c-table__cell">uint32_t fiftyoneDegreesCollectionGetCount <!-- endMemberDocName -->
-</td>
-<!-- startParameterList -->
-          <td>(</td>
-<!-- startFirstParameterType -->
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
-&#160;</td>
-<!-- startParameterName -->
-          <td class="c-table__cell"><em>collection</em><!-- endParameterName -->
-</td><td>)</td>
-          <td><!-- endParameterList -->
-</td>
-        </tr>
-<!-- endMemberDoc -->
-          </table>
-        </div>
-      </div>
-</div><!-- startIndent -->
-<div class="c-member__body">
-
-<p>Gets the actual number of items in the collection by iterating through to the base collection. </p>
-<p>In cases where there are chained collections which pre-load and/or cache elements, the first collections may not contain the full collection of elements. Therefore the value of collection-&gt;count may not be correct. This method follows the collection-&gt;next pointers to get to the base collection containing the true count.</p>
-<p>It is important to note that this gets the count for a collection of fixed size elements, and does not apply to collections of variable sized elements. </p><dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">collection</span> - to get the count for </dd>
-  </dd>
-</dl>
-<dl class="c-list-definition return"><dt class="c-list-definition__title">Returns</dt><dd class="c-list-definition__desc">the number of items in the collection </dd></dl>
-<!-- endIndent -->
-
-</div>
-</div>
-</article>
-<article class="c-member">
-<a id="ga00b0e267683622a47c9dfcb18c9ab13e"></a><!-- startMemberDoc -->
-
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga00b0e267683622a47c9dfcb18c9ab13e">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionGetInteger32()</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga869bfcf6f49f954c24ddb9af408dbbf3">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionGetInteger32()</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -1051,7 +1022,7 @@ Functions</h2>
 <!-- startParameterList -->
           <td>(</td>
 <!-- startFirstParameterType -->
-          <td class="c-table__cell"><a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_collection.html">fiftyoneDegreesCollection</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>collection</em>, <!-- endParameterName -->
@@ -1278,9 +1249,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="ga3a983293cfd5b0775b6fee7eedc09c97"></a><!-- startMemberDoc -->
+<a id="gaff4001f9a2cd0797cadf46ba5aed0a3f"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga3a983293cfd5b0775b6fee7eedc09c97">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionReadFileFixed()</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#gaff4001f9a2cd0797cadf46ba5aed0a3f">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionReadFileFixed()</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -1304,10 +1275,10 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell">uint32_t<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
-          <td class="c-table__cell"><em>index</em>, <!-- endParameterName -->
+          <td class="c-table__cell"><em>key</em>, <!-- endParameterName -->
 </td>
         </tr>
 <!-- startParameterType -->
@@ -1347,7 +1318,7 @@ Functions</h2>
 <p>The method will read that number of bytes into the data item ensuring sufficient memory is allocated. Contained in the collection to avoid repeating this common method across different collection consumers. </p><dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">file</span> - pointer to the <a class="el" href="structfiftyone_degrees_collection_file.html" title="Type of collection where the collection is streamed from file.">fiftyoneDegreesCollectionFile</a> to use for the read </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">data</span> - structure to populate with a reference to the item </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">index</span> - zero based index of the item required in the fixed with data structure </dd>
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">key</span> - zero based index of the item required in the fixed with data structure </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">exception</span> - pointer to an exception data structure to be used if an exception occurs. See <a class="el" href="exceptions_8h_source.html">exceptions.h</a>. </dd>
   </dd>
 </dl>
@@ -1427,9 +1398,9 @@ Functions</h2>
 </div>
 </article>
 <article class="c-member">
-<a id="ga9bd20972b368977b0d5ca2483b82eebd"></a><!-- startMemberDoc -->
+<a id="ga5108660fba3e86aed3d0f440188da3b9"></a><!-- startMemberDoc -->
 
-<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga9bd20972b368977b0d5ca2483b82eebd">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionReadFileVariable()</h2>
+<h2 class="c-member__title"><span class="c-member__anchor"><a href="#ga5108660fba3e86aed3d0f440188da3b9">&#9670;&nbsp;</a></span>fiftyoneDegreesCollectionReadFileVariable()</h2>
 
 <div class="c-member__main">
 <div class="c-member__head">
@@ -1463,10 +1434,10 @@ Functions</h2>
         <tr>
           <td class="c-table__cell"></td>
           <td></td>
-          <td class="c-table__cell">uint32_t<!-- endParameterType -->
+          <td class="c-table__cell">const <a class="el" href="structfiftyone_degrees_collection_key.html">fiftyoneDegreesCollectionKey</a> *<!-- endParameterType -->
 &#160;</td>
 <!-- startParameterName -->
-          <td class="c-table__cell"><em>offset</em>, <!-- endParameterName -->
+          <td class="c-table__cell"><em>key</em>, <!-- endParameterName -->
 </td>
         </tr>
 <!-- startParameterType -->
@@ -1477,26 +1448,6 @@ Functions</h2>
 &#160;</td>
 <!-- startParameterName -->
           <td class="c-table__cell"><em>initial</em>, <!-- endParameterName -->
-</td>
-        </tr>
-<!-- startParameterType -->
-        <tr>
-          <td class="c-table__cell"></td>
-          <td></td>
-          <td class="c-table__cell">size_t<!-- endParameterType -->
-&#160;</td>
-<!-- startParameterName -->
-          <td class="c-table__cell"><em>initialSize</em>, <!-- endParameterName -->
-</td>
-        </tr>
-<!-- startParameterType -->
-        <tr>
-          <td class="c-table__cell"></td>
-          <td></td>
-          <td class="c-table__cell"><a class="el" href="group___fifty_one_degrees_collection.html#ga40914cc064fd916cd7a1f3537de81f02">fiftyoneDegreesCollectionGetFileVariableSizeMethod</a><!-- endParameterType -->
-&#160;</td>
-<!-- startParameterName -->
-          <td class="c-table__cell"><em>getFinalSize</em>, <!-- endParameterName -->
 </td>
         </tr>
 <!-- startParameterType -->
@@ -1526,10 +1477,8 @@ Functions</h2>
 <dl class="c-list-definition"><dt class="c-list-definition__title">Parameters</dt><dd class="c-list-definition__desc">
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">file</span> - pointer to the <a class="el" href="structfiftyone_degrees_collection_file.html" title="Type of collection where the collection is streamed from file.">fiftyoneDegreesCollectionFile</a> to use for the read </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">data</span> - structure to populate with a reference to the item </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">offset</span> - zero based offset to the item within the data structure </dd>
+    <tr><dd class="c-list-definition__desc"><span class="b-text--red">key</span> - key of the item in the data structure </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">initial</span> - pointer to enough memory to store the initial data </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">initialSize</span> - amount of initial data to read </dd>
-    <tr><dd class="c-list-definition__desc"><span class="b-text--red">getFinalSize</span> - method pass the initial pointer to get the final size </dd>
     <tr><dd class="c-list-definition__desc"><span class="b-text--red">exception</span> - pointer to an exception data structure to be used if an exception occurs. See <a class="el" href="exceptions_8h_source.html">exceptions.h</a>. </dd>
   </dd>
 </dl>

@@ -3,6 +3,8 @@ var group___fifty_one_degrees_common =
     [ "Arrays", "group___fifty_one_degrees_array.html", "group___fifty_one_degrees_array" ],
     [ "Cache", "group___fifty_one_degrees_cache.html", "group___fifty_one_degrees_cache" ],
     [ "Collection", "group___fifty_one_degrees_collection.html", "group___fifty_one_degrees_collection" ],
+    [ "CollectionKey", "group___fifty_one_degrees_collection_key.html", "group___fifty_one_degrees_collection_key" ],
+    [ "CollectionKeyTypes", "group___fifty_one_degrees_collection_key_types.html", "group___fifty_one_degrees_collection_key_types" ],
     [ "Component", "group___fifty_one_degrees_component.html", "group___fifty_one_degrees_component" ],
     [ "Config", "group___fifty_one_degrees_config.html", "group___fifty_one_degrees_config" ],
     [ "Data", "group___fifty_one_degrees_data.html", "group___fifty_one_degrees_data" ],
