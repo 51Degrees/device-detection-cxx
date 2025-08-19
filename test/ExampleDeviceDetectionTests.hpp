@@ -67,9 +67,6 @@ TEST_F(c, HighPerformance) { \
 } \
 TEST_F(c, InMemory) { \
 	run(fiftyoneDegrees##t##InMemoryConfig); \
-} \
-TEST_F(c, SingleLoaded) { \
-	run(fiftyoneDegrees##t##SingleLoadedConfig); \
 }
 
 #endif

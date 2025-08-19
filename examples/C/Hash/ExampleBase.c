@@ -42,9 +42,6 @@ const char* fiftyoneDegreesExampleGetConfigName(ConfigHash config) {
 	if (CONFIG_EQUALS(HashBalancedTempConfig)) {
 		return "BalancedTemp";
 	}
-	if (CONFIG_EQUALS(fiftyoneDegreesHashSingleLoadedConfig)) {
-		return "SingleLoaded";
-	}
 	return "Unknown";
 }
 

@@ -472,14 +472,6 @@ EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashBalancedTempConfig;
 EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashDefaultConfig;
 
 /**
- * Configuration designed only for testing. This uses a loaded size of 1 in
- * all collections to ensure all every get and release calls can be tested for
- * items which do not exist in the root collection. This configuration is not
- * exposed through C++ intentionally as it is only used in testing.
- */
-EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig;
-
-/**
  * EXTERNAL METHODS
  */
 
