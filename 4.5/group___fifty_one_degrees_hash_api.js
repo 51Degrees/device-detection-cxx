@@ -86,19 +86,7 @@ var group___fifty_one_degrees_hash_api =
     [ "FIFTYONE_DEGREES_EVIDENCE_DEVICE_ID", "group___fifty_one_degrees_hash_api.html#ga179f2ed3472c93c1829c42ce87381391", null ],
     [ "FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES", "group___fifty_one_degrees_hash_api.html#gae3d208cef874d47cf0490c8b22a96d81", null ],
     [ "FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT", "group___fifty_one_degrees_hash_api.html#gacb7112d7f21d49e06a214064466f9cf5", null ],
-    [ "FIFTYONE_DEGREES_HASH_DIFFERENCE", "group___fifty_one_degrees_hash_api.html#ga62f7800c471e275f051ecde4e097218f", null ],
-    [ "FIFTYONE_DEGREES_HASH_DRIFT", "group___fifty_one_degrees_hash_api.html#ga91dc7d4e7e6e3c291542b30b9aad57ac", null ],
-    [ "FIFTYONE_DEGREES_NODE_CACHE_SIZE", "group___fifty_one_degrees_hash_api.html#gad229d5069b920f4a3062673ff32dfab0", null ],
-    [ "FIFTYONE_DEGREES_NODE_LOADED", "group___fifty_one_degrees_hash_api.html#ga3caadb1167b826e0f0ee5b57c0985d49", null ],
-    [ "FIFTYONE_DEGREES_PROFILE_CACHE_SIZE", "group___fifty_one_degrees_hash_api.html#gacd4998b9dd1b8a888333d381ea261592", null ],
-    [ "FIFTYONE_DEGREES_PROFILE_LOADED", "group___fifty_one_degrees_hash_api.html#ga142cf6e99a9043b4b2c96d0faf8bc105", null ],
-    [ "FIFTYONE_DEGREES_PROPERTY_CACHE_SIZE", "group___fifty_one_degrees_hash_api.html#ga495d34457f2901230b6f2191f12f9087", null ],
-    [ "FIFTYONE_DEGREES_PROPERTY_LOADED", "group___fifty_one_degrees_hash_api.html#ga92ae1b26ceb542f3368c56869f9aeb4a", null ],
     [ "FIFTYONE_DEGREES_RESULTS_HASH_MEMBERS", "group___fifty_one_degrees_hash_api.html#ga1230c04c1d63f3ca581de0e6c29c0bc4", null ],
-    [ "FIFTYONE_DEGREES_STRING_CACHE_SIZE", "group___fifty_one_degrees_hash_api.html#ga4c51112d1ab7ff33a200d92eab0ec1e4", null ],
-    [ "FIFTYONE_DEGREES_STRING_LOADED", "group___fifty_one_degrees_hash_api.html#ga9005545cb664efec6c29c875f7e751e5", null ],
-    [ "FIFTYONE_DEGREES_VALUE_CACHE_SIZE", "group___fifty_one_degrees_hash_api.html#ga5509bb50c2e692cfeae9e8b467fc4fc9", null ],
-    [ "FIFTYONE_DEGREES_VALUE_LOADED", "group___fifty_one_degrees_hash_api.html#ga1ccfa59836996f5f57df0d9b085fa858", null ],
     [ "fiftyoneDegreesResultsHash", "group___fifty_one_degrees_hash_api.html#ga3a08e540ab36bec35d1939e9547e8c10", null ],
     [ "fiftyoneDegreesHashMatchMethod", "group___fifty_one_degrees_hash_api.html#ga67aa036768bc73323346f87d05ab7130", [
       [ "FIFTYONE_DEGREES_HASH_MATCH_METHODS_LENGTH", "group___fifty_one_degrees_hash_api.html#gga67aa036768bc73323346f87d05ab7130a9aa9312001a99144f98014e589b217b2", null ]
@@ -133,6 +121,5 @@ var group___fifty_one_degrees_hash_api =
     [ "fiftyoneDegreesHashDefaultConfig", "group___fifty_one_degrees_hash_api.html#ga212680b36e099570eef3110ec6977c39", null ],
     [ "fiftyoneDegreesHashHighPerformanceConfig", "group___fifty_one_degrees_hash_api.html#gaf2e24e8e35eb0b90a72b864cbdf9845f", null ],
     [ "fiftyoneDegreesHashInMemoryConfig", "group___fifty_one_degrees_hash_api.html#ga3c292094cfc2cc31156ff8a5c5ea0333", null ],
-    [ "fiftyoneDegreesHashLowMemoryConfig", "group___fifty_one_degrees_hash_api.html#ga89f95970a8b22298ee41ce56f80b0e31", null ],
-    [ "fiftyoneDegreesHashSingleLoadedConfig", "group___fifty_one_degrees_hash_api.html#ga9655ba92ec64896cf28ae5b47a69e0a2", null ]
+    [ "fiftyoneDegreesHashLowMemoryConfig", "group___fifty_one_degrees_hash_api.html#ga89f95970a8b22298ee41ce56f80b0e31", null ]
 ];
