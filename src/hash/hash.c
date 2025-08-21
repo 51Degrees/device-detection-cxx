@@ -232,17 +232,17 @@ typedef struct set_special_headers_find_state_t {
 #define FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY true
 fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig = {
 	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_WITH_INDEX,
-	{0,0,0}, // Strings
-	{0,0,0}, // Components
-	{0,0,0}, // Maps
-	{0,0,0}, // Properties
-	{0,0,0}, // Values
-	{0,0,0}, // Profiles
-	{0,0,0}, // Root Nodes
-	{0,0,0}, // Nodes
-	{0,0,0}, // ProfileOffsets
-	FIFTYONE_DEGREES_HASH_DIFFERENCE,
-	FIFTYONE_DEGREES_HASH_DRIFT,
+	{false,0,0}, // Strings
+	{false,0,0}, // Components
+	{false,0,0}, // Maps
+	{false,0,0}, // Properties
+	{false,0,0}, // Values
+	{false,0,0}, // Profiles
+	{false,0,0}, // Root Nodes
+	{false,0,0}, // Nodes
+	{false,0,0}, // ProfileOffsets
+	0,
+	0,
 	false, // Performance graph
 	true, // Predictive graph
 	false // Trace
@@ -262,8 +262,8 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
 	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Root Nodes
 	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Nodes
 	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
-	FIFTYONE_DEGREES_HASH_DIFFERENCE,
-	FIFTYONE_DEGREES_HASH_DRIFT,
+	0,
+	0,
 	false, // Performance graph
 	true, // Predictive graph
 	false // Trace
@@ -271,35 +271,17 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
 
 fiftyoneDegreesConfigHash fiftyoneDegreesHashLowMemoryConfig = {
 	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_NO_INDEX,
-	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Strings
-	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Components
-	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Maps
-	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Properties
-	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Values
-	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Profiles
-	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Root Nodes
-	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Nodes
-	{ 0, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
-	FIFTYONE_DEGREES_HASH_DIFFERENCE,
-	FIFTYONE_DEGREES_HASH_DRIFT,
-	false, // Performance graph
-	true, // Predictive graph
-	false // Trace
-};
-
-fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
-	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_NO_INDEX,
-	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Strings
-	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Components
-	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Maps
-	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Properties
-	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Values
-	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Profiles
-	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Root Nodes
-	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Nodes
-	{ 1, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
-	FIFTYONE_DEGREES_HASH_DIFFERENCE,
-	FIFTYONE_DEGREES_HASH_DRIFT,
+	{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Strings
+	{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Components
+	{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Maps
+	{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Properties
+	{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Values
+	{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Profiles
+	{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Root Nodes
+	{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Nodes
+	{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // ProfileOffsets
+	0,
+	0,
 	false, // Performance graph
 	true, // Predictive graph
 	false // Trace
@@ -307,17 +289,17 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashSingleLoadedConfig = {
 
 #define FIFTYONE_DEGREES_HASH_CONFIG_BALANCED \
 FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_NO_INDEX, \
-{ false, FIFTYONE_DEGREES_STRING_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Strings */ \
+{ false, 10000, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Strings */ \
 { true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Components */ \
 { true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Maps */ \
-{ false, FIFTYONE_DEGREES_PROPERTY_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Properties */ \
-{ false, FIFTYONE_DEGREES_VALUE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Values */ \
-{ false, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Profiles */ \
+{ false, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Properties */ \
+{ false, 500, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Values */ \
+{ false, 10000, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Profiles */ \
 { true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Root Nodes */ \
-{ false, FIFTYONE_DEGREES_NODE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Nodes */ \
-{ false, FIFTYONE_DEGREES_PROFILE_CACHE_SIZE, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* ProfileOffsets */ \
-FIFTYONE_DEGREES_HASH_DIFFERENCE, \
-FIFTYONE_DEGREES_HASH_DRIFT, \
+{ false, 50000, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* Nodes */ \
+{ false, 10000, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, /* ProfileOffsets */ \
+0, \
+0, \
 false, /* Performance graph */ \
 true,  /* Predictive graph */ \
 false /* Trace */
