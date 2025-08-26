@@ -18,10 +18,11 @@ function updateLinks(project, divId) {
     var base = DOC_URL_BASE.split('/')[0];
     var as = $('#' + divId + ' a');
     for (i = 0; i < as.length; i++) {
-        if (as[i].href.includes('/' + base + '/')) {
-            // Replace the local part of the URL with the correct repository part
-            // e.g. replace '/documentation/' with '/device-detection-cxx/'.
-            as[i].href = as[i].href.replace('/' + base + '/', '/' + project + '/');
+        var href = as[i].getAttribute('href');
+        if (href && !href.startsWith('http') && !href.startsWith('#') && !href.includes('/')) {
+            // This is a relative link (e.g. "namespace_fifty_one_1_1_device_detection.html")
+            // Convert it to point to the correct project API directory
+            as[i].href = 'apis/' + project + '/' + href;
         }
     }
 }
@@ -72,7 +73,7 @@ function grabExample(caller, project, name) {
 
 function grabSnippet(caller, project, file, tag, btnClass, divId) {
     selectBtn(caller, caller.parentElement.children);
-    let url = '../../' + project + '/' + getVersion() + '/' + file;
+    let url = 'apis/' + project + '/' + file;
     // Load the example into the 'grabbed-example' div, then update the links.
     let element = document.getElementById(divId);
     element.style.display = 'block';
@@ -81,15 +82,15 @@ function grabSnippet(caller, project, file, tag, btnClass, divId) {
         .html('')
         .load(url + ' #' + tag, function(response, status) {
             if (status === 'error' && getVersion() === '4.5') {
-                url = '../../' + project + '/' + '4.4' + '/' + file;
+                url = 'apis/' + project + '/' + file;
                 $('#' + divId)
                     .html('')
                     .load(url + ' #' + tag, function() {
-                        // updateLinks(project, divId);
+                        updateLinks(project, divId);
                         addLink(url, divId);
                     });
             } else {
-                // updateLinks(project, divId);
+                updateLinks(project, divId);
                 addLink(url, divId);
             }
         });
