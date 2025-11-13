@@ -251,6 +251,25 @@ fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig = {
 #define FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY \
 FIFTYONE_DEGREES_CONFIG_ALL_IN_MEMORY_DEFAULT
 
+// WASM-specific config without property-value index to avoid memory issues
+fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfigNoIndex = {
+	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_NO_INDEX,
+	{false,0,0}, // Strings
+	{false,0,0}, // Components
+	{false,0,0}, // Maps
+	{false,0,0}, // Properties
+	{false,0,0}, // Values
+	{false,0,0}, // Profiles
+	{false,0,0}, // Root Nodes
+	{false,0,0}, // Nodes
+	{false,0,0}, // ProfileOffsets
+	0,
+	0,
+	false, // Performance graph
+	true, // Predictive graph
+	false // Trace
+};
+
 fiftyoneDegreesConfigHash fiftyoneDegreesHashHighPerformanceConfig = {
 	FIFTYONE_DEGREES_DEVICE_DETECTION_CONFIG_DEFAULT_WITH_INDEX,
 	{ true, 0, FIFTYONE_DEGREES_CACHE_CONCURRENCY }, // Strings
@@ -1287,13 +1306,15 @@ static const String* initGetPropertyString(
 			&propertyKey,
 			&propertyItem,
 			exception);
-		if (property != NULL && EXCEPTION_OKAY) {
+		// Fix: Check for SUCCESS explicitly, not just EXCEPTION_OKAY
+		if (property != NULL && (exception->status == FIFTYONE_DEGREES_STATUS_SUCCESS || exception->status == FIFTYONE_DEGREES_STATUS_NOT_SET)) {
 			name = PropertyGetName(
 				dataSet->strings,
 				property,
 				item,
 				exception);
-			if (EXCEPTION_OKAY) {
+			// Fix: Same bug here - check for SUCCESS explicitly
+			if (exception->status == FIFTYONE_DEGREES_STATUS_SUCCESS || exception->status == FIFTYONE_DEGREES_STATUS_NOT_SET) {
 				COLLECTION_RELEASE(dataSet->properties, &propertyItem);
 			}
 		}
@@ -2007,7 +2028,7 @@ static StatusCode initDataSetFromFile(
 	}
 
 	// Return the status code if something has gone wrong.
-	if (status != SUCCESS || EXCEPTION_FAILED) {
+	if (status != SUCCESS) {
 		freeDataSet(dataSet);
 		// Delete the temp file if one has been created.
 		if (config->b.b.useTempFile == true) {
@@ -2015,17 +2036,33 @@ static StatusCode initDataSetFromFile(
 		}
 		return status;
 	}
+	if (EXCEPTION_FAILED && exception && exception->status != SUCCESS) {
+		freeDataSet(dataSet);
+		// Delete the temp file if one has been created.
+		if (config->b.b.useTempFile == true) {
+			FileDelete(dataSet->b.b.fileName);
+		}
+		return exception->status;
+	}
 
 	// Initialise the required properties and headers and check the
 	// initialisation was successful.
 	status = initPropertiesAndHeaders(dataSet, properties, exception);
-	if (status != SUCCESS || EXCEPTION_FAILED) {
+	if (status != SUCCESS) {
 		freeDataSet(dataSet);
 		// Delete the temp file if one has been created.
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
 		}
 		return status;
+	}
+	if (EXCEPTION_FAILED && exception && exception->status != SUCCESS) {
+		freeDataSet(dataSet);
+		// Delete the temp file if one has been created.
+		if (config->b.b.useTempFile == true) {
+			FileDelete(dataSet->b.b.fileName);
+		}
+		return exception->status;
 	}
 
 	// Initialise the components available to flag which components have
@@ -2080,6 +2117,7 @@ fiftyoneDegreesStatusCode fiftyoneDegreesHashInitManagerFromFile(
 	const char *fileName,
 	fiftyoneDegreesException *exception) {
 
+
 	if (config->usePerformanceGraph == false &&
 		config->usePredictiveGraph == false) {
 		return INVALID_CONFIG;
@@ -2096,8 +2134,13 @@ fiftyoneDegreesStatusCode fiftyoneDegreesHashInitManagerFromFile(
 		properties,
 		fileName,
 		exception);
-	if (status != SUCCESS || EXCEPTION_FAILED) {
+	// Don't check EXCEPTION_FAILED if status is SUCCESS - the init functions
+	// may set exception status to SUCCESS which triggers EXCEPTION_FAILED
+	if (status != SUCCESS) {
 		return status;
+	}
+	if (EXCEPTION_FAILED && exception && exception->status != SUCCESS) {
+		return exception->status;
 	}
 	ResourceManagerInit(manager, dataSet, &dataSet->b.b.handle, freeDataSet);
 	if (dataSet->b.b.handle == NULL) {

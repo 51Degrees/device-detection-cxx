@@ -329,6 +329,13 @@ typedef fiftyoneDegreesResultHashArray fiftyoneDegreesResultsHash;
 EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfig;
 
 /**
+ * Configuration to avoid all caching and performance graphs, and uses
+ * collection configurations that minimize memory usage. All data is held
+ * in memory, with no property-value index (useful for WASM environments).
+ */
+EXTERNAL_VAR fiftyoneDegreesConfigHash fiftyoneDegreesHashInMemoryConfigNoIndex;
+
+/**
  * Highest performance configuration. Loads all the data into memory and does
  * not maintain a connection to the source data file used to build the data
  * set. The concurrency setting is ignored as there are no critical sections

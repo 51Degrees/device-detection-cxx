@@ -1,0 +1,18 @@
+[package]
+name = "rust-poc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libc = "0.2"
+
+[build-dependencies]
+bindgen = "0.69"
+cc = "1.0"
+
+[lib]
+crate-type = ["rlib"]
+
+[[bin]]
+name = "detect"
+path = "src/main.rs"
