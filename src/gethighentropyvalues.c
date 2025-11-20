@@ -164,7 +164,7 @@ static int iterateValueSeparators(
 // Iterate all the value strings for the property calling the callback for each.
 // The callback will be null when a count of the values is required for the 
 // purposes of setting the size of the array used in the second pass.
-static int iterateValues(
+static int iterateValueStrings(
     DataSetDeviceDetection *dataSet,
     fiftyoneDegreesCollection *values,
     fiftyoneDegreesCollection *strings,
@@ -231,7 +231,7 @@ static int iterateProperties(
             // If this is any ACCEPT_CH property then iterate the values
             // increasing the count of the values available.
             if (isAcceptCh(strings, property, exception) && EXCEPTION_OKAY) {
-                count += iterateValues(
+                count += iterateValueStrings(
                     dataSet, 
                     values, 
                     strings, 
