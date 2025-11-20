@@ -135,7 +135,7 @@ if (dataSet->t == NULL) { \
  * The last byte of t is null where as keyLength is the length of printable 
  * characters. Take 1 from the t to compare length.
  */
-#define IS_HEADER_MATCH(t,p) \
+#define IS_HASH_HEADER_MATCH(t,p) \
 	(sizeof(t) - 1 == p->item.keyLength && \
 	StringCompareLength(p->item.key, t, sizeof(t)) == 0)
 
@@ -2645,7 +2645,7 @@ static bool setGetHighEntropyValuesHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
-    if (IS_HEADER_MATCH(
+    if (IS_HASH_HEADER_MATCH(
         FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES,
         pair)) {
         TransformIterateResult result = TransformIterateGhevFromBase64(
@@ -2666,7 +2666,7 @@ static bool setStructuredUserAgentHeader(
 	detectionComponentState* state,
 	EvidenceKeyValuePair* pair) {
 	EXCEPTION_CREATE
-    if (IS_HEADER_MATCH(
+    if (IS_HASH_HEADER_MATCH(
                         FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT,
                         pair)) 
     {
@@ -2705,7 +2705,7 @@ static bool setResultFromDeviceId(
 	EvidenceKeyValuePair* pair) {
 
 	// Only consider the device id header.
-	if (!IS_HEADER_MATCH(FIFTYONE_DEGREES_EVIDENCE_DEVICE_ID, pair)) {
+	if (!IS_HASH_HEADER_MATCH(FIFTYONE_DEGREES_EVIDENCE_DEVICE_ID, pair)) {
 		return true; // not a match, skip
 	}
 

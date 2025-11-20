@@ -25,7 +25,7 @@
 #include "fiftyone.h"
 #include "config-dd.h"
 
-#define CONFIG(d) ((ConfigDeviceDetection*)d->b.config)
+#define CONFIG_DD(d) ((ConfigDeviceDetection*)d->b.config)
 
 void fiftyoneDegreesResultsDeviceDetectionInit(
 	fiftyoneDegreesResultsDeviceDetection *results,
@@ -37,7 +37,7 @@ void fiftyoneDegreesResultsDeviceDetectionInit(
 	// Allocate working memory that might be used when combining header values
 	// to become pseudo headers.
 	results->bufferPseudoLength = 
-		(int)CONFIG(dataSet)->maxMatchedUserAgentLength + 1;
+		(int)CONFIG_DD(dataSet)->maxMatchedUserAgentLength + 1;
 	results->bufferPseudo = (char*)Malloc(results->bufferPseudoLength);
 
 	// Allocate working memory that might be used to transform evidence.
@@ -49,7 +49,7 @@ void fiftyoneDegreesResultsDeviceDetectionInit(
 	// applied to reduce the risk of insufficient working memory being 
 	// available.
 	results->bufferTransformLength =
-		(int)CONFIG(dataSet)->maxMatchedUserAgentLength * 2;
+		(int)CONFIG_DD(dataSet)->maxMatchedUserAgentLength * 2;
 	results->bufferTransform = (char*)Malloc(results->bufferTransformLength);
 }
 
