@@ -10,16 +10,6 @@ on:
     - cron: '35 0 * * *'
 
 jobs:
-  DocumentationUpdate:
-    name: Nightly Documentation Update
-    uses: 51Degrees/common-ci/.github/workflows/nightly-documentation-update.yml@main
-    with:
-      repo-name: ${{ github.event.repository.name }}
-      org-name: ${{ github.event.repository.owner.login }}
-      dryrun: ${{ inputs.dryrun || false }}
-    secrets:
-      token: ${{ secrets.ACCESS_TOKEN }}
-
   SubmoduleUpdate:
     name: Nightly Submodule Update
     uses: 51Degrees/common-ci/.github/workflows/nightly-submodule-update.yml@main
@@ -32,7 +22,7 @@ jobs:
 
   PullRequests:
     if: ${{ !cancelled() }}
-    needs: [DocumentationUpdate, SubmoduleUpdate]
+    needs: SubmoduleUpdate
     name: Nightly Pull Requests
     uses: 51Degrees/common-ci/.github/workflows/nightly-pull-requests.yml@main
     with:
