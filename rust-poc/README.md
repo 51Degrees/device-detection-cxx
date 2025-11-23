@@ -87,15 +87,7 @@ Run with `wasmtime`, mounting the data directory:
 
 ```bash
 wasmtime \
-  --dir=/path/to/device-detection-data::/data/device-detection-data \
-  target/wasm32-wasip1/release/detect.wasm
-```
-
-Example with full path:
-
-```bash
-wasmtime \
-  --dir=/Users/eugene/projects/51degrees/51drepos/device-detection-cxx/device-detection-data::/data/device-detection-data \
+  --dir=../device-detection-data::/data/device-detection-data \
   target/wasm32-wasip1/release/detect.wasm
 ```
 
