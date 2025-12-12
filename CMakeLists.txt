@@ -95,8 +95,8 @@ set_target_properties(fiftyone-hash-c fiftyone-hash-cxx
 
 # Shared library
 
-file(WRITE null.cpp "")
-add_library(fiftyone-device-detection-complete SHARED null.cpp)
+file(WRITE ${CMAKE_BINARY_DIR}/null.cpp "")
+add_library(fiftyone-device-detection-complete SHARED ${CMAKE_BINARY_DIR}/null.cpp)
 target_link_libraries(fiftyone-device-detection-complete fiftyone-hash-cxx)
 if (MSVC)
 	target_compile_options(fiftyone-device-detection-complete PRIVATE "/D_CRT_SECURE_NO_WARNINGS" "/W4" "/WX")
