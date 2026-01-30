@@ -109,6 +109,14 @@ void* fiftyoneDegreesGraphNodeReadFromFile(
 		exception);
 }
 
+#else
+
+static const CollectionKeyType nodeKeyType = {
+	FIFTYONE_DEGREES_COLLECTION_ENTRY_TYPE_CUSTOM,
+	sizeof(GraphNode),
+	NULL,
+};
+
 #endif
 
 fiftyoneDegreesGraphNode* fiftyoneDegreesGraphGetNode(
