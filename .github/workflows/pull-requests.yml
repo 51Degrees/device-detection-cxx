@@ -6,6 +6,10 @@ on:
       dryrun:
         type: boolean
         default: false
+      skip-lite-tests:
+        description: 'Skip testing with Lite data file'
+        type: boolean
+        default: false
 
 jobs:
   PullRequests:
@@ -20,3 +24,5 @@ jobs:
       token: ${{ secrets.ACCESS_TOKEN }}
       DeviceDetection: ${{ secrets.DEVICE_DETECTION_KEY }}
       DeviceDetectionUrl: ${{ secrets.DEVICE_DETECTION_URL }}
+    env:
+      DD_CXX_SKIP_LITE_TESTS: ${{ inputs.skip-lite-tests }}

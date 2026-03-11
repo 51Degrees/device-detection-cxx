@@ -19,7 +19,11 @@ Write-Output "Running tests with enterprise data file..."
 $enterpriseExitCode = $LASTEXITCODE
 
 # Run tests with lite data file (temporarily hide enterprise file)
-if (Test-Path $enterpriseFile) {
+if ($env:DD_CXX_SKIP_LITE_TESTS -eq 'true') {
+    Write-Output "Skipping tests with lite data file (SkipLiteTests is set)"
+    exit $enterpriseExitCode
+}
+elseif (Test-Path $enterpriseFile) {
     Write-Output "Running tests with lite data file..."
     Move-Item $enterpriseFile $enterpriseFileBackup -Force
 
