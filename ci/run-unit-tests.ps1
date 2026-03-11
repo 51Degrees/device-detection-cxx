@@ -4,7 +4,8 @@ param(
     [string]$Name = "Release_x64",
     [string]$Arch = "x64",
     [string]$Configuration = "Release",
-    [string]$BuildMethod = "cmake"
+    [string]$BuildMethod = "cmake",
+    [bool]$SkipLiteTests
 )
 
 $deviceDetectionData = "$PSScriptRoot/../device-detection-data"
@@ -19,7 +20,7 @@ Write-Output "Running tests with enterprise data file..."
 $enterpriseExitCode = $LASTEXITCODE
 
 # Run tests with lite data file (temporarily hide enterprise file)
-if ($env:DD_CXX_SKIP_LITE_TESTS -eq 'true') {
+if ($SkipLiteTests) {
     Write-Output "Skipping tests with lite data file (SkipLiteTests is set)"
     exit $enterpriseExitCode
 }

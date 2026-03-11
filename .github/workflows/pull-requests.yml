@@ -11,9 +11,6 @@ on:
         type: boolean
         default: false
 
-env:
-  DD_CXX_SKIP_LITE_TESTS: ${{ inputs.skip-lite-tests }}
-
 jobs:
   PullRequests:
     name: Pull Requests
@@ -22,6 +19,7 @@ jobs:
       repo-name: ${{ github.event.repository.name }}
       org-name: ${{ github.event.repository.owner.login }}
       dryrun: ${{ inputs.dryrun || false }}
+      skip-lite-tests: ${{ inputs.skip-lite-tests || false }}
       cache-assets: true
     secrets:
       token: ${{ secrets.ACCESS_TOKEN }}
