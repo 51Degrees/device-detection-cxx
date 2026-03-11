@@ -11,6 +11,9 @@ on:
         type: boolean
         default: false
 
+env:
+  DD_CXX_SKIP_LITE_TESTS: ${{ inputs.skip-lite-tests }}
+
 jobs:
   PullRequests:
     name: Pull Requests
@@ -24,5 +27,3 @@ jobs:
       token: ${{ secrets.ACCESS_TOKEN }}
       DeviceDetection: ${{ secrets.DEVICE_DETECTION_KEY }}
       DeviceDetectionUrl: ${{ secrets.DEVICE_DETECTION_URL }}
-    env:
-      DD_CXX_SKIP_LITE_TESTS: ${{ inputs.skip-lite-tests }}
