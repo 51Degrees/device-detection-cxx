@@ -34,11 +34,12 @@ jobs:
       org-name: ${{ github.event.repository.owner.login }}
       dryrun: ${{ inputs.dryrun || false }}
       cache-assets: true
-      skip-lite-tests: ${{ inputs.skip-lite-tests || false }}
     secrets:
       token: ${{ secrets.ACCESS_TOKEN }}
       DeviceDetection: ${{ secrets.DEVICE_DETECTION_KEY }}
       DeviceDetectionUrl: ${{ secrets.DEVICE_DETECTION_URL }}
+    env:
+      DD_CXX_SKIP_LITE_TESTS: ${{ inputs.skip-lite-tests }}
 
   Publish:
     if: ${{ !cancelled() }}
