@@ -6,6 +6,10 @@ on:
       dryrun:
         type: boolean
         default: false
+      skip-lite-tests:
+        description: 'Skip testing with Lite data file'
+        type: boolean
+        default: false
 
 jobs:
   PullRequests:
@@ -15,6 +19,7 @@ jobs:
       repo-name: ${{ github.event.repository.name }}
       org-name: ${{ github.event.repository.owner.login }}
       dryrun: ${{ inputs.dryrun || false }}
+      skip-lite-tests: ${{ inputs.skip-lite-tests || false }}
       cache-assets: true
     secrets:
       token: ${{ secrets.ACCESS_TOKEN }}
