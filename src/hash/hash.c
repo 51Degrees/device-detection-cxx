@@ -1726,6 +1726,8 @@ static void initDataSetPost(
 /**
  * Single node info for path tracing.
  */
+#define PATH_NODE_MAX_HASHES 8  // Store first N hash codes for debugging
+
 typedef struct path_node_t {
 	uint32_t offset;           // Relative offset in nodes collection
 	uint64_t fileOffset;       // Absolute file offset
@@ -1734,6 +1736,8 @@ typedef struct path_node_t {
 	int32_t length;            // Node's length
 	int32_t modulo;            // Node's modulo
 	int32_t hashesCount;       // Node's hashesCount
+	uint32_t hashes[PATH_NODE_MAX_HASHES];  // First N hash codes
+	int32_t childOffsets[PATH_NODE_MAX_HASHES];  // First N child offsets
 } PathNode;
 
 /**
@@ -1756,20 +1760,44 @@ static void dumpPathTrace(PathTrace *trace, FILE *logFile) {
 		trace->componentIndex,
 		trace->headerKey,
 		trace->isPerformanceGraph ? "Performance" : "Predictive");
-	fprintf(logFile, "%-10s %-18s %-10s %-10s %-8s %-8s %-10s\n",
-		"Depth", "FileOffset", "Offset", "First", "Last", "Len", "Mod", "Hashes");
-	fprintf(logFile, "---------- ------------------ ---------- ---------- -------- -------- ----------\n");
+	fprintf(logFile, "%-10s %-18s %-10s %-10s %-8s %-8s %-8s %-10s %s\n",
+		"Depth", "FileOffset", "Offset", "First", "Last", "Len", "Mod", "Hashes", "Children");
+	fprintf(logFile, "---------- ------------------ ---------- ---------- -------- -------- -------- ---------- --------------------\n");
 	for (int i = 0; i < trace->depth; i++) {
 		PathNode *n = &trace->nodes[i];
-		fprintf(logFile, "%-10d 0x%-16llX %-10u %-10d %-8d %-8d %-8d %-10d\n",
-			i,
-			(unsigned long long)n->fileOffset,
-			n->offset,
-			n->firstIndex,
-			n->lastIndex,
-			n->length,
-			n->modulo,
-			n->hashesCount);
+		int printCount = n->hashesCount < PATH_NODE_MAX_HASHES ? n->hashesCount : PATH_NODE_MAX_HASHES;
+		
+		// Print first line with node info and first child (if any)
+		if (printCount > 0) {
+			fprintf(logFile, "%-10d 0x%-16llX %-10u %-10d %-8d %-8d %-8d %-10d [0] %u->%d\n",
+				i,
+				(unsigned long long)n->fileOffset,
+				n->offset,
+				n->firstIndex,
+				n->lastIndex,
+				n->length,
+				n->modulo,
+				n->hashesCount,
+				n->hashes[0],
+				n->childOffsets[0]);
+			// Print remaining children on separate lines
+			for (int h = 1; h < printCount; h++) {
+				fprintf(logFile, "%91s[%d] %u->%d\n", "", h, n->hashes[h], n->childOffsets[h]);
+			}
+			if (n->hashesCount > PATH_NODE_MAX_HASHES) {
+				fprintf(logFile, "%91s... (+%d more)\n", "", n->hashesCount - PATH_NODE_MAX_HASHES);
+			}
+		} else {
+			fprintf(logFile, "%-10d 0x%-16llX %-10u %-10d %-8d %-8d %-8d %-10d\n",
+				i,
+				(unsigned long long)n->fileOffset,
+				n->offset,
+				n->firstIndex,
+				n->lastIndex,
+				n->length,
+				n->modulo,
+				n->hashesCount);
+		}
 	}
 	fprintf(logFile, "=== END PATH TRACE ===\n\n");
 }
@@ -1790,11 +1818,25 @@ static int validateGraphNode(
 	// Calculate absolute file offset for hex editor navigation
 	uint64_t absoluteFileOffset = dataSet->header.nodes.startPosition + nodeOffset;
 
-	if (node->modulo > 0) {
+	if (node->modulo != 0) {
+		// Check 0: modulo must be positive
+		// If modulo < 0, the unsigned % operation treats it as a huge positive
+		// number (e.g., -5 becomes 4294967291), causing massive OOB access
+		if (node->modulo < 0) {
+			fprintf(logFile, 
+				"[CRITICAL] Node at relative offset %u (file offset 0x%llX): modulo (%d) is NEGATIVE - will cause massive OOB access!\n",
+				nodeOffset,
+				(unsigned long long)absoluteFileOffset,
+				node->modulo);
+			if (trace != NULL) {
+				dumpPathTrace(trace, logFile);
+			}
+			issues++;
+		}
 		// Check 1: modulo should not exceed hashesCount
 		// If modulo > hashesCount, then hash % modulo could produce
 		// an index >= hashesCount, causing out-of-bounds access
-		if (node->modulo > node->hashesCount) {
+		else if (node->modulo > node->hashesCount) {
 			fprintf(logFile, 
 				"[CRITICAL] Node at relative offset %u (file offset 0x%llX): modulo (%d) > hashesCount (%d) - WILL CRASH!\n",
 				nodeOffset,
@@ -1902,6 +1944,20 @@ static int validateGraphFromNode(
 		pn->length = node->length;
 		pn->modulo = node->modulo;
 		pn->hashesCount = node->hashesCount;
+		
+		// Copy first N hash codes and child offsets for debugging
+		GraphNodeHash *nodeHashes = (GraphNodeHash*)(node + 1);
+		int copyCount = node->hashesCount < PATH_NODE_MAX_HASHES ? node->hashesCount : PATH_NODE_MAX_HASHES;
+		for (int h = 0; h < copyCount; h++) {
+			pn->hashes[h] = nodeHashes[h].hashCode;
+			pn->childOffsets[h] = nodeHashes[h].nodeOffset;
+		}
+		// Zero out remaining slots
+		for (int h = copyCount; h < PATH_NODE_MAX_HASHES; h++) {
+			pn->hashes[h] = 0;
+			pn->childOffsets[h] = 0;
+		}
+		
 		trace->depth++;
 	}
 	
@@ -1914,14 +1970,19 @@ static int validateGraphFromNode(
 	// Recursively validate child nodes
 	for (int32_t i = 0; i < node->hashesCount; i++) {
 		int32_t childOffset = hashes[i].nodeOffset;
-		// Positive offset means another node, negative/zero means leaf (profile)
-		if (childOffset > 0) {
+		uint32_t hashCode = hashes[i].hashCode;
+		
+		// Skip overflow chain entries (hashCode==0, nodeOffset>0 is array index)
+		// Skip empty slots (hashCode==0, nodeOffset==0)
+		// Skip leaf nodes (nodeOffset<=0 is profile offset)
+		// Only recurse into actual child node pointers (hashCode!=0, nodeOffset>0)
+		if (hashCode != 0 && childOffset > 0) {
 			// Check if this offset is valid (exists in the valid offsets set)
 			if (validOffsets != NULL && !isValidNodeOffset((uint32_t)childOffset, validOffsets, validOffsetsCount)) {
 				uint64_t absoluteFileOffset = dataSet->header.nodes.startPosition + nodeOffset;
 				fprintf(logFile,
-					"[CRITICAL] Node at offset %u (file 0x%llX): child[%d].nodeOffset=%d is INVALID (misaligned or out of bounds)!\n",
-					nodeOffset, (unsigned long long)absoluteFileOffset, i, childOffset);
+					"[CRITICAL] Node at offset %u (file 0x%llX): child[%d].nodeOffset=%d (hash=%u) is INVALID!\n",
+					nodeOffset, (unsigned long long)absoluteFileOffset, i, childOffset, hashCode);
 				if (trace != NULL) {
 					dumpPathTrace(trace, logFile);
 				}
@@ -1994,6 +2055,9 @@ static uint32_t buildValidNodeOffsets(
 	fprintf(logFile, "Building valid node offsets (collection count: %u nodes)...\n", 
 		totalNodes);
 	
+	// Open offsets file for on-the-fly writing
+	FILE *offsetsFile = fopen("node_offsets.txt", "w");
+	
 	// Iterate through nodes sequentially
 	while (offset < dataSet->header.nodes.length) {
 		DataReset(&nodeItem.data);
@@ -2002,6 +2066,24 @@ static uint32_t buildValidNodeOffsets(
 		if (node == NULL || EXCEPTION_FAILED) {
 			fprintf(logFile, "[ERROR] Failed to read node at offset %u\n", offset);
 			break;
+		}
+		
+		// Calculate size of this node
+		uint32_t nodeSize = (uint32_t)sizeof(GraphNode);
+		if (node->hashesCount > 0) {
+			nodeSize += (uint32_t)(sizeof(GraphNodeHash) * node->hashesCount);
+		}
+		
+		// Write to offsets file on-the-fly
+		if (offsetsFile != NULL) {
+			uint64_t absoluteOffset = dataSet->header.nodes.startPosition + offset;
+			fprintf(offsetsFile, "0x%llX %u : +%u (%u + %d*%u)\n",
+				(unsigned long long)absoluteOffset,
+				offset,
+				nodeSize,
+				(uint32_t)sizeof(GraphNode),
+				node->hashesCount,
+				(uint32_t)sizeof(GraphNodeHash));
 		}
 		
 		// Store this valid offset
@@ -2024,29 +2106,18 @@ static uint32_t buildValidNodeOffsets(
 			VALIDATE_PROGRESS("[VALIDATE] Building valid offsets: %u/%u nodes...\n", count, totalNodes);
 		}
 		
-		// Calculate size of this node and advance to next
-		uint32_t nodeSize = sizeof(GraphNode);
-		if (node->hashesCount > 0) {
-			nodeSize += sizeof(GraphNodeHash) * node->hashesCount;
-		}
-		
 		COLLECTION_RELEASE(dataSet->nodes, &nodeItem);
 		offset += nodeSize;
 	}
 	
-	fprintf(logFile, "Found %u valid node offsets\n", count);
-	VALIDATE_PROGRESS("[VALIDATE] Building valid offsets: %u/%u nodes (complete)\n", count, count);
-	
-	// Dump offsets to file before sorting
-	FILE *offsetsFile = fopen("node_offsets.txt", "w");
+	// Close offsets file
 	if (offsetsFile != NULL) {
-		for (uint32_t i = 0; i < count; i++) {
-			uint64_t absoluteOffset = dataSet->header.nodes.startPosition + (*validOffsets)[i];
-			fprintf(offsetsFile, "0x%llX %u\n", (unsigned long long)absoluteOffset, (*validOffsets)[i]);
-		}
 		fclose(offsetsFile);
 		VALIDATE_PROGRESS("[VALIDATE] Dumped %u offsets to node_offsets.txt\n", count);
 	}
+	
+	fprintf(logFile, "Found %u valid node offsets\n", count);
+	VALIDATE_PROGRESS("[VALIDATE] Building valid offsets: %u/%u nodes (complete)\n", count, count);
 	
 	// Sort for binary search
 	qsort(*validOffsets, count, sizeof(uint32_t), compareOffsets);
@@ -2111,14 +2182,29 @@ static uint32_t validateNodeChildren(
 		// Check each child in hashes array
 		for (int32_t j = 0; j < node->hashesCount; j++) {
 			int32_t childOffset = hashes[j].nodeOffset;
-			if (childOffset > 0) {
-				if (!isValidNodeOffset((uint32_t)childOffset, validOffsets, validOffsetsCount)) {
-					fprintf(checkFile, "%u (@%u/0x%llX): child[%d].nodeOffset=%d\n",
-						i, offset, (unsigned long long)fileOffset, j, childOffset);
+			uint32_t hashCode = hashes[j].hashCode;
+			
+			if (hashCode == 0 && childOffset > 0) {
+				// Overflow chain entry: nodeOffset is an array index, not a node offset
+				// Validate that the index is within bounds of the hashes array
+				if (childOffset >= node->hashesCount) {
+					fprintf(checkFile, "%u (@%u/0x%llX): child[%d] overflow index=%d >= hashesCount=%d\n",
+						i, offset, (unsigned long long)fileOffset, j, childOffset, node->hashesCount);
 					affectedChildren++;
 					nodeHasFailure = true;
 				}
 			}
+			else if (hashCode != 0 && childOffset > 0) {
+				// Actual child node pointer: validate it points to a valid node offset
+				if (!isValidNodeOffset((uint32_t)childOffset, validOffsets, validOffsetsCount)) {
+					fprintf(checkFile, "%u (@%u/0x%llX): child[%d].nodeOffset=%d (hash=%u) INVALID\n",
+						i, offset, (unsigned long long)fileOffset, j, childOffset, hashCode);
+					affectedChildren++;
+					nodeHasFailure = true;
+				}
+			}
+			// Skip empty slots (hashCode==0, nodeOffset==0)
+			// Skip leaf nodes (nodeOffset<=0 is profile offset)
 		}
 		
 		// Check unmatchedNodeOffset
@@ -2143,9 +2229,15 @@ static uint32_t validateNodeChildren(
 	
 	// Write footer
 	fprintf(checkFile, "# Affected unmatched: %u\n", affectedUnmatched);
-	fprintf(checkFile, "# Affected children: %u\n", affectedChildren);
-	fprintf(checkFile, "# Affected nodes: %u\n", affectedNodes);
-	fprintf(checkFile, "# Affected addresses: %u\n", affectedUnmatched + affectedChildren);
+	fprintf(checkFile, "# Affected children: %u/%llu (%.1f%%)\n", 
+		affectedChildren, (unsigned long long)totalChildren,
+		totalChildren > 0 ? (100.0 * affectedChildren / totalChildren) : 0.0);
+	fprintf(checkFile, "# Affected nodes: %u/%u (%.1f%%)\n", 
+		affectedNodes, validOffsetsCount,
+		validOffsetsCount > 0 ? (100.0 * affectedNodes / validOffsetsCount) : 0.0);
+	fprintf(checkFile, "# Affected addresses: %u/%llu (%.1f%%)\n", 
+		affectedUnmatched + affectedChildren, (unsigned long long)totalAddresses,
+		totalAddresses > 0 ? (100.0 * (affectedUnmatched + affectedChildren) / totalAddresses) : 0.0);
 	
 	fclose(checkFile);
 	VALIDATE_PROGRESS("[VALIDATE] Pass 2 complete: %u invalid addresses found\n", affectedUnmatched + affectedChildren);
