@@ -1714,6 +1714,16 @@ static void initDataSetPost(
 }
 
 /**
+ * Macro for validation progress output. Change VALIDATE_PROGRESS_STREAM to
+ * stderr if needed.
+ */
+#define VALIDATE_PROGRESS_STREAM stdout
+#define VALIDATE_PROGRESS(fmt, ...) do { \
+    fprintf(VALIDATE_PROGRESS_STREAM, fmt, ##__VA_ARGS__); \
+    fflush(VALIDATE_PROGRESS_STREAM); \
+} while(0)
+
+/**
  * Single node info for path tracing.
  */
 typedef struct path_node_t {
@@ -1822,6 +1832,27 @@ static int validateGraphNode(
 }
 
 /**
+ * Comparison function for qsort/bsearch on uint32_t offsets.
+ */
+static int compareOffsets(const void *a, const void *b) {
+	uint32_t va = *(const uint32_t*)a;
+	uint32_t vb = *(const uint32_t*)b;
+	if (va < vb) return -1;
+	if (va > vb) return 1;
+	return 0;
+}
+
+/**
+ * Checks if an offset is in the valid offsets array using binary search.
+ */
+static bool isValidNodeOffset(
+	uint32_t offset,
+	uint32_t *validOffsets,
+	uint32_t validCount) {
+	return bsearch(&offset, validOffsets, validCount, sizeof(uint32_t), compareOffsets) != NULL;
+}
+
+/**
  * DEBUG: Recursively walks the graph from a given node offset,
  * validating each node encountered.
  */
@@ -1831,6 +1862,8 @@ static int validateGraphFromNode(
 	uint32_t *visitedOffsets,
 	uint32_t *visitedCount,
 	uint32_t maxVisited,
+	uint32_t *validOffsets,
+	uint32_t validOffsetsCount,
 	PathTrace *trace,
 	FILE *logFile,
 	Exception *exception) {
@@ -1883,19 +1916,45 @@ static int validateGraphFromNode(
 		int32_t childOffset = hashes[i].nodeOffset;
 		// Positive offset means another node, negative/zero means leaf (profile)
 		if (childOffset > 0) {
-			issues += validateGraphFromNode(
-				dataSet, (uint32_t)childOffset, 
-				visitedOffsets, visitedCount, maxVisited,
-				trace, logFile, exception);
+			// Check if this offset is valid (exists in the valid offsets set)
+			if (validOffsets != NULL && !isValidNodeOffset((uint32_t)childOffset, validOffsets, validOffsetsCount)) {
+				uint64_t absoluteFileOffset = dataSet->header.nodes.startPosition + nodeOffset;
+				fprintf(logFile,
+					"[CRITICAL] Node at offset %u (file 0x%llX): child[%d].nodeOffset=%d is INVALID (misaligned or out of bounds)!\n",
+					nodeOffset, (unsigned long long)absoluteFileOffset, i, childOffset);
+				if (trace != NULL) {
+					dumpPathTrace(trace, logFile);
+				}
+				issues++;
+			} else {
+				issues += validateGraphFromNode(
+					dataSet, (uint32_t)childOffset, 
+					visitedOffsets, visitedCount, maxVisited,
+					validOffsets, validOffsetsCount,
+					trace, logFile, exception);
+			}
 		}
 	}
 	
 	// Also check unmatched path
 	if (node->unmatchedNodeOffset > 0) {
-		issues += validateGraphFromNode(
-			dataSet, (uint32_t)node->unmatchedNodeOffset,
-			visitedOffsets, visitedCount, maxVisited,
-			trace, logFile, exception);
+		// Check if unmatched offset is valid
+		if (validOffsets != NULL && !isValidNodeOffset((uint32_t)node->unmatchedNodeOffset, validOffsets, validOffsetsCount)) {
+			uint64_t absoluteFileOffset = dataSet->header.nodes.startPosition + nodeOffset;
+			fprintf(logFile,
+				"[CRITICAL] Node at offset %u (file 0x%llX): unmatchedNodeOffset=%d is INVALID (misaligned or out of bounds)!\n",
+				nodeOffset, (unsigned long long)absoluteFileOffset, node->unmatchedNodeOffset);
+			if (trace != NULL) {
+				dumpPathTrace(trace, logFile);
+			}
+			issues++;
+		} else {
+			issues += validateGraphFromNode(
+				dataSet, (uint32_t)node->unmatchedNodeOffset,
+				visitedOffsets, visitedCount, maxVisited,
+				validOffsets, validOffsetsCount,
+				trace, logFile, exception);
+		}
 	}
 	
 	// Pop this node from the path trace
@@ -1905,6 +1964,83 @@ static int validateGraphFromNode(
 	
 	COLLECTION_RELEASE(dataSet->nodes, &nodeItem);
 	return issues;
+}
+
+#define NODES_TO_REPORT_PROGRESS 10000
+
+/**
+ * Builds an array of valid node offsets by iterating sequentially through
+ * the nodes collection. Returns the count of valid offsets found.
+ */
+static uint32_t buildValidNodeOffsets(
+	DataSetHash *dataSet,
+	uint32_t **validOffsets,
+	FILE *logFile,
+	Exception *exception) {
+	uint32_t offset = 0;
+	uint32_t count = 0;
+	uint32_t capacity = 100000;
+	Item nodeItem;
+	GraphNode *node;
+	
+	// Allocate initial array
+	*validOffsets = (uint32_t*)Malloc(sizeof(uint32_t) * capacity);
+	if (*validOffsets == NULL) {
+		fprintf(logFile, "[ERROR] Failed to allocate valid offsets array\n");
+		return 0;
+	}
+	
+	uint32_t totalNodes = CollectionGetCount(dataSet->nodes);
+	fprintf(logFile, "Building valid node offsets (collection count: %u nodes)...\n", 
+		totalNodes);
+	
+	// Iterate through nodes sequentially
+	while (offset < dataSet->header.nodes.length) {
+		DataReset(&nodeItem.data);
+		node = GraphGetNode(dataSet->nodes, offset, &nodeItem, exception);
+		
+		if (node == NULL || EXCEPTION_FAILED) {
+			fprintf(logFile, "[ERROR] Failed to read node at offset %u\n", offset);
+			break;
+		}
+		
+		// Store this valid offset
+		if (count >= capacity) {
+			capacity *= 2;
+			uint32_t *newArray = (uint32_t*)Malloc(sizeof(uint32_t) * capacity);
+			if (newArray == NULL) {
+				fprintf(logFile, "[ERROR] Failed to expand valid offsets array\n");
+				COLLECTION_RELEASE(dataSet->nodes, &nodeItem);
+				break;
+			}
+			memcpy(newArray, *validOffsets, sizeof(uint32_t) * count);
+			Free(*validOffsets);
+			*validOffsets = newArray;
+		}
+		(*validOffsets)[count++] = offset;
+		
+		// Progress message every N nodes
+		if (count % NODES_TO_REPORT_PROGRESS == 0) {
+			VALIDATE_PROGRESS("[VALIDATE] Building valid offsets: %u/%u nodes...\n", count, totalNodes);
+		}
+		
+		// Calculate size of this node and advance to next
+		uint32_t nodeSize = sizeof(GraphNode);
+		if (node->hashesCount > 0) {
+			nodeSize += sizeof(GraphNodeHash) * node->hashesCount;
+		}
+		
+		COLLECTION_RELEASE(dataSet->nodes, &nodeItem);
+		offset += nodeSize;
+	}
+	
+	fprintf(logFile, "Found %u valid node offsets\n", count);
+	VALIDATE_PROGRESS("[VALIDATE] Building valid offsets: %u/%u nodes (complete)\n", count, count);
+	
+	// Sort for binary search
+	qsort(*validOffsets, count, sizeof(uint32_t), compareOffsets);
+	
+	return count;
 }
 
 /**
@@ -1917,12 +2053,14 @@ static void validateGraphIntegrity(
 	FILE *logFile;
 	uint32_t totalIssues = 0;
 	uint32_t nodesValidated = 0;
+	uint32_t *validOffsets = NULL;
+	uint32_t validOffsetsCount = 0;
 	
 	// Allocate visited tracking array
 	uint32_t maxVisited = 1000000; // 1M nodes max
 	uint32_t *visitedOffsets = (uint32_t*)Malloc(sizeof(uint32_t) * maxVisited);
 	if (visitedOffsets == NULL) {
-		fprintf(stderr, "[VALIDATE] Failed to allocate visited array\n");
+		VALIDATE_PROGRESS("[VALIDATE] Failed to allocate visited array\n");
 		return;
 	}
 	
@@ -1934,6 +2072,9 @@ static void validateGraphIntegrity(
 	
 	fprintf(logFile, "=== Graph Integrity Validation ===\n");
 	fprintf(logFile, "Total root nodes entries: %u\n", dataSet->header.rootNodes.count);
+	
+	// Build valid node offsets first
+	validOffsetsCount = buildValidNodeOffsets(dataSet, &validOffsets, logFile, exception);
 	
 	// Iterate through all root nodes
 	Item rootNodesItem;
@@ -1960,8 +2101,13 @@ static void validateGraphIntegrity(
 				totalIssues += validateGraphFromNode(
 					dataSet, rootNodes->performanceNodeOffset,
 					visitedOffsets, &visitedCount, maxVisited,
+					validOffsets, validOffsetsCount,
 					&trace, logFile, exception);
-				nodesValidated += visitedCount;
+			nodesValidated += visitedCount;
+				// Progress message every N nodes
+				if (nodesValidated % NODES_TO_REPORT_PROGRESS < visitedCount) {
+					VALIDATE_PROGRESS("[VALIDATE] Traversing graph: %u/%u nodes visited...\n", nodesValidated, validOffsetsCount);
+				}
 			}
 			
 			// Validate predictive graph
@@ -1972,8 +2118,13 @@ static void validateGraphIntegrity(
 				totalIssues += validateGraphFromNode(
 					dataSet, rootNodes->predictiveNodeOffset,
 					visitedOffsets, &visitedCount, maxVisited,
+					validOffsets, validOffsetsCount,
 					&trace, logFile, exception);
 				nodesValidated += visitedCount;
+				// Progress message every N nodes
+				if (nodesValidated % NODES_TO_REPORT_PROGRESS < visitedCount) {
+					VALIDATE_PROGRESS("[VALIDATE] Traversing graph: %u/%u nodes visited...\n", nodesValidated, validOffsetsCount);
+				}
 			}
 			
 			COLLECTION_RELEASE(dataSet->rootNodes, &rootNodesItem);
@@ -1986,16 +2137,19 @@ static void validateGraphIntegrity(
 	
 	if (totalIssues > 0) {
 		fprintf(logFile, "\n*** CRITICAL: Graph corruption detected! ***\n");
-		fprintf(stderr, "[VALIDATE] CRITICAL: %u graph integrity issues found! See graph_validation.log\n", totalIssues);
+		VALIDATE_PROGRESS("[VALIDATE] CRITICAL: %u graph integrity issues found! See graph_validation.log\n", totalIssues);
 	} else {
 		fprintf(logFile, "\nGraph integrity OK.\n");
-		fprintf(stderr, "[VALIDATE] Graph integrity OK. %u nodes validated.\n", nodesValidated);
+		VALIDATE_PROGRESS("[VALIDATE] Graph integrity OK. %u nodes validated.\n", nodesValidated);
 	}
 	
 	if (logFile != stderr) {
 		fclose(logFile);
 	}
 	Free(visitedOffsets);
+	if (validOffsets != NULL) {
+		Free(validOffsets);
+	}
 }
 
 static StatusCode initWithMemory(
