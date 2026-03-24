@@ -2063,10 +2063,15 @@ static uint32_t validateNodeChildren(
 	uint32_t *validOffsets,
 	uint32_t validOffsetsCount,
 	Exception *exception) {
-	uint32_t invalidCount = 0;
+	uint32_t affectedChildren = 0;
+	uint32_t affectedUnmatched = 0;
+	uint32_t affectedNodes = 0;
+	uint64_t totalChildren = 0;
+	uint64_t totalAddresses = 0;
 	Item nodeItem;
 	GraphNode *node;
 	GraphNodeHash *hashes;
+	bool nodeHasFailure;
 	
 	FILE *checkFile = fopen("node_children_check.txt", "w");
 	if (checkFile == NULL) {
@@ -2076,26 +2081,42 @@ static uint32_t validateNodeChildren(
 	
 	VALIDATE_PROGRESS("[VALIDATE] Pass 2: Checking node children...\n");
 	
+	// First pass: count totals for header
+	for (uint32_t i = 0; i < validOffsetsCount; i++) {
+		DataReset(&nodeItem.data);
+		node = GraphGetNode(dataSet->nodes, validOffsets[i], &nodeItem, exception);
+		if (node == NULL || EXCEPTION_FAILED) continue;
+		totalChildren += node->hashesCount;
+		if (node->unmatchedNodeOffset > 0) totalAddresses++;
+		COLLECTION_RELEASE(dataSet->nodes, &nodeItem);
+	}
+	totalAddresses += totalChildren;
+	
+	// Write header
+	fprintf(checkFile, "# Total children: %llu\n", (unsigned long long)totalChildren);
+	fprintf(checkFile, "# Total addresses: %llu\n", (unsigned long long)totalAddresses);
+	
+	// Second pass: check validity and write failures
 	for (uint32_t i = 0; i < validOffsetsCount; i++) {
 		uint32_t offset = validOffsets[i];
 		uint64_t fileOffset = dataSet->header.nodes.startPosition + offset;
 		
 		DataReset(&nodeItem.data);
 		node = GraphGetNode(dataSet->nodes, offset, &nodeItem, exception);
-		if (node == NULL || EXCEPTION_FAILED) {
-			continue;
-		}
+		if (node == NULL || EXCEPTION_FAILED) continue;
 		
 		hashes = (GraphNodeHash*)(node + 1);
+		nodeHasFailure = false;
 		
 		// Check each child in hashes array
 		for (int32_t j = 0; j < node->hashesCount; j++) {
 			int32_t childOffset = hashes[j].nodeOffset;
 			if (childOffset > 0) {
 				if (!isValidNodeOffset((uint32_t)childOffset, validOffsets, validOffsetsCount)) {
-					fprintf(checkFile, "0x%llX %u: child[%d].nodeOffset=%d\n",
-						(unsigned long long)fileOffset, offset, j, childOffset);
-					invalidCount++;
+					fprintf(checkFile, "%u (@%u/0x%llX): child[%d].nodeOffset=%d\n",
+						i, offset, (unsigned long long)fileOffset, j, childOffset);
+					affectedChildren++;
+					nodeHasFailure = true;
 				}
 			}
 		}
@@ -2103,11 +2124,14 @@ static uint32_t validateNodeChildren(
 		// Check unmatchedNodeOffset
 		if (node->unmatchedNodeOffset > 0) {
 			if (!isValidNodeOffset((uint32_t)node->unmatchedNodeOffset, validOffsets, validOffsetsCount)) {
-				fprintf(checkFile, "0x%llX %u: unmatchedNodeOffset=%d\n",
-					(unsigned long long)fileOffset, offset, node->unmatchedNodeOffset);
-				invalidCount++;
+				fprintf(checkFile, "%u (@%u/0x%llX): unmatchedNodeOffset=%d\n",
+					i, offset, (unsigned long long)fileOffset, node->unmatchedNodeOffset);
+				affectedUnmatched++;
+				nodeHasFailure = true;
 			}
 		}
+		
+		if (nodeHasFailure) affectedNodes++;
 		
 		COLLECTION_RELEASE(dataSet->nodes, &nodeItem);
 		
@@ -2117,10 +2141,16 @@ static uint32_t validateNodeChildren(
 		}
 	}
 	
-	fclose(checkFile);
-	VALIDATE_PROGRESS("[VALIDATE] Pass 2 complete: %u invalid children found\n", invalidCount);
+	// Write footer
+	fprintf(checkFile, "# Affected unmatched: %u\n", affectedUnmatched);
+	fprintf(checkFile, "# Affected children: %u\n", affectedChildren);
+	fprintf(checkFile, "# Affected nodes: %u\n", affectedNodes);
+	fprintf(checkFile, "# Affected addresses: %u\n", affectedUnmatched + affectedChildren);
 	
-	return invalidCount;
+	fclose(checkFile);
+	VALIDATE_PROGRESS("[VALIDATE] Pass 2 complete: %u invalid addresses found\n", affectedUnmatched + affectedChildren);
+	
+	return affectedUnmatched + affectedChildren;
 }
 
 /**
