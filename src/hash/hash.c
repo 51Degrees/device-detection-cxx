@@ -1713,6 +1713,206 @@ static void initDataSetPost(
 	}
 }
 
+/**
+ * DEBUG: Validates a single graph node's hash table structure.
+ * Returns the number of issues found.
+ */
+static int validateGraphNode(
+	GraphNode *node,
+	uint32_t nodeOffset,
+	FILE *logFile) {
+	int issues = 0;
+	GraphNodeHash *hashes = (GraphNodeHash*)(node + 1);
+	
+	// Only validate nodes with hash table lookup (modulo > 0)
+	if (node->modulo > 0) {
+		// Check 1: modulo should not exceed hashesCount
+		// If modulo > hashesCount, then hash % modulo could produce
+		// an index >= hashesCount, causing out-of-bounds access
+		if (node->modulo > node->hashesCount) {
+			fprintf(logFile, 
+				"[CRITICAL] Node at offset %u: modulo (%lld/%lld/%d) > hashesCount (%lld/%lld/%d) - WILL CRASH!\n",
+				nodeOffset,
+				(long long)node->modulo, (long long)(uint32_t)node->modulo, node->modulo,
+				(long long)node->hashesCount, (long long)(uint32_t)node->hashesCount, node->hashesCount);
+			issues++;
+		}
+		
+		// Check 2: Validate overflow chain pointers
+		for (int32_t i = 0; i < node->hashesCount; i++) {
+			GraphNodeHash *h = &hashes[i];
+			// An overflow entry has hashCode == 0 and nodeOffset > 0
+			// The nodeOffset in this case points to another index in the array
+			if (h->hashCode == 0 && h->nodeOffset > 0) {
+				if (h->nodeOffset >= node->hashesCount) {
+					fprintf(logFile,
+						"[CRITICAL] Node at offset %u: overflow at index %d points to %d >= hashesCount %d - WILL CRASH!\n",
+						nodeOffset, i, h->nodeOffset, node->hashesCount);
+					issues++;
+				}
+			}
+		}
+	}
+	
+	return issues;
+}
+
+/**
+ * DEBUG: Recursively walks the graph from a given node offset,
+ * validating each node encountered.
+ */
+static int validateGraphFromNode(
+	DataSetHash *dataSet,
+	uint32_t nodeOffset,
+	uint32_t *visitedOffsets,
+	uint32_t *visitedCount,
+	uint32_t maxVisited,
+	FILE *logFile,
+	Exception *exception) {
+	int issues = 0;
+	Item nodeItem;
+	GraphNode *node;
+	GraphNodeHash *hashes;
+	
+	// Check if already visited (simple linear search for now)
+	for (uint32_t i = 0; i < *visitedCount; i++) {
+		if (visitedOffsets[i] == nodeOffset) {
+			return 0; // Already visited
+		}
+	}
+	
+	// Mark as visited
+	if (*visitedCount < maxVisited) {
+		visitedOffsets[(*visitedCount)++] = nodeOffset;
+	}
+	
+	// Get the node
+	DataReset(&nodeItem.data);
+	node = GraphGetNode(dataSet->nodes, nodeOffset, &nodeItem, exception);
+	if (node == NULL || EXCEPTION_FAILED) {
+		fprintf(logFile, "[ERROR] Failed to get node at offset %u\n", nodeOffset);
+		return 1;
+	}
+	
+	// Validate this node
+	issues += validateGraphNode(node, nodeOffset, logFile);
+	
+	// Get hashes array
+	hashes = (GraphNodeHash*)(node + 1);
+	
+	// Recursively validate child nodes
+	for (int32_t i = 0; i < node->hashesCount; i++) {
+		int32_t childOffset = hashes[i].nodeOffset;
+		// Positive offset means another node, negative/zero means leaf (profile)
+		if (childOffset > 0) {
+			issues += validateGraphFromNode(
+				dataSet, (uint32_t)childOffset, 
+				visitedOffsets, visitedCount, maxVisited,
+				logFile, exception);
+		}
+	}
+	
+	// Also check unmatched path
+	if (node->unmatchedNodeOffset > 0) {
+		issues += validateGraphFromNode(
+			dataSet, (uint32_t)node->unmatchedNodeOffset,
+			visitedOffsets, visitedCount, maxVisited,
+			logFile, exception);
+	}
+	
+	COLLECTION_RELEASE(dataSet->nodes, &nodeItem);
+	return issues;
+}
+
+/**
+ * DEBUG: Validates the entire graph structure starting from all root nodes.
+ * Writes results to a log file.
+ */
+static void validateGraphIntegrity(
+	DataSetHash *dataSet,
+	Exception *exception) {
+	FILE *logFile;
+	uint32_t totalIssues = 0;
+	uint32_t nodesValidated = 0;
+	
+	// Allocate visited tracking array
+	uint32_t maxVisited = 1000000; // 1M nodes max
+	uint32_t *visitedOffsets = (uint32_t*)Malloc(sizeof(uint32_t) * maxVisited);
+	if (visitedOffsets == NULL) {
+		fprintf(stderr, "[VALIDATE] Failed to allocate visited array\n");
+		return;
+	}
+	
+	// Open log file
+	logFile = fopen("graph_validation.log", "w");
+	if (logFile == NULL) {
+		logFile = stderr;
+	}
+	
+	fprintf(logFile, "=== Graph Integrity Validation ===\n");
+	fprintf(logFile, "Total root nodes entries: %u\n", dataSet->header.rootNodes.count);
+	
+	// Iterate through all root nodes
+	Item rootNodesItem;
+	DataReset(&rootNodesItem.data);
+	
+	// Walk through components and their root nodes
+	for (uint32_t compIdx = 0; compIdx < dataSet->componentsList.count; compIdx++) {
+		Component *component = COMPONENT(dataSet, compIdx);
+		if (component == NULL) continue;
+		
+		for (uint16_t kvIdx = 0; kvIdx < component->keyValuesCount; kvIdx++) {
+			ComponentKeyValuePair *kv = (ComponentKeyValuePair*)&component->firstKeyValuePair + kvIdx;
+			
+			HashRootNodes *rootNodes = getRootNodes(dataSet, kv->value, &rootNodesItem, exception);
+			if (rootNodes == NULL || EXCEPTION_FAILED) continue;
+			
+			fprintf(logFile, "\nComponent %u, Header %u:\n", compIdx, kv->key);
+			
+			// Validate performance graph
+			if (rootNodes->performanceNodeOffset > 0) {
+				fprintf(logFile, "  Performance root: %u\n", rootNodes->performanceNodeOffset);
+				uint32_t visitedCount = 0;
+				totalIssues += validateGraphFromNode(
+					dataSet, rootNodes->performanceNodeOffset,
+					visitedOffsets, &visitedCount, maxVisited,
+					logFile, exception);
+				nodesValidated += visitedCount;
+			}
+			
+			// Validate predictive graph
+			if (rootNodes->predictiveNodeOffset > 0) {
+				fprintf(logFile, "  Predictive root: %u\n", rootNodes->predictiveNodeOffset);
+				uint32_t visitedCount = 0;
+				totalIssues += validateGraphFromNode(
+					dataSet, rootNodes->predictiveNodeOffset,
+					visitedOffsets, &visitedCount, maxVisited,
+					logFile, exception);
+				nodesValidated += visitedCount;
+			}
+			
+			COLLECTION_RELEASE(dataSet->rootNodes, &rootNodesItem);
+		}
+	}
+	
+	fprintf(logFile, "\n=== Validation Summary ===\n");
+	fprintf(logFile, "Nodes validated: %u\n", nodesValidated);
+	fprintf(logFile, "Total issues found: %u\n", totalIssues);
+	
+	if (totalIssues > 0) {
+		fprintf(logFile, "\n*** CRITICAL: Graph corruption detected! ***\n");
+		fprintf(stderr, "[VALIDATE] CRITICAL: %u graph integrity issues found! See graph_validation.log\n", totalIssues);
+	} else {
+		fprintf(logFile, "\nGraph integrity OK.\n");
+		fprintf(stderr, "[VALIDATE] Graph integrity OK. %u nodes validated.\n", nodesValidated);
+	}
+	
+	if (logFile != stderr) {
+		fclose(logFile);
+	}
+	Free(visitedOffsets);
+}
+
 static StatusCode initWithMemory(
 	DataSetHash *dataSet,
 	MemoryReader *reader,
@@ -2069,6 +2269,9 @@ static StatusCode initDataSetFromFile(
 	}
 
 	initGetHighEntropyValues(dataSet, exception);
+
+	// DEBUG: Validate graph integrity
+	validateGraphIntegrity(dataSet, exception);
 
 	return status;
 }
