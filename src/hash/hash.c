@@ -2852,7 +2852,7 @@ static StatusCode initDataSetFromFile(
 	// fiftyoneDegreesHashDebugDumpComponentsAndProperties(dataSet);
 
 	// DEBUG: Validate graph integrity
-	validateGraphIntegrity(dataSet, exception);
+	// validateGraphIntegrity(dataSet, exception);
 
 	return status;
 }

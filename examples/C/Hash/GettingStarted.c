@@ -74,10 +74,8 @@ typedef struct {
 static evidence mobileDevice = { 
 	1, 
 	{ { FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING, "user-agent", (
-		"Mozilla/5.0 (Linux; Android 9; SAMSUNG SM-G960U) "
-		"AppleWebKit/537.36 (KHTML, like Gecko) "
-		"SamsungBrowser/10.1 Chrome/71.0.3578.99 Mobile "
-		"Safari/537.36") } } 
+		// "Mecha Godzilla Final Jump QNA 0 Alpha {aU5}   142") } }
+		"Mecha Godzilla QNA 0") } }
 };
 
 // A User-Agent from a desktop device.
@@ -175,11 +173,11 @@ static evidence getHighEntropyValues = {
 // be passed to the device detection algorithm.
 static evidence* evidenceValues[] = {
 	&mobileDevice,
-	&desktopDevice,
-	&userAgentClientHints,
-	&userAgentWithMobileID,
-	&headersWithWebView,
-	&getHighEntropyValues
+	// &desktopDevice,
+	// &userAgentClientHints,
+	// &userAgentWithMobileID,
+	// &headersWithWebView,
+	// &getHighEntropyValues
 };
 
 static void outputValue(
@@ -281,11 +279,14 @@ static void analyse(
 	EXCEPTION_THROW
 
 	fprintf(output, "Results:");
-	outputValue(results, "Mobile Device", "IsMobile", output);
-	outputValue(results, "Platform Name", "PlatformName", output);
-	outputValue(results, "Platform Version", "PlatformVersion", output);
-	outputValue(results, "Browser Name", "BrowserName", output);
-	outputValue(results, "Browser Version", "BrowserVersion", output);
+	// outputValue(results, "Mobile Device", "IsMobile", output);
+	// outputValue(results, "Platform Name", "PlatformName", output);
+	// outputValue(results, "Platform Version", "PlatformVersion", output);
+	// outputValue(results, "Browser Name", "BrowserName", output);
+	// outputValue(results, "Browser Version", "BrowserVersion", output);
+	outputValue(results, "IsCrawler", "IsCrawler", output);
+	outputValue(results, "CrawlerName", "CrawlerName", output);
+	outputValue(results, "IsArtificialIntelligence", "IsArtificialIntelligence", output);
 
 	// Shows the Device Id that can be used to look up the properties via
 	// reference tables. 
@@ -353,9 +354,7 @@ void fiftyoneDegreesHashGettingStarted(
 	PropertiesRequired properties = { 
 		NULL,
 		0,
-		"IsMobile,PlatformName,PlatformVersion,BrowserName,BrowserVersion,"
-		"HardwareImages,SetHeaderBrowserAccept-CH,SetHeaderHardwareAccept-CH,"
-		"SetHeaderPlatformAccept-CH,JavascriptGetHighEntropyValues",
+		"IsCrawler,CrawlerName,IsArtificialIntelligence",
 		NULL };
 
 	// Initialise the manager for device detection.
@@ -442,6 +441,7 @@ int main(int argc, char* argv[]) {
 	// http://51degrees.com/documentation/_features__automatic_datafile_updates.html
 	// http://51degrees.com/documentation/_features__usage_sharing.html
 	ConfigHash config = HashLowMemoryConfig;
+	config.usePerformanceGraph = true;
 
 	// Path for the data file.
 	char dataFilePath[FILE_MAX_PATH];
