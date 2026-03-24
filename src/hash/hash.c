@@ -1726,7 +1726,7 @@ static void initDataSetPost(
 /**
  * Single node info for path tracing.
  */
-#define PATH_NODE_MAX_HASHES 8  // Store first N hash codes for debugging
+#define PATH_NODE_MAX_HASHES 200  // Store first N hash codes for debugging
 
 typedef struct path_node_t {
 	uint32_t offset;           // Relative offset in nodes collection
@@ -1736,6 +1736,7 @@ typedef struct path_node_t {
 	int32_t length;            // Node's length
 	int32_t modulo;            // Node's modulo
 	int32_t hashesCount;       // Node's hashesCount
+	int32_t unmatchedNodeOffset; // Node's unmatchedNodeOffset
 	uint32_t hashes[PATH_NODE_MAX_HASHES];  // First N hash codes
 	int32_t childOffsets[PATH_NODE_MAX_HASHES];  // First N child offsets
 } PathNode;
@@ -1760,16 +1761,16 @@ static void dumpPathTrace(PathTrace *trace, FILE *logFile) {
 		trace->componentIndex,
 		trace->headerKey,
 		trace->isPerformanceGraph ? "Performance" : "Predictive");
-	fprintf(logFile, "%-10s %-18s %-10s %-10s %-8s %-8s %-8s %-10s %s\n",
-		"Depth", "FileOffset", "Offset", "First", "Last", "Len", "Mod", "Hashes", "Children");
-	fprintf(logFile, "---------- ------------------ ---------- ---------- -------- -------- -------- ---------- --------------------\n");
+	fprintf(logFile, "%-10s %-18s %-10s %-10s %-8s %-8s %-8s %-10s %-12s %s\n",
+		"Depth", "FileOffset", "Offset", "First", "Last", "Len", "Mod", "Hashes", "Unmatched", "Children");
+	fprintf(logFile, "---------- ------------------ ---------- ---------- -------- -------- -------- ---------- ------------ --------------------\n");
 	for (int i = 0; i < trace->depth; i++) {
 		PathNode *n = &trace->nodes[i];
 		int printCount = n->hashesCount < PATH_NODE_MAX_HASHES ? n->hashesCount : PATH_NODE_MAX_HASHES;
 		
 		// Print first line with node info and first child (if any)
 		if (printCount > 0) {
-			fprintf(logFile, "%-10d 0x%-16llX %-10u %-10d %-8d %-8d %-8d %-10d [0] %u->%d\n",
+			fprintf(logFile, "%-10d 0x%-16llX %-10u %-10d %-8d %-8d %-8d %-10d %-12d [0] %u->%d\n",
 				i,
 				(unsigned long long)n->fileOffset,
 				n->offset,
@@ -1778,17 +1779,18 @@ static void dumpPathTrace(PathTrace *trace, FILE *logFile) {
 				n->length,
 				n->modulo,
 				n->hashesCount,
+				n->unmatchedNodeOffset,
 				n->hashes[0],
 				n->childOffsets[0]);
 			// Print remaining children on separate lines
 			for (int h = 1; h < printCount; h++) {
-				fprintf(logFile, "%91s[%d] %u->%d\n", "", h, n->hashes[h], n->childOffsets[h]);
+				fprintf(logFile, "%103s[%d] %u->%d\n", "", h, n->hashes[h], n->childOffsets[h]);
 			}
 			if (n->hashesCount > PATH_NODE_MAX_HASHES) {
-				fprintf(logFile, "%91s... (+%d more)\n", "", n->hashesCount - PATH_NODE_MAX_HASHES);
+				fprintf(logFile, "%103s... (+%d more)\n", "", n->hashesCount - PATH_NODE_MAX_HASHES);
 			}
 		} else {
-			fprintf(logFile, "%-10d 0x%-16llX %-10u %-10d %-8d %-8d %-8d %-10d\n",
+			fprintf(logFile, "%-10d 0x%-16llX %-10u %-10d %-8d %-8d %-8d %-10d %-12d\n",
 				i,
 				(unsigned long long)n->fileOffset,
 				n->offset,
@@ -1796,7 +1798,8 @@ static void dumpPathTrace(PathTrace *trace, FILE *logFile) {
 				n->lastIndex,
 				n->length,
 				n->modulo,
-				n->hashesCount);
+				n->hashesCount,
+				n->unmatchedNodeOffset);
 		}
 	}
 	fprintf(logFile, "=== END PATH TRACE ===\n\n");
@@ -1856,17 +1859,51 @@ static int validateGraphNode(
 			// An overflow entry has hashCode == 0 and nodeOffset > 0
 			// The nodeOffset in this case points to another index in the array
 			if (h->hashCode == 0 && h->nodeOffset > 0) {
+				// Check upper bound: overflow index must be < hashesCount
 				if (h->nodeOffset >= node->hashesCount) {
 					fprintf(logFile,
 						"[CRITICAL] Node at relative offset %u (file offset 0x%llX): overflow at index %d points to %d >= hashesCount %d - WILL CRASH!\n",
 						nodeOffset, (unsigned long long)absoluteFileOffset, i, h->nodeOffset, node->hashesCount);
-					// Dump the path trace if available
+					if (trace != NULL) {
+						dumpPathTrace(trace, logFile);
+					}
+					issues++;
+				}
+				// Check lower bound: overflow index must be >= modulo (overflow region starts at modulo)
+				if (h->nodeOffset < node->modulo) {
+					fprintf(logFile,
+						"[CRITICAL] Node at relative offset %u (file offset 0x%llX): overflow at index %d points to %d < modulo %d - invalid overflow chain!\n",
+						nodeOffset, (unsigned long long)absoluteFileOffset, i, h->nodeOffset, node->modulo);
 					if (trace != NULL) {
 						dumpPathTrace(trace, logFile);
 					}
 					issues++;
 				}
 			}
+		}
+		
+		// Check 3: Sentinel - if there's an overflow region, the last entry must have hashCode == 0
+		if (node->modulo > 0 && node->modulo < node->hashesCount) {
+			if (hashes[node->hashesCount - 1].hashCode != 0) {
+				fprintf(logFile,
+					"[CRITICAL] Node at relative offset %u (file offset 0x%llX): missing sentinel at hashes[%d], hashCode=%u (should be 0)\n",
+					nodeOffset, (unsigned long long)absoluteFileOffset, node->hashesCount - 1, hashes[node->hashesCount - 1].hashCode);
+				if (trace != NULL) {
+					dumpPathTrace(trace, logFile);
+				}
+				issues++;
+			}
+		}
+		
+		// Check 4: Bucket 0 collision - if bucket 0 has overflow pointer, hash==0 would match incorrectly
+		if (node->modulo > 0 && hashes[0].hashCode == 0 && hashes[0].nodeOffset > 0) {
+			fprintf(logFile,
+				"[WARNING] Node at relative offset %u (file offset 0x%llX): bucket 0 has overflow pointer (nodeOffset=%d) - hash==0 would match incorrectly!\n",
+				nodeOffset, (unsigned long long)absoluteFileOffset, hashes[0].nodeOffset);
+			if (trace != NULL) {
+				dumpPathTrace(trace, logFile);
+			}
+			issues++;
 		}
 	}
 	
@@ -1944,6 +1981,7 @@ static int validateGraphFromNode(
 		pn->length = node->length;
 		pn->modulo = node->modulo;
 		pn->hashesCount = node->hashesCount;
+		pn->unmatchedNodeOffset = node->unmatchedNodeOffset;
 		
 		// Copy first N hash codes and child offsets for debugging
 		GraphNodeHash *nodeHashes = (GraphNodeHash*)(node + 1);
@@ -2274,6 +2312,8 @@ static uint32_t validateNodeChildren(
 static void validateGraphIntegrity(
 	DataSetHash *dataSet,
 	Exception *exception) {
+	// return;
+
 	FILE *logFile;
 	uint32_t totalIssues = 0;
 	uint32_t nodesValidated = 0;
@@ -2586,6 +2626,77 @@ static uint16_t getMaxConcurrency(const ConfigHash *config) {
 
 #ifndef FIFTYONE_DEGREES_MEMORY_ONLY
 
+/**
+ * DEBUG: Dump all components and properties with their indices to stdout.
+ * @param dataSet pointer to the hash data set
+ */
+void fiftyoneDegreesHashDebugDumpComponentsAndProperties(
+        fiftyoneDegreesDataSetHash *dataSet) {
+    EXCEPTION_CREATE;
+    Item item;
+    Item nameItem;
+    DataReset(&item.data);
+    DataReset(&nameItem.data);
+
+    // Dump components
+    printf("=== COMPONENTS (%u) ===\n", dataSet->componentsList.count);
+    for (uint32_t i = 0; i < dataSet->componentsList.count; i++) {
+        Component *comp = (Component*)dataSet->componentsList.items[i].data.ptr;
+        if (comp != NULL) {
+            const String *name = fiftyoneDegreesComponentGetName(
+                dataSet->strings,
+                comp,
+                &nameItem,
+                exception);
+            if (name != NULL && EXCEPTION_OKAY) {
+                printf("[%u] %s (id=%u, keyValuesCount=%u)\n",
+                    i,
+                    STRING(name),
+                    comp->componentId,
+                    comp->keyValuesCount);
+                COLLECTION_RELEASE(dataSet->strings, &nameItem);
+            } else {
+                printf("[%u] <error getting name> (id=%u)\n", i, comp->componentId);
+            }
+        }
+    }
+
+    // Dump properties
+    printf("\n=== PROPERTIES (%u) ===\n", dataSet->header.properties.count);
+    for (uint32_t i = 0; i < dataSet->header.properties.count; i++) {
+        const CollectionKey propKey = {
+            {i},
+            CollectionKeyType_Property,
+        };
+        Property *prop = (Property*)dataSet->properties->get(
+            dataSet->properties,
+            &propKey,
+            &item,
+            exception);
+        if (prop != NULL && EXCEPTION_OKAY) {
+            const String *name = PropertyGetName(
+                dataSet->strings,
+                prop,
+                &nameItem,
+                exception);
+            if (name != NULL && EXCEPTION_OKAY) {
+                printf("[%u] %s (componentIdx=%u, valueType=%u, firstValue=%u, lastValue=%u)\n",
+                    i,
+                    STRING(name),
+                    prop->componentIndex,
+                    prop->valueType,
+                    prop->firstValueIndex,
+                    prop->lastValueIndex);
+                COLLECTION_RELEASE(dataSet->strings, &nameItem);
+            } else {
+                printf("[%u] <error getting name> (componentIdx=%u)\n", i, prop->componentIndex);
+            }
+            COLLECTION_RELEASE(dataSet->properties, &item);
+        }
+    }
+    printf("\n");
+}
+
 static StatusCode initWithFile(DataSetHash *dataSet, Exception *exception) {
 	StatusCode status;
 	FileHandle handle;
@@ -2736,6 +2847,9 @@ static StatusCode initDataSetFromFile(
 	}
 
 	initGetHighEntropyValues(dataSet, exception);
+
+	// DEBUG: Dump components and properties
+	// fiftyoneDegreesHashDebugDumpComponentsAndProperties(dataSet);
 
 	// DEBUG: Validate graph integrity
 	validateGraphIntegrity(dataSet, exception);
@@ -4755,10 +4869,10 @@ char* fiftyoneDegreesHashGetDeviceIdFromResults(
 }
 
 size_t fiftyoneDegreesResultsHashGetValuesJson(
-	fiftyoneDegreesResultsHash* results,
-	char* const buffer,
-	size_t const length,
-	fiftyoneDegreesException* exception) {
+        fiftyoneDegreesResultsHash* results,
+        char* const buffer,
+        size_t const length,
+        fiftyoneDegreesException* exception) {
 
 	int propertyIndex;
 	Item propertyItem;
