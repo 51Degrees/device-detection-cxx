@@ -2037,10 +2037,90 @@ static uint32_t buildValidNodeOffsets(
 	fprintf(logFile, "Found %u valid node offsets\n", count);
 	VALIDATE_PROGRESS("[VALIDATE] Building valid offsets: %u/%u nodes (complete)\n", count, count);
 	
+	// Dump offsets to file before sorting
+	FILE *offsetsFile = fopen("node_offsets.txt", "w");
+	if (offsetsFile != NULL) {
+		for (uint32_t i = 0; i < count; i++) {
+			uint64_t absoluteOffset = dataSet->header.nodes.startPosition + (*validOffsets)[i];
+			fprintf(offsetsFile, "0x%llX %u\n", (unsigned long long)absoluteOffset, (*validOffsets)[i]);
+		}
+		fclose(offsetsFile);
+		VALIDATE_PROGRESS("[VALIDATE] Dumped %u offsets to node_offsets.txt\n", count);
+	}
+	
 	// Sort for binary search
 	qsort(*validOffsets, count, sizeof(uint32_t), compareOffsets);
 	
 	return count;
+}
+
+/**
+ * Pass 2: Check all children of each node point to valid offsets.
+ * Dumps invalid children to node_children_check.txt
+ */
+static uint32_t validateNodeChildren(
+	DataSetHash *dataSet,
+	uint32_t *validOffsets,
+	uint32_t validOffsetsCount,
+	Exception *exception) {
+	uint32_t invalidCount = 0;
+	Item nodeItem;
+	GraphNode *node;
+	GraphNodeHash *hashes;
+	
+	FILE *checkFile = fopen("node_children_check.txt", "w");
+	if (checkFile == NULL) {
+		VALIDATE_PROGRESS("[VALIDATE] Failed to open node_children_check.txt\n");
+		return 0;
+	}
+	
+	VALIDATE_PROGRESS("[VALIDATE] Pass 2: Checking node children...\n");
+	
+	for (uint32_t i = 0; i < validOffsetsCount; i++) {
+		uint32_t offset = validOffsets[i];
+		uint64_t fileOffset = dataSet->header.nodes.startPosition + offset;
+		
+		DataReset(&nodeItem.data);
+		node = GraphGetNode(dataSet->nodes, offset, &nodeItem, exception);
+		if (node == NULL || EXCEPTION_FAILED) {
+			continue;
+		}
+		
+		hashes = (GraphNodeHash*)(node + 1);
+		
+		// Check each child in hashes array
+		for (int32_t j = 0; j < node->hashesCount; j++) {
+			int32_t childOffset = hashes[j].nodeOffset;
+			if (childOffset > 0) {
+				if (!isValidNodeOffset((uint32_t)childOffset, validOffsets, validOffsetsCount)) {
+					fprintf(checkFile, "0x%llX %u: child[%d].nodeOffset=%d\n",
+						(unsigned long long)fileOffset, offset, j, childOffset);
+					invalidCount++;
+				}
+			}
+		}
+		
+		// Check unmatchedNodeOffset
+		if (node->unmatchedNodeOffset > 0) {
+			if (!isValidNodeOffset((uint32_t)node->unmatchedNodeOffset, validOffsets, validOffsetsCount)) {
+				fprintf(checkFile, "0x%llX %u: unmatchedNodeOffset=%d\n",
+					(unsigned long long)fileOffset, offset, node->unmatchedNodeOffset);
+				invalidCount++;
+			}
+		}
+		
+		COLLECTION_RELEASE(dataSet->nodes, &nodeItem);
+		
+		// Progress every 100k nodes
+		if ((i + 1) % 100000 == 0) {
+			VALIDATE_PROGRESS("[VALIDATE] Pass 2: %u/%u nodes checked...\n", i + 1, validOffsetsCount);
+		}
+	}
+	
+	fclose(checkFile);
+	VALIDATE_PROGRESS("[VALIDATE] Pass 2 complete: %u invalid children found\n", invalidCount);
+	
+	return invalidCount;
 }
 
 /**
@@ -2073,10 +2153,14 @@ static void validateGraphIntegrity(
 	fprintf(logFile, "=== Graph Integrity Validation ===\n");
 	fprintf(logFile, "Total root nodes entries: %u\n", dataSet->header.rootNodes.count);
 	
-	// Build valid node offsets first
+	// Build valid node offsets first (Pass 1)
 	validOffsetsCount = buildValidNodeOffsets(dataSet, &validOffsets, logFile, exception);
 	
-	// Iterate through all root nodes
+	// Pass 2: Check all children point to valid offsets
+	uint32_t invalidChildren = validateNodeChildren(dataSet, validOffsets, validOffsetsCount, exception);
+	totalIssues += invalidChildren;
+	
+	// Pass 3: Iterate through all root nodes
 	Item rootNodesItem;
 	DataReset(&rootNodesItem.data);
 	
