@@ -2186,10 +2186,10 @@ static uint32_t validateNodeChildren(
 			
 			if (hashCode == 0 && childOffset > 0) {
 				// Overflow chain entry: nodeOffset is an array index, not a node offset
-				// Validate that the index is within bounds of the hashes array
-				if (childOffset >= node->hashesCount) {
-					fprintf(checkFile, "%u (@%u/0x%llX): child[%d] overflow index=%d >= hashesCount=%d\n",
-						i, offset, (unsigned long long)fileOffset, j, childOffset, node->hashesCount);
+				// Validate that the index is in range [modulo, hashesCount)
+				if (childOffset < node->modulo || childOffset >= node->hashesCount) {
+					fprintf(checkFile, "%u (@%u/0x%llX): child[%d] overflow index=%d out of range [%d,%d)\n",
+						i, offset, (unsigned long long)fileOffset, j, childOffset, node->modulo, node->hashesCount);
 					affectedChildren++;
 					nodeHasFailure = true;
 				}
