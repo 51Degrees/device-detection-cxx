@@ -1714,27 +1714,87 @@ static void initDataSetPost(
 }
 
 /**
+ * Single node info for path tracing.
+ */
+typedef struct path_node_t {
+	uint32_t offset;           // Relative offset in nodes collection
+	uint64_t fileOffset;       // Absolute file offset
+	int32_t firstIndex;        // Node's firstIndex
+	int32_t lastIndex;         // Node's lastIndex
+	int32_t length;            // Node's length
+	int32_t modulo;            // Node's modulo
+	int32_t hashesCount;       // Node's hashesCount
+} PathNode;
+
+/**
+ * Path trace structure for tracking the traversal path to a corrupted node.
+ */
+typedef struct path_trace_t {
+	PathNode nodes[256];        // Stack of nodes visited with full details
+	int depth;                  // Current depth in the path
+	uint32_t componentIndex;    // Component being validated
+	uint32_t headerKey;         // Header key (unique ID)
+	bool isPerformanceGraph;    // true = performance, false = predictive
+} PathTrace;
+
+/**
+ * Dumps the path trace to the log file.
+ */
+static void dumpPathTrace(PathTrace *trace, FILE *logFile) {
+	fprintf(logFile, "\n=== PATH TRACE (depth=%d) ===\n", trace->depth);
+	fprintf(logFile, "Component: %u, Header: %u, Graph: %s\n",
+		trace->componentIndex,
+		trace->headerKey,
+		trace->isPerformanceGraph ? "Performance" : "Predictive");
+	fprintf(logFile, "%-10s %-18s %-10s %-10s %-8s %-8s %-10s\n",
+		"Depth", "FileOffset", "Offset", "First", "Last", "Len", "Mod", "Hashes");
+	fprintf(logFile, "---------- ------------------ ---------- ---------- -------- -------- ----------\n");
+	for (int i = 0; i < trace->depth; i++) {
+		PathNode *n = &trace->nodes[i];
+		fprintf(logFile, "%-10d 0x%-16llX %-10u %-10d %-8d %-8d %-8d %-10d\n",
+			i,
+			(unsigned long long)n->fileOffset,
+			n->offset,
+			n->firstIndex,
+			n->lastIndex,
+			n->length,
+			n->modulo,
+			n->hashesCount);
+	}
+	fprintf(logFile, "=== END PATH TRACE ===\n\n");
+}
+
+/**
  * DEBUG: Validates a single graph node's hash table structure.
  * Returns the number of issues found.
  */
 static int validateGraphNode(
+	DataSetHash *dataSet,
 	GraphNode *node,
 	uint32_t nodeOffset,
+	PathTrace *trace,
 	FILE *logFile) {
 	int issues = 0;
 	GraphNodeHash *hashes = (GraphNodeHash*)(node + 1);
 	
-	// Only validate nodes with hash table lookup (modulo > 0)
+	// Calculate absolute file offset for hex editor navigation
+	uint64_t absoluteFileOffset = dataSet->header.nodes.startPosition + nodeOffset;
+
 	if (node->modulo > 0) {
 		// Check 1: modulo should not exceed hashesCount
 		// If modulo > hashesCount, then hash % modulo could produce
 		// an index >= hashesCount, causing out-of-bounds access
 		if (node->modulo > node->hashesCount) {
 			fprintf(logFile, 
-				"[CRITICAL] Node at offset %u: modulo (%lld/%lld/%d) > hashesCount (%lld/%lld/%d) - WILL CRASH!\n",
+				"[CRITICAL] Node at relative offset %u (file offset 0x%llX): modulo (%d) > hashesCount (%d) - WILL CRASH!\n",
 				nodeOffset,
-				(long long)node->modulo, (long long)(uint32_t)node->modulo, node->modulo,
-				(long long)node->hashesCount, (long long)(uint32_t)node->hashesCount, node->hashesCount);
+				(unsigned long long)absoluteFileOffset,
+				node->modulo,
+				node->hashesCount);
+			// Dump the path trace if available
+			if (trace != NULL) {
+				dumpPathTrace(trace, logFile);
+			}
 			issues++;
 		}
 		
@@ -1746,8 +1806,12 @@ static int validateGraphNode(
 			if (h->hashCode == 0 && h->nodeOffset > 0) {
 				if (h->nodeOffset >= node->hashesCount) {
 					fprintf(logFile,
-						"[CRITICAL] Node at offset %u: overflow at index %d points to %d >= hashesCount %d - WILL CRASH!\n",
-						nodeOffset, i, h->nodeOffset, node->hashesCount);
+						"[CRITICAL] Node at relative offset %u (file offset 0x%llX): overflow at index %d points to %d >= hashesCount %d - WILL CRASH!\n",
+						nodeOffset, (unsigned long long)absoluteFileOffset, i, h->nodeOffset, node->hashesCount);
+					// Dump the path trace if available
+					if (trace != NULL) {
+						dumpPathTrace(trace, logFile);
+					}
 					issues++;
 				}
 			}
@@ -1767,6 +1831,7 @@ static int validateGraphFromNode(
 	uint32_t *visitedOffsets,
 	uint32_t *visitedCount,
 	uint32_t maxVisited,
+	PathTrace *trace,
 	FILE *logFile,
 	Exception *exception) {
 	int issues = 0;
@@ -1794,8 +1859,21 @@ static int validateGraphFromNode(
 		return 1;
 	}
 	
-	// Validate this node
-	issues += validateGraphNode(node, nodeOffset, logFile);
+	// Push this node onto the path trace
+	if (trace != NULL && trace->depth < 256) {
+		PathNode *pn = &trace->nodes[trace->depth];
+		pn->offset = nodeOffset;
+		pn->fileOffset = dataSet->header.nodes.startPosition + nodeOffset;
+		pn->firstIndex = node->firstIndex;
+		pn->lastIndex = node->lastIndex;
+		pn->length = node->length;
+		pn->modulo = node->modulo;
+		pn->hashesCount = node->hashesCount;
+		trace->depth++;
+	}
+	
+	// Validate this node with the path trace
+	issues += validateGraphNode(dataSet, node, nodeOffset, trace, logFile);
 	
 	// Get hashes array
 	hashes = (GraphNodeHash*)(node + 1);
@@ -1808,7 +1886,7 @@ static int validateGraphFromNode(
 			issues += validateGraphFromNode(
 				dataSet, (uint32_t)childOffset, 
 				visitedOffsets, visitedCount, maxVisited,
-				logFile, exception);
+				trace, logFile, exception);
 		}
 	}
 	
@@ -1817,7 +1895,12 @@ static int validateGraphFromNode(
 		issues += validateGraphFromNode(
 			dataSet, (uint32_t)node->unmatchedNodeOffset,
 			visitedOffsets, visitedCount, maxVisited,
-			logFile, exception);
+			trace, logFile, exception);
+	}
+	
+	// Pop this node from the path trace
+	if (trace != NULL && trace->depth > 0) {
+		trace->depth--;
 	}
 	
 	COLLECTION_RELEASE(dataSet->nodes, &nodeItem);
@@ -1873,10 +1956,11 @@ static void validateGraphIntegrity(
 			if (rootNodes->performanceNodeOffset > 0) {
 				fprintf(logFile, "  Performance root: %u\n", rootNodes->performanceNodeOffset);
 				uint32_t visitedCount = 0;
+				PathTrace trace = { {{0}}, 0, compIdx, kv->key, true };
 				totalIssues += validateGraphFromNode(
 					dataSet, rootNodes->performanceNodeOffset,
 					visitedOffsets, &visitedCount, maxVisited,
-					logFile, exception);
+					&trace, logFile, exception);
 				nodesValidated += visitedCount;
 			}
 			
@@ -1884,10 +1968,11 @@ static void validateGraphIntegrity(
 			if (rootNodes->predictiveNodeOffset > 0) {
 				fprintf(logFile, "  Predictive root: %u\n", rootNodes->predictiveNodeOffset);
 				uint32_t visitedCount = 0;
+				PathTrace trace = { {{0}}, 0, compIdx, kv->key, false };
 				totalIssues += validateGraphFromNode(
 					dataSet, rootNodes->predictiveNodeOffset,
 					visitedOffsets, &visitedCount, maxVisited,
-					logFile, exception);
+					&trace, logFile, exception);
 				nodesValidated += visitedCount;
 			}
 			
