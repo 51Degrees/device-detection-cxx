@@ -2077,13 +2077,14 @@ static uint32_t buildValidNodeOffsets(
 		// Write to offsets file on-the-fly
 		if (offsetsFile != NULL) {
 			uint64_t absoluteOffset = dataSet->header.nodes.startPosition + offset;
-			fprintf(offsetsFile, "0x%llX %u : +%u (%u + %d*%u)\n",
+			fprintf(offsetsFile, "0x%llX %u : +%u (%u + %d*%u) mod=%d\n",
 				(unsigned long long)absoluteOffset,
 				offset,
 				nodeSize,
 				(uint32_t)sizeof(GraphNode),
 				node->hashesCount,
-				(uint32_t)sizeof(GraphNodeHash));
+				(uint32_t)sizeof(GraphNodeHash),
+				node->modulo);
 		}
 		
 		// Store this valid offset
@@ -2215,6 +2216,27 @@ static uint32_t validateNodeChildren(
 				affectedUnmatched++;
 				nodeHasFailure = true;
 			}
+		}
+		
+		// Check sentinel: if there's an overflow region, the last entry must have hashCode == 0
+		// to terminate collision chains (prevents while(nodeHash->hashCode != 0) from overflowing)
+		if (node->modulo > 0 && node->modulo < node->hashesCount) {
+			if (hashes[node->hashesCount - 1].hashCode != 0) {
+				fprintf(checkFile, "%u (@%u/0x%llX): missing sentinel at hashes[%d], hashCode=%u (should be 0)\n",
+					i, offset, (unsigned long long)fileOffset, node->hashesCount - 1, hashes[node->hashesCount - 1].hashCode);
+				affectedChildren++;
+				nodeHasFailure = true;
+			}
+		}
+		
+		// Check for collision at bucket 0: if hashes[0].hashCode == 0 and nodeOffset > 0,
+		// this is an overflow pointer. But if someone searches for hash==0, they'd match
+		// this overflow marker incorrectly (0 % modulo == 0, and 0 == 0).
+		if (node->modulo > 0 && hashes[0].hashCode == 0 && hashes[0].nodeOffset > 0) {
+			fprintf(checkFile, "%u (@%u/0x%llX): bucket 0 has overflow pointer (nodeOffset=%d) - hash==0 would match incorrectly!\n",
+				i, offset, (unsigned long long)fileOffset, hashes[0].nodeOffset);
+			affectedChildren++;
+			nodeHasFailure = true;
 		}
 		
 		if (nodeHasFailure) affectedNodes++;
