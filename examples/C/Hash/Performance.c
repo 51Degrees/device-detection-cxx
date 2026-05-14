@@ -367,23 +367,29 @@ void runPerformanceThread(void* state) {
 	// Reference to the dataset.
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 
-	// Thread specific evidence instance.
+	// Thread specific evidence instance. localItems is the thread-owned
+	// items buffer; we restore it after each shared-node struct copy below.
 	EvidenceKeyValuePairArray* evidence = EvidenceCreate(
 		thisState->mainState->maxEvidence);
-	for (uint32_t i = 0; i < evidence->capacity; i++) {
-		evidence->items[i].header = NULL;
-	}
+	EvidenceKeyValuePair* localItems = evidence->items;
 
 	// Execute the performance test moving through the linked list.
 	evidenceNode* node = thisState->evidenceFirst;
 
 	while(node != NULL) {
 
-		// The evidence data structure has a field for pseudoEvidence which is
-		// modified during processing. Therefore the node in the list can't
-		// be used directly as it might be in use by another thread. Therefore
-		// copy the immutable members of the evidence node.
+		// node->array is shared across threads and across executeBenchmark
+		// iterations. The struct copy below aliases evidence->items to the
+		// shared buffer, so copy item data into the thread-local buffer and
+		// restore the pointer. header is reset because it points into the
+		// previous dataset's uniqueHeaders, freed at end of prior iteration.
 		*evidence = *node->array;
+		memcpy(localItems, evidence->items,
+			sizeof(EvidenceKeyValuePair) * evidence->count);
+		evidence->items = localItems;
+		for (uint32_t i = 0; i < evidence->count; i++) {
+			evidence->items[i].header = NULL;
+		}
 
 		ResultsHashFromEvidence(results, evidence, exception);
 		EXCEPTION_THROW;
