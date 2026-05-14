@@ -72,7 +72,7 @@ public:
 				return _fileTypes[i];
 			}
 		}
-		return nullptr;
+		return "";
 	}
 
 	virtual void reload() {}
