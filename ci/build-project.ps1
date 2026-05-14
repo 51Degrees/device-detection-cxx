@@ -8,6 +8,9 @@ param(
 )
 
 # This is common logic, so let's call the common script
-./cxx/build-project.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -Configuration $Configuration -BuildMethod $BuildMethod
+# Enable AddressSanitizer for test builds. The publish path goes through
+# ci/build-package.ps1, which does not use this script, so production
+# packages stay ASAN-free.
+./cxx/build-project.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -Configuration $Configuration -BuildMethod $BuildMethod -ExtraArgs '-DWITH_ASAN=ON'
 
 exit $LASTEXITCODE
