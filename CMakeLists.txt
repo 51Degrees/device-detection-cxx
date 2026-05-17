@@ -5,6 +5,18 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 
+# Opt-in AddressSanitizer. When ON, applied to compile + link of every target
+# so library code (common-cxx, dd-cxx, hash) is instrumented, not only the
+# test binary runtime — required for ASAN to report use-after-free instead of
+# bare SEGV. Default OFF so production package builds stay ASAN-free.
+# Gated on CMAKE_HOST_WIN32 rather than MSVC/MINGW because this block runs
+# before project() and the compiler variables are not yet set.
+option(WITH_ASAN "Build with AddressSanitizer (compile + link)" OFF)
+if (WITH_ASAN AND NOT CMAKE_HOST_WIN32)
+	add_compile_options(-fsanitize=address)
+	add_link_options(-fsanitize=address)
+endif()
+
 # Include the common API
 
 include(CMakeDependentOption)

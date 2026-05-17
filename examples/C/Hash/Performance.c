@@ -367,23 +367,29 @@ void runPerformanceThread(void* state) {
 	// Reference to the dataset.
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 
-	// Thread specific evidence instance.
+	// ResultsHashFromEvidence caches a pair->header pointer into the current
+	// dataset's uniqueHeaders. If we walked node->array directly, that cache
+	// would persist on the shared node and outlive the dataset — the next
+	// executeBenchmark iteration reloads the resource manager and frees the
+	// prior uniqueHeaders, turning the cached pointer into a dangling
+	// reference (heap-use-after-free). A per-thread items buffer keeps the
+	// cache scoped to this run, and zeroing header forces re-resolution
+	// against the current dataset.
 	EvidenceKeyValuePairArray* evidence = EvidenceCreate(
 		thisState->mainState->maxEvidence);
-	for (uint32_t i = 0; i < evidence->capacity; i++) {
-		evidence->items[i].header = NULL;
-	}
+	EvidenceKeyValuePair* localItems = evidence->items;
 
-	// Execute the performance test moving through the linked list.
 	evidenceNode* node = thisState->evidenceFirst;
 
 	while(node != NULL) {
 
-		// The evidence data structure has a field for pseudoEvidence which is
-		// modified during processing. Therefore the node in the list can't
-		// be used directly as it might be in use by another thread. Therefore
-		// copy the immutable members of the evidence node.
 		*evidence = *node->array;
+		memcpy(localItems, evidence->items,
+			sizeof(EvidenceKeyValuePair) * evidence->count);
+		evidence->items = localItems;
+		for (uint32_t i = 0; i < evidence->count; i++) {
+			evidence->items[i].header = NULL;
+		}
 
 		ResultsHashFromEvidence(results, evidence, exception);
 		EXCEPTION_THROW;
