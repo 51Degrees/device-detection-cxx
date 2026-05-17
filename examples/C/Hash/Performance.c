@@ -367,22 +367,22 @@ void runPerformanceThread(void* state) {
 	// Reference to the dataset.
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 
-	// Thread specific evidence instance. localItems is the thread-owned
-	// items buffer; we restore it after each shared-node struct copy below.
+	// ResultsHashFromEvidence caches a pair->header pointer into the current
+	// dataset's uniqueHeaders. If we walked node->array directly, that cache
+	// would persist on the shared node and outlive the dataset — the next
+	// executeBenchmark iteration reloads the resource manager and frees the
+	// prior uniqueHeaders, turning the cached pointer into a dangling
+	// reference (heap-use-after-free). A per-thread items buffer keeps the
+	// cache scoped to this run, and zeroing header forces re-resolution
+	// against the current dataset.
 	EvidenceKeyValuePairArray* evidence = EvidenceCreate(
 		thisState->mainState->maxEvidence);
 	EvidenceKeyValuePair* localItems = evidence->items;
 
-	// Execute the performance test moving through the linked list.
 	evidenceNode* node = thisState->evidenceFirst;
 
 	while(node != NULL) {
 
-		// node->array is shared across threads and across executeBenchmark
-		// iterations. The struct copy below aliases evidence->items to the
-		// shared buffer, so copy item data into the thread-local buffer and
-		// restore the pointer. header is reset because it points into the
-		// previous dataset's uniqueHeaders, freed at end of prior iteration.
 		*evidence = *node->array;
 		memcpy(localItems, evidence->items,
 			sizeof(EvidenceKeyValuePair) * evidence->count);
