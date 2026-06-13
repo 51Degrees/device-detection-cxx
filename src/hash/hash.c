@@ -565,18 +565,25 @@ static void setNextNode(detectionState *state, int32_t offset) {
  */
 static bool setInitialHash(detectionState *state) {
 	bool result = false;
-	const size_t length = state->firstIndex + NODE(state)->length;
+	const GraphNode * const node = NODE(state);
+	const size_t length = state->firstIndex + node->length;
 	state->hash = 0;
 	// Hash over the whole length using:
 	// h[i] = (c[i]*p^(L-1)) + (c[i+1]*p^(L-2)) ... + (c[i+L]*p^(0))
 	if (length <= state->result->b.targetUserAgentLength) {
-		state->power = POWERS[NODE(state)->length];
+		// Cache the loop-invariant base pointer and accumulate in a local so
+		// the per-character work stays in registers rather than re-walking the
+		// state->result->b.targetUserAgent pointer chain on every iteration.
+		const char * const targetUserAgent = state->result->b.targetUserAgent;
+		uint32_t hash = 0;
+		state->power = POWERS[node->length];
 		for (size_t i = state->firstIndex; i < length; i++) {
 			// Increment the powers of the prime coefficients.
-			state->hash *= RK_PRIME;
+			hash *= RK_PRIME;
 			// Add the next character to the right.
-			state->hash += state->result->b.targetUserAgent[i];
+			hash += targetUserAgent[i];
 		}
+		state->hash = hash;
 		state->currentIndex = state->firstIndex;
 		result = true;
 	}
@@ -612,22 +619,25 @@ static bool setInitialHash(detectionState *state) {
  */
 static int advanceHash(detectionState *state) {
 	int result = 0;
-	size_t nextAddIndex;
 	// Roll the hash on by one character using:
 	// h[n] = p*h[n-1] - c[n-1]*p^(L) + c[i+L]
 	if (state->currentIndex < state->lastIndex) {
-		nextAddIndex = state->currentIndex + NODE(state)->length;
+		const size_t nextAddIndex = state->currentIndex + NODE(state)->length;
 		if (nextAddIndex < state->result->b.targetUserAgentLength) {
+			// Cache the base pointer so the two character reads below share a
+			// single walk of the targetUserAgent pointer chain.
+			const char * const targetUserAgent =
+				state->result->b.targetUserAgent;
 			// Increment the powers of the prime coefficients.
 			// p*h[n-1]
 			state->hash *= RK_PRIME;
 			// Add the next character to the right.
 			// + c[i+L]
-			state->hash += state->result->b.targetUserAgent[nextAddIndex];
+			state->hash += targetUserAgent[nextAddIndex];
 			// Remove the character that has dropped off the left.
 			// - c[n-1]*p^(L)
 			state->hash -= (state->power *
-				state->result->b.targetUserAgent[state->currentIndex]);
+				targetUserAgent[state->currentIndex]);
 			// Increment the current index to the start index of the hash
 			// which was just calculated.
 			state->currentIndex++;
@@ -727,13 +737,26 @@ static void evaluateListNode(detectionState *state) {
 	else {
 		// Set the match structure with the initial hash value.
 		if (setInitialHash(state)) {
-			// Loop between the first and last indexes checking the hash
-			// values.
-			do {
-				nodeHash = GraphGetMatchingHashFromListNode(
-					NODE(state), 
-					state->hash);
-			} while (nodeHash == NULL && advanceHash(state));
+			// The table vs binary-search decision depends only on the node's
+			// modulo, which is constant for the duration of this scan. Resolve
+			// it once here rather than re-testing it for every rolled hash.
+			GraphNode * const node = NODE(state);
+			if (node->modulo == 0) {
+				// Loop between the first and last indexes checking the hash
+				// values.
+				do {
+					nodeHash = GraphGetMatchingHashFromListNodeSearch(
+						node,
+						state->hash);
+				} while (nodeHash == NULL && advanceHash(state));
+			}
+			else {
+				do {
+					nodeHash = GraphGetMatchingHashFromListNodeTable(
+						node,
+						state->hash);
+				} while (nodeHash == NULL && advanceHash(state));
+			}
 		}
 	}
 	
