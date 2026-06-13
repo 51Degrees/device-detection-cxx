@@ -63,7 +63,7 @@ static const char *dataDir = "device-detection-data";
 //
 // Note that the Lite data file is only used for illustration, and has limited accuracy
 // and capabilities. Find out about the Enterprise data file on our pricing page:
-// https://51degrees.com/pricing
+// https://51degrees.com/pricing?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-offlineprocessing.c&utm_term=top
 static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 // This file contains the 20,000 most commonly seen combinations of header values 
 // that are relevant to device detection. For example, User-Agent and UA-CH headers.
@@ -80,9 +80,9 @@ static const size_t valueBufferLength = sizeof(valueBuffer) / sizeof(valueBuffer
 // We use the low memory profile as its performance is sufficient for this
 // example. See the documentation for more detail on this and other
 // configuration options:
-// http://51degrees.com/documentation/_device_detection__features__performance_options.html
-// http://51degrees.com/documentation/_features__automatic_datafile_updates.html
-// http://51degrees.com/documentation/_features__usage_sharing.html
+// https://51degrees.com/documentation/_device_detection__features__performance_options.html?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-offlineprocessing.c&utm_term=top
+// https://51degrees.com/documentation/_features__automatic_datafile_updates.html?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-offlineprocessing.c&utm_term=top
+// https://51degrees.com/documentation/_features__usage_sharing.html?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-offlineprocessing.c&utm_term=top
 
 // #define CONFIG fiftyoneDegreesHashInMemoryConfig
 // #define CONFIG fiftyoneDegreesHashHighPerformanceConfig

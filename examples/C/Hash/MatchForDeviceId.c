@@ -102,9 +102,9 @@ Hardware-Software-Browser-Crawler.
 
 For more information on the Hash data model and how various entities 
 are related please see:
-https://51degrees.com/support/documentation/device-detection-data-model
+https://51degrees.com/support/documentation/device-detection-data-model?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-matchfordeviceid.c&utm_term=header
 For more information on how device detection works please see:
-https://51degrees.com/support/documentation/how-device-detection-works
+https://51degrees.com/support/documentation/how-device-detection-works?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-matchfordeviceid.c&utm_term=header
 */
 
 #include <stdio.h>

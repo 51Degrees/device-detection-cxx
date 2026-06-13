@@ -42,8 +42,8 @@
  * reduces detection time compared with requesting properties from multiple components. If you
  * don't specify any properties to detect, then all properties are detected.
  *
- * Please review [performance options](https://51degrees.com/documentation/_device_detection__features__performance_options.html)
- * and [hash dataset options](https://51degrees.com/documentation/_device_detection__hash.html#DeviceDetection_Hash_DataSetProduction_Performance)
+ * Please review [performance options](https://51degrees.com/documentation/_device_detection__features__performance_options.html?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-performance.c&utm_term=header)
+ * and [hash dataset options](https://51degrees.com/documentation/_device_detection__hash.html?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-performance.c&utm_term=header#DeviceDetection_Hash_DataSetProduction_Performance)
  * for more information about adjusting performance.
  *
  * This example is available in full on [GitHub](https://github.com/51Degrees/device-detection-cxx/blob/master/examples/C/Hash/Performance.c).
@@ -71,7 +71,7 @@ static const char* dataDir = "device-detection-data";
 // Note that the Lite data file is only used for illustration, and has
 // limited accuracy and capabilities.
 // Find out about the Enterprise data file on our pricing page:
-// https://51degrees.com/pricing
+// https://51degrees.com/pricing?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-performance.c&utm_term=top
 static const char* dataFileName = "51Degrees-LiteV4.1.hash";
 
 // This file contains the 20,000 most commonly seen combinations of header 

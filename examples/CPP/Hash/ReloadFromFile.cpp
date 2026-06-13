@@ -76,7 +76,7 @@ In a single threaded environment the reload function is executed as part of
 the normal flow of the program execution and will prevent any other actions
 until the reload is complete. The reload itself takes less than half a
 second even for Enterprise dataset. For more information see:
-https://51degrees.com/Support/Documentation/APIs/C-V32/Benchmarks
+https://51degrees.com/Support/Documentation/APIs/C-V32/Benchmarks?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-cpp-hash-reloadfromfile.cpp&utm_term=header
 */
 
 namespace FiftyoneDegrees {

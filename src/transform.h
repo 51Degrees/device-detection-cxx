@@ -39,7 +39,7 @@
  * -
  * [getHighEntropyValues()](https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/getHighEntropyValues)
  * -
- * [device.sua](https://51degrees.com/blog/openrtb-structured-user-agent-and-user-agent-client-hints)
+ * [device.sua](https://51degrees.com/blog/openrtb-structured-user-agent-and-user-agent-client-hints?utm_source=code&utm_medium=comment&utm_campaign=device-detection-cxx&utm_content=transform.h&utm_term=top)
  * - [OpenRTB 2.6
  * spec](https://iabtechlab.com/wp-content/uploads/2022/04/OpenRTB-2-6_FINAL.pdf)
  *

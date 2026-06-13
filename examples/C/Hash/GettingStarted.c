@@ -54,7 +54,7 @@ static const char *dataDir = "device-detection-data";
 // Note that the Lite data file is only used for illustration, and has
 // limited accuracy and capabilities.
 // Find out about the Enterprise data file on our pricing page:
-// https://51degrees.com/pricing
+// https://51degrees.com/pricing?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-gettingstarted.c&utm_term=top
 static const char *dataFileName = "51Degrees-LiteV4.1.hash";
 
 static char valueBuffer[1024] = "";
@@ -309,7 +309,7 @@ static void analyse(
 	// Shows the JavaScript that can be run in a User Agent Client Hint 
 	// compatible web browsers to return evidence needed for device detection
 	// as a base64 string. See 
-	// https://51degrees.com/documentation/4.4/_device_detection__features__u_a_c_h__overview.html
+	// https://51degrees.com/documentation/_device_detection__features__u_a_c_h__overview.html?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-gettingstarted.c&utm_term=analyse
 	outputValue(
 		results, 
 		"GetHighEntropyValues JS", 
@@ -438,9 +438,9 @@ int main(int argc, char* argv[]) {
 	// We use the low memory profile as its performance is sufficient for this 
 	// example. See the documentation for more detail on this and other 
 	// configuration options:
-	// http://51degrees.com/documentation/_device_detection__features__performance_options.html
-	// http://51degrees.com/documentation/_features__automatic_datafile_updates.html
-	// http://51degrees.com/documentation/_features__usage_sharing.html
+	// https://51degrees.com/documentation/_device_detection__features__performance_options.html?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-gettingstarted.c&utm_term=main
+	// https://51degrees.com/documentation/_features__automatic_datafile_updates.html?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-gettingstarted.c&utm_term=main
+	// https://51degrees.com/documentation/_features__usage_sharing.html?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-gettingstarted.c&utm_term=main
 	ConfigHash config = HashLowMemoryConfig;
 
 	// Path for the data file.
