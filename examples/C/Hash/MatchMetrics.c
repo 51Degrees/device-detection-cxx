@@ -92,7 +92,7 @@ int iterations = results->items->iterations;
 8. Obtain match method: provides information about the algorithm that was used
 to perform detection for a particular User-Agent. For more information on what
 each method means please see:
-<a href="https://51degrees.com/support/documentation/hash">
+<a href="https://51degrees.com/support/documentation/hash?utm_source=code&utm_medium=example&utm_campaign=device-detection-cxx&utm_content=examples-c-hash-matchmetrics.c&utm_term=header">
 How device detection works</a>.
 ```
 fiftyoneDegreesHashMatchMethod method = results->items->method;

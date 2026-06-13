@@ -1,8 +1,8 @@
 # 51Degrees Device Detection API
 
-![51Degrees](https://51degrees.com/DesktopModules/FiftyOne/Distributor/Logo.ashx?utm_source=github&utm_medium=repository&utm_content=home&utm_campaign=c-open-source "Data rewards the curious") **Device Detection**
+![51Degrees](https://51degrees.com/img/logo.png?utm_source=github&utm_medium=readme&utm_campaign=device-detection-cxx&utm_content=readme.md&utm_term=51degrees-device-detection-api "Data rewards the curious") **Device Detection**
 
-[C Documentation](https://51degrees.com/device-detection-cxx/modules.html) and the [C++ Documentation](https://51degrees.com/device-detection-cxx/namespaces.html).
+[C Documentation](https://51degrees.com/device-detection-cxx/modules.html?utm_source=github&utm_medium=readme&utm_campaign=device-detection-cxx&utm_content=readme.md&utm_term=51degrees-device-detection-api) and the [C++ Documentation](https://51degrees.com/device-detection-cxx/namespaces.html?utm_source=github&utm_medium=readme&utm_campaign=device-detection-cxx&utm_content=readme.md&utm_term=51degrees-device-detection-api).
 
 The 51Degrees device detection API is built on the 51Degrees [common API](https://github.com/51Degrees/common-cxx).
 
@@ -14,7 +14,7 @@ In order to perform device detection, you will need to use a 51Degrees data file
 This repository includes a free, 'lite' file in the 'device-detection-data' 
 sub-module that has a significantly reduced set of properties. To obtain a 
 file with a more complete set of device properties see the 
-[51Degrees website](https://51degrees.com/pricing). 
+[51Degrees website](https://51degrees.com/pricing?utm_source=github&utm_medium=readme&utm_campaign=device-detection-cxx&utm_content=readme.md&utm_term=data-file). 
 If you want to use the lite file, you will need to install [GitLFS](https://git-lfs.github.com/).
 
 For Linux:
