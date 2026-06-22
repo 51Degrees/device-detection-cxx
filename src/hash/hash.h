@@ -554,12 +554,17 @@ EXTERNAL int fiftyoneDegreesResultsHashFromDeviceId(
  * process. e.g. Client Hints support.
  * @param manager pointer to the resource manager which manages a Hash data
  * set
+ * @param userAgentCapacity deprecated and ignored. Retained only so that
+ * integrations built against the pre-4.5 API (e.g. the HAProxy 51degrees
+ * addon, which still passes it) continue to compile unchanged. Results are
+ * now sized by the number of components determined at initialisation.
  * @param overridesCapacity number of properties that can be overridden,
  * 0 to disable overrides
  * @return newly created results structure
  */
 EXTERNAL fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 	fiftyoneDegreesResourceManager *manager,
+	uint32_t userAgentCapacity,
 	uint32_t overridesCapacity);
 
 /**

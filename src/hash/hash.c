@@ -3280,9 +3280,15 @@ void fiftyoneDegreesResultsHashFree(
 
 fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 	fiftyoneDegreesResourceManager *manager,
+	uint32_t userAgentCapacity,
 	uint32_t overridesCapacity) {
 	uint32_t i;
 	ResultsHash *results;
+
+	// Kept only so callers built against the pre-4.5 API (e.g. the HAProxy
+	// 51degrees addon) still compile; results are now sized by the number of
+	// components determined at initialisation, so this value is unused.
+	(void)userAgentCapacity;
 
 	// Increment the inUse counter for the active data set so that we can
 	// track any results that are created.
