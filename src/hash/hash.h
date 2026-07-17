@@ -493,7 +493,17 @@ fiftyoneDegreesHashInitManagerFromMemory(
 
 /**
  * Processes the evidence value pairs in the evidence collection and
- * populates the result in the results structure. 
+ * populates the result in the results structure.
+ *
+ * The result shape is a deterministic function of the data set, not of how
+ * many evidence pairs are supplied. One result item is produced per available
+ * component (results->count == componentsAvailableCount when every available
+ * component resolves from the evidence, as it does for a User-Agent). Adding a
+ * redundant, lower-precedence pair that resolves to the same value (for
+ * example both 'query.user-agent' and 'header.user-agent') therefore does not
+ * change the number or layout of result items. This is the single detection
+ * entry point; ResultsHashFromUserAgent is a thin wrapper over it.
+ *
  * The 'query' and 'cookie' evidence key prefixes are used to get values which
  * dynamically override values returned from device detection. 'query' prefixes 
  * are also used in preference to 'header' for HTTP header values that are 
@@ -518,6 +528,13 @@ EXTERNAL void fiftyoneDegreesResultsHashFromEvidence(
 /**
  * Process a single User-Agent and populate the device offsets in the results
  * structure.
+ *
+ * This is a thin convenience wrapper: the User-Agent is wrapped in a
+ * single 'header.user-agent' evidence pair and passed to
+ * #fiftyoneDegreesResultsHashFromEvidence, so the result shape is identical
+ * to processing the same User-Agent as evidence (one item per available
+ * component, not a single coalesced item). The userAgent string must remain
+ * valid for the lifetime of the results, as it is referenced, not copied.
  * @param results preallocated results structure to populate
  * @param userAgent string to process
  * @param userAgentLength of the User-Agent string
