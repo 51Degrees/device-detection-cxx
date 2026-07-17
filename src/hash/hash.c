@@ -3068,28 +3068,32 @@ void fiftyoneDegreesResultsHashFromUserAgent(
 	// The evidence pair aliases the caller's string (parsedValue == item.value
 	// for a header prefix, no copy), so the lifetime contract is unchanged: the
 	// caller must keep userAgent alive while the results are in use.
+	//
+	// The array and its single item are built on the stack to avoid a heap
+	// allocation on this hot, UA-only detection path. EvidenceAddPair fills the
+	// item and never grows the array (capacity 1, one pair), so no 'next' block
+	// is allocated and there is nothing to free.
 	Header* uaHeader = &dataSet->b.b.uniqueHeaders->items[
 		dataSet->b.uniqueUserAgentHeaderIndex];
-	EvidenceKeyValuePairArray* evidence = EvidenceCreate(1);
-	if (evidence == NULL) {
-		EXCEPTION_SET(INSUFFICIENT_MEMORY);
-		return;
-	}
+	EvidenceKeyValuePair pairStorage;
+	EvidenceKeyValuePairArray evidence;
+	evidence.count = 0;
+	evidence.capacity = 1;
+	evidence.items = &pairStorage;
+	evidence.next = NULL;
+	evidence.prev = NULL;
+
 	KeyValuePair uaPair = {
 		uaHeader->name,
 		uaHeader->nameLength,
 		userAgent,
 		userAgentLength };
 	EvidenceAddPair(
-		evidence,
+		&evidence,
 		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
 		uaPair);
 
-	ResultsHashFromEvidence(results, evidence, exception);
-
-	// Frees only the evidence array; the result's targetUserAgent still points
-	// at the caller-owned userAgent string, not into the freed array.
-	EvidenceFree(evidence);
+	ResultsHashFromEvidence(results, &evidence, exception);
 }
 
 // Adds the profile associated with the string version of the profile id 

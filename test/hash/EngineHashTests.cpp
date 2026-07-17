@@ -234,19 +234,20 @@ public:
 		// are not nulled by the forced no-match below. Turning the option off
 		// first leaves unmatched components with a null profile, so forcing
 		// matchedNodes to zero produces a fully null device id and no values.
+		// Hold the data set reference for the whole test: the config is mutated
+		// through it and must stay valid until allowUnmatched is restored below.
 		fiftyoneDegreesDataSetHash *dataSet =
 			fiftyoneDegreesDataSetHashGet(&*engine->manager);
 		// Discard the const qualifier to allow changing for the test.
 		fiftyoneDegreesConfigHash *editableConfig =
 			(fiftyoneDegreesConfigHash*)&dataSet->config;
-		fiftyoneDegreesDataSetHashRelease(dataSet);
 		bool originalAllow = editableConfig->b.allowUnmatched;
 		editableConfig->b.allowUnmatched = false;
 
 		ResultsHash *results = engine->process(mobileUserAgent);
 
 		// Force a whole-result miss: a User-Agent yields one result item per
-		// distinct header, so clear matchedNodes on every item.
+		// available component, so clear matchedNodes on every item.
 		for (uint32_t r = 0; r < results->results->count; r++) {
 			results->results->items[r].matchedNodes = 0;
 		}
@@ -265,6 +266,7 @@ public:
 			L"not valid.";
 
 		editableConfig->b.allowUnmatched = originalAllow;
+		fiftyoneDegreesDataSetHashRelease(dataSet);
 		delete results;
 	}
 
