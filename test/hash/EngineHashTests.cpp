@@ -223,30 +223,48 @@ public:
 		verifyPredictiveGraph();
 		verifyMatchForLowerPrecedence();
 	}
-	bool setResultsMatchedNodes(
-		ResultsHash *results,
-		int matchedNodes,
-		bool allowUnmatched) {
-		fiftyoneDegreesDataSetHash *dataSet =
-			(fiftyoneDegreesDataSetHash*)results->results->b.b.dataSet;
-		// Discard the const qualifier to allow changing for the test.
-		fiftyoneDegreesConfigHash *configSource =
-			(fiftyoneDegreesConfigHash*)&dataSet->config;
-
-		int originalAllow = configSource->b.allowUnmatched;
-
-		results->results->items->matchedNodes = matchedNodes;
-		configSource->b.allowUnmatched = allowUnmatched;
-
-		return originalAllow;
-	}
 	void verifyNoMatchedNodes() {
 		int i;
-		bool originalMatchedNodes;
 		vector<string>::iterator it;
-		ResultsHash *results = engine->process(mobileUserAgent);
 
-		originalMatchedNodes = setResultsMatchedNodes(results, 0, false);
+		// Disable unmatched-result defaults BEFORE detection. The unified
+		// evidence-driven detection fills components that have no matched
+		// profile with each component's default profile (flagged as
+		// overridden) when allowUnmatched is true; those overridden defaults
+		// are not nulled by the forced no-match below. Turning the option off
+		// first leaves unmatched components with a null profile, so forcing
+		// matchedNodes to zero produces a fully null device id and no values.
+		// Hold the data set reference for the whole test: the config is mutated
+		// through it and must stay valid until allowUnmatched is restored below.
+		fiftyoneDegreesDataSetHash *dataSet =
+			fiftyoneDegreesDataSetHashGet(&*engine->manager);
+		// Discard the const qualifier to allow changing for the test.
+		fiftyoneDegreesConfigHash *editableConfig =
+			(fiftyoneDegreesConfigHash*)&dataSet->config;
+		bool originalAllow = editableConfig->b.allowUnmatched;
+		editableConfig->b.allowUnmatched = false;
+
+		// Restore the config and release the data set even when an ASSERT
+		// below returns early.
+		struct ConfigGuard {
+			fiftyoneDegreesDataSetHash *dataSet;
+			fiftyoneDegreesConfigHash *config;
+			bool originalAllow;
+			~ConfigGuard() {
+				config->b.allowUnmatched = originalAllow;
+				fiftyoneDegreesDataSetHashRelease(dataSet);
+			}
+		} guard{ dataSet, editableConfig, originalAllow };
+
+		std::unique_ptr<ResultsHash> const results(
+			engine->process(mobileUserAgent));
+
+		// Force a whole-result miss: a User-Agent yields one result item per
+		// available component, so clear matchedNodes on every item.
+		for (uint32_t r = 0; r < results->results->count; r++) {
+			results->results->items[r].matchedNodes = 0;
+		}
+
 		for (i = 0; i < (int)results->available->count; i++) {
 			Value<string> value = results->getValueAsString(i);
 			ASSERT_FALSE(value.hasValue()) <<
@@ -259,10 +277,6 @@ public:
 		ASSERT_STREQ("0-0-0-0", results->getDeviceId().c_str()) <<
 			L"The device id should be a 'null' device id as the results are "
 			L"not valid.";
-		// Reset matched nodes in config
-		setResultsMatchedNodes(results, 0, originalMatchedNodes);
-
-		delete results;
 	}
 
 	void verifyPerformanceGraph() {

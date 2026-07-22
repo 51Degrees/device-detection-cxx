@@ -146,8 +146,12 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 		exception);
 	EXCEPTION_THROW;
 
-	EXPECT_EQ(1, resultsUserAgents->count) << "Only one results should be "
-		<< "returned.\n";
+	// A single User-Agent now yields the unified evidence-driven shape: one
+	// result item per available component, matching ResultsHashFromEvidence.
+	EXPECT_EQ(
+		((DataSetHash*)resultsUserAgents->b.b.dataSet)->componentsAvailableCount,
+		resultsUserAgents->count) << "One result per available component "
+		<< "should be returned.\n";
 	EXPECT_EQ(true, ResultsHashGetHasValues(
 		resultsUserAgents,
 		getRequiredPropertyIndex(resultsUserAgents, testPropertyName.c_str()),
@@ -196,6 +200,82 @@ TEST_F (HashCTests, ResultsHashFromDeviceIdTest) {
 	// Free the results and resource
 	ResultsHashFree(resultsUserAgents);
 	ResultsHashFree(resultsDeviceId);
+}
+
+/*
+ * Regression for issue #362. The result shape must be a function of the data
+ * set, not of evidence cardinality. A single 'header.user-agent' pair (Case A)
+ * and the same User-Agent with a redundant, lower-precedence 'query.user-agent'
+ * pair (Case B) must produce identical result counts and identify the same
+ * device. The public ResultsHashFromUserAgent entry point (Case C) must agree
+ * with them. Before the fast path was removed, Case A returned a single
+ * coalesced item while Case B returned one item per component.
+ */
+TEST_F(HashCTests, ResultsShapeIndependentOfEvidenceCardinality) {
+	EXCEPTION_CREATE;
+
+	// Case A: a single User-Agent supplied as an HTTP header.
+	EvidenceKeyValuePairArray* evidenceA = EvidenceCreate(1);
+	EvidenceAddString(
+		evidenceA,
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+		"User-Agent",
+		mobileUserAgent);
+	ResultsHash* resultsA = ResultsHashCreate(&manager, 0);
+	ResultsHashFromEvidence(resultsA, evidenceA, exception);
+	EXCEPTION_THROW;
+
+	// Case B: the same User-Agent plus a redundant query User-Agent. Query has
+	// precedence over header but resolves to the same string, so detection is
+	// identical; only the number of evidence pairs differs from Case A.
+	EvidenceKeyValuePairArray* evidenceB = EvidenceCreate(2);
+	EvidenceAddString(
+		evidenceB,
+		FIFTYONE_DEGREES_EVIDENCE_QUERY,
+		"User-Agent",
+		mobileUserAgent);
+	EvidenceAddString(
+		evidenceB,
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+		"User-Agent",
+		mobileUserAgent);
+	ResultsHash* resultsB = ResultsHashCreate(&manager, 0);
+	ResultsHashFromEvidence(resultsB, evidenceB, exception);
+	EXCEPTION_THROW;
+
+	// Case C: the public convenience entry point for a bare User-Agent.
+	ResultsHash* resultsC = ResultsHashCreate(&manager, 0);
+	ResultsHashFromUserAgent(
+		resultsC, mobileUserAgent, strlen(mobileUserAgent), exception);
+	EXCEPTION_THROW;
+
+	// The regression invariant for #362: all three shapes must agree,
+	// whatever the data file provides.
+	EXPECT_EQ(resultsA->count, resultsB->count) <<
+		"Redundant evidence must not change the result count.\n";
+	EXPECT_EQ(resultsA->count, resultsC->count) <<
+		"FromUserAgent must produce the same shape as FromEvidence.\n";
+	// Secondary: with a User-Agent every available component resolves, so
+	// the unified shape is one result item per available component.
+	DataSetHash* dataSet = (DataSetHash*)resultsA->b.b.dataSet;
+	EXPECT_EQ(dataSet->componentsAvailableCount, resultsA->count) <<
+		"One result per available component should be returned.\n";
+
+	char idA[80] = "", idB[80] = "", idC[80] = "";
+	HashGetDeviceIdFromResults(resultsA, idA, sizeof(idA), exception);
+	HashGetDeviceIdFromResults(resultsB, idB, sizeof(idB), exception);
+	HashGetDeviceIdFromResults(resultsC, idC, sizeof(idC), exception);
+	EXCEPTION_THROW;
+	EXPECT_STREQ(idA, idB) <<
+		"Redundant evidence must not change the detected device.\n";
+	EXPECT_STREQ(idA, idC) <<
+		"FromUserAgent must detect the same device as FromEvidence.\n";
+
+	ResultsHashFree(resultsA);
+	ResultsHashFree(resultsB);
+	ResultsHashFree(resultsC);
+	EvidenceFree(evidenceA);
+	EvidenceFree(evidenceB);
 }
 
 /*
