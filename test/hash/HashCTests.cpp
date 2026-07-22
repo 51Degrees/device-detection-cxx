@@ -249,13 +249,17 @@ TEST_F(HashCTests, ResultsShapeIndependentOfEvidenceCardinality) {
 		resultsC, mobileUserAgent, strlen(mobileUserAgent), exception);
 	EXCEPTION_THROW;
 
-	DataSetHash* dataSet = (DataSetHash*)resultsA->b.b.dataSet;
-	EXPECT_EQ(dataSet->componentsAvailableCount, resultsA->count) <<
-		"One result per available component should be returned.\n";
+	// The regression invariant for #362: all three shapes must agree,
+	// whatever the data file provides.
 	EXPECT_EQ(resultsA->count, resultsB->count) <<
 		"Redundant evidence must not change the result count.\n";
 	EXPECT_EQ(resultsA->count, resultsC->count) <<
 		"FromUserAgent must produce the same shape as FromEvidence.\n";
+	// Secondary: with a User-Agent every available component resolves, so
+	// the unified shape is one result item per available component.
+	DataSetHash* dataSet = (DataSetHash*)resultsA->b.b.dataSet;
+	EXPECT_EQ(dataSet->componentsAvailableCount, resultsA->count) <<
+		"One result per available component should be returned.\n";
 
 	char idA[80] = "", idB[80] = "", idC[80] = "";
 	HashGetDeviceIdFromResults(resultsA, idA, sizeof(idA), exception);

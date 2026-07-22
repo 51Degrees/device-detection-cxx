@@ -244,7 +244,20 @@ public:
 		bool originalAllow = editableConfig->b.allowUnmatched;
 		editableConfig->b.allowUnmatched = false;
 
-		ResultsHash *results = engine->process(mobileUserAgent);
+		// Restore the config and release the data set even when an ASSERT
+		// below returns early.
+		struct ConfigGuard {
+			fiftyoneDegreesDataSetHash *dataSet;
+			fiftyoneDegreesConfigHash *config;
+			bool originalAllow;
+			~ConfigGuard() {
+				config->b.allowUnmatched = originalAllow;
+				fiftyoneDegreesDataSetHashRelease(dataSet);
+			}
+		} guard{ dataSet, editableConfig, originalAllow };
+
+		std::unique_ptr<ResultsHash> const results(
+			engine->process(mobileUserAgent));
 
 		// Force a whole-result miss: a User-Agent yields one result item per
 		// available component, so clear matchedNodes on every item.
@@ -264,10 +277,6 @@ public:
 		ASSERT_STREQ("0-0-0-0", results->getDeviceId().c_str()) <<
 			L"The device id should be a 'null' device id as the results are "
 			L"not valid.";
-
-		editableConfig->b.allowUnmatched = originalAllow;
-		fiftyoneDegreesDataSetHashRelease(dataSet);
-		delete results;
 	}
 
 	void verifyPerformanceGraph() {

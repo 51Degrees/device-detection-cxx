@@ -3075,7 +3075,9 @@ void fiftyoneDegreesResultsHashFromUserAgent(
 	// is allocated and there is nothing to free.
 	Header* uaHeader = &dataSet->b.b.uniqueHeaders->items[
 		dataSet->b.uniqueUserAgentHeaderIndex];
-	EvidenceKeyValuePair pairStorage;
+	// Zero-initialise: EvidenceAddPair sets prefix, item, parsedValue and
+	// header but not parsedLength, which would otherwise be stack garbage.
+	EvidenceKeyValuePair pairStorage = { FIFTYONE_DEGREES_EVIDENCE_IGNORE };
 	EvidenceKeyValuePairArray evidence;
 	evidence.count = 0;
 	evidence.capacity = 1;
@@ -3094,6 +3096,13 @@ void fiftyoneDegreesResultsHashFromUserAgent(
 		uaPair);
 
 	ResultsHashFromEvidence(results, &evidence, exception);
+
+	// Guard the stack-allocation contract: if a future change makes the
+	// engine add pairs beyond the capacity of 1, EvidenceAddPair would heap
+	// allocate evidence.next, which would leak here (and a naive EvidenceFree
+	// would walk prev back to this stack block). Debug builds only; assert
+	// compiles out under NDEBUG (release).
+	assert(evidence.next == NULL);
 }
 
 // Adds the profile associated with the string version of the profile id 
