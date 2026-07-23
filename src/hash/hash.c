@@ -3717,15 +3717,13 @@ fiftyoneDegreesResultsNoValueReason fiftyoneDegreesResultsHashGetNoValueReason(
 		// result for the property's component when none of the result items
 		// carries a matched profile for it and unmatched results are disabled
 		// (allowUnmatched == false). A result item still exists for the
-		// component - it simply has a null profile - so report NULL_PROFILE,
-		// whose message points the caller at lenient matching, rather than the
-		// generic NO_RESULT_FOR_PROPERTY. Before #362 removed the single
-		// User-Agent fast path, this same case produced one coalesced result
-		// and correctly reported NULL_PROFILE; NO_RESULT_FOR_PROPERTY remains
-		// the fallback for when no result item pertains to the component.
-		return results->count > 0
-			? FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE
-			: FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NO_RESULT_FOR_PROPERTY;
+		// component (count > 0 is guaranteed by the NO_RESULTS check above) - it
+		// simply has a null profile - so report NULL_PROFILE, whose message
+		// points the caller at lenient matching, rather than the generic
+		// NO_RESULT_FOR_PROPERTY. Before #362 removed the single User-Agent fast
+		// path, this same case produced one coalesced result and correctly
+		// reported NULL_PROFILE.
+		return FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE;
 	}
 	else if (result->profileOffsets[property->componentIndex] == NULL_PROFILE_OFFSET) {
 		return FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE;
