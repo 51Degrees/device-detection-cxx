@@ -279,6 +279,82 @@ TEST_F(HashCTests, ResultsShapeIndependentOfEvidenceCardinality) {
 }
 
 /*
+ * Regression for issue #362. When the property's component has no matched
+ * profile in any result item and unmatched results are not allowed
+ * (allowUnmatched == false, the default), GetNoValueReason must report
+ * NULL_PROFILE - whose message points the caller at lenient matching - not the
+ * generic NO_RESULT_FOR_PROPERTY.
+ *
+ * Removing the single-User-Agent fast path changed the result shape from one
+ * coalesced item to one item per component. That routed value selection down
+ * the multi-result path, which returns no result at all for a component with
+ * only null profiles, so GetNoValueReason fell through to
+ * NO_RESULT_FOR_PROPERTY instead of the informative NULL_PROFILE it returned
+ * before. This is user-visible in every wrapper (.NET/Java/Node/Python/PHP).
+ *
+ * A component with no matched profile arises naturally on data files whose
+ * components a single User-Agent does not all populate (e.g. a crawler
+ * component), but the Lite file used here resolves every component for a real
+ * User-Agent via the predictive graph. To reproduce the null-profile state
+ * deterministically we clear the profile offsets on the result items - exactly
+ * the state a genuinely unpopulated component leaves behind - and assert the
+ * reason. Before the fix this returns NO_RESULT_FOR_PROPERTY.
+ */
+TEST_F(HashCTests, NoValueReasonForNullProfileComponentIsNullProfile) {
+	EXCEPTION_CREATE;
+
+	EvidenceKeyValuePairArray* evidence = EvidenceCreate(1);
+	EvidenceAddString(
+		evidence,
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+		"User-Agent",
+		mobileUserAgent);
+
+	ResultsHash* results = ResultsHashCreate(&manager, 0);
+	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
+	ASSERT_FALSE(dataSet->config.b.allowUnmatched) <<
+		"This regression only applies when unmatched results are disabled.\n";
+
+	ResultsHashFromEvidence(results, evidence, exception);
+	EXCEPTION_THROW;
+	ASSERT_GT(results->count, 0u) <<
+		"A User-Agent should produce at least one result.\n";
+
+	// Force the null-profile state: no result item carries a profile for any
+	// component, as happens for a component the evidence does not resolve. The
+	// engine marks an absent profile with UINT32_MAX (its internal
+	// NULL_PROFILE_OFFSET sentinel, which is not exported).
+	const uint32_t nullProfileOffset = UINT32_MAX;
+	for (uint32_t i = 0; i < results->count; i++) {
+		for (uint32_t c = 0; c < dataSet->componentsList.count; c++) {
+			results->items[i].profileOffsets[c] = nullProfileOffset;
+			results->items[i].profileIsOverriden[c] = false;
+		}
+	}
+
+	const int requiredPropertyIndex =
+		getRequiredPropertyIndex(results, "IsMobile");
+	ASSERT_GE(requiredPropertyIndex, 0) <<
+		"IsMobile must be an available property for this test.\n";
+
+	ASSERT_FALSE(ResultsHashGetHasValues(
+		results, requiredPropertyIndex, exception)) <<
+		"A component with only null profiles must have no value.\n";
+	EXCEPTION_THROW;
+
+	fiftyoneDegreesResultsNoValueReason reason =
+		ResultsHashGetNoValueReason(results, requiredPropertyIndex, exception);
+	EXCEPTION_THROW;
+	EXPECT_EQ(FIFTYONE_DEGREES_RESULTS_NO_VALUE_REASON_NULL_PROFILE, reason) <<
+		"A component with only null profiles should report a null profile, "
+		"pointing the caller at lenient matching, not a generic "
+		"no-result-for-property reason.\n";
+
+	ResultsHashFree(results);
+	EvidenceFree(evidence);
+}
+
+/*
  * Check that the API ResultsHashGetValuesString correctly
  * deal with invalid uniqueHttpHeaderIndex for a single result.
  */
