@@ -68,6 +68,14 @@ void fiftyoneDegreesResultsUserAgentReset(
 			result->matchedUserAgent,
 			'_',
 			config->maxMatchedUserAgentLength);
+		// Null terminate the buffer (allocated with a +1 slot for this). A
+		// result whose component is never matched - which now happens for the
+		// unpopulated components once the result shape was unified (#362) - is
+		// otherwise left without a terminator, so reading the matched
+		// User-Agent (e.g. ResultsHash::getUserAgent, which assigns from the
+		// char*) over-reads past the fill into adjacent heap and returns
+		// garbage, non-UTF-8 bytes.
+		result->matchedUserAgent[config->maxMatchedUserAgentLength] = '\0';
 	}
 	result->targetUserAgent = NULL;
 	result->uniqueHttpHeaderIndex = 0;
