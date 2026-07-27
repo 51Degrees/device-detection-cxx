@@ -90,6 +90,7 @@ MAP_TYPE(GraphNode)
 MAP_TYPE(GraphNodeHash)
 MAP_TYPE(GraphTraceNode)
 
+#define GRAPH_NODE_IS_HASH_TABLE FIFTYONE_DEGREES_GRAPH_NODE_IS_HASH_TABLE /**< Synonym for #FIFTYONE_DEGREES_GRAPH_NODE_IS_HASH_TABLE macro. */
 #define GraphNodeReadFromFile fiftyoneDegreesGraphNodeReadFromFile /**< Synonym for #fiftyoneDegreesGraphNodeReadFromFile function. */
 #define GraphGetNode fiftyoneDegreesGraphGetNode /**< Synonym for #fiftyoneDegreesGraphGetNode function. */
 #define GraphGetMatchingHashFromListNodeTable fiftyoneDegreesGraphGetMatchingHashFromListNodeTable /**< Synonym for #fiftyoneDegreesGraphGetMatchingHashFromListNodeTable function. */

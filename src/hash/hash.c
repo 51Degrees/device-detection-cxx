@@ -741,13 +741,15 @@ static void evaluateListNode(detectionState *state) {
 						state->hash);
 				} while (nodeHash == NULL && advanceHash(state));
 			}
-			else {
+			else if (GRAPH_NODE_IS_HASH_TABLE(node)) {
 				do {
 					nodeHash = GraphGetMatchingHashFromListNodeTable(
 						node,
 						state->hash);
 				} while (nodeHash == NULL && advanceHash(state));
 			}
+			// Any other modulo cannot index the records of the node safely, so
+			// no hash is looked for and the unmatched branch is taken.
 		}
 	}
 	

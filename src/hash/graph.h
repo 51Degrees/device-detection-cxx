@@ -123,7 +123,22 @@
 #include "../common-cxx/collection.h"
 #include "../common-cxx/exceptions.h"
 
-/** Hash record structure to compare to a substring hash. */
+/**
+ * Hash record structure to compare to a substring hash.
+ *
+ * In a node whose records are laid out as a hash table (see
+ * fiftyoneDegreesGraphNode::modulo) a hash code of zero is **reserved as a
+ * marker** and never identifies a stored hash code. Such a record is instead:
+ * - the head of a collision bucket, where nodeOffset is greater than zero and
+ *   is an index into this node's own array of hash records rather than a node
+ *   offset,
+ * - an unused slot, where nodeOffset is zero or negative,
+ * - or the terminator of a collision bucket.
+ *
+ * A substring which hashes to zero therefore cannot be matched in a hash table
+ * node. The ordered list and single record layouts do not use markers, so a
+ * hash code of zero is a genuine value in those.
+ */
 #pragma pack(push, 4)
 typedef struct fiftyoneDegrees_graph_node_hash_t {
 	uint32_t hashCode; /**< Hash code to compare. */
@@ -172,9 +187,26 @@ typedef struct fiftyoneDegrees_graph_node_t {
 					   code. */
 	byte length; /**< Length of the substring to hash. */
     int32_t hashesCount; /**< Number of hash records in the node. */
-	int32_t modulo; /**< Modulo to use when the hashes are a hash table. */
+	int32_t modulo; /**< Modulo to use when the hashes are a hash table. Zero
+					when the hash records are instead an ordered list to be
+					searched. When positive, the first modulo records are the
+					slots indexed by (hash % modulo) and the records from index
+					modulo onwards hold the collision buckets, so a valid value
+					never exceeds hashesCount. */
 } fiftyoneDegreesGraphNode;
 #pragma pack(pop)
+
+/**
+ * Determines whether the hash records of a node are laid out as a usable hash
+ * table, i.e. the modulo is positive and cannot produce an index beyond the
+ * end of the records. Nodes which are neither a hash table nor an ordered list
+ * (modulo of zero) hold values which cannot be evaluated safely, and are
+ * treated as containing no matching hash.
+ * @param n pointer to the fiftyoneDegreesGraphNode to test
+ * @return true if (hash % modulo) indexes a record of the node
+ */
+#define FIFTYONE_DEGREES_GRAPH_NODE_IS_HASH_TABLE(n) \
+	((n)->modulo > 0 && (n)->modulo <= (n)->hashesCount)
 
 #ifndef FIFTYONE_DEGREES_MEMORY_ONLY
 
@@ -215,9 +247,13 @@ EXTERNAL fiftyoneDegreesGraphNode* fiftyoneDegreesGraphGetNode(
 /**
  * Gets a matching hash record from a node where the hash records are
  * structured as a hash table.
- * The value that index is set to can never be greater than the number of
- * hashes. As such there is no need to perform a bounds check on index
- * before using it with the array of hashes.
+ * The node must be a usable hash table, i.e.
+ * #FIFTYONE_DEGREES_GRAPH_NODE_IS_HASH_TABLE must be true for it. This
+ * guarantees that the index the hash is reduced to can never be greater than
+ * the number of hashes, so there is no need to perform a bounds check on the
+ * index before using it with the array of hashes.
+ * A hash of zero never matches, as a hash code of zero is reserved as a marker
+ * in this layout. See #fiftyoneDegreesGraphNodeHash.
  * @param node the node to search
  * @param hash the hash code to search for
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
@@ -243,7 +279,9 @@ fiftyoneDegreesGraphGetMatchingHashFromListNodeSearch(
 
 /**
  * Gets a matching hash record from a node where the node has multiple hash
- * records.
+ * records, using the layout indicated by the modulo of the node. Nodes which
+ * are neither a hash table nor an ordered list hold values which cannot be
+ * evaluated safely, and are treated as containing no matching hash.
  * @param node the node to search
  * @param hash the hash code to search for
  * @return fiftyoneDegreesGraphNodeHash* data.ptr to a matching hash record,
