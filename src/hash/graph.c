@@ -140,18 +140,35 @@ fiftyoneDegreesGraphGetMatchingHashFromListNodeTable(
 	fiftyoneDegreesGraphNode *node,
 	uint32_t hash) {
 	fiftyoneDegreesGraphNodeHash *foundHash = NULL;
-	fiftyoneDegreesGraphNodeHash *nodeHashes = (GraphNodeHash*)(node + 1);
-	int index = hash % node->modulo;
-	fiftyoneDegreesGraphNodeHash *nodeHash = &nodeHashes[index];
+	fiftyoneDegreesGraphNodeHash *nodeHashes, *nodeHash, *bucketEnd;
+	uint32_t index;
+	if (hash == 0) {
+		// A hash code of zero is reserved as a marker in this layout: it marks
+		// a slot as empty or as the head of a collision bucket, and terminates
+		// a bucket. Comparing a hash of zero against the records would match
+		// one of those markers rather than a stored hash code, so return no
+		// match before any comparison is made.
+		return NULL;
+	}
+	nodeHashes = (GraphNodeHash*)(node + 1);
+	// The modulo is a positive value no greater than the number of hashes, so
+	// the index is always that of a record of the node.
+	index = hash % (uint32_t)node->modulo;
+	nodeHash = &nodeHashes[index];
 	if (hash == nodeHash->hashCode) {
 		// There is a single record at this index and it matched, so return it.
 		foundHash = nodeHash;
 	}
-	else if (nodeHash->hashCode == 0 && nodeHash->nodeOffset > 0) {
+	else if (nodeHash->hashCode == 0 &&
+		nodeHash->nodeOffset > 0 &&
+		nodeHash->nodeOffset < node->hashesCount) {
 		// There are multiple records at this index, so go through them to find
-		// a match.
+		// a match. The bucket is terminated by a record with a hash code of
+		// zero, but stop at the end of the records in case the terminator is
+		// missing from the data file.
+		bucketEnd = &nodeHashes[node->hashesCount];
 		nodeHash = &nodeHashes[nodeHash->nodeOffset];
-		while (nodeHash->hashCode != 0) {
+		while (nodeHash < bucketEnd && nodeHash->hashCode != 0) {
 			if (hash == nodeHash->hashCode) {
 				// There was a match, so stop looking.
 				foundHash = nodeHash;
@@ -196,10 +213,17 @@ fiftyoneDegreesGraphGetMatchingHashFromListNode(
 			node,
 			hash);
 	}
-	else {
+	else if (GRAPH_NODE_IS_HASH_TABLE(node)) {
 		foundHash = GraphGetMatchingHashFromListNodeTable(
 			node,
 			hash);
+	}
+	else {
+		// The modulo is negative, or greater than the number of hashes, so the
+		// records cannot be indexed as a hash table. Rather than read beyond
+		// the records of the node, report that nothing matched so that the
+		// unmatched branch of the graph is taken.
+		foundHash = NULL;
 	}
 	return foundHash;
 }
