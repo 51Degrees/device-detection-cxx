@@ -133,7 +133,10 @@ typedef struct shared_string_node_t sharedStringNode;
 typedef struct shared_string_node_t {
 	const char* value;
 	size_t length;
+	// Next node in the insertion-ordered list, used only to free every node.
 	sharedStringNode* next;
+	// Next node in the same hash bucket, used for fast lookup.
+	sharedStringNode* bucketNext;
 } sharedStringNode;
 
 /**
@@ -169,6 +172,13 @@ typedef struct performanceState_t {
 	sharedStringNode* sharedStringFirst;
 	// Pointer to the last shared string.
 	sharedStringNode* sharedStringLast;
+	// Hash table over the shared strings for O(1) average lookup instead of a
+	// linear scan of the whole list (which is O(n) per lookup and makes loading
+	// a large evidence set slow). Bucket array of chain heads, and the number of
+	// buckets (a power of two so a mask can index it). NULL/0 when not
+	// initialised, in which case lookup falls back to the linear scan.
+	sharedStringNode** sharedStringBuckets;
+	size_t sharedStringBucketCount;
 	// Number of sets of evidence in the evidence array
 	int evidenceCount;
 	// Number of sets of evidence to process
@@ -197,24 +207,56 @@ typedef struct performanceState_t {
 	int threadIndex;
 } performanceState;
 
-static const char* getOrAddSharedString(
-	performanceState* perfState, 
-	const char* target) {
-	sharedStringNode* node = perfState->sharedStringFirst;
-	while (node != NULL) {
-		if (strcmp(target, node->value) == 0) {
-			return node->value;
-		}
-		node = node->next;
+// FNV-1a hash of a NUL-terminated string, reduced to a bucket index. The
+// bucket count is a power of two so the modulo is a cheap bitmask.
+static size_t sharedStringBucket(
+	performanceState* perfState,
+	const char* s) {
+	uint64_t h = 1469598103934665603ULL; // FNV-1a offset basis
+	for (const unsigned char* p = (const unsigned char*)s; *p != '\0'; p++) {
+		h ^= (uint64_t)*p;
+		h *= 1099511628211ULL; // FNV-1a prime
 	}
-	
-	// Create a new node to add to the head of the list.
+	return (size_t)h & (perfState->sharedStringBucketCount - 1);
+}
+
+static const char* getOrAddSharedString(
+	performanceState* perfState,
+	const char* target) {
+	sharedStringNode* node;
+
+	// Look the string up. With the hash table this scans only the (short) chain
+	// in one bucket; without it (table not allocated) it falls back to scanning
+	// the whole insertion-ordered list as before.
+	int haveTable = perfState->sharedStringBuckets != NULL;
+	size_t bucket = 0;
+	if (haveTable) {
+		bucket = sharedStringBucket(perfState, target);
+		for (node = perfState->sharedStringBuckets[bucket];
+			node != NULL; node = node->bucketNext) {
+			if (strcmp(target, node->value) == 0) {
+				return node->value;
+			}
+		}
+	}
+	else {
+		for (node = perfState->sharedStringFirst;
+			node != NULL; node = node->next) {
+			if (strcmp(target, node->value) == 0) {
+				return node->value;
+			}
+		}
+	}
+
+	// Not present yet, so create a new node.
 	size_t length = strlen(target) + 1;
 	node = (sharedStringNode*)Malloc(sizeof(sharedStringNode));
 	if (node == NULL) {
 		return NULL;
 	}
 	node->next = NULL;
+	node->bucketNext = NULL;
+	node->length = length;
 	node->value = (const char*)Malloc(sizeof(char) * length);
 	if (node->value == NULL) {
 		return NULL;
@@ -222,8 +264,9 @@ static const char* getOrAddSharedString(
 	if (strncpy((char*)node->value, target, length) == NULL) {
 		return NULL;
 	}
-	
-	// Add to the linked list or start a new linked list if this is the first.
+
+	// Add to the insertion-ordered list, which freeSharedStrings walks to free
+	// every node.
 	if (perfState->sharedStringFirst == NULL) {
 		perfState->sharedStringFirst = node;
 		perfState->sharedStringLast = node;
@@ -231,6 +274,12 @@ static const char* getOrAddSharedString(
 	else {
 		perfState->sharedStringLast->next = node;
 		perfState->sharedStringLast = node;
+	}
+
+	// Add to the head of its hash bucket for fast future lookups.
+	if (haveTable) {
+		node->bucketNext = perfState->sharedStringBuckets[bucket];
+		perfState->sharedStringBuckets[bucket] = node;
 	}
 
 	// Return the string from the node.
@@ -581,9 +630,14 @@ void executeBenchmark(
 	fiftyoneDegreesExampleCheckDataFile(dataset);
 	DataSetHashRelease(dataset);
 
-	// run the benchmarks twice, once to warm up any caches
-	fprintf(state->output, "Warming up\n");
-	runTests(state);
+	// Normally the benchmark is run twice, the first pass warming the caches.
+	// The memory-only build holds the whole dataset in memory with no caches to
+	// warm, so that warmup pass just doubles the work for no measurable benefit;
+	// skip it there and only warm up the standard build, whose caches benefit.
+	if (!CollectionGetIsMemoryOnly()) {
+		fprintf(state->output, "Warming up\n");
+		runTests(state);
+	}
 
 	fprintf(state->output, "Running\n");
 	state->elapsedMilliSeconds = runTests(state);
@@ -628,6 +682,12 @@ void freeSharedStrings(performanceState* state) {
 		sharedStringNode* next = node->next;
 		Free(node);
 		node = next;
+	}
+	// Free the hash table itself (the nodes were freed via the list above).
+	if (state->sharedStringBuckets != NULL) {
+		Free((void*)state->sharedStringBuckets);
+		state->sharedStringBuckets = NULL;
+		state->sharedStringBucketCount = 0;
 	}
 }
 
@@ -708,6 +768,20 @@ void fiftyoneDegreesHashPerformance(
 	state.threadIndex = 0;
 	state.sharedStringFirst = NULL;
 	state.sharedStringLast = NULL;
+	// Allocate the shared-string hash table so evidence loading looks strings up
+	// in O(1) rather than scanning the whole list. A power-of-two bucket count
+	// lets the hash be reduced with a bitmask. If allocation fails it is left
+	// NULL and lookups fall back to a linear scan.
+	state.sharedStringBucketCount = (size_t)1 << 20; // ~1 million buckets
+	state.sharedStringBuckets = (sharedStringNode**)Malloc(
+		state.sharedStringBucketCount * sizeof(sharedStringNode*));
+	if (state.sharedStringBuckets != NULL) {
+		memset(state.sharedStringBuckets, 0,
+			state.sharedStringBucketCount * sizeof(sharedStringNode*));
+	}
+	else {
+		state.sharedStringBucketCount = 0;
+	}
 
 	YamlFileIterateWithLimit(
 		evidenceFilePath,
