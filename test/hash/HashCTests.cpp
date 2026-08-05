@@ -704,3 +704,165 @@ TEST_F(HashCTests, HashResultsGetValuesNoProfileValues) {
 	EXPECT_FALSE(EXCEPTION_OKAY);
 	EXPECT_TRUE(EXCEPTION_CHECK(COLLECTION_INDEX_OUT_OF_RANGE));
 }
+
+/*
+ * Issue #393. DeviceId is advertised as an available property and can be read
+ * from a result, but it is not stored in the data file, so requesting it in
+ * the required properties used to fail initialisation with
+ * REQ_PROP_NOT_PRESENT. It must now initialise, and produce the same device id
+ * as a data set with no restriction on the required properties.
+ */
+
+static string getDeviceIdForUserAgent(
+	ResourceManager *manager,
+	const char *userAgent) {
+	EXCEPTION_CREATE;
+	char deviceId[80] = "";
+	ResultsHash *results = ResultsHashCreate(manager, 0);
+	ResultsHashFromUserAgent(
+		results,
+		userAgent,
+		strlen(userAgent),
+		exception);
+	EXCEPTION_THROW;
+	HashGetDeviceIdFromResults(results, deviceId, sizeof(deviceId), exception);
+	EXCEPTION_THROW;
+	ResultsHashFree(results);
+	return string(deviceId);
+}
+
+class HashDeviceIdPropertyTests : public HashCTests {
+public:
+	void SetUp() { Base::SetUp(); }
+	void TearDown() { Base::TearDown(); }
+protected:
+	StatusCode initManager(
+		ResourceManager *manager,
+		PropertiesRequired *required) {
+		EXCEPTION_CREATE;
+		ConfigHash config = HashDefaultConfig;
+		return HashInitManagerFromFile(
+			manager,
+			&config,
+			required,
+			dataFilePath.c_str(),
+			exception);
+	}
+
+	// The device id from a data set where every property is available, which
+	// is what requesting DeviceId has to reproduce.
+	string unrestrictedDeviceId() {
+		ResourceManager manager;
+		PropertiesRequired required = PropertiesDefault;
+		EXPECT_EQ(SUCCESS, initManager(&manager, &required));
+		string deviceId = getDeviceIdForUserAgent(&manager, mobileUserAgent);
+		ResourceManagerFree(&manager);
+		return deviceId;
+	}
+};
+
+TEST_F(HashDeviceIdPropertyTests, DeviceIdAsOnlyRequiredProperty) {
+	ResourceManager manager;
+	PropertiesRequired required = PropertiesDefault;
+	required.string = "DeviceId";
+	ASSERT_EQ(SUCCESS, initManager(&manager, &required)) <<
+		"DeviceId should be accepted as a required property.\n";
+	EXPECT_EQ(unrestrictedDeviceId(),
+		getDeviceIdForUserAgent(&manager, mobileUserAgent)) <<
+		"Requesting only DeviceId should produce the same device id as "
+		"requesting every property.\n";
+	ResourceManagerFree(&manager);
+}
+
+TEST_F(HashDeviceIdPropertyTests, DeviceIdIsCaseInsensitive) {
+	ResourceManager manager;
+	PropertiesRequired required = PropertiesDefault;
+	required.string = "deviceid";
+	ASSERT_EQ(SUCCESS, initManager(&manager, &required)) <<
+		"Property names are matched without regard to case.\n";
+	EXPECT_EQ(unrestrictedDeviceId(),
+		getDeviceIdForUserAgent(&manager, mobileUserAgent));
+	ResourceManagerFree(&manager);
+}
+
+TEST_F(HashDeviceIdPropertyTests, DeviceIdFromArray) {
+	ResourceManager manager;
+	const char *names[] = { "DeviceId" };
+	PropertiesRequired required = PropertiesDefault;
+	required.array = names;
+	required.count = 1;
+	ASSERT_EQ(SUCCESS, initManager(&manager, &required));
+	EXPECT_EQ(unrestrictedDeviceId(),
+		getDeviceIdForUserAgent(&manager, mobileUserAgent));
+	ResourceManagerFree(&manager);
+}
+
+/*
+ * A stored property requested alongside DeviceId must still be available, and
+ * the components it does not cover must still be resolved.
+ */
+TEST_F(HashDeviceIdPropertyTests, DeviceIdWithStoredProperty) {
+	EXCEPTION_CREATE;
+	ResourceManager manager;
+	PropertiesRequired required = PropertiesDefault;
+	required.string = "DeviceId,IsMobile";
+	ASSERT_EQ(SUCCESS, initManager(&manager, &required));
+	EXPECT_EQ(unrestrictedDeviceId(),
+		getDeviceIdForUserAgent(&manager, mobileUserAgent));
+
+	ResultsHash *results = ResultsHashCreate(&manager, 0);
+	ResultsHashFromUserAgent(
+		results, mobileUserAgent, strlen(mobileUserAgent), exception);
+	EXCEPTION_THROW;
+	const int index = getRequiredPropertyIndex(results, "IsMobile");
+	ASSERT_GE(index, 0) << "IsMobile should still be available.\n";
+	EXPECT_TRUE(ResultsHashGetHasValues(results, index, exception));
+	EXCEPTION_THROW;
+	ResultsHashFree(results);
+	ResourceManagerFree(&manager);
+}
+
+/*
+ * Unknown names are silently ignored by the properties source, so DeviceId
+ * alongside one is the same as DeviceId alone.
+ */
+TEST_F(HashDeviceIdPropertyTests, DeviceIdWithUnknownProperty) {
+	ResourceManager manager;
+	PropertiesRequired required = PropertiesDefault;
+	required.string = "DeviceId|NotARealProperty";
+	ASSERT_EQ(SUCCESS, initManager(&manager, &required));
+	EXPECT_EQ(unrestrictedDeviceId(),
+		getDeviceIdForUserAgent(&manager, mobileUserAgent));
+	ResourceManagerFree(&manager);
+}
+
+/*
+ * Requesting only names which are not in the data file must still fail. The
+ * DeviceId handling must not make an entirely invalid list initialise.
+ */
+TEST_F(HashDeviceIdPropertyTests, UnknownPropertyStillFails) {
+	ResourceManager manager;
+	PropertiesRequired required = PropertiesDefault;
+	required.string = "NotARealProperty";
+	EXPECT_EQ(REQ_PROP_NOT_PRESENT, initManager(&manager, &required));
+}
+
+/*
+ * A reload takes the required property names from the data set being replaced,
+ * which holds the stored properties DeviceId was translated into, so the
+ * device id must survive it.
+ */
+TEST_F(HashDeviceIdPropertyTests, DeviceIdSurvivesReload) {
+	EXCEPTION_CREATE;
+	ResourceManager manager;
+	PropertiesRequired required = PropertiesDefault;
+	required.string = "DeviceId";
+	ASSERT_EQ(SUCCESS, initManager(&manager, &required));
+	const string before = getDeviceIdForUserAgent(&manager, mobileUserAgent);
+	ASSERT_EQ(SUCCESS, HashReloadManagerFromFile(
+		&manager, dataFilePath.c_str(), exception));
+	EXCEPTION_THROW;
+	EXPECT_EQ(before, getDeviceIdForUserAgent(&manager, mobileUserAgent)) <<
+		"The device id should be unchanged by a reload.\n";
+	ResourceManagerFree(&manager);
+}

@@ -1486,22 +1486,316 @@ uint32_t initGetEvidenceProperties(
 	return (uint32_t)count;
 }
 
+/**
+ * Property name separators used when the required properties are provided as
+ * a single string. Must match the separators used by the properties source in
+ * common-cxx.
+ */
+static const char requiredPropertySeparators[] = { '|', ',', ' ', '\0' };
+
+/**
+ * A required property name as provided by the caller. Points into the memory
+ * owned by the caller's PropertiesRequired, so is only valid for the duration
+ * of the initialisation call.
+ */
+typedef struct property_name_token_t {
+	const char *value;
+	size_t length;
+} propertyNameToken;
+
+/**
+ * Property names owned by this data structure rather than by a collection or
+ * the caller.
+ */
+typedef struct required_property_names_t {
+	char **items;
+	uint32_t count;
+} requiredPropertyNames;
+
+static void freeRequiredPropertyNames(requiredPropertyNames *names) {
+	if (names->items != NULL) {
+		for (uint32_t i = 0; i < names->count; i++) {
+			if (names->items[i] != NULL) {
+				Free(names->items[i]);
+			}
+		}
+		Free(names->items);
+		names->items = NULL;
+	}
+	names->count = 0;
+}
+
+static char* copyPropertyName(const char *value, size_t length) {
+	char *copy = (char*)Malloc(length + 1);
+	if (copy != NULL) {
+		memcpy(copy, value, length);
+		copy[length] = '\0';
+	}
+	return copy;
+}
+
+static bool isDeviceIdPropertyName(const char *value, size_t length) {
+	return length == sizeof(FIFTYONE_DEGREES_DEVICE_ID_PROPERTY_NAME) - 1 &&
+		_strnicmp(
+			value,
+			FIFTYONE_DEGREES_DEVICE_ID_PROPERTY_NAME,
+			length) == 0;
+}
+
+/**
+ * Splits the required properties into individual names. If tokens is NULL then
+ * only the number of names is returned so that the caller can allocate the
+ * array. The array and string forms are considered in the same order of
+ * precedence as fiftyoneDegreesPropertiesCreate.
+ */
+static uint32_t getRequiredPropertyTokens(
+	PropertiesRequired *properties,
+	propertyNameToken *tokens) {
+	uint32_t count = 0;
+	if (properties->array != NULL && properties->count > 0) {
+		for (int i = 0; i < properties->count; i++) {
+			if (properties->array[i] != NULL) {
+				if (tokens != NULL) {
+					tokens[count].value = properties->array[i];
+					tokens[count].length = strlen(properties->array[i]);
+				}
+				count++;
+			}
+		}
+	}
+	else if (properties->string != NULL) {
+		const char *start = properties->string;
+		const char *end = start;
+		while (true) {
+			if (*end == '\0' ||
+				strchr(requiredPropertySeparators, *end) != NULL) {
+				if (end > start) {
+					if (tokens != NULL) {
+						tokens[count].value = start;
+						tokens[count].length = (size_t)(end - start);
+					}
+					count++;
+				}
+				if (*end == '\0') {
+					break;
+				}
+				start = end + 1;
+			}
+			end++;
+		}
+	}
+	return count;
+}
+
+/**
+ * DeviceId is not stored in the data file. It is composed from the profile id
+ * of each component, and a component's profile is only resolved when it has at
+ * least one available property (see initComponentsAvailable). Requesting
+ * DeviceId is therefore translated into a request for one stored property from
+ * every component that the caller's other required properties do not already
+ * cover, which is the minimum needed to produce the same DeviceId as an
+ * unrestricted data set.
+ *
+ * On return names contains the replacement property names, or a count of zero
+ * if the required properties are to be used unaltered.
+ */
+static StatusCode initRequiredPropertiesForDeviceId(
+	DataSetHash *dataSet,
+	PropertiesRequired *properties,
+	requiredPropertyNames *names,
+	Exception *exception) {
+	StatusCode status = SUCCESS;
+	propertyNameToken *tokens = NULL;
+	bool *covered = NULL;
+	char **componentProperty = NULL;
+	uint32_t tokenCount, componentsCount, i;
+	bool deviceIdRequired = false;
+
+	names->items = NULL;
+	names->count = 0;
+
+	// Names taken from another data set during a reload were themselves
+	// resolved against the data file, so cannot contain DeviceId.
+	if (properties == NULL || properties->existing != NULL) {
+		return SUCCESS;
+	}
+
+	tokenCount = getRequiredPropertyTokens(properties, NULL);
+	if (tokenCount == 0) {
+		return SUCCESS;
+	}
+	tokens = (propertyNameToken*)Malloc(
+		sizeof(propertyNameToken) * tokenCount);
+	if (tokens == NULL) {
+		return INSUFFICIENT_MEMORY;
+	}
+	getRequiredPropertyTokens(properties, tokens);
+
+	for (i = 0; i < tokenCount && deviceIdRequired == false; i++) {
+		deviceIdRequired = isDeviceIdPropertyName(
+			tokens[i].value,
+			tokens[i].length);
+	}
+	if (deviceIdRequired == false) {
+		Free(tokens);
+		return SUCCESS;
+	}
+
+	componentsCount = dataSet->componentsList.count;
+	covered = (bool*)Malloc(sizeof(bool) * componentsCount);
+	componentProperty = (char**)Malloc(sizeof(char*) * componentsCount);
+	if (covered == NULL || componentProperty == NULL) {
+		status = INSUFFICIENT_MEMORY;
+	}
+	else {
+		for (i = 0; i < componentsCount; i++) {
+			covered[i] = false;
+			componentProperty[i] = NULL;
+		}
+
+		// Find which components the caller has already covered, and the first
+		// property of every component to use where they have not.
+		uint32_t propertiesCount = CollectionGetCount(dataSet->properties);
+		Item propertyItem, nameItem;
+		DataReset(&propertyItem.data);
+		DataReset(&nameItem.data);
+		for (i = 0; i < propertiesCount && status == SUCCESS; i++) {
+			Property *property = PropertyGet(
+				dataSet->properties,
+				i,
+				&propertyItem,
+				exception);
+			if (property == NULL || EXCEPTION_FAILED) {
+				status = COLLECTION_FAILURE;
+				break;
+			}
+			const String *name = PropertyGetName(
+				dataSet->strings,
+				property,
+				&nameItem,
+				exception);
+			if (name == NULL || EXCEPTION_FAILED) {
+				COLLECTION_RELEASE(dataSet->properties, &propertyItem);
+				status = COLLECTION_FAILURE;
+				break;
+			}
+			uint32_t componentIndex = property->componentIndex;
+			if (componentIndex < componentsCount) {
+				size_t nameLength = (size_t)(name->size - 1);
+				if (componentProperty[componentIndex] == NULL) {
+					componentProperty[componentIndex] = copyPropertyName(
+						&name->value,
+						nameLength);
+					if (componentProperty[componentIndex] == NULL) {
+						status = INSUFFICIENT_MEMORY;
+					}
+				}
+				for (uint32_t t = 0;
+					t < tokenCount && covered[componentIndex] == false;
+					t++) {
+					if (tokens[t].length == nameLength &&
+						_strnicmp(
+							tokens[t].value,
+							&name->value,
+							nameLength) == 0) {
+						covered[componentIndex] = true;
+					}
+				}
+			}
+			COLLECTION_RELEASE(dataSet->strings, &nameItem);
+			COLLECTION_RELEASE(dataSet->properties, &propertyItem);
+		}
+	}
+
+	if (status == SUCCESS) {
+		// Every requested property other than DeviceId, plus a property for
+		// each component which is not covered by them.
+		names->items = (char**)Malloc(
+			sizeof(char*) * (tokenCount + componentsCount));
+		if (names->items == NULL) {
+			status = INSUFFICIENT_MEMORY;
+		}
+		else {
+			for (i = 0; i < tokenCount && status == SUCCESS; i++) {
+				if (isDeviceIdPropertyName(
+					tokens[i].value,
+					tokens[i].length) == false) {
+					names->items[names->count] = copyPropertyName(
+						tokens[i].value,
+						tokens[i].length);
+					if (names->items[names->count] == NULL) {
+						status = INSUFFICIENT_MEMORY;
+					}
+					else {
+						names->count++;
+					}
+				}
+			}
+			for (i = 0; i < componentsCount && status == SUCCESS; i++) {
+				if (covered[i] == false && componentProperty[i] != NULL) {
+					names->items[names->count++] = componentProperty[i];
+					componentProperty[i] = NULL;
+				}
+			}
+		}
+	}
+
+	if (componentProperty != NULL) {
+		for (i = 0; i < componentsCount; i++) {
+			if (componentProperty[i] != NULL) {
+				Free(componentProperty[i]);
+			}
+		}
+		Free(componentProperty);
+	}
+	if (covered != NULL) {
+		Free(covered);
+	}
+	Free(tokens);
+
+	if (status != SUCCESS) {
+		freeRequiredPropertyNames(names);
+	}
+	return status;
+}
+
 static StatusCode initPropertiesAndHeaders(
 	DataSetHash *dataSet,
 	PropertiesRequired *properties,
 	Exception *exception) {
 	stateWithException state;
+	requiredPropertyNames names;
+	PropertiesRequired expanded;
+	PropertiesRequired *required = properties;
 	state.state = (void*)dataSet;
 	state.exception = exception;
-	StatusCode status = DataSetDeviceDetectionInitPropertiesAndHeaders(
-		&dataSet->b,
+
+	StatusCode status = initRequiredPropertiesForDeviceId(
+		dataSet,
 		properties,
+		&names,
+		exception);
+	if (status != SUCCESS || EXCEPTION_FAILED) {
+		return status;
+	}
+	if (names.count > 0) {
+		expanded.array = (const char**)names.items;
+		expanded.count = (int)names.count;
+		expanded.string = NULL;
+		expanded.existing = NULL;
+		required = &expanded;
+	}
+
+	status = DataSetDeviceDetectionInitPropertiesAndHeaders(
+		&dataSet->b,
+		required,
 		&state,
 		initGetPropertyString,
 		initGetHttpHeaderString,
 		initOverridesFilter,
 		initGetEvidenceProperties,
 		exception);
+	freeRequiredPropertyNames(&names);
 	return status;
 }
 
