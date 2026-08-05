@@ -49,8 +49,24 @@
  * Device detection data set structure which contains the 'must have's for all
  * device detection data sets.
  */
+/**
+ * State which is derived from the properties required by the caller rather
+ * than read from the data file, and which must therefore be carried into the
+ * replacement data set when one is reloaded. Passed opaquely through
+ * #fiftyoneDegreesPropertiesRequired.state.
+ */
+typedef struct fiftyone_degrees_dataset_state_device_detection_t {
+	bool synthesizeDeviceId; /**< True if the device id was requested. The
+							 profile of every component must then be resolved,
+							 whether or not it has an available property, as
+							 the device id is composed from all of them. */
+} fiftyoneDegreesDataSetStateDeviceDetection;
+
 typedef struct fiftyone_degrees_dataset_device_detection_t {
 	fiftyoneDegreesDataSetBase b; /**< Base structure members */
+	fiftyoneDegreesDataSetStateDeviceDetection state; /**< Carried across a
+													  reload, see
+													  #fiftyoneDegreesDataSetStateDeviceDetection */
 	uint32_t uniqueUserAgentHeaderIndex; /**< The unique HTTP header for the 
 										 field name "User-Agent" */
 	fiftyoneDegreesHeaderPtrArray *ghevHeaders; /**< Array of get high entropy 
