@@ -1289,6 +1289,14 @@ static StatusCode initComponentsAvailable(
 		COLLECTION_RELEASE(dataSet->properties, &item);
 	}
 
+	// The device id is composed from the profile of every component, so all of
+	// them must be resolved even where they have no available property.
+	if (dataSet->b.state.synthesizeDeviceId) {
+		for (i = 0; i < dataSet->componentsList.count; i++) {
+			dataSet->componentsAvailable[i] = true;
+		}
+	}
+
 	// Count the number of components with available properties. Needed when
 	// creating results to allocate sufficient capacity for all the components.
 	dataSet->componentsAvailableCount = 0;
@@ -1486,6 +1494,32 @@ uint32_t initGetEvidenceProperties(
 	return (uint32_t)count;
 }
 
+/**
+ * The device id is not a property stored in the data file, so it cannot be
+ * resolved by PropertiesCreate. It is composed from the profile of every
+ * component, and a component's profile is only resolved when it is flagged as
+ * available (see initComponentsAvailable). Requesting it therefore sets state
+ * on the data set rather than adding to the available properties, and that
+ * state is carried into the replacement data set when one is reloaded.
+ */
+static void initDataSetState(
+	DataSetHash *dataSet,
+	PropertiesRequired *properties) {
+	if (properties != NULL && properties->state != NULL) {
+		// Carried over from the data set this one replaces.
+		dataSet->b.state =
+			*(const DataSetStateDeviceDetection*)properties->state;
+	}
+	if (PropertiesRequiredContains(
+		properties,
+		FIFTYONE_DEGREES_DEVICE_ID_PROPERTY_NAME)) {
+		dataSet->b.state.synthesizeDeviceId = true;
+	}
+	if (dataSet->b.state.synthesizeDeviceId) {
+		dataSet->b.b.state = &dataSet->b.state;
+	}
+}
+
 static StatusCode initPropertiesAndHeaders(
 	DataSetHash *dataSet,
 	PropertiesRequired *properties,
@@ -1493,6 +1527,7 @@ static StatusCode initPropertiesAndHeaders(
 	stateWithException state;
 	state.state = (void*)dataSet;
 	state.exception = exception;
+	initDataSetState(dataSet, properties);
 	StatusCode status = DataSetDeviceDetectionInitPropertiesAndHeaders(
 		&dataSet->b,
 		properties,
@@ -1966,8 +2001,10 @@ static StatusCode initDataSetFromFile(
 		return status;
 	}
 
-	// Check there are properties available for retrieval.
-	if (dataSet->b.b.available->count == 0) {
+	// Check there are properties available for retrieval. Only the device id
+	// can be produced without one.
+	if (dataSet->b.b.available->count == 0 &&
+		dataSet->b.state.synthesizeDeviceId == false) {
 		freeDataSet(dataSet);
 		// Delete the temp file if one has been created.
 		if (config->b.b.useTempFile == true) {

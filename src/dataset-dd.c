@@ -107,4 +107,5 @@ void fiftyoneDegreesDataSetDeviceDetectionReset(
 	DataSetReset(&dataSet->b);
 	dataSet->uniqueUserAgentHeaderIndex = 0;
 	dataSet->ghevHeaders = NULL;
+	dataSet->state.synthesizeDeviceId = false;
 }
