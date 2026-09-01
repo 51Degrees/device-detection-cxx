@@ -869,8 +869,9 @@ public:
 	void TearDown() {
 		EngineHashTests::TearDown();
 	}
-	void reload() { 
+	void reload() {
 		reloadFile();
+		reloadFileWithBadData();
 #ifdef _MSC_VER
 		reloadFileWithLock();
 #endif
@@ -925,7 +926,10 @@ public:
 	void TearDown() {
 		EngineHashTests::TearDown();
 	}
-	void reload() { reloadMemory(); }
+	void reload() {
+		reloadMemory();
+		reloadMemoryWithBadData();
+	}
 	void metaDataReload() {}
 	void size() {
 		FIFTYONE_DEGREES_EXCEPTION_CREATE;

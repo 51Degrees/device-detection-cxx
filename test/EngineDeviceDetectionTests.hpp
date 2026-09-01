@@ -134,6 +134,8 @@ public:
 	void multiThreadRandom(uint16_t concurrency);
 	void reloadMemory();
 	void reloadFile();
+	void reloadFileWithBadData();
+	void reloadMemoryWithBadData();
 #ifdef _MSC_VER
 	void reloadFileWithLock();
 #endif

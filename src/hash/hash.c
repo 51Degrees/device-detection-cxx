@@ -1915,7 +1915,6 @@ static StatusCode initDataSetFromFile(
 		fileName,
 		sizeof(DataSetHashHeader));
 	if (status != SUCCESS) {
-		freeDataSet(dataSet);
 		return status;
 	}
 
@@ -1935,7 +1934,6 @@ static StatusCode initDataSetFromFile(
 
 	// Return the status code if something has gone wrong.
 	if (status != SUCCESS || EXCEPTION_FAILED) {
-		freeDataSet(dataSet);
 		// Delete the temp file if one has been created.
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
@@ -1947,7 +1945,6 @@ static StatusCode initDataSetFromFile(
 	// initialisation was successful.
 	status = initPropertiesAndHeaders(dataSet, properties, exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
-		freeDataSet(dataSet);
 		// Delete the temp file if one has been created.
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
@@ -1959,7 +1956,6 @@ static StatusCode initDataSetFromFile(
 	// properties which are to be returned (i.e. available properties).
 	status = initComponentsAvailable(dataSet, exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
-		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
 		}
@@ -1968,7 +1964,6 @@ static StatusCode initDataSetFromFile(
 
 	// Check there are properties available for retrieval.
 	if (dataSet->b.b.available->count == 0) {
-		freeDataSet(dataSet);
 		// Delete the temp file if one has been created.
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
@@ -1979,7 +1974,6 @@ static StatusCode initDataSetFromFile(
 	// Initialise the index for properties and profiles to values.
 	initIndicesPropertyProfile(dataSet, exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
-		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
 		}
@@ -1988,7 +1982,6 @@ static StatusCode initDataSetFromFile(
 
 	// Initialise the headers for each component.
 	if (!initComponentHeaders(dataSet, exception) || EXCEPTION_FAILED) {
-		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
 		}
@@ -2024,6 +2017,10 @@ fiftyoneDegreesStatusCode fiftyoneDegreesHashInitManagerFromFile(
 		fileName,
 		exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
+		// Nothing below has taken ownership of the data set, so it is freed
+		// here on every failure. Without this a failed initialisation leaks
+		// it along with the file pool's open handles.
+		freeDataSet(dataSet);
 		return status;
 	}
 	ResourceManagerInit(manager, dataSet, &dataSet->b.b.handle, freeDataSet);
@@ -2134,7 +2131,6 @@ static StatusCode initDataSetFromMemory(
 	// Initialise the index for properties and profiles to values.
 	initIndicesPropertyProfile(dataSet, exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
-		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
 		}
@@ -2143,7 +2139,6 @@ static StatusCode initDataSetFromMemory(
 
 	// Initialise the headers for each component.
 	if (!initComponentHeaders(dataSet, exception) || EXCEPTION_FAILED) {
-		freeDataSet(dataSet);
 		if (config->b.b.useTempFile == true) {
 			FileDelete(dataSet->b.b.fileName);
 		}
@@ -2181,6 +2176,10 @@ fiftyoneDegreesStatusCode fiftyoneDegreesHashInitManagerFromMemory(
 		size,
 		exception);
 	if (status != SUCCESS || EXCEPTION_FAILED) {
+		// A plain free is used rather than the engine's free method so
+		// that the memory provided by the caller is left for the caller
+		// to release, keeping the behaviour callers have always had on
+		// this path.
 		Free(dataSet);
 		return status;
 	}

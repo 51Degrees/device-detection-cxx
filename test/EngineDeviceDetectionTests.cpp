@@ -527,6 +527,99 @@ void EngineDeviceDetectionTests::reloadFileWithLock() {
 }
 #endif
 
+/*
+ * Attempt a reload from a file which can never be a valid data file and
+ * check that the reload reports a failure and that the engine continues
+ * to answer from the data set it already holds. The memory check in the
+ * fixture tear down asserts that the failed reload did not leak the
+ * replacement data set or its file pool handles. Before common-cxx
+ * freed the replacement data set on the reload failure path this test
+ * failed that tear down check.
+ */
+void EngineDeviceDetectionTests::reloadFileWithBadData() {
+	int i;
+	EngineDeviceDetection *engine = (EngineDeviceDetection*)getEngine();
+	ResultsDeviceDetection *results1 = engine->processDeviceDetection(
+		mobileUserAgent);
+
+	// Create a file to reload from. The content is larger than any data
+	// file header so the reload fails on the content being wrong rather
+	// than the file being too short.
+	string targetFile = string(_reloadTestFile);
+	ofstream dst(targetFile.c_str());
+	for (i = 0; i < 4096; i++) {
+		dst << "bad data";
+	}
+
+	EXPECT_TRUE(dst.good()) <<
+		"Failed to create output file";
+
+	dst.close();
+
+	try {
+		engine->refreshData(targetFile.c_str());
+		FAIL() << "No exception has been thrown.\n";
+	}
+	catch (StatusCodeException e) {
+		ASSERT_NE(FIFTYONE_DEGREES_STATUS_SUCCESS, e.getCode()) <<
+			"A success status was returned for a bad data file.\n";
+	}
+	catch (exception e) {
+		FAIL() << "Incorrect exception was thrown.\n";
+	}
+
+	ResultsDeviceDetection *results2 = engine->processDeviceDetection(
+		mobileUserAgent);
+	EXPECT_EQ(results1->results->b.dataSet, results2->results->b.dataSet) <<
+		"The data set should not have been replaced by a failed reload.";
+	validate(results2);
+	delete results1;
+	delete results2;
+}
+
+/*
+ * The same check as reloadFileWithBadData through the reload from
+ * memory path. Only used by engines constructed from memory as those
+ * set the free data configuration which makes the engine responsible
+ * for the copy it takes of the memory provided.
+ */
+void EngineDeviceDetectionTests::reloadMemoryWithBadData() {
+	int i;
+	const long badLength = 4096;
+	EngineDeviceDetection *engine = (EngineDeviceDetection*)getEngine();
+	ResultsDeviceDetection *results1 = engine->processDeviceDetection(
+		mobileUserAgent);
+
+	// Build a buffer which can never contain a valid data file.
+	char *badData = (char*)malloc(badLength);
+	ASSERT_NE(nullptr, badData) <<
+		"Failed to allocate memory for the bad data";
+	for (i = 0; i < badLength; i++) {
+		badData[i] = '!';
+	}
+
+	try {
+		engine->refreshData((void*)badData, badLength);
+		FAIL() << "No exception has been thrown.\n";
+	}
+	catch (StatusCodeException e) {
+		ASSERT_NE(FIFTYONE_DEGREES_STATUS_SUCCESS, e.getCode()) <<
+			"A success status was returned for bad data.\n";
+	}
+	catch (exception e) {
+		FAIL() << "Incorrect exception was thrown.\n";
+	}
+	free((void*)badData);
+
+	ResultsDeviceDetection *results2 = engine->processDeviceDetection(
+		mobileUserAgent);
+	EXPECT_EQ(results1->results->b.dataSet, results2->results->b.dataSet) <<
+		"The data set should not have been replaced by a failed reload.";
+	validate(results2);
+	delete results1;
+	delete results2;
+}
+
 void EngineDeviceDetectionTests::reloadMemory() {
 	EngineDeviceDetection *engine = (EngineDeviceDetection*)getEngine();
 	ResultsDeviceDetection *results1 = engine->processDeviceDetection(
