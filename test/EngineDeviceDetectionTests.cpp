@@ -588,9 +588,9 @@ void EngineDeviceDetectionTests::reloadFileWithBadData() {
 
 /*
  * The same check as reloadFileWithBadData through the reload from
- * memory path. Only used by engines constructed from memory as those
- * set the free data configuration which makes the engine responsible
- * for the copy it takes of the memory provided.
+ * memory path. The engine is responsible for the copy it takes of the
+ * memory provided however it was constructed, so this runs for engines
+ * built from a file as well as from memory.
  */
 void EngineDeviceDetectionTests::reloadMemoryWithBadData() {
 	int i;

@@ -872,6 +872,11 @@ public:
 	void reload() {
 		reloadFile();
 		reloadFileWithBadData();
+		// An engine built from a file can still be reloaded from a buffer,
+		// and the copy the engine takes of that buffer is its own to free.
+		// The bad data buffer is small, so this costs nothing next to a
+		// reload from a real data file.
+		reloadMemoryWithBadData();
 #ifdef _MSC_VER
 		reloadFileWithLock();
 #endif
