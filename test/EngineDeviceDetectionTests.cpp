@@ -556,6 +556,13 @@ void EngineDeviceDetectionTests::reloadFileWithBadData() {
 
 	dst.close();
 
+	// The failed reload must leave nothing allocated behind it. The engine
+	// test suites restore the standard allocators in SetUp, so the memory
+	// check in the fixture tear down never sees anything. Tracking is
+	// turned on around the failed reload alone, where everything allocated
+	// is also freed within the window, so the leak is caught on every
+	// platform rather than only where the C runtime provides its own check.
+	fiftyoneDegreesSetUpMemoryTracking();
 	try {
 		engine->refreshData(targetFile.c_str());
 		FAIL() << "No exception has been thrown.\n";
@@ -567,6 +574,8 @@ void EngineDeviceDetectionTests::reloadFileWithBadData() {
 	catch (exception e) {
 		FAIL() << "Incorrect exception was thrown.\n";
 	}
+	EXPECT_EQ((size_t)0, fiftyoneDegreesUnsetMemoryTracking()) << "The "
+		"failed reload from a file did not free everything it allocated.";
 
 	ResultsDeviceDetection *results2 = engine->processDeviceDetection(
 		mobileUserAgent);
@@ -579,9 +588,9 @@ void EngineDeviceDetectionTests::reloadFileWithBadData() {
 
 /*
  * The same check as reloadFileWithBadData through the reload from
- * memory path. Only used by engines constructed from memory as those
- * set the free data configuration which makes the engine responsible
- * for the copy it takes of the memory provided.
+ * memory path. The engine is responsible for the copy it takes of the
+ * memory provided however it was constructed, so this runs for engines
+ * built from a file as well as from memory.
  */
 void EngineDeviceDetectionTests::reloadMemoryWithBadData() {
 	int i;
@@ -598,6 +607,11 @@ void EngineDeviceDetectionTests::reloadMemoryWithBadData() {
 		badData[i] = '!';
 	}
 
+	// The failed reload must leave nothing allocated behind it, the copy
+	// the engine takes of the buffer included. See reloadFileWithBadData
+	// for why the check brackets the reload rather than relying on the
+	// memory check in the fixture tear down.
+	fiftyoneDegreesSetUpMemoryTracking();
 	try {
 		engine->refreshData((void*)badData, badLength);
 		FAIL() << "No exception has been thrown.\n";
@@ -609,6 +623,8 @@ void EngineDeviceDetectionTests::reloadMemoryWithBadData() {
 	catch (exception e) {
 		FAIL() << "Incorrect exception was thrown.\n";
 	}
+	EXPECT_EQ((size_t)0, fiftyoneDegreesUnsetMemoryTracking()) << "The "
+		"failed reload from memory did not free everything it allocated.";
 	free((void*)badData);
 
 	ResultsDeviceDetection *results2 = engine->processDeviceDetection(
