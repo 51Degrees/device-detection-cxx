@@ -221,7 +221,9 @@ if(BUILD_TESTING)
 		target_link_libraries(HashTests fiftyone-device-detection-test-base fiftyone-hash-cxx)
 	endif()
 
-	gtest_discover_tests(HashTests DISCOVERY_MODE PRE_TEST)
+	# DISCOVERY_TIMEOUT must stay outside PROPERTIES; anything after that keyword is
+	# parsed as a test property. The 5 second default is too tight for Windows CI.
+	gtest_discover_tests(HashTests DISCOVERY_TIMEOUT 600 DISCOVERY_MODE PRE_TEST)
 
 	set_target_properties(HashTests PROPERTIES FOLDER "Tests")
 
