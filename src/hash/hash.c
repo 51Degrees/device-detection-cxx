@@ -1589,6 +1589,16 @@ static StatusCode readHeaderFromMemory(
 	MemoryReader *reader,
 	const DataSetHashHeader *header) {
 
+	// MemoryAdvance below only reports an overrun once the copy has already
+	// read past the end, so the space is checked here instead. The pointers
+	// are compared before subtracting because a negative size puts lastByte
+	// behind current.
+	if (reader->current > reader->lastByte ||
+		(size_t)(reader->lastByte - reader->current) <
+		sizeof(DataSetHashHeader)) {
+		return CORRUPT_DATA;
+	}
+
 	// Copy the bytes that make up the dataset header.
 	if (memcpy(
 		(void*)header,

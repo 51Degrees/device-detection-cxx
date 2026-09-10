@@ -119,6 +119,21 @@ public:
         }
     }
 
+    /**
+     * @return the number of bytes in the named file, or zero if it cannot be
+     * opened.
+     */
+    static size_t fileLength(const char *fileName) {
+        ifstream file(fileName, ios::in | ios::binary | ios::ate);
+        if (file.is_open() == false) {
+            cout << "Unable to open file";
+            return 0;
+        }
+        const std::streampos length = file.tellg();
+        file.close();
+        return (size_t)length;
+    }
+
 private:
     void writeTestFiles() {
         void* garbledHeader =
@@ -286,14 +301,22 @@ TEST_F(EngineHashInitTests, BadData_Memory) {
  * Check that when initializing from memory which is too small and does not
  * contain enough data to fill the header, the correct error is thrown,
  * and memory is cleaned up.
+ *
+ * The buffer is the size of the data rather than the size of the header, so
+ * that reading a header out of it is an out of bounds read a sanitizer or an
+ * unmapped page can catch.
  */
 TEST_F(EngineHashInitTests, SmallData_Memory) {
     ConfigHash config;
     RequiredPropertiesConfig properties;
-    void* mem = fiftyoneDegreesMalloc(sizeof(fiftyoneDegreesDataSetHashHeader));
-    ifstream file(smallDataFileName, ios::out | ios::binary);
+    const size_t dataLength = fileLength(smallDataFileName);
+    ASSERT_LT(dataLength, sizeof(fiftyoneDegreesDataSetHashHeader))
+        << "The small data file must be shorter than the header for this "
+        << "test to exercise a short buffer.";
+    void* mem = fiftyoneDegreesMalloc(dataLength);
+    ifstream file(smallDataFileName, ios::in | ios::binary);
     if (file.is_open()) {
-        file.read((char*)mem, sizeof(fiftyoneDegreesDataSetHashHeader));
+        file.read((char*)mem, dataLength);
         file.close();
     }
     else {
@@ -303,15 +326,15 @@ TEST_F(EngineHashInitTests, SmallData_Memory) {
     try {
         EngineHash* testEngine = new EngineHash(
             mem,
-            (long)sizeof(fiftyoneDegreesDataSetHashHeader),
+            (long)dataLength,
             &config,
             &properties);
         delete testEngine;
         FAIL() << L"No exception was thrown";
     }
     catch (exception & e) {
-        const char* expected = fiftyoneDegreesStatusGetMessage
-        (FIFTYONE_DEGREES_STATUS_INCORRECT_VERSION,
+        const char* expected = fiftyoneDegreesStatusGetMessage(
+            FIFTYONE_DEGREES_STATUS_CORRUPT_DATA,
             NULL);
         ASSERT_STREQ(
             e.what(),
