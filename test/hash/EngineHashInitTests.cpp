@@ -120,9 +120,8 @@ public:
     }
 
     /**
-     * The number of bytes in the named file. Used so a test can allocate a
-     * buffer that is the size of the data rather than the size of the
-     * structure the data is supposed to contain.
+     * @return the number of bytes in the named file, or zero if it cannot be
+     * opened.
      */
     static size_t fileLength(const char *fileName) {
         ifstream file(fileName, ios::in | ios::binary | ios::ate);
@@ -303,12 +302,9 @@ TEST_F(EngineHashInitTests, BadData_Memory) {
  * contain enough data to fill the header, the correct error is thrown,
  * and memory is cleaned up.
  *
- * The buffer is allocated at the size of the data, not at the size of the
- * header, so that reading the header past the end of it is an out of bounds
- * read that a sanitizer or an unmapped page will catch. Previously this test
- * allocated a whole header, read the single byte of data into it and told the
- * engine the data was a header long, so the engine never saw a short buffer
- * and the status it returned depended on the uninitialised remainder.
+ * The buffer is the size of the data rather than the size of the header, so
+ * that reading a header out of it is an out of bounds read a sanitizer or an
+ * unmapped page can catch.
  */
 TEST_F(EngineHashInitTests, SmallData_Memory) {
     ConfigHash config;

@@ -1589,15 +1589,10 @@ static StatusCode readHeaderFromMemory(
 	MemoryReader *reader,
 	const DataSetHashHeader *header) {
 
-	// Check there are enough bytes left to read a header before reading one.
-	// MemoryAdvance below reports an overrun, but only after the copy has
-	// already read past the end of the caller's memory. Where the bytes that
-	// follow are not mapped that read is a crash rather than a status code,
-	// and where they are mapped it is a silent read of unrelated memory.
-	// The pointers are compared before the difference is taken because the
-	// size reaching HashInitManagerFromMemory is a caller supplied long: a
-	// negative one puts lastByte behind current, and the difference then
-	// converts to a huge size_t that would pass any length test.
+	// MemoryAdvance below only reports an overrun once the copy has already
+	// read past the end, so the space is checked here instead. The pointers
+	// are compared before subtracting because a negative size puts lastByte
+	// behind current.
 	if (reader->current > reader->lastByte ||
 		(size_t)(reader->lastByte - reader->current) <
 		sizeof(DataSetHashHeader)) {
