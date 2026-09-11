@@ -67,6 +67,42 @@ d->componentsList.items[i].data.ptr : NULL))
 #define RK_PRIME 997
 
 /**
+ * Match a table hash using a reciprocal prepared once for the node scan.
+ * The caller validates the positive divisor and table bounds. The estimated
+ * quotient is exact or one below floor(hash / divisor), so one subtraction
+ * gives the exact remainder. A zero hash remains a reserved table marker.
+ */
+static GraphNodeHash* getMatchingHashFromTablePrepared(
+	GraphNode* node,
+	uint32_t hash,
+	uint64_t reciprocal) {
+	if (hash == 0) {
+		return NULL;
+	}
+	GraphNodeHash* hashes = (GraphNodeHash*)(node + 1);
+	const uint32_t divisor = (uint32_t)node->modulo;
+	const uint32_t quotient = (uint32_t)(((uint64_t)hash * reciprocal) >> 32);
+	uint32_t remainder = hash - quotient * divisor;
+	if (remainder >= divisor) {
+		remainder -= divisor;
+	}
+	GraphNodeHash* h = hashes + remainder;
+	if (h->hashCode == hash) {
+		return h;
+	}
+	if (h->hashCode == 0 && h->nodeOffset > 0 &&
+		h->nodeOffset < node->hashesCount) {
+		GraphNodeHash* end = hashes + node->hashesCount;
+		for (h = hashes + h->nodeOffset; h < end && h->hashCode != 0; ++h) {
+			if (h->hashCode == hash) {
+				return h;
+			}
+		}
+	}
+	return NULL;
+}
+
+/**
  * Array of powers for the RK_PRIME.
  */
 #ifndef FIFTYONE_DEGREES_POWERS
@@ -745,7 +781,26 @@ static void evaluateListNode(detectionState *state) {
 			// modulo, which is constant for the duration of this scan. Resolve
 			// it once here rather than re-testing it for every rolled hash.
 			GraphNode * const node = NODE(state);
-			if (node->modulo == 0) {
+			if (node->modulo == 0 && node->hashesCount == 2) {
+				GraphNodeHash* hashes = (GraphNodeHash*)(node + 1);
+				const uint32_t h0 = hashes[0].hashCode, h1 = hashes[1].hashCode;
+				do {
+					nodeHash = state->hash == h1 ? hashes + 1 : NULL;
+					nodeHash = state->hash == h0 ? hashes : nodeHash;
+				} while (nodeHash == NULL && advanceHash(state));
+			}
+			else if (node->modulo == 0 && node->hashesCount == 3) {
+				GraphNodeHash* hashes = (GraphNodeHash*)(node + 1);
+				const uint32_t h0 = hashes[0].hashCode, h1 = hashes[1].hashCode,
+					h2 = hashes[2].hashCode;
+				do {
+					nodeHash = state->hash == h2 ? hashes + 2 : NULL;
+					nodeHash = state->hash == h0 ? hashes : nodeHash;
+					// Preserve the binary-search midpoint priority for duplicates.
+					nodeHash = state->hash == h1 ? hashes + 1 : nodeHash;
+				} while (nodeHash == NULL && advanceHash(state));
+			}
+			else if (node->modulo == 0) {
 				// Loop between the first and last indexes checking the hash
 				// values.
 				do {
@@ -755,10 +810,9 @@ static void evaluateListNode(detectionState *state) {
 				} while (nodeHash == NULL && advanceHash(state));
 			}
 			else if (GRAPH_NODE_IS_HASH_TABLE(node)) {
+				const uint64_t reciprocal = (UINT64_C(1) << 32) / (uint32_t)node->modulo;
 				do {
-					nodeHash = GraphGetMatchingHashFromListNodeTable(
-						node,
-						state->hash);
+					nodeHash = getMatchingHashFromTablePrepared(node, state->hash, reciprocal);
 				} while (nodeHash == NULL && advanceHash(state));
 			}
 			// Any other modulo cannot index the records of the node safely, so
