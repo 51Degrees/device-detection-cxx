@@ -777,6 +777,20 @@ static void evaluateListNode(detectionState *state) {
 	else {
 		// Set the match structure with the initial hash value.
 		if (setInitialHash(state)) {
+			// Keep rolling state local. Only the final hash and position are
+			// observable outside this exact scan. Tolerance scans retain the
+			// original state-based path.
+			const char * const ua = state->result->b.targetUserAgent;
+			int index = state->currentIndex;
+			uint32_t hash = state->hash;
+			const uint32_t power = state->power;
+			const int length = NODE(state)->length;
+			int end = state->lastIndex;
+			if (end >= 0 && (size_t)end >
+				state->result->b.targetUserAgentLength - (size_t)length) {
+				end = (int)(state->result->b.targetUserAgentLength - (size_t)length);
+			}
+
 			// The table vs binary-search decision depends only on the node's
 			// modulo, which is constant for the duration of this scan. Resolve
 			// it once here rather than re-testing it for every rolled hash.
@@ -785,20 +799,24 @@ static void evaluateListNode(detectionState *state) {
 				GraphNodeHash* hashes = (GraphNodeHash*)(node + 1);
 				const uint32_t h0 = hashes[0].hashCode, h1 = hashes[1].hashCode;
 				do {
-					nodeHash = state->hash == h1 ? hashes + 1 : NULL;
-					nodeHash = state->hash == h0 ? hashes : nodeHash;
-				} while (nodeHash == NULL && advanceHash(state));
+					nodeHash = hash == h1 ? hashes + 1 : NULL;
+					nodeHash = hash == h0 ? hashes : nodeHash;
+				} while (nodeHash == NULL && (index < end ?
+					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+						power * (uint32_t)ua[index], index++, 1) : 0));
 			}
 			else if (node->modulo == 0 && node->hashesCount == 3) {
 				GraphNodeHash* hashes = (GraphNodeHash*)(node + 1);
 				const uint32_t h0 = hashes[0].hashCode, h1 = hashes[1].hashCode,
 					h2 = hashes[2].hashCode;
 				do {
-					nodeHash = state->hash == h2 ? hashes + 2 : NULL;
-					nodeHash = state->hash == h0 ? hashes : nodeHash;
+					nodeHash = hash == h2 ? hashes + 2 : NULL;
+					nodeHash = hash == h0 ? hashes : nodeHash;
 					// Preserve the binary-search midpoint priority for duplicates.
-					nodeHash = state->hash == h1 ? hashes + 1 : nodeHash;
-				} while (nodeHash == NULL && advanceHash(state));
+					nodeHash = hash == h1 ? hashes + 1 : nodeHash;
+				} while (nodeHash == NULL && (index < end ?
+					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+						power * (uint32_t)ua[index], index++, 1) : 0));
 			}
 			else if (node->modulo == 0) {
 				// Loop between the first and last indexes checking the hash
@@ -806,17 +824,23 @@ static void evaluateListNode(detectionState *state) {
 				do {
 					nodeHash = GraphGetMatchingHashFromListNodeSearch(
 						node,
-						state->hash);
-				} while (nodeHash == NULL && advanceHash(state));
+						hash);
+				} while (nodeHash == NULL && (index < end ?
+					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+						power * (uint32_t)ua[index], index++, 1) : 0));
 			}
 			else if (GRAPH_NODE_IS_HASH_TABLE(node)) {
 				const uint64_t reciprocal = (UINT64_C(1) << 32) / (uint32_t)node->modulo;
 				do {
-					nodeHash = getMatchingHashFromTablePrepared(node, state->hash, reciprocal);
-				} while (nodeHash == NULL && advanceHash(state));
+					nodeHash = getMatchingHashFromTablePrepared(node, hash, reciprocal);
+				} while (nodeHash == NULL && (index < end ?
+					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+						power * (uint32_t)ua[index], index++, 1) : 0));
 			}
 			// Any other modulo cannot index the records of the node safely, so
 			// no hash is looked for and the unmatched branch is taken.
+			state->hash = hash;
+			state->currentIndex = index;
 		}
 	}
 	
@@ -935,10 +959,28 @@ static void evaluateBinaryNode(detectionState *state) {
 	}
 	else {
 		if (setInitialHash(state)) {
+			// Keep rolling state local. Only the final hash and position are
+			// observable outside this exact scan. Tolerance scans retain the
+			// original state-based path.
+			const char * const ua = state->result->b.targetUserAgent;
+			int index = state->currentIndex;
+			uint32_t hash = state->hash;
+			const uint32_t power = state->power;
+			const int length = NODE(state)->length;
+			int end = state->lastIndex;
+			if (end >= 0 && (size_t)end >
+				state->result->b.targetUserAgentLength - (size_t)length) {
+				end = (int)(state->result->b.targetUserAgentLength - (size_t)length);
+			}
+
 			// Keep rolling the hash until the hash is found or the last index is
 			// reached and there is no possibility of finding the hash value.
-			while (state->hash != hashes->hashCode && advanceHash(state)) {
+			while (hash != hashes->hashCode && (index < end ?
+					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+						power * (uint32_t)ua[index], index++, 1) : 0)) {
 			}
+			state->hash = hash;
+			state->currentIndex = index;
 		}
 		found = state->hash == hashes->hashCode;
 	}
