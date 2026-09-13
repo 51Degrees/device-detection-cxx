@@ -831,11 +831,33 @@ static void evaluateListNode(detectionState *state) {
 			}
 			else if (GRAPH_NODE_IS_HASH_TABLE(node)) {
 				const uint64_t reciprocal = (UINT64_C(1) << 32) / (uint32_t)node->modulo;
-				do {
-					nodeHash = getMatchingHashFromTablePrepared(node, hash, reciprocal);
-				} while (nodeHash == NULL && (index < end ?
-					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
-						power * (uint32_t)ua[index], index++, 1) : 0));
+				// Amortize a local miss filter only over longer scans of small tables.
+				// Every stored nonzero hash contributes a bit. A clear bit proves
+				// absence, while possible matches retain the original lookup order.
+				if (node->hashesCount <= 128 && (int64_t)end - index >= 32) {
+					uint64_t filter = 0;
+					GraphNodeHash* records = (GraphNodeHash*)(node + 1);
+					for (int k = 0; k < node->hashesCount; k++) {
+						const uint32_t code = records[k].hashCode;
+						if (code != 0) {
+							filter |= UINT64_C(1) << (code & 63);
+						}
+					}
+
+					do {
+						nodeHash = (filter & (UINT64_C(1) << (hash & 63))) != 0 ?
+							getMatchingHashFromTablePrepared(node, hash, reciprocal) : NULL;
+					} while (nodeHash == NULL && (index < end ?
+						(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+							power * (uint32_t)ua[index], index++, 1) : 0));
+				}
+				else {
+					do {
+						nodeHash = getMatchingHashFromTablePrepared(node, hash, reciprocal);
+					} while (nodeHash == NULL && (index < end ?
+						(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+							power * (uint32_t)ua[index], index++, 1) : 0));
+				}
 			}
 			// Any other modulo cannot index the records of the node safely, so
 			// no hash is looked for and the unmatched branch is taken.
