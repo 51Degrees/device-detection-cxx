@@ -232,27 +232,20 @@ void EngineHash::refreshData(
 	refreshData((void*)data, length);
 }
 
+// Turns overrides on when creating results for evidence. The list of
+// override values is sized by the data set, which knows how many properties
+// evidence can override, so the number given here decides nothing else.
+static const uint32_t overridesEnabled = 1;
+
 DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	DeviceDetection::EvidenceDeviceDetection *evidence) const {
 	EXCEPTION_CREATE;
-	
-	// Number of items on the evidence array.
-	uint32_t evidenceSize = evidence == nullptr ? 
-		0 : 
-		(uint32_t)evidence->size();
 
-	// Get the number of components.
-	DataSetHash* dataSet = (DataSetHash*)DataSetGet(manager.get());
-	uint32_t componentsSize = dataSet->componentsList.count;
-	DataSetRelease((DataSetBase*)dataSet);
-
-	// Create the results with capacity for the larger of the components and
-	// the evidence array.
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
-		componentsSize > evidenceSize ? componentsSize : evidenceSize);
+		overridesEnabled);
 	ResultsHashFromEvidence(
-		results, 
+		results,
 		evidence == nullptr ? nullptr : evidence->get(),
 		exception);
 	EXCEPTION_THROW;
@@ -263,6 +256,9 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	const char *userAgent) const {
 	EXCEPTION_CREATE;
+
+	// A User-Agent on its own carries no values to override, so the results
+	// need no list of override values.
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
 		0);
@@ -278,10 +274,9 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 Common::ResultsBase* EngineHash::processBase(
 	Common::EvidenceBase *evidence) const {
 	EXCEPTION_CREATE;
-	uint32_t size = evidence == nullptr ? 0 : (uint32_t)evidence->size();
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
-		size);
+		overridesEnabled);
 	ResultsHashFromEvidence(
 		results, 
 		evidence == nullptr ? nullptr : evidence->get(),

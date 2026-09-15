@@ -575,8 +575,11 @@ EXTERNAL int fiftyoneDegreesResultsHashFromDeviceId(
  * integrations built against the pre-4.5 API (e.g. the HAProxy 51degrees
  * addon, which still passes it) continue to compile unchanged. Results are
  * now sized by the number of components determined at initialisation.
- * @param overridesCapacity number of properties that can be overridden,
- * 0 to disable overrides
+ * @param overridesCapacity 0 to disable overrides, any other number to
+ * enable them. The list is sized at the number of properties the data set
+ * allows evidence to override, which is as many as a set of results can
+ * need, or at this number where that is larger, so a caller processing
+ * evidence does not have to work the size out for itself.
  * @return newly created results structure
  */
 EXTERNAL fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(

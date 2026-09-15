@@ -3198,6 +3198,23 @@ fiftyoneDegreesResultsHash* fiftyoneDegreesResultsHashCreate(
 	// track any results that are created.
 	DataSetHash* dataSet = (DataSetHash*)DataSetGet(manager);
 
+	// A set of results can never need more override values than there are
+	// properties the data set allows evidence to override, because a value is
+	// held once for each of those properties and a second value for the same
+	// property replaces the first. Every value the evidence carries, every
+	// empty value marking the JavaScript property that measures one of those
+	// values, and the empty value for the high entropy values script, is a
+	// value for one of those properties. Sizing the list here means a caller
+	// no longer has to work the size out from the evidence, which is what
+	// left values, in particular those empty values, unapplied. A caller
+	// asking for more still gets what it asks for, and a caller asking for
+	// none still gets none, which is how overrides are turned off.
+	if (overridesCapacity > 0 &&
+		dataSet->b.b.overridable != NULL &&
+		dataSet->b.b.overridable->count > overridesCapacity) {
+		overridesCapacity = dataSet->b.b.overridable->count;
+	}
+
 	// Create a new instance of results with a result for each component in the
 	// dataset.
 	FIFTYONE_DEGREES_ARRAY_CREATE(

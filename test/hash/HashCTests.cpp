@@ -22,6 +22,7 @@
 
 #include "../../src/common-cxx/tests/pch.h"
 #include <string>
+#include <vector>
 #include "../Constants.hpp"
 #include "../../src/common-cxx/tests/Base.hpp"
 #include "../../src/hash/fiftyone.h"
@@ -704,3 +705,256 @@ TEST_F(HashCTests, HashResultsGetValuesNoProfileValues) {
 	EXPECT_FALSE(EXCEPTION_OKAY);
 	EXPECT_TRUE(EXCEPTION_CHECK(COLLECTION_INDEX_OUT_OF_RANGE));
 }
+
+/*
+ * Tests for the way the list of override values is sized and filled, for
+ * issue #411. Which properties evidence can override differs between data
+ * files, so each test takes the names it needs from the data set rather than
+ * naming them, and says so where a data file cannot carry the case. Every
+ * property is required so that the properties evidence can override, and the
+ * JavaScript properties which measure them, are all available.
+ */
+class HashCOverridesTests : public Base {
+public:
+	HashCOverridesTests() {
+		dataFilePath = "";
+		for (int i = 0;
+			i < _HashFileNamesLength && strcmp("", dataFilePath.c_str()) == 0;
+			i++) {
+			dataFilePath = GetFilePath(_dataFolderName, _HashFileNames[i]);
+		}
+	}
+
+	void SetUp() {
+		Base::SetUp();
+		EXCEPTION_CREATE;
+		properties.string = NULL;
+		HashInitManagerFromFile(
+			&manager,
+			&configHash,
+			&properties,
+			dataFilePath.c_str(),
+			exception);
+		EXCEPTION_THROW;
+	}
+
+	void TearDown() {
+		ResourceManagerFree(&manager);
+		Base::TearDown();
+	}
+
+protected:
+	/*
+	 * The names of the properties that evidence can override.
+	 */
+	vector<string> getOverridableNames() {
+		vector<string> names;
+		DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+		if (dataSet->b.b.overridable != NULL) {
+			for (uint32_t i = 0; i < dataSet->b.b.overridable->count; i++) {
+				names.push_back(string(STRING(
+					dataSet->b.b.overridable->items[i]
+						.available->name.data.ptr)));
+			}
+		}
+		DataSetHashRelease(dataSet);
+		return names;
+	}
+
+	/*
+	 * The names of the properties that evidence can override and that the
+	 * engine does not empty as the JavaScript property measuring another
+	 * property, which it does for a property whose name starts with the name
+	 * of another. A test sending a value for one of those would find the
+	 * value replaced by the empty one, which is the engine working rather
+	 * than a fault.
+	 */
+	vector<string> getOverridableNamesNotEmptied() {
+		vector<string> names;
+		DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+		if (dataSet->b.b.overridable != NULL) {
+			for (uint32_t i = 0; i < dataSet->b.b.overridable->count; i++) {
+				string name = string(STRING(
+					dataSet->b.b.overridable->items[i]
+						.available->name.data.ptr));
+				bool measuresAnother = false;
+				for (uint32_t j = 0;
+					j < dataSet->b.b.available->count &&
+						measuresAnother == false;
+					j++) {
+					string other = string(STRING(
+						dataSet->b.b.available->items[j].name.data.ptr));
+					measuresAnother =
+						other.length() < name.length() &&
+						name.compare(0, other.length(), other) == 0;
+				}
+				if (measuresAnother == false) {
+					names.push_back(name);
+				}
+			}
+		}
+		DataSetHashRelease(dataSet);
+		return names;
+	}
+
+	string dataFilePath;
+	PropertiesRequired properties = PropertiesDefault;
+	ConfigHash configHash = HashDefaultConfig;
+	ResourceManager manager;
+};
+
+/*
+ * The list of override values is sized by the data set rather than by the
+ * number the caller passes, so a caller asking for overrides gets room for
+ * every property the data set lets evidence override however little evidence
+ * the request carries. A caller asking for more than that still gets what it
+ * asked for, and a caller asking for none still gets none. See #411.
+ */
+TEST_F(HashCOverridesTests, OverrideListIsSizedFromTheDataSet) {
+	EXCEPTION_CREATE;
+	uint32_t overridableCount = (uint32_t)getOverridableNames().size();
+	if (overridableCount < 2) {
+		// The Visual Studio test project builds against a googletest that
+		// has no skip, so the test reports why it checked nothing and
+		// returns.
+		SUCCEED() << "The data file offers fewer than two properties that "
+			"evidence can override, so there is nothing to check.\n";
+		return;
+	}
+
+	// One item of evidence, fewer than the properties the data set lets
+	// evidence override.
+	EvidenceKeyValuePairArray* evidence = EvidenceCreate(1);
+	EvidenceAddString(
+		evidence,
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+		"User-Agent",
+		mobileUserAgent);
+
+	ResultsHash* results = ResultsHashCreate(&manager, 1);
+	ResultsHashFromEvidence(results, evidence, exception);
+	EXCEPTION_THROW;
+	EXPECT_EQ(overridableCount, results->b.overrides->capacity) <<
+		"The list should hold one item for each property the data set lets "
+		"evidence override, whatever the request carries.\n";
+
+	// A caller asking for more than the data set needs gets what it asked
+	// for.
+	ResultsHash* larger = ResultsHashCreate(&manager, overridableCount + 10);
+	EXPECT_EQ(overridableCount + 10, larger->b.overrides->capacity) <<
+		"A caller asking for a longer list should still get one.\n";
+
+	// A caller asking for no overrides still gets none, which is how
+	// overrides are turned off.
+	ResultsHash* none = ResultsHashCreate(&manager, 0);
+	EXPECT_EQ(0, none->b.overrides->capacity) <<
+		"A capacity of zero should still turn overrides off.\n";
+
+	ResultsHashFree(results);
+	ResultsHashFree(larger);
+	ResultsHashFree(none);
+	EvidenceFree(evidence);
+}
+
+/*
+ * That size is only enough because every value the engine stores is a value
+ * for a property the data set lets evidence override. The values taken from
+ * the evidence are, by definition. The empty values are for JavaScript
+ * properties, so this checks that every JavaScript property in the data set
+ * is one evidence can override. If a data file ever breaks that, this test
+ * fails rather than a browser being sent a snippet it has already run. See
+ * #411.
+ */
+TEST_F(HashCOverridesTests, EveryJavaScriptPropertyCanBeOverridden) {
+	EXCEPTION_CREATE;
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(&manager);
+	int javaScriptProperties = 0;
+	for (uint32_t i = 0; i < dataSet->b.b.available->count; i++) {
+		if (fiftyoneDegreesPropertyGetValueType(
+			dataSet->properties,
+			dataSet->b.b.available->items[i].propertyIndex,
+			exception) == FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_JAVASCRIPT) {
+			javaScriptProperties++;
+			bool overridable = false;
+			if (dataSet->b.b.overridable != NULL) {
+				for (uint32_t j = 0;
+					j < dataSet->b.b.overridable->count &&
+						overridable == false;
+					j++) {
+					overridable =
+						dataSet->b.b.overridable->items[j]
+							.requiredPropertyIndex == i;
+				}
+			}
+			EXPECT_TRUE(overridable) <<
+				STRING(dataSet->b.b.available->items[i].name.data.ptr) <<
+				" is a JavaScript property, so the engine can empty it, and "
+				"it has to be one evidence can override for the list to be "
+				"long enough.\n";
+		}
+	}
+	EXCEPTION_THROW;
+	EXPECT_GT(javaScriptProperties, 0) <<
+		"The data file should carry at least one JavaScript property.\n";
+	DataSetHashRelease(dataSet);
+}
+
+/*
+ * Every value the evidence carries is applied, whatever the mix of headers
+ * and results, now that the list is sized by the data set. See #411.
+ */
+TEST_F(HashCOverridesTests, EveryValueTheEvidenceCarriesIsApplied) {
+	EXCEPTION_CREATE;
+	vector<string> names = getOverridableNamesNotEmptied();
+	if (names.empty()) {
+		SUCCEED() << "The data file offers no properties that evidence can "
+			"override without the engine emptying them again, so there is "
+			"nothing to check.\n";
+		return;
+	}
+
+	// One item of evidence for the User-Agent and one for each property the
+	// data file lets evidence override. The keys are built before any is
+	// added because the evidence does not copy them.
+	vector<string> keys;
+	for (size_t i = 0; i < names.size(); i++) {
+		keys.push_back("51D_" + names[i]);
+	}
+	EvidenceKeyValuePairArray* evidence =
+		EvidenceCreate((uint32_t)keys.size() + 1);
+	EvidenceAddString(
+		evidence,
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+		"User-Agent",
+		mobileUserAgent);
+	for (size_t i = 0; i < keys.size(); i++) {
+		EvidenceAddString(
+			evidence,
+			FIFTYONE_DEGREES_EVIDENCE_QUERY,
+			keys[i].c_str(),
+			"1");
+	}
+
+	ResultsHash* results = ResultsHashCreate(&manager, 1);
+	ResultsHashFromEvidence(results, evidence, exception);
+	EXCEPTION_THROW;
+
+	EXPECT_GE(results->b.overrides->count, (uint32_t)names.size()) <<
+		"Every value the evidence carries should be held, along with the "
+		"empty value for any JavaScript property measuring one of them.\n";
+	char buffer[50] = "";
+	for (size_t i = 0; i < names.size(); i++) {
+		EXPECT_STREQ(
+			"1",
+			getPropertyValueAsString(
+				results,
+				names[i].c_str(),
+				buffer,
+				sizeof(buffer))) << "The value sent for " << names[i] <<
+			" should be applied.\n";
+	}
+
+	ResultsHashFree(results);
+	EvidenceFree(evidence);
+}
+
