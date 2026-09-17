@@ -70,26 +70,6 @@ std::string getTimestamp() {
     return ss.str();
 }
 
-fs::path getRepoRoot() {
-    // Try environment variable first
-    const char* envRepo = std::getenv("DEVICE_DETECTION_CXX_ROOT");
-    if (envRepo != nullptr && fs::exists(envRepo)) {
-        return fs::path(envRepo);
-    }
-    
-    // Fall back to executable path - go up from bin/ to repo root
-    fs::path exePath = fs::canonical(fs::path(std::filesystem::current_path()));
-    // Assume running from build/bin or similar
-    while (exePath.has_parent_path() && !fs::exists(exePath / "CMakeLists.txt")) {
-        exePath = exePath.parent_path();
-    }
-    if (fs::exists(exePath / "CMakeLists.txt")) {
-        return exePath;
-    }
-    // Last resort: current directory
-    return fs::current_path();
-}
-
 void writeFile(const fs::path& dir, const std::string& filename, const std::string& content) {
     fs::path filepath = dir / filename;
     std::ofstream file(filepath);
@@ -98,9 +78,9 @@ void writeFile(const fs::path& dir, const std::string& filename, const std::stri
 }
 
 void printUsage(const char* progName) {
-    std::cerr << "Usage: " << progName << " [-d <data_file>] [-o <output_dir>]" << std::endl;
-    std::cerr << "  -d  Path to Hash data file" << std::endl;
-    std::cerr << "  -o  Output directory for snippets" << std::endl;
+    std::cerr << "Usage: " << progName << " -d <data_file> [-o <output_dir>]" << std::endl;
+    std::cerr << "  -d  Path to Hash data file (required)" << std::endl;
+    std::cerr << "  -o  Output directory for snippets (default: ./js-snippets)" << std::endl;
     std::cerr << "  -h  Show this help message" << std::endl;
 }
 
@@ -111,31 +91,68 @@ struct ManifestEntry {
 };
 
 int main(int argc, char* argv[]) {
-    fs::path repoRoot = getRepoRoot();
-    fs::path defaultDataFile = repoRoot / "device-detection-data" / "51Degrees-LiteV4.1.hash";
-    fs::path defaultOutputDir = repoRoot / "js-snippets";
-    
-    fs::path dataFilePath = defaultDataFile;
-    fs::path outputDir = defaultOutputDir;
-    
+    fs::path dataFilePath;
+    fs::path outputDir = "js-snippets";
+    bool dataFileProvided = false;
+    bool outputDirProvided = false;
+
+    // Reads the value that must follow an option flag. Rejects a missing value
+    // (flag at the end of argv) or one that is itself an option, so mistakes
+    // like "-d -o out" don't silently consume "-o" as the data file path.
+    auto takeValue = [&](int& i, const std::string& flag, std::string& out) -> bool {
+        if (i + 1 >= argc) {
+            std::cerr << "Error: missing value for " << flag << std::endl;
+            return false;
+        }
+        std::string next = argv[i + 1];
+        if (!next.empty() && next[0] == '-') {
+            std::cerr << "Error: " << flag << " expects a value but got option '"
+                      << next << "'" << std::endl;
+            return false;
+        }
+        out = next;
+        ++i;
+        return true;
+    };
+
     // Parse arguments
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
-        if (arg == "-d" && i + 1 < argc) {
-            dataFilePath = fs::path(argv[++i]);
-        } else if (arg == "-o" && i + 1 < argc) {
-            outputDir = fs::path(argv[++i]);
+        if (arg == "-d") {
+            std::string value;
+            if (!takeValue(i, arg, value)) { printUsage(argv[0]); return 1; }
+            if (dataFileProvided) {
+                std::cerr << "Error: -d specified more than once" << std::endl;
+                printUsage(argv[0]);
+                return 1;
+            }
+            dataFilePath = fs::path(value);
+            dataFileProvided = true;
+        } else if (arg == "-o") {
+            std::string value;
+            if (!takeValue(i, arg, value)) { printUsage(argv[0]); return 1; }
+            if (outputDirProvided) {
+                std::cerr << "Error: -o specified more than once" << std::endl;
+                printUsage(argv[0]);
+                return 1;
+            }
+            outputDir = fs::path(value);
+            outputDirProvided = true;
         } else if (arg == "-h" || arg == "--help") {
             printUsage(argv[0]);
-            std::cerr << "\nDefaults:" << std::endl;
-            std::cerr << "  Data file:  " << defaultDataFile << std::endl;
-            std::cerr << "  Output dir: " << defaultOutputDir << std::endl;
             return 0;
-        } else if (arg[0] == '-') {
+        } else {
             std::cerr << "Unknown option: " << arg << std::endl;
             printUsage(argv[0]);
             return 1;
         }
+    }
+
+    // The data file is required - there is no path discovery.
+    if (!dataFileProvided) {
+        std::cerr << "Error: -d <data_file> is required" << std::endl;
+        printUsage(argv[0]);
+        return 1;
     }
     
     std::cout << "JavaScript Snippet Export Tool" << std::endl;
