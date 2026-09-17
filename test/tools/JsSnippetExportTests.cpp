@@ -21,14 +21,22 @@
  * ********************************************************************* */
 
 #include "../Constants.hpp"
-#include "../src/common-cxx/tests/pch.h"
+#include "../../src/common-cxx/tests/pch.h"
+#include "../../src/common-cxx/tests/Base.hpp"
 #include "../../src/hash/EngineHash.hpp"
 #include <fstream>
 #include <filesystem>
+#include <memory>
 
 using namespace FiftyoneDegrees::Common;
 using namespace FiftyoneDegrees::DeviceDetection::Hash;
 using namespace std;
+
+// Collections and meta data instances returned by the API are heap allocated
+// and owned by the caller (see Collection.hpp), so they are wrapped in
+// unique_ptr with the default deleter to release them automatically.
+using PropertyCollection = Collection<string, PropertyMetaData>;
+using ValueCollection = Collection<ValueMetaDataKey, ValueMetaData>;
 
 namespace {
     // Helper function to sanitize filenames (mirrors tool implementation)
@@ -115,18 +123,16 @@ TEST_F(JsSnippetExportTests, DataFile_HasJavaScriptProperties) {
     RequiredPropertiesConfig properties;
     EngineHash engine(dataFilePath, &config, &properties);
 
-    Collection<string, PropertyMetaData>* allProperties = engine.getMetaData()->getProperties();
+    unique_ptr<PropertyCollection> allProperties(engine.getMetaData()->getProperties());
     ASSERT_NE(allProperties, nullptr);
 
     uint32_t jsPropertyCount = 0;
     for (uint32_t i = 0; i < allProperties->getSize(); i++) {
-        PropertyMetaData* prop = allProperties->getByIndex(i);
-        if (prop->getValueType() == FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_JAVASCRIPT) {
+        unique_ptr<PropertyMetaData> prop(allProperties->getByIndex(i));
+        if (prop->getType().compare("javascript") == 0) {
             jsPropertyCount++;
         }
-        delete prop;
     }
-    delete allProperties;
 
     ASSERT_GT(jsPropertyCount, (uint32_t)0) << "Data file should contain JavaScript properties";
 }
@@ -136,34 +142,30 @@ TEST_F(JsSnippetExportTests, DataFile_JavaScriptPropertiesHaveValues) {
     RequiredPropertiesConfig properties;
     EngineHash engine(dataFilePath, &config, &properties);
 
-    Collection<string, PropertyMetaData>* allProperties = engine.getMetaData()->getProperties();
+    unique_ptr<PropertyCollection> allProperties(engine.getMetaData()->getProperties());
     ASSERT_NE(allProperties, nullptr);
 
     for (uint32_t i = 0; i < allProperties->getSize(); i++) {
-        PropertyMetaData* prop = allProperties->getByIndex(i);
-        if (prop->getValueType() == FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_JAVASCRIPT) {
+        unique_ptr<PropertyMetaData> prop(allProperties->getByIndex(i));
+        if (prop->getType().compare("javascript") == 0) {
             string propName = prop->getName();
 
-            Collection<ValueMetaDataKey, ValueMetaData>* values =
-                engine.getMetaData()->getValuesForProperty(prop);
+            unique_ptr<ValueCollection> values(
+                engine.getMetaData()->getValuesForProperty(prop.get()));
             ASSERT_NE(values, nullptr) << "Values collection should not be null for " << propName;
 
             bool hasNonEmptyValue = false;
             for (uint32_t j = 0; j < values->getSize(); j++) {
-                ValueMetaData* value = values->getByIndex(j);
+                unique_ptr<ValueMetaData> value(values->getByIndex(j));
                 string snippet = value->getName();
                 if (!snippet.empty()) {
                     hasNonEmptyValue = true;
                 }
-                delete value;
             }
-            delete values;
 
             ASSERT_TRUE(hasNonEmptyValue) << "JavaScript property " << propName << " should have non-empty snippet values";
         }
-        delete prop;
     }
-    delete allProperties;
 }
 
 TEST_F(JsSnippetExportTests, DataFile_JavaScriptSnippetsContainExpectedPatterns) {
@@ -171,17 +173,17 @@ TEST_F(JsSnippetExportTests, DataFile_JavaScriptSnippetsContainExpectedPatterns)
     RequiredPropertiesConfig properties;
     EngineHash engine(dataFilePath, &config, &properties);
 
-    Collection<string, PropertyMetaData>* allProperties = engine.getMetaData()->getProperties();
+    unique_ptr<PropertyCollection> allProperties(engine.getMetaData()->getProperties());
 
     for (uint32_t i = 0; i < allProperties->getSize(); i++) {
-        PropertyMetaData* prop = allProperties->getByIndex(i);
-        if (prop->getValueType() == FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_JAVASCRIPT) {
-            Collection<ValueMetaDataKey, ValueMetaData>* values =
-                engine.getMetaData()->getValuesForProperty(prop);
+        unique_ptr<PropertyMetaData> prop(allProperties->getByIndex(i));
+        if (prop->getType().compare("javascript") == 0) {
+            unique_ptr<ValueCollection> values(
+                engine.getMetaData()->getValuesForProperty(prop.get()));
 
             if (values != nullptr) {
                 for (uint32_t j = 0; j < values->getSize(); j++) {
-                    ValueMetaData* value = values->getByIndex(j);
+                    unique_ptr<ValueMetaData> value(values->getByIndex(j));
                     string snippet = value->getName();
 
                     if (!snippet.empty()) {
@@ -191,11 +193,11 @@ TEST_F(JsSnippetExportTests, DataFile_JavaScriptSnippetsContainExpectedPatterns)
                         EXPECT_TRUE(snippet.find("=") != string::npos || snippet.find("function") != string::npos)
                             << "Snippet for " << prop->getName() << " should contain assignment or function";
                     }
-                    delete value;
                 }
-                delete values;
             }
         }
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Export integration tests
@@ -209,20 +211,20 @@ TEST_F(JsSnippetExportTests, Export_CreatesOutputFiles) {
     RequiredPropertiesConfig properties;
     EngineHash engine(dataFilePath, &config, &properties);
 
-    Collection<string, PropertyMetaData>* allProperties = engine.getMetaData()->getProperties();
+    unique_ptr<PropertyCollection> allProperties(engine.getMetaData()->getProperties());
     uint32_t fileCount = 0;
 
     for (uint32_t i = 0; i < allProperties->getSize(); i++) {
-        PropertyMetaData* prop = allProperties->getByIndex(i);
-        if (prop->getValueType() == FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_JAVASCRIPT) {
+        unique_ptr<PropertyMetaData> prop(allProperties->getByIndex(i));
+        if (prop->getType().compare("javascript") == 0) {
             string safeName = sanitizeFilename(prop->getName());
 
-            Collection<ValueMetaDataKey, ValueMetaData>* values =
-                engine.getMetaData()->getValuesForProperty(prop);
+            unique_ptr<ValueCollection> values(
+                engine.getMetaData()->getValuesForProperty(prop.get()));
 
             if (values != nullptr) {
                 for (uint32_t j = 0; j < values->getSize(); j++) {
-                    ValueMetaData* value = values->getByIndex(j);
+                    unique_ptr<ValueMetaData> value(values->getByIndex(j));
                     string snippet = value->getName();
 
                     if (!snippet.empty()) {
@@ -242,14 +244,10 @@ TEST_F(JsSnippetExportTests, Export_CreatesOutputFiles) {
 
                         fileCount++;
                     }
-                    delete value;
                 }
-                delete values;
             }
         }
-        delete prop;
     }
-    delete allProperties;
 
     ASSERT_GT(fileCount, (uint32_t)0) << "Should have created at least one snippet file";
 }
@@ -261,7 +259,7 @@ TEST_F(JsSnippetExportTests, Export_ManifestIsValid) {
     RequiredPropertiesConfig properties;
     EngineHash engine(dataFilePath, &config, &properties);
 
-    Collection<string, PropertyMetaData>* allProperties = engine.getMetaData()->getProperties();
+    unique_ptr<PropertyCollection> allProperties(engine.getMetaData()->getProperties());
 
     ostringstream manifestJson;
     manifestJson << "{\n";
@@ -271,17 +269,17 @@ TEST_F(JsSnippetExportTests, Export_ManifestIsValid) {
     uint32_t jsCount = 0;
 
     for (uint32_t i = 0; i < allProperties->getSize(); i++) {
-        PropertyMetaData* prop = allProperties->getByIndex(i);
-        if (prop->getValueType() == FIFTYONE_DEGREES_PROPERTY_VALUE_TYPE_JAVASCRIPT) {
+        unique_ptr<PropertyMetaData> prop(allProperties->getByIndex(i));
+        if (prop->getType().compare("javascript") == 0) {
             string propName = prop->getName();
             string safeName = sanitizeFilename(propName);
 
-            Collection<ValueMetaDataKey, ValueMetaData>* values =
-                engine.getMetaData()->getValuesForProperty(prop);
+            unique_ptr<ValueCollection> values(
+                engine.getMetaData()->getValuesForProperty(prop.get()));
 
             if (values != nullptr) {
                 for (uint32_t j = 0; j < values->getSize(); j++) {
-                    ValueMetaData* value = values->getByIndex(j);
+                    unique_ptr<ValueMetaData> value(values->getByIndex(j));
                     string snippet = value->getName();
 
                     if (!snippet.empty()) {
@@ -292,14 +290,10 @@ TEST_F(JsSnippetExportTests, Export_ManifestIsValid) {
                         first = false;
                         jsCount++;
                     }
-                    delete value;
                 }
-                delete values;
             }
         }
-        delete prop;
     }
-    delete allProperties;
 
     manifestJson << "\n  ]\n";
     manifestJson << "}\n";
