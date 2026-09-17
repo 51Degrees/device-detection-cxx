@@ -74,6 +74,13 @@ protected:
     string dataFilePath;
 };
 
+// Integration-level tests share the same setup but are routed to the
+// integration CI step (and excluded from the unit step) via the
+// "Integration" fixture name. See ci/run-unit-tests.ps1 and
+// ci/run-integration-tests.ps1.
+class JsSnippetExportIntegrationTests : public JsSnippetExportTests {
+};
+
 // ---------------------------------------------------------------------------
 // Filename sanitization tests
 // ---------------------------------------------------------------------------
@@ -203,7 +210,7 @@ TEST_F(JsSnippetExportTests, DataFile_JavaScriptSnippetsContainExpectedPatterns)
 // Export integration tests
 // ---------------------------------------------------------------------------
 
-TEST_F(JsSnippetExportTests, Export_CreatesOutputFiles) {
+TEST_F(JsSnippetExportIntegrationTests, Export_CreatesOutputFiles) {
     // Create temporary directory for output
     string tempDir = testing::TempDir();
 
@@ -252,7 +259,7 @@ TEST_F(JsSnippetExportTests, Export_CreatesOutputFiles) {
     ASSERT_GT(fileCount, (uint32_t)0) << "Should have created at least one snippet file";
 }
 
-TEST_F(JsSnippetExportTests, Export_ManifestIsValid) {
+TEST_F(JsSnippetExportIntegrationTests, Export_ManifestIsValid) {
     string tempDir = testing::TempDir();
 
     ConfigHash config;

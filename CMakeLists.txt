@@ -204,7 +204,6 @@ if(BUILD_TESTING)
 
 	add_library(fiftyone-device-detection-test-base
 		${DD_TEST_SRC} ${DD_TEST_H}
-		${TOOLS_TEST_SRC}
 		${COMMON_TEST}/Base.cpp
 		${COMMON_TEST}/EngineTests.cpp
 		${COMMON_TEST}/ExampleTests.cpp)
@@ -217,6 +216,7 @@ if(BUILD_TESTING)
 
 	add_executable(HashTests 
 		${HASH_TEST_SRC} ${HASH_TEST_H}
+		${TOOLS_TEST_SRC}
 		${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.cpp
 		${CMAKE_CURRENT_LIST_DIR}/examples/CPP/Hash/ExampleBase.hpp)
 
