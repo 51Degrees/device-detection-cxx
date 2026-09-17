@@ -185,20 +185,26 @@ foreach (api "Hash")
 	endforeach()
 endforeach()
 
+# Tools
+add_subdirectory(tools/js-snippet-export)
+
 # Tests
 
 if(BUILD_TESTING)
 	set(COMMON_TEST ${CMAKE_CURRENT_LIST_DIR}/src/common-cxx/tests)
 	set(HASH_TEST ${CMAKE_CURRENT_LIST_DIR}/test/hash)
 	set(DD_TEST	${CMAKE_CURRENT_LIST_DIR}/test)
+	set(TOOLS_TEST ${CMAKE_CURRENT_LIST_DIR}/test/tools)
 
 	FILE(GLOB DD_TEST_SRC ${DD_TEST}/*.cpp)
 	FILE(GLOB DD_TEST_H ${DD_TEST}/*.hpp)
 	FILE(GLOB HASH_TEST_SRC ${HASH_TEST}/*.cpp)
 	FILE(GLOB HASH_TEST_H ${HASH_TEST}/*.hpp)
+	FILE(GLOB TOOLS_TEST_SRC ${TOOLS_TEST}/*.cpp)
 
 	add_library(fiftyone-device-detection-test-base
 		${DD_TEST_SRC} ${DD_TEST_H}
+		${TOOLS_TEST_SRC}
 		${COMMON_TEST}/Base.cpp
 		${COMMON_TEST}/EngineTests.cpp
 		${COMMON_TEST}/ExampleTests.cpp)
