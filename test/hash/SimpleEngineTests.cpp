@@ -454,3 +454,163 @@ TEST_F(BrowserCallbackTests, desktopFirefoxCallbackThroughProcessBase) {
         unique_ptr<ResultsBase>(getEngine()->processBase(&evidence));
     check(desktopFirefox, results.get());
 }
+
+/*
+ * The results a page measures reach the engine as the high entropy values or
+ * the structured User-Agent, sent either in the query string or in a cookie.
+ * The User-Agent itself arrives as a header when the browser calls directly,
+ * and in the query string when a server passes on the end user's request.
+ * Query evidence is used in preference to header evidence, so the values the
+ * page measured must be read alongside the User-Agent wherever it arrived.
+ * Before this was fixed the values were always added as headers, so a
+ * request carrying the User-Agent in the query string ignored them and gave
+ * a different result for the same device.
+ *
+ * Each test first checks the User-Agent alone gives a platform version other
+ * than the one the page measured, so that a pass can only come from the
+ * measured values being used.
+ */
+class SpecialEvidencePrefixTests : public SimpleEngineTestBase {
+public:
+    virtual void SetUp() {
+        Base::SetUp();
+        config = new ConfigHash();
+        requiredProperties = new RequiredPropertiesConfig(&properties);
+        createEngine(config, requiredProperties);
+    }
+
+    virtual void TearDown() {
+        deallocEngine();
+        delete requiredProperties;
+        delete config;
+        Base::TearDown();
+    }
+
+    string getPlatformVersion(EvidenceDeviceDetection &evidence) {
+        auto results = unique_ptr<ResultsHash>(
+            getEngine()->process(&evidence));
+        Value<string> value = results->getValueAsString("PlatformVersion");
+        return value.hasValue() ? value.getValue() : string("");
+    }
+
+    // Checks the value named, sent with the prefix given, sets the platform
+    // version when the User-Agent is sent with its own prefix.
+    void check(
+        const string &userAgentPrefix,
+        const string &valuePrefix,
+        const string &key,
+        const string &value) {
+        EvidenceDeviceDetection evidence;
+        evidence[userAgentPrefix + ".user-agent"] = userAgent;
+        string alone = getPlatformVersion(evidence);
+        ASSERT_NE(measuredVersion, alone) << "The User-Agent alone must "
+            "give a different platform version for this test to show "
+            "anything.";
+
+        evidence[valuePrefix + "." + key] = value;
+        EXPECT_EQ(measuredVersion, getPlatformVersion(evidence)) <<
+            "User-Agent as " << userAgentPrefix << ", " << key << " as " <<
+            valuePrefix << ", the platform version should be the one the "
+            "page measured.";
+    }
+
+    void checkHighEntropyValues(
+        const string &userAgentPrefix,
+        const string &valuePrefix) {
+        check(
+            userAgentPrefix,
+            valuePrefix,
+            "51D_gethighentropyvalues",
+            windowsHighEntropyValues);
+    }
+
+    void checkStructuredUserAgent(
+        const string &userAgentPrefix,
+        const string &valuePrefix) {
+        check(
+            userAgentPrefix,
+            valuePrefix,
+            "51D_structureduseragent",
+            structuredUserAgent);
+    }
+
+    ConfigHash *config = nullptr;
+    RequiredPropertiesConfig *requiredProperties = nullptr;
+    vector<string> properties { "PlatformName", "PlatformVersion" };
+
+    // A Windows desktop running Chrome. The User-Agent always names Windows
+    // NT 10.0, whilst the page measures Windows 11 as platform version 15.0.0
+    // in the high entropy values and 14.0.0 in the structured User-Agent.
+    const string userAgent =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
+    const string structuredUserAgent =
+        "{\"browsers\":[{\"brand\":\"Chromium\",\"version\":[\"140\",\"0\","
+        "\"0\",\"0\"]},{\"brand\":\"Google Chrome\",\"version\":[\"140\","
+        "\"0\",\"0\",\"0\"]}],\"platform\":{\"brand\":\"Windows\","
+        "\"version\":[\"14\",\"0\",\"0\"]},\"mobile\":0,"
+        "\"architecture\":\"x86\",\"source\":2}";
+    const string measuredVersion = "11.0";
+};
+
+TEST_F(SpecialEvidencePrefixTests, queryUserAgentQueryHighEntropyValues) {
+    checkHighEntropyValues("query", "query");
+}
+
+TEST_F(SpecialEvidencePrefixTests, queryUserAgentCookieHighEntropyValues) {
+    checkHighEntropyValues("query", "cookie");
+}
+
+TEST_F(SpecialEvidencePrefixTests, headerUserAgentQueryHighEntropyValues) {
+    checkHighEntropyValues("header", "query");
+}
+
+TEST_F(SpecialEvidencePrefixTests, headerUserAgentCookieHighEntropyValues) {
+    checkHighEntropyValues("header", "cookie");
+}
+
+TEST_F(SpecialEvidencePrefixTests, queryUserAgentQueryStructuredUserAgent) {
+    checkStructuredUserAgent("query", "query");
+}
+
+TEST_F(SpecialEvidencePrefixTests, queryUserAgentCookieStructuredUserAgent) {
+    checkStructuredUserAgent("query", "cookie");
+}
+
+TEST_F(SpecialEvidencePrefixTests, headerUserAgentQueryStructuredUserAgent) {
+    checkStructuredUserAgent("header", "query");
+}
+
+TEST_F(SpecialEvidencePrefixTests, headerUserAgentCookieStructuredUserAgent) {
+    checkStructuredUserAgent("header", "cookie");
+}
+
+/*
+ * A header the page's values set can already be present with another prefix,
+ * for example when a browser sent its own client hints to the server that is
+ * now passing the User-Agent on in the query string. The measured value must
+ * still reach the query evidence, where the User-Agent is, rather than only
+ * replacing the header that is not used.
+ */
+TEST_F(SpecialEvidencePrefixTests, queryUserAgentWithExistingHeaderHints) {
+    EvidenceDeviceDetection evidence;
+    evidence["query.user-agent"] = userAgent;
+    evidence["header.sec-ch-ua-platform"] = "\"Windows\"";
+    evidence["header.sec-ch-ua-platform-version"] = "\"10.0.0\"";
+    evidence["cookie.51D_gethighentropyvalues"] = windowsHighEntropyValues;
+    EXPECT_EQ(measuredVersion, getPlatformVersion(evidence));
+}
+
+/*
+ * The browser case, where the client hints the browser sent are headers and
+ * the page's values arrive in a cookie. The measured values replace the
+ * headers as they always have.
+ */
+TEST_F(SpecialEvidencePrefixTests, headerUserAgentWithExistingHeaderHints) {
+    EvidenceDeviceDetection evidence;
+    evidence["header.user-agent"] = userAgent;
+    evidence["header.sec-ch-ua-platform"] = "\"Windows\"";
+    evidence["header.sec-ch-ua-platform-version"] = "\"10.0.0\"";
+    evidence["cookie.51D_gethighentropyvalues"] = windowsHighEntropyValues;
+    EXPECT_EQ(measuredVersion, getPlatformVersion(evidence));
+}

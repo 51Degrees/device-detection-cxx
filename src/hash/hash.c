@@ -201,6 +201,9 @@ typedef struct detection_component_state_t {
 	HeaderID headerUniqueId; /* Unique id in the data set for the header */
 	int headerIndex; /* Current header index. See macro HTTP_HEADER */
 	Exception* exception; /* Pointer to the exception structure */
+	EvidencePrefix specialPrefix; /* Prefix given to the headers that special
+								  evidence such as GHEV or SUA is turned into.
+								  See setSpecialHeaderPrefix */
 } detectionComponentState;
 
 /**
@@ -210,6 +213,14 @@ typedef struct set_special_headers_find_state_t {
 	KeyValuePair* header;
 	EvidenceKeyValuePair* pair;
 } setSpecialHeadersFindState;
+
+/**
+ * Used to find whether any evidence pair is a header from the data set.
+ */
+typedef struct find_data_set_header_state_t {
+	Headers* headers;
+	bool found;
+} findDataSetHeaderState;
 
 /**
  * PRESET HASH CONFIGURATIONS
@@ -2530,17 +2541,19 @@ static bool setSpecialHeadersFindCallback(
 	return true;
 }
 
-// Adds the header to the evidence. If the header already exists then the 
-// current value is replaced.
+// Adds the header to the evidence with the prefix in the state. If the header
+// already exists with that prefix then the current value is replaced. A pair
+// for the same header with any other prefix is left alone, because it belongs
+// to evidence that is not the evidence detection will use.
 static bool setSpecialHeadersCallback(void *state, KeyValuePair header) {
 	int uniqueHeaderIndex;
 	detectionComponentState* componentState = (detectionComponentState*)state;
 
-	// Get the existing pair for the header with any prefix.
+	// Get the existing pair for the header with the same prefix.
 	setSpecialHeadersFindState findState = { &header, NULL };
 	EvidenceIterate(
 		componentState->evidence,
-		INT_MAX,
+		componentState->specialPrefix,
 		&findState,
 		setSpecialHeadersFindCallback);
 
@@ -2548,7 +2561,7 @@ static bool setSpecialHeadersCallback(void *state, KeyValuePair header) {
 		// No pair was found so add a new string.
 		findState.pair = EvidenceAddPair(
 			componentState->evidence,
-			FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+			componentState->specialPrefix,
 			header);
 	}
 
@@ -2575,6 +2588,48 @@ static bool setSpecialHeadersCallback(void *state, KeyValuePair header) {
 	return true;
 }
 
+// If the pair is a header from the data set then records that one was found
+// and stops, otherwise continues iterating.
+static bool findDataSetHeaderCallback(
+	void* state,
+	EvidenceKeyValuePair* pair) {
+	findDataSetHeaderState* s = (findDataSetHeaderState*)state;
+	int index = HeaderGetIndex(
+		s->headers,
+		pair->item.key,
+		pair->item.keyLength);
+	if (index >= 0 && s->headers->items[index].isDataSet) {
+		s->found = true;
+		return false;
+	}
+	return true;
+}
+
+// Sets the prefix given to the headers that special evidence is turned into,
+// so that they are read alongside the other headers detection will use.
+// resultsHashFromEvidence_handleComponentEvidence uses the first prefix in
+// prefixOrderOfPrecedence that yields evidence, and query comes before
+// header. So if the query evidence holds any header from the data set, such
+// as a User-Agent a server has passed on, the special headers are added as
+// query evidence. Otherwise they are added as header evidence, as they
+// always were, which keeps the case of a browser calling directly unchanged.
+// This applies whether the special evidence came from the query or from a
+// cookie. Cookie is not in prefixOrderOfPrecedence, so special headers
+// given the cookie prefix would never be used.
+static void setSpecialHeaderPrefix(detectionComponentState* state) {
+	findDataSetHeaderState findState = {
+		state->dataSet->b.b.uniqueHeaders,
+		false };
+	EvidenceIterate(
+		state->evidence,
+		FIFTYONE_DEGREES_EVIDENCE_QUERY,
+		&findState,
+		findDataSetHeaderCallback);
+	state->specialPrefix = findState.found ?
+		FIFTYONE_DEGREES_EVIDENCE_QUERY :
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING;
+}
+
 // True if the header is GHEV, the transform results in at least one additional 
 // header, and there is no exception. Otherwise false.
 static bool setGetHighEntropyValuesHeader(
@@ -2584,6 +2639,7 @@ static bool setGetHighEntropyValuesHeader(
     if (IS_HASH_HEADER_MATCH(
         FIFTYONE_DEGREES_EVIDENCE_HIGH_ENTROPY_VALUES,
         pair)) {
+        setSpecialHeaderPrefix(state);
         TransformIterateResult result = TransformIterateGhevFromBase64(
             pair->parsedValue,
             state->results->b.bufferTransform,
@@ -2606,6 +2662,7 @@ static bool setStructuredUserAgentHeader(
                         FIFTYONE_DEGREES_EVIDENCE_STRUCTURED_USER_AGENT,
                         pair)) 
     {
+        setSpecialHeaderPrefix(state);
         TransformIterateResult result = TransformIterateSua
         (pair->parsedValue,
          state->results->b.bufferTransform,
@@ -3001,7 +3058,8 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		0,
 		0,
 		0,
-		exception };
+		exception,
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING };
 
 	// Reset the results data before iterating the evidence.
 	resultsHashReset(results);
