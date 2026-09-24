@@ -164,6 +164,47 @@ namespace FiftyoneDegrees {
 				ResultsHash* process(const char *userAgent) const;
 
 				/**
+				 * Processes the evidence as process(EvidenceDeviceDetection*)
+				 * but walks only the graphs needed by the required properties
+				 * whose indexes are supplied. NULL or a negative count walks
+				 * every graph. A count of zero walks none. A property whose
+				 * graph was not walked has no value with the NULL_PROFILE
+				 * reason. The native mask is 32 bits, so components beyond
+				 * index 31 are always walked.
+				 * @param evidence to process
+				 * @param requiredPropertyIndexes the caller will read
+				 * @param requiredPropertyIndexesCount entries in the array
+				 * @return new results instance, owned by the caller
+				 */
+				ResultsHash* process(
+					EvidenceDeviceDetection *evidence,
+					const int *requiredPropertyIndexes,
+					int requiredPropertyIndexesCount) const;
+
+				/**
+				 * Processes the User-Agent as process(const char*) but walks
+				 * only the graphs needed by the required properties whose
+				 * indexes are supplied. See the evidence overload for the
+				 * rules.
+				 * @param userAgent to process
+				 * @param requiredPropertyIndexes the caller will read
+				 * @param requiredPropertyIndexesCount entries in the array
+				 * @return new results instance, owned by the caller
+				 */
+				ResultsHash* process(
+					const char *userAgent,
+					const int *requiredPropertyIndexes,
+					int requiredPropertyIndexesCount) const;
+
+				/**
+				 * The names of the required properties in required property
+				 * index order, so position i in the vector is the index to
+				 * pass for that property. Fixed when the engine is built.
+				 * @return the required property names
+				 */
+				vector<string> getRequiredProperties() const;
+
+				/**
 				 * @}
 				 * @name Common::EngineBase Implementation
 				 * @{

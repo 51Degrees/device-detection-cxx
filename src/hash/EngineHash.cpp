@@ -271,6 +271,71 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	return new ResultsHash(results, manager);
 }
 
+DeviceDetection::Hash::ResultsHash* EngineHash::process(
+	DeviceDetection::EvidenceDeviceDetection *evidence,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount) const {
+	EXCEPTION_CREATE;
+
+	// Number of items on the evidence array.
+	uint32_t evidenceSize = evidence == nullptr ?
+		0 :
+		(uint32_t)evidence->size();
+
+	// Get the number of components.
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(manager.get());
+	uint32_t componentsSize = dataSet->componentsList.count;
+	DataSetRelease((DataSetBase*)dataSet);
+
+	// Create the results with capacity for the larger of the components and
+	// the evidence array, then walk only the graphs the indexes need.
+	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
+		manager.get(),
+		componentsSize > evidenceSize ? componentsSize : evidenceSize);
+	ResultsHashFromEvidenceForProperties(
+		results,
+		evidence == nullptr ? nullptr : evidence->get(),
+		requiredPropertyIndexes,
+		requiredPropertyIndexesCount,
+		exception);
+	EXCEPTION_THROW;
+
+	return new ResultsHash(results, manager);
+}
+
+DeviceDetection::Hash::ResultsHash* EngineHash::process(
+	const char *userAgent,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount) const {
+	EXCEPTION_CREATE;
+	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
+		manager.get(),
+		0);
+	ResultsHashFromUserAgentForProperties(
+		results,
+		userAgent,
+		userAgent == nullptr ? 0 : strlen(userAgent),
+		requiredPropertyIndexes,
+		requiredPropertyIndexesCount,
+		exception);
+	EXCEPTION_THROW;
+	return new ResultsHash(results, manager);
+}
+
+vector<string> EngineHash::getRequiredProperties() const {
+	vector<string> names;
+	DataSetHash* dataSet = (DataSetHash*)DataSetGet(manager.get());
+	PropertiesAvailable* available = dataSet->b.b.available;
+	for (uint32_t i = 0; i < available->count; i++) {
+		const char *name = STRING(PropertiesGetNameFromRequiredIndex(
+			available,
+			(int)i));
+		names.push_back(name == nullptr ? string() : string(name));
+	}
+	DataSetRelease((DataSetBase*)dataSet);
+	return names;
+}
+
 Common::ResultsBase* EngineHash::processBase(
 	Common::EvidenceBase *evidence) const {
 	EXCEPTION_CREATE;

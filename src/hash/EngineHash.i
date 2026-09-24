@@ -48,6 +48,15 @@ public:
 	void refreshData(unsigned char data[], long length);
 	ResultsHash* process(EvidenceDeviceDetection *evidence);
 	ResultsHash* process(const char *userAgent);
+	ResultsHash* process(
+		EvidenceDeviceDetection *evidence,
+		const int *requiredPropertyIndexes,
+		int requiredPropertyIndexesCount);
+	ResultsHash* process(
+		const char *userAgent,
+		const int *requiredPropertyIndexes,
+		int requiredPropertyIndexesCount);
+	std::vector<std::string> getRequiredProperties();
 	ResultsBase* processBase(EvidenceBase *evidence);
 	ResultsDeviceDetection* processDeviceDetection(
 		EvidenceDeviceDetection *evidence);
