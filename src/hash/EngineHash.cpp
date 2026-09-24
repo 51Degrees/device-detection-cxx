@@ -322,20 +322,6 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	return new ResultsHash(results, manager);
 }
 
-vector<string> EngineHash::getRequiredProperties() const {
-	vector<string> names;
-	DataSetHash* dataSet = (DataSetHash*)DataSetGet(manager.get());
-	PropertiesAvailable* available = dataSet->b.b.available;
-	for (uint32_t i = 0; i < available->count; i++) {
-		const char *name = STRING(PropertiesGetNameFromRequiredIndex(
-			available,
-			(int)i));
-		names.push_back(name == nullptr ? string() : string(name));
-	}
-	DataSetRelease((DataSetBase*)dataSet);
-	return names;
-}
-
 Common::ResultsBase* EngineHash::processBase(
 	Common::EvidenceBase *evidence) const {
 	EXCEPTION_CREATE;

@@ -197,14 +197,6 @@ namespace FiftyoneDegrees {
 					int requiredPropertyIndexesCount) const;
 
 				/**
-				 * The names of the required properties in required property
-				 * index order, so position i in the vector is the index to
-				 * pass for that property. Fixed when the engine is built.
-				 * @return the required property names
-				 */
-				vector<string> getRequiredProperties() const;
-
-				/**
 				 * @}
 				 * @name Common::EngineBase Implementation
 				 * @{

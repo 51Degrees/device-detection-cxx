@@ -56,7 +56,6 @@ public:
 		const char *userAgent,
 		const int *requiredPropertyIndexes,
 		int requiredPropertyIndexesCount);
-	std::vector<std::string> getRequiredProperties();
 	ResultsBase* processBase(EvidenceBase *evidence);
 	ResultsDeviceDetection* processDeviceDetection(
 		EvidenceDeviceDetection *evidence);

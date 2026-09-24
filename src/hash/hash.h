@@ -251,14 +251,6 @@ typedef struct fiftyone_degrees_dataset_hash_t {
 							   the matching index in componentsList */
 	uint32_t componentsAvailableCount; /**< Number of components with 
 									   properties */
-	byte *requiredPropertyComponents; /**< One entry per required property,
-									  indexed by required property index,
-									  holding the index in componentsList of
-									  the component the property belongs to.
-									  Filled at initialisation so a list of
-									  required property indexes can be turned
-									  into the graphs to evaluate without
-									  reading any property. */
 	fiftyoneDegreesCollection *maps; /**< Collection data file maps */
 	fiftyoneDegreesCollection *properties; /**< Collection of all properties */
 	fiftyoneDegreesCollection *values; /**< Collection of all values */

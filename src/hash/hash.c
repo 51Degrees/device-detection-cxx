@@ -39,22 +39,6 @@ MAP_TYPE(Collection)
 /** Offset used for a null profile. */
 #define NULL_PROFILE_OFFSET UINT32_MAX
 
-/** Graphs mask with every graph enabled. */
-#define GRAPHS_ALL UINT32_MAX
-
-/** Number of graphs the mask can address. */
-#define GRAPHS_MASK_BITS 32
-
-/**
- * True if the graph for component index i should be walked under the mask.
- * Components at index 32 and above are beyond the mask and are always walked,
- * so a data file with more than 32 components gives the unfiltered result for
- * those components rather than undefined behaviour from shifting past the
- * width of the mask.
- */
-#define GRAPH_ENABLED(mask, i) \
-	((uint32_t)(i) >= GRAPHS_MASK_BITS || ((mask) & (1u << (i))) != 0)
-
 #ifndef MAX
 #ifdef max
 #define MAX(a,b) max(a,b)
@@ -221,7 +205,7 @@ typedef struct detection_component_state_t {
 								  evidence such as GHEV or SUA is turned into.
 								  See setSpecialHeaderPrefix */
 	uint32_t graphs; /* Bit i set means the graph for component i is walked.
-					 See GRAPH_ENABLED */
+					 See COMPONENT_MASK_ENABLED */
 } detectionComponentState;
 
 /**
@@ -1136,7 +1120,6 @@ static void resetDataSet(DataSetHash *dataSet) {
 	DataSetDeviceDetectionReset(&dataSet->b);
 	ListReset(&dataSet->componentsList);
 	dataSet->componentsAvailable = NULL;
-	dataSet->requiredPropertyComponents = NULL;
 	dataSet->componentHeaders = NULL;
 	dataSet->components = NULL;
 	dataSet->maps = NULL;
@@ -1168,10 +1151,6 @@ static void freeDataSet(void *dataSetPtr) {
 	if (dataSet->componentsAvailable != NULL) {
 		Free(dataSet->componentsAvailable);
 		dataSet->componentsAvailable = NULL;
-	}
-	if (dataSet->requiredPropertyComponents != NULL) {
-		Free(dataSet->requiredPropertyComponents);
-		dataSet->requiredPropertyComponents = NULL;
 	}
 	FIFTYONE_DEGREES_COLLECTION_FREE(dataSet->strings);
 	FIFTYONE_DEGREES_COLLECTION_FREE(dataSet->components);
@@ -1308,19 +1287,6 @@ static StatusCode initComponentsAvailable(
 	Item item;
 	DataReset(&item.data);
 
-	// One component index per required property, so a detection can turn
-	// required property indexes into graphs without reading a property.
-	if (dataSet->requiredPropertyComponents != NULL) {
-		Free(dataSet->requiredPropertyComponents);
-	}
-	dataSet->requiredPropertyComponents = (byte*)Malloc(
-		sizeof(byte) * (dataSet->b.b.available->count > 0 ?
-			dataSet->b.b.available->count : 1));
-	if (dataSet->requiredPropertyComponents == NULL) {
-		EXCEPTION_SET(INSUFFICIENT_MEMORY);
-		return INSUFFICIENT_MEMORY;
-	}
-
 	// Set the componentsAvailable flag to avoid performing device detection
 	// for components that have no required properties.
 	for (i = 0; i < dataSet->b.b.available->count; i++) {
@@ -1333,7 +1299,10 @@ static StatusCode initComponentsAvailable(
 			return COLLECTION_FAILURE;
 		}
 		dataSet->componentsAvailable[property->componentIndex] = true;
-		dataSet->requiredPropertyComponents[i] = property->componentIndex;
+		// Record the component so required property indexes can be turned
+		// into a component mask without reading the property again.
+		dataSet->b.b.available->items[i].componentIndex =
+			property->componentIndex;
 		COLLECTION_RELEASE(dataSet->properties, &item);
 	}
 
@@ -2542,7 +2511,7 @@ static bool setResultFromEvidenceForComponentCallback(
 			// produce and outcome that concludes the iterations.
 			s->lastResult = result;
 
-			if (GRAPH_ENABLED(s->graphs, s->componentIndex)) {
+			if (COMPONENT_MASK_ENABLED(s->graphs, s->componentIndex)) {
 
 				// Perform the device detection and set the result.
 				complete = setResultForComponentHeader(
@@ -2910,7 +2879,7 @@ static void resultsHashFromEvidence_SetMissingComponentDefaultProfiles(
 			i++) {
 
 			// A component whose graph was not walked gets no default.
-			if (GRAPH_ENABLED(graphs, i) == false) {
+			if (COMPONENT_MASK_ENABLED(graphs, i) == false) {
 				continue;
 			}
 
@@ -3090,32 +3059,6 @@ static void resultsHashReset(ResultsHash* results) {
 	results->count = 0;
 }
 
-// Turns required property indexes into the graphs mask. NULL or a negative
-// count means every graph. Indexes outside the required properties are
-// ignored. Components beyond the mask width cannot be addressed and are
-// always walked by GRAPH_ENABLED.
-static uint32_t graphsFromRequiredProperties(
-	DataSetHash *dataSet,
-	const int *requiredPropertyIndexes,
-	int requiredPropertyIndexesCount) {
-	uint32_t graphs = 0;
-	int i;
-	int requiredCount = (int)dataSet->b.b.available->count;
-	if (requiredPropertyIndexes == NULL || requiredPropertyIndexesCount < 0) {
-		return GRAPHS_ALL;
-	}
-	for (i = 0; i < requiredPropertyIndexesCount; i++) {
-		int index = requiredPropertyIndexes[i];
-		if (index >= 0 && index < requiredCount) {
-			byte componentIndex = dataSet->requiredPropertyComponents[index];
-			if (componentIndex < GRAPHS_MASK_BITS) {
-				graphs |= 1u << componentIndex;
-			}
-		}
-	}
-	return graphs;
-}
-
 void fiftyoneDegreesResultsHashFromEvidenceForProperties(
 	fiftyoneDegreesResultsHash *results,
 	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
@@ -3141,8 +3084,8 @@ void fiftyoneDegreesResultsHashFromEvidenceForProperties(
 		0,
 		exception,
 		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
-		graphsFromRequiredProperties(
-			dataSet,
+		PropertiesGetComponentMask(
+			dataSet->b.b.available,
 			requiredPropertyIndexes,
 			requiredPropertyIndexesCount) };
 
