@@ -170,7 +170,10 @@ namespace FiftyoneDegrees {
 				 * every graph. A count of zero walks none. A property whose
 				 * graph was not walked has no value with the NULL_PROFILE
 				 * reason. The native mask is 32 bits, so components beyond
-				 * index 31 are always walked.
+				 * index 31 are always walked. Indexes are positions in
+				 * getRequiredProperties(), which move when a refresh loads a
+				 * data file that gains or loses a required property, so look
+				 * them up again after a refresh.
 				 * @param evidence to process
 				 * @param requiredPropertyIndexes the caller will read
 				 * @param requiredPropertyIndexesCount entries in the array
