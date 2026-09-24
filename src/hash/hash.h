@@ -251,6 +251,14 @@ typedef struct fiftyone_degrees_dataset_hash_t {
 							   the matching index in componentsList */
 	uint32_t componentsAvailableCount; /**< Number of components with 
 									   properties */
+	byte *requiredPropertyComponents; /**< One entry per required property,
+									  indexed by required property index,
+									  holding the index in componentsList of
+									  the component the property belongs to.
+									  Filled at initialisation so a list of
+									  required property indexes can be turned
+									  into the graphs to evaluate without
+									  reading any property. */
 	fiftyoneDegreesCollection *maps; /**< Collection data file maps */
 	fiftyoneDegreesCollection *properties; /**< Collection of all properties */
 	fiftyoneDegreesCollection *values; /**< Collection of all values */
@@ -545,6 +553,57 @@ EXTERNAL void fiftyoneDegreesResultsHashFromUserAgent(
 	fiftyoneDegreesResultsHash *results,
 	const char* userAgent,
 	size_t userAgentLength,
+	fiftyoneDegreesException *exception);
+
+/**
+ * Processes the evidence exactly as #fiftyoneDegreesResultsHashFromEvidence,
+ * but walks only the graphs needed by the required properties whose indexes
+ * are supplied. The result shape is unchanged, one item per available
+ * component. A component whose graph was not walked keeps a null profile, so
+ * its properties report no value with the NULL_PROFILE reason, and receives
+ * no default profile even when allowUnmatched is set.
+ *
+ * The indexes are turned into a 32 bit mask, bit i meaning the graph for
+ * component i in componentsList. Components at index 32 and above are beyond
+ * the mask and are always walked, so a data file with more than 32 components
+ * is filtered for the first 32 only.
+ * @param results preallocated results structure to populate
+ * @param evidence to process containing parsed or unparsed values
+ * @param requiredPropertyIndexes array of required property indexes the
+ * caller will read, or NULL to walk every graph
+ * @param requiredPropertyIndexesCount number of entries in the array. A
+ * negative count walks every graph. A count of zero with a non NULL array
+ * walks no graph. Indexes outside the required properties are ignored.
+ * @param exception pointer to an exception data structure to be used if an
+ * exception occurs. See exceptions.h.
+ */
+EXTERNAL void fiftyoneDegreesResultsHashFromEvidenceForProperties(
+	fiftyoneDegreesResultsHash *results,
+	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount,
+	fiftyoneDegreesException *exception);
+
+/**
+ * Processes the User-Agent exactly as #fiftyoneDegreesResultsHashFromUserAgent,
+ * but walks only the graphs needed by the required properties whose indexes
+ * are supplied. See #fiftyoneDegreesResultsHashFromEvidenceForProperties for
+ * the rules that apply to the indexes.
+ * @param results preallocated results structure to populate
+ * @param userAgent string to process
+ * @param userAgentLength of the User-Agent string
+ * @param requiredPropertyIndexes array of required property indexes the
+ * caller will read, or NULL to walk every graph
+ * @param requiredPropertyIndexesCount number of entries in the array
+ * @param exception pointer to an exception data structure to be used if an
+ * exception occurs. See exceptions.h.
+ */
+EXTERNAL void fiftyoneDegreesResultsHashFromUserAgentForProperties(
+	fiftyoneDegreesResultsHash *results,
+	const char* userAgent,
+	size_t userAgentLength,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount,
 	fiftyoneDegreesException *exception);
 
 /**
