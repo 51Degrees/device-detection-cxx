@@ -548,6 +548,70 @@ EXTERNAL void fiftyoneDegreesResultsHashFromUserAgent(
 	fiftyoneDegreesException *exception);
 
 /**
+ * Processes the evidence exactly as #fiftyoneDegreesResultsHashFromEvidence,
+ * but walks only the graphs needed by the required properties whose indexes
+ * are supplied. It is meant for a service that knows, for every request,
+ * which properties it will read. Other callers should use
+ * #fiftyoneDegreesResultsHashFromEvidence.
+ *
+ * Results are built as for an unfiltered detection. A component whose graph
+ * was not walked still takes the result its evidence would have used, with
+ * no profile, so its properties report no value with the NULL_PROFILE
+ * reason, and it receives no default profile even when allowUnmatched is
+ * set. Values worked out across every result, such as the device id, the
+ * matched User-Agents and the match metrics, count that result as a
+ * component that matched nothing.
+ *
+ * The indexes are turned into a 32 bit mask, bit i meaning the graph for
+ * component i in componentsList. Components at index 32 and above are beyond
+ * the mask and are always walked, so a data file with more than 32 components
+ * is filtered for the first 32 only.
+ *
+ * An index is a position in the required properties of the data set the
+ * results use, which are sorted by name. A reloaded data file that gains or
+ * loses a required property moves the indexes of the properties after it, so
+ * look them up again after a reload, for example with
+ * #fiftyoneDegreesPropertiesGetRequiredPropertyIndexFromName.
+ * @param results preallocated results structure to populate
+ * @param evidence to process containing parsed or unparsed values
+ * @param requiredPropertyIndexes array of required property indexes the
+ * caller will read, or NULL to walk every graph
+ * @param requiredPropertyIndexesCount number of entries in the array. A
+ * negative count walks every graph. A count of zero with a non NULL array
+ * walks no graph. Indexes outside the required properties are ignored.
+ * @param exception pointer to an exception data structure to be used if an
+ * exception occurs. See exceptions.h.
+ */
+EXTERNAL void fiftyoneDegreesResultsHashFromEvidenceForProperties(
+	fiftyoneDegreesResultsHash *results,
+	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount,
+	fiftyoneDegreesException *exception);
+
+/**
+ * Processes the User-Agent exactly as #fiftyoneDegreesResultsHashFromUserAgent,
+ * but walks only the graphs needed by the required properties whose indexes
+ * are supplied. See #fiftyoneDegreesResultsHashFromEvidenceForProperties for
+ * the rules that apply to the indexes.
+ * @param results preallocated results structure to populate
+ * @param userAgent string to process
+ * @param userAgentLength of the User-Agent string
+ * @param requiredPropertyIndexes array of required property indexes the
+ * caller will read, or NULL to walk every graph
+ * @param requiredPropertyIndexesCount number of entries in the array
+ * @param exception pointer to an exception data structure to be used if an
+ * exception occurs. See exceptions.h.
+ */
+EXTERNAL void fiftyoneDegreesResultsHashFromUserAgentForProperties(
+	fiftyoneDegreesResultsHash *results,
+	const char* userAgent,
+	size_t userAgentLength,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount,
+	fiftyoneDegreesException *exception);
+
+/**
  * Process a single Device Id and populate the device offsets in the results
  * structure.
  * @param results preallocated results structure to populate

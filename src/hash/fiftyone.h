@@ -67,6 +67,8 @@ MAP_TYPE(HashMatchMethod)
 #define ResultsHashFromDeviceId fiftyoneDegreesResultsHashFromDeviceId /**< Synonym for #fiftyoneDegreesResultsHashFromDeviceId function. */
 #define ResultsHashFromUserAgent fiftyoneDegreesResultsHashFromUserAgent /**< Synonym for #fiftyoneDegreesResultsHashFromUserAgent function. */
 #define ResultsHashFromEvidence fiftyoneDegreesResultsHashFromEvidence /**< Synonym for #fiftyoneDegreesResultsHashFromEvidence function. */
+#define ResultsHashFromUserAgentForProperties fiftyoneDegreesResultsHashFromUserAgentForProperties /**< Synonym for #fiftyoneDegreesResultsHashFromUserAgentForProperties function. */
+#define ResultsHashFromEvidenceForProperties fiftyoneDegreesResultsHashFromEvidenceForProperties /**< Synonym for #fiftyoneDegreesResultsHashFromEvidenceForProperties function. */
 #define DataSetHashGet fiftyoneDegreesDataSetHashGet /**< Synonym for #fiftyoneDegreesDataSetHashGet function. */
 #define DataSetHashRelease fiftyoneDegreesDataSetHashRelease /**< Synonym for #fiftyoneDegreesDataSetHashRelease function. */
 #define HashSizeManagerFromFile fiftyoneDegreesHashSizeManagerFromFile /**< Synonym for #fiftyoneDegreesHashSizeManagerFromFile function. */
