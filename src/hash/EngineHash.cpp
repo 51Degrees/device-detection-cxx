@@ -239,14 +239,28 @@ static const uint32_t overridesEnabled = 1;
 
 DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	DeviceDetection::EvidenceDeviceDetection *evidence) const {
+	return process(evidence, nullptr, -1);
+}
+
+DeviceDetection::Hash::ResultsHash* EngineHash::process(
+	const char *userAgent) const {
+	return process(userAgent, nullptr, -1);
+}
+
+DeviceDetection::Hash::ResultsHash* EngineHash::process(
+	DeviceDetection::EvidenceDeviceDetection *evidence,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount) const {
 	EXCEPTION_CREATE;
 
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
 		overridesEnabled);
-	ResultsHashFromEvidence(
+	ResultsHashFromEvidenceForProperties(
 		results,
 		evidence == nullptr ? nullptr : evidence->get(),
+		requiredPropertyIndexes,
+		requiredPropertyIndexesCount,
 		exception);
 	EXCEPTION_THROW;
 
@@ -254,7 +268,9 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 }
 
 DeviceDetection::Hash::ResultsHash* EngineHash::process(
-	const char *userAgent) const {
+	const char *userAgent,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount) const {
 	EXCEPTION_CREATE;
 
 	// A User-Agent on its own carries no values to override, so the results
@@ -262,10 +278,12 @@ DeviceDetection::Hash::ResultsHash* EngineHash::process(
 	fiftyoneDegreesResultsHash *results = ResultsHashCreate(
 		manager.get(),
 		0);
-	ResultsHashFromUserAgent(
+	ResultsHashFromUserAgentForProperties(
 		results,
 		userAgent,
 		userAgent == nullptr ? 0 : strlen(userAgent),
+		requiredPropertyIndexes,
+		requiredPropertyIndexesCount,
 		exception);
 	EXCEPTION_THROW;
 	return new ResultsHash(results, manager);

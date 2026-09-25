@@ -204,6 +204,8 @@ typedef struct detection_component_state_t {
 	EvidencePrefix specialPrefix; /* Prefix given to the headers that special
 								  evidence such as GHEV or SUA is turned into.
 								  See setSpecialHeaderPrefix */
+	uint32_t graphs; /* Bit i set means the graph for component i is walked.
+					 See COMPONENT_MASK_ENABLED */
 } detectionComponentState;
 
 /**
@@ -1297,6 +1299,10 @@ static StatusCode initComponentsAvailable(
 			return COLLECTION_FAILURE;
 		}
 		dataSet->componentsAvailable[property->componentIndex] = true;
+		// Record the component so required property indexes can be turned
+		// into a component mask without reading the property again.
+		dataSet->b.b.available->items[i].componentIndex =
+			property->componentIndex;
 		COLLECTION_RELEASE(dataSet->properties, &item);
 	}
 
@@ -2505,14 +2511,23 @@ static bool setResultFromEvidenceForComponentCallback(
 			// produce and outcome that concludes the iterations.
 			s->lastResult = result;
 
-			// Perform the device detection and set the result.
-			complete = setResultForComponentHeader(
-				s->dataSet,
-				s->componentIndex,
-				pair->header,
-				result,
-				exception);
-			if (EXCEPTION_FAILED) return false;
+			if (COMPONENT_MASK_ENABLED(s->graphs, s->componentIndex)) {
+
+				// Perform the device detection and set the result.
+				complete = setResultForComponentHeader(
+					s->dataSet,
+					s->componentIndex,
+					pair->header,
+					result,
+					exception);
+				if (EXCEPTION_FAILED) return false;
+			}
+			else {
+
+				// The caller will not read this component, so leave the
+				// result with a null profile and do not walk the graph.
+				complete = true;
+			}
 
 		}
 		else {
@@ -2855,12 +2870,18 @@ static void resultsHashFromEvidence_extractOverrides(
 // true.
 static void resultsHashFromEvidence_SetMissingComponentDefaultProfiles(
 	DataSetHash* dataSet,
-	ResultsHash* results) {
+	ResultsHash* results,
+	uint32_t graphs) {
 
 	if (dataSet->config.b.allowUnmatched == true) {
 		for (byte i = 0;
 			i < dataSet->componentsList.count;
 			i++) {
+
+			// A component whose graph was not walked gets no default.
+			if (COMPONENT_MASK_ENABLED(graphs, i) == false) {
+				continue;
+			}
 
 			// Get the result for the component.
 			ResultHash* result = getResultFromResultsForComponentIndex(
@@ -2914,7 +2935,8 @@ static int resultsHashFromEvidence_findAndApplyDeviceIDs(
 		if (lookupState.profilesFoundFromDeviceId > 0) {
 			resultsHashFromEvidence_SetMissingComponentDefaultProfiles(
 				state->dataSet,
-				state->results);
+				state->results,
+				state->graphs);
 		}
 
 	} while (false); // once
@@ -3037,9 +3059,11 @@ static void resultsHashReset(ResultsHash* results) {
 	results->count = 0;
 }
 
-void fiftyoneDegreesResultsHashFromEvidence(
+void fiftyoneDegreesResultsHashFromEvidenceForProperties(
 	fiftyoneDegreesResultsHash *results,
 	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount,
 	fiftyoneDegreesException *exception) {
 	DataSetHash* dataSet = (DataSetHash*)results->b.b.dataSet;
 
@@ -3059,7 +3083,11 @@ void fiftyoneDegreesResultsHashFromEvidence(
 		0,
 		0,
 		exception,
-		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING };
+		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
+		PropertiesGetComponentMask(
+			dataSet->b.b.available,
+			requiredPropertyIndexes,
+			requiredPropertyIndexesCount) };
 
 	// Reset the results data before iterating the evidence.
 	resultsHashReset(results);
@@ -3103,7 +3131,8 @@ void fiftyoneDegreesResultsHashFromEvidence(
 			if (EXCEPTION_FAILED) { break; };
 			resultsHashFromEvidence_SetMissingComponentDefaultProfiles(
 				dataSet,
-				results);
+				results,
+				state.graphs);
 		}
 
 		// Check to see if all the UACH evidence is present and if so then 
@@ -3122,10 +3151,24 @@ void fiftyoneDegreesResultsHashFromEvidence(
 	} while (false); // once
 }
 
-void fiftyoneDegreesResultsHashFromUserAgent(
+void fiftyoneDegreesResultsHashFromEvidence(
+	fiftyoneDegreesResultsHash *results,
+	fiftyoneDegreesEvidenceKeyValuePairArray *evidence,
+	fiftyoneDegreesException *exception) {
+	fiftyoneDegreesResultsHashFromEvidenceForProperties(
+		results,
+		evidence,
+		NULL,
+		-1,
+		exception);
+}
+
+void fiftyoneDegreesResultsHashFromUserAgentForProperties(
 	fiftyoneDegreesResultsHash *results,
 	const char* userAgent,
 	size_t userAgentLength,
+	const int *requiredPropertyIndexes,
+	int requiredPropertyIndexesCount,
 	fiftyoneDegreesException *exception) {
 	DataSetHash *dataSet = (DataSetHash*)results->b.b.dataSet;
 
@@ -3164,7 +3207,12 @@ void fiftyoneDegreesResultsHashFromUserAgent(
 		FIFTYONE_DEGREES_EVIDENCE_HTTP_HEADER_STRING,
 		uaPair);
 
-	ResultsHashFromEvidence(results, &evidence, exception);
+	fiftyoneDegreesResultsHashFromEvidenceForProperties(
+		results,
+		&evidence,
+		requiredPropertyIndexes,
+		requiredPropertyIndexesCount,
+		exception);
 
 	// Guard the stack-allocation contract: if a future change makes the
 	// engine add pairs beyond the capacity of 1, EvidenceAddPair would heap
@@ -3172,6 +3220,20 @@ void fiftyoneDegreesResultsHashFromUserAgent(
 	// would walk prev back to this stack block). Debug builds only; assert
 	// compiles out under NDEBUG (release).
 	assert(evidence.next == NULL);
+}
+
+void fiftyoneDegreesResultsHashFromUserAgent(
+	fiftyoneDegreesResultsHash *results,
+	const char* userAgent,
+	size_t userAgentLength,
+	fiftyoneDegreesException *exception) {
+	fiftyoneDegreesResultsHashFromUserAgentForProperties(
+		results,
+		userAgent,
+		userAgentLength,
+		NULL,
+		-1,
+		exception);
 }
 
 // Adds the profile associated with the string version of the profile id 
