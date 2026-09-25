@@ -235,3 +235,27 @@ TEST_F(ResultsHashSerializerTests, processEmpty) {
     
     EXPECT_EQ(serializer.allValuesJson(results.get()), "{}");
 }
+
+// The Lite data file has no values for JavascriptHardwareProfile on a
+// desktop profile. Such a property used to be written as a key with nothing
+// after the colon ("JavascriptHardwareProfile":,), which is not valid JSON.
+// Load Lite explicitly, as the fixture prefers other files.
+TEST_F(ResultsHashSerializerTests, liteNoValuesPropertyOmitted) {
+    ConfigHash liteConfig;
+    RequiredPropertiesConfig liteProperties(
+        "BrowserName,JavascriptHardwareProfile,PlatformName");
+    auto engine = make_unique<EngineHash>(
+        GetFilePath(_dataFolderName, "51Degrees-LiteV4.1.hash"),
+        &liteConfig,
+        &liteProperties);
+    auto results = unique_ptr<ResultsHash>(engine->process(testUA));
+    auto values = results->getValues("JavascriptHardwareProfile");
+    ASSERT_TRUE(!values.hasValue() || values.getValue().empty());
+
+    ResultsHashSerializer serializer;
+    verify(serializer, results.get());
+    EXPECT_EQ(
+        serializer.allValuesJson(results.get()).find(
+            "\"JavascriptHardwareProfile\""),
+        string::npos);
+}
