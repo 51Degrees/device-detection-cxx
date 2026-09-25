@@ -4138,8 +4138,12 @@ size_t fiftyoneDegreesResultsHashGetValuesJson(
 		if (propertyIndex >= 0) {
             // Write the property and values only if we have them
             // Otherwise we could have ended up with {"key1":,"key2":} invalid json
+            // A non-NULL return is not enough: when the matched profile has
+            // no values for the property it returns the list's items with a
+            // count of zero, so the count must be checked too.
             if (ResultsHashGetValues(results, i, exception) != NULL &&
-                EXCEPTION_OKAY) {
+                EXCEPTION_OKAY &&
+                results->values.count > 0) {
                 // Get the property.
             	const CollectionKey propertyKey = {
 					{propertyIndex},
