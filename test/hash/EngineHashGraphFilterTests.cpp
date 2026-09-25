@@ -67,9 +67,9 @@ public:
 		Base::TearDown();
 	}
 protected:
-	ConfigHash* config;
-	RequiredPropertiesConfig* properties;
-	EngineHash* engine;
+	ConfigHash* config = nullptr;
+	RequiredPropertiesConfig* properties = nullptr;
+	EngineHash* engine = nullptr;
 };
 
 TEST_F(EngineHashGraphFilterTests, RequiredPropertiesAreInIndexOrder) {
