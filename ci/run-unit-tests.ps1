@@ -14,7 +14,7 @@ $enterpriseFileBackup = "$deviceDetectionData/TAC-HashV41.hash.bak"
 
 # Run tests with enterprise data file (if present)
 Write-Output "Running tests with enterprise data file..."
-./cxx/run-unit-tests.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -Configuration $Configuration -Arch $Arch -BuildMethod $BuildMethod -ExcludeRegex ".*Example.*" `
+./cxx/run-unit-tests.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -Configuration $Configuration -Arch $Arch -BuildMethod $BuildMethod -ExcludeRegex ".*Example.*|.*Integration.*" `
     -CoverageExcludeDirs 'fiftyone-common-c(xx)?-cov\.dir$'
 
 $enterpriseExitCode = $LASTEXITCODE
@@ -29,7 +29,14 @@ elseif (Test-Path $enterpriseFile) {
     Move-Item $enterpriseFile $enterpriseFileBackup -Force
 
     try {
-        ./cxx/run-unit-tests.ps1 -RepoName $RepoName -ProjectDir $ProjectDir -Name $Name -Configuration $Configuration -Arch $Arch -BuildMethod $BuildMethod -ExcludeRegex ".*Example.*" `
+        ./cxx/run-unit-tests.ps1 `
+            -RepoName $RepoName `
+            -ProjectDir $ProjectDir `
+            -Name $Name `
+            -Configuration $Configuration `
+            -Arch $Arch `
+            -BuildMethod $BuildMethod `
+            -ExcludeRegex ".*Integration|Example.*" ` `
             -CoverageExcludeDirs 'fiftyone-common-c(xx)?-cov\.dir$'
         $liteExitCode = $LASTEXITCODE
     }
