@@ -244,11 +244,11 @@ TEST_F(ResultsHashSerializerTests, liteNoValuesPropertyOmitted) {
     ConfigHash liteConfig;
     RequiredPropertiesConfig liteProperties(
         "BrowserName,JavascriptHardwareProfile,PlatformName");
-    auto engine = make_unique<EngineHash>(
+    auto liteEngine = make_unique<EngineHash>(
         GetFilePath(_dataFolderName, "51Degrees-LiteV4.1.hash"),
         &liteConfig,
         &liteProperties);
-    auto results = unique_ptr<ResultsHash>(engine->process(testUA));
+    auto results = unique_ptr<ResultsHash>(liteEngine->process(testUA));
     auto values = results->getValues("JavascriptHardwareProfile");
     ASSERT_TRUE(!values.hasValue() || values.getValue().empty());
 
