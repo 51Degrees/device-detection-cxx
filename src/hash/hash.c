@@ -67,6 +67,42 @@ d->componentsList.items[i].data.ptr : NULL))
 #define RK_PRIME 997
 
 /**
+ * Match a table hash using a reciprocal prepared once for the node scan.
+ * The caller validates the positive divisor and table bounds. The estimated
+ * quotient is exact or one below floor(hash / divisor), so one subtraction
+ * gives the exact remainder. A zero hash remains a reserved table marker.
+ */
+static GraphNodeHash* getMatchingHashFromTablePrepared(
+	GraphNode* node,
+	uint32_t hash,
+	uint64_t reciprocal) {
+	if (hash == 0) {
+		return NULL;
+	}
+	GraphNodeHash* hashes = (GraphNodeHash*)(node + 1);
+	const uint32_t divisor = (uint32_t)node->modulo;
+	const uint32_t quotient = (uint32_t)(((uint64_t)hash * reciprocal) >> 32);
+	uint32_t remainder = hash - quotient * divisor;
+	if (remainder >= divisor) {
+		remainder -= divisor;
+	}
+	GraphNodeHash* h = hashes + remainder;
+	if (h->hashCode == hash) {
+		return h;
+	}
+	if (h->hashCode == 0 && h->nodeOffset > 0 &&
+		h->nodeOffset < node->hashesCount) {
+		GraphNodeHash* end = hashes + node->hashesCount;
+		for (h = hashes + h->nodeOffset; h < end && h->hashCode != 0; ++h) {
+			if (h->hashCode == hash) {
+				return h;
+			}
+		}
+	}
+	return NULL;
+}
+
+/**
  * Array of powers for the RK_PRIME.
  */
 #ifndef FIFTYONE_DEGREES_POWERS
@@ -741,28 +777,92 @@ static void evaluateListNode(detectionState *state) {
 	else {
 		// Set the match structure with the initial hash value.
 		if (setInitialHash(state)) {
+			// Keep rolling state local. Only the final hash and position are
+			// observable outside this exact scan. Tolerance scans retain the
+			// original state-based path.
+			const char * const ua = state->result->b.targetUserAgent;
+			int index = state->currentIndex;
+			uint32_t hash = state->hash;
+			const uint32_t power = state->power;
+			const int length = NODE(state)->length;
+			int end = state->lastIndex;
+			if (end >= 0 && (size_t)end >
+				state->result->b.targetUserAgentLength - (size_t)length) {
+				end = (int)(state->result->b.targetUserAgentLength - (size_t)length);
+			}
+
 			// The table vs binary-search decision depends only on the node's
 			// modulo, which is constant for the duration of this scan. Resolve
 			// it once here rather than re-testing it for every rolled hash.
 			GraphNode * const node = NODE(state);
-			if (node->modulo == 0) {
+			if (node->modulo == 0 && node->hashesCount == 2) {
+				GraphNodeHash* hashes = (GraphNodeHash*)(node + 1);
+				const uint32_t h0 = hashes[0].hashCode, h1 = hashes[1].hashCode;
+				do {
+					nodeHash = hash == h1 ? hashes + 1 : NULL;
+					nodeHash = hash == h0 ? hashes : nodeHash;
+				} while (nodeHash == NULL && (index < end ?
+					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+						power * (uint32_t)ua[index], index++, 1) : 0));
+			}
+			else if (node->modulo == 0 && node->hashesCount == 3) {
+				GraphNodeHash* hashes = (GraphNodeHash*)(node + 1);
+				const uint32_t h0 = hashes[0].hashCode, h1 = hashes[1].hashCode,
+					h2 = hashes[2].hashCode;
+				do {
+					nodeHash = hash == h2 ? hashes + 2 : NULL;
+					nodeHash = hash == h0 ? hashes : nodeHash;
+					// Preserve the binary-search midpoint priority for duplicates.
+					nodeHash = hash == h1 ? hashes + 1 : nodeHash;
+				} while (nodeHash == NULL && (index < end ?
+					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+						power * (uint32_t)ua[index], index++, 1) : 0));
+			}
+			else if (node->modulo == 0) {
 				// Loop between the first and last indexes checking the hash
 				// values.
 				do {
 					nodeHash = GraphGetMatchingHashFromListNodeSearch(
 						node,
-						state->hash);
-				} while (nodeHash == NULL && advanceHash(state));
+						hash);
+				} while (nodeHash == NULL && (index < end ?
+					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+						power * (uint32_t)ua[index], index++, 1) : 0));
 			}
 			else if (GRAPH_NODE_IS_HASH_TABLE(node)) {
-				do {
-					nodeHash = GraphGetMatchingHashFromListNodeTable(
-						node,
-						state->hash);
-				} while (nodeHash == NULL && advanceHash(state));
+				const uint64_t reciprocal = (UINT64_C(1) << 32) / (uint32_t)node->modulo;
+				// Amortize a local miss filter only over longer scans of small tables.
+				// Every stored nonzero hash contributes a bit. A clear bit proves
+				// absence, while possible matches retain the original lookup order.
+				if (node->hashesCount <= 128 && (int64_t)end - index >= 32) {
+					uint64_t filter = 0;
+					GraphNodeHash* records = (GraphNodeHash*)(node + 1);
+					for (int k = 0; k < node->hashesCount; k++) {
+						const uint32_t code = records[k].hashCode;
+						if (code != 0) {
+							filter |= UINT64_C(1) << (code & 63);
+						}
+					}
+
+					do {
+						nodeHash = (filter & (UINT64_C(1) << (hash & 63))) != 0 ?
+							getMatchingHashFromTablePrepared(node, hash, reciprocal) : NULL;
+					} while (nodeHash == NULL && (index < end ?
+						(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+							power * (uint32_t)ua[index], index++, 1) : 0));
+				}
+				else {
+					do {
+						nodeHash = getMatchingHashFromTablePrepared(node, hash, reciprocal);
+					} while (nodeHash == NULL && (index < end ?
+						(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+							power * (uint32_t)ua[index], index++, 1) : 0));
+				}
 			}
 			// Any other modulo cannot index the records of the node safely, so
 			// no hash is looked for and the unmatched branch is taken.
+			state->hash = hash;
+			state->currentIndex = index;
 		}
 	}
 	
@@ -881,10 +981,28 @@ static void evaluateBinaryNode(detectionState *state) {
 	}
 	else {
 		if (setInitialHash(state)) {
+			// Keep rolling state local. Only the final hash and position are
+			// observable outside this exact scan. Tolerance scans retain the
+			// original state-based path.
+			const char * const ua = state->result->b.targetUserAgent;
+			int index = state->currentIndex;
+			uint32_t hash = state->hash;
+			const uint32_t power = state->power;
+			const int length = NODE(state)->length;
+			int end = state->lastIndex;
+			if (end >= 0 && (size_t)end >
+				state->result->b.targetUserAgentLength - (size_t)length) {
+				end = (int)(state->result->b.targetUserAgentLength - (size_t)length);
+			}
+
 			// Keep rolling the hash until the hash is found or the last index is
 			// reached and there is no possibility of finding the hash value.
-			while (state->hash != hashes->hashCode && advanceHash(state)) {
+			while (hash != hashes->hashCode && (index < end ?
+					(hash = hash * RK_PRIME + (uint32_t)ua[index + length] -
+						power * (uint32_t)ua[index], index++, 1) : 0)) {
 			}
+			state->hash = hash;
+			state->currentIndex = index;
 		}
 		found = state->hash == hashes->hashCode;
 	}
