@@ -10,6 +10,9 @@ on:
         description: 'Skip testing with Lite data file'
         type: boolean
         default: false
+      common-ci-ref:
+        type: string
+        default: ''
 
 jobs:
   PullRequests:
@@ -19,6 +22,7 @@ jobs:
       repo-name: ${{ github.event.repository.name }}
       org-name: ${{ github.event.repository.owner.login }}
       dryrun: ${{ inputs.dryrun || false }}
+      common-ci-ref: ${{ inputs.common-ci-ref || '' }}
       skip-lite-tests: ${{ inputs.skip-lite-tests || false }}
       cache-assets: true
     secrets:
