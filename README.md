@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> This repo has been merged into the monorepo https://github.com/51Degrees/51degrees-cxx. Please refer to the new monorepository for issues and PRs.
+
 # 51Degrees Device Detection API
 
 ![51Degrees](https://51degrees.com/img/logo.png?utm_source=github&utm_medium=readme&utm_campaign=device-detection-cxx&utm_content=readme.md&utm_term=51degrees-device-detection-api "Data rewards the curious") **Device Detection**
